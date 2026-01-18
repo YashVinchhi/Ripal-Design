@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="ico/images.ico">
+    <link rel="stylesheet" href="/signup/sign.css">
+    <title>Signup</title>
+</head>
+
+<body>
+    <div class="main">
+        
+            <h1>Signup Form</h1>
+            <form class="singup">
+                <div class="first-name">
+                    <input type="text" name="firstname" placeholder="FirstName" required autofocus>
+                </div>
+                <div class="last-name">
+                    <input type="text" name="last-name" placeholder="LatName" required autofocus>
+                </div>
+                <div class="sign-password">
+                    <input type="password" placeholder="Password" id="signpassword" class="signpassword" required>
+                    <img src="eye/eye-off.svg" id="eyepass">
+                </div>
+                <div class="sign-conform-password">
+                    <input type="password" placeholder="Conform Password" id="signconformpassword"
+                        class="signconformpassword" required>
+                    <img src="eye/eye-off.svg" id="eyecpass">
+                </div>
+                  <div class="account">
+                <p>You don have an account? <a href="Login.html">login</a></p>
+            </div>
+                <div class="register">
+                    <button type="register">Register</button>
+                </div>
+                <div class="status" aria-live="polite"></div>
+            </form>
+        
+    </div>
+    <script src="signup/sign.js"></script>
+</body>
+
+</html>
