@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Ripal Design | Architectural Excellence</title>
-    <link rel="icon" type="image/x-icon" href="Content/Ripal Design.png">
+    <link rel="icon" type="image/png" href="assets/images/Logo.png">
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -48,7 +48,7 @@
     <section class="hero relative h-screen w-full overflow-hidden">
             <div class="absolute inset-0 z-0">
                 <img alt="Hero Architecture" class="w-full h-full object-cover brightness-50"
-                    src="Content/WhatsApp Image 2026-02-02 at 6.55.18 PM.jpeg" />
+                    src="assets/Content/WhatsApp Image 2026-02-02 at 6.55.18 PM.jpeg" />
             </div>
             <div class="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
                 <h1 class="text-7xl md:text-9xl font-light mb-4">Ripal Design</h1>
@@ -65,16 +65,16 @@
             <div class="carousel absolute inset-0 z-0">
                 <div class="carousel-track" id="mediaTrack">
                     <div class="carousel-slide">
-                        <video muted playsinline loop class="w-full h-full object-cover" src="Content/sample-video-1.mp4"></video>
+                        <video muted playsinline loop class="w-full h-full object-cover" src="assets/Content/sample-video-1.mp4"></video>
                     </div>
                     <div class="carousel-slide">
-                        <img alt="Slide 2" src="Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" />
+                        <img alt="Slide 2" src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" />
                     </div>
                     <div class="carousel-slide">
-                        <video muted playsinline loop class="w-full h-full object-cover" src="Content/sample-video-2.mp4"></video>
+                        <video muted playsinline loop class="w-full h-full object-cover" src="assets/Content/sample-video-2.mp4"></video>
                     </div>
                     <div class="carousel-slide">
-                        <img alt="Slide 4" src="Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" />
+                        <img alt="Slide 4" src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" />
                     </div>
                 </div>
             </div>
@@ -85,10 +85,10 @@
         <section id="photoCarousel" class="h-screen w-full relative overflow-hidden bg-black">
             <div class="carousel absolute inset-0 z-0">
                 <div class="carousel-track" id="photoTrack">
-                    <div class="carousel-slide"><img alt="P1" src="Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" /></div>
-                    <div class="carousel-slide"><img alt="P2" src="Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" /></div>
-                    <div class="carousel-slide"><img alt="P3" src="Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM.jpeg" /></div>
-                    <div class="carousel-slide"><img alt="P4" src="Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" /></div>
+                    <div class="carousel-slide"><img alt="P1" src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" /></div>
+                    <div class="carousel-slide"><img alt="P2" src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" /></div>
+                    <div class="carousel-slide"><img alt="P3" src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM.jpeg" /></div>
+                    <div class="carousel-slide"><img alt="P4" src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" /></div>
                 </div>
             </div>
             <div class="relative z-20 w-full px-10">
@@ -110,7 +110,7 @@
                     <div class="project__media w-[33%] aspect-[3/4] overflow-hidden group">
                         <img alt="Project 1"
                             class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                            src="Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" />
+                            src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" />
                     </div>
                     <div class="project__content ml-[7%] flex-1">
                         <span class="text-[var(--primary)] font-semibold tracking-tighter text-2xl">01</span>
@@ -126,7 +126,7 @@
                     <div class="project__media w-[33%] aspect-[3/4] overflow-hidden group">
                         <img alt="Project 2"
                             class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                            src="Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" />
+                            src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" />
                     </div>
                     <div class="project__content mr-[7%] flex-1 text-right flex flex-col items-end">
                         <span class="text-[var(--primary)] font-semibold tracking-tighter text-2xl">02</span>
@@ -141,7 +141,7 @@
                     <div class="project__media w-[33%] aspect-[3/4] overflow-hidden group">
                         <img alt="Project 3"
                             class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                            src="Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" />
+                            src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" />
                     </div>
                     <div class="project__content ml-[7%] flex-1">
                         <span class="text-[var(--primary)] font-semibold tracking-tighter text-2xl">03</span>
@@ -156,7 +156,7 @@
                     <div class="project__media w-[33%] aspect-[3/4] overflow-hidden group">
                         <img alt="Project 4"
                             class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                            src="Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" />
+                            src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" />
                     </div>
                     <div class="project__content mr-[7%] flex-1 text-right flex flex-col items-end">
                         <span class="text-[var(--primary)] font-semibold tracking-tighter text-2xl">04</span>
@@ -178,7 +178,7 @@
                     <div class="h-64 overflow-hidden">
                         <img alt="Estate"
                             class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-                            src="Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" />
+                            src="assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" />
                     </div>
                     <p class="text-2xl font-['Cormorant_Garamond'] italic leading-relaxed text-gray-300">"The surgical
                         precision of their design language transformed our site into a masterpiece of modern
