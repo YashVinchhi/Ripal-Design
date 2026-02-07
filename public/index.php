@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Ripal Design | Architectural Excellence</title>
-    <link rel="icon" type="image/png" href="assets/Content/Logo.png">
+    <link rel="icon" type="image/png" href="../assets/Content/Logo.png">
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -22,8 +22,7 @@
 <body class="antialiased overflow-x-hidden scrollbar:none ms-overflow-style:none">
     <header class="site-header fixed top-0 left-0 w-full z-[100] flex justify-between items-center px-10 py-8 mix-blend-difference">
         <div class="mirrored-logo" aria-hidden="true">
-            <span class="mirrored-logo__r text-[var(--primary)]">R</span>
-            <span class="text-white">D</span>
+            <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
         </div>
         <button aria-label="Open menu" class="menu-btn group p-2 focus:outline-none" id="menuBtn">
             <span class="menu-line"></span>
@@ -224,9 +223,8 @@
         <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
             <div class="col-span-1 md:col-span-2">
                 <div class="mirrored-logo mb-10 scale-125 origin-left">
-                    <span class="mirrored-logo__r text-[var(--primary)]">R</span>
-                    <span class="text-white">D</span>
-                </div>
+                        <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2.5rem;">
+                    </div>
                 <p class="text-gray-500 max-w-sm leading-relaxed text-lg">
                     Creating landmark structures that define the skyline and enrich the human experience.
                 </p>

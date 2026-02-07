@@ -252,8 +252,7 @@
     <!-- Navigation -->
     <nav class="fixed-top p-4 d-flex justify-content-between align-items-center mixed-blend-mode">
         <a class="mirrored-logo text-white" href="#">
-            <span class="mirrored-logo__r" style="color: var(--primary);">R</span>
-            <span>D</span>
+            <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
         </a>
         <div class="menu-btn" id="menuBtn">
             <span class="menu-line"></span>
@@ -324,8 +323,8 @@
                     <!-- Tape Case -->
                     <div class="tape-body position-absolute start-0 top-50 translate-middle-y z-3">
                         <div class="tape-case d-flex align-items-center justify-content-center">
-                            <span class="font-serif fs-3" style="color: var(--primary);">RD</span>
-                        </div>
+                                <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2.5rem;">
+                            </div>
                     </div>
 
                     <!-- Tape Strip Container -->
