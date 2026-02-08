@@ -102,9 +102,12 @@ createCarousel('photoTrack', { prevId: 'photoPrev', nextId: 'photoNext', interva
     startTestimonials();
 })();
 
-// Measuring Tape Animation (GSAP)
-$(document).ready(function () {
-    gsap.registerPlugin(ScrollTrigger);
+// Measuring Tape Animation (GSAP) — vanilla JS (no jQuery required)
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof gsap === 'undefined') return;
+    if (typeof gsap.registerPlugin === 'function' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+    }
 
     // Initial State
     gsap.set('.tape-strip', { width: '0%' });
@@ -132,14 +135,10 @@ $(document).ready(function () {
         }, 0);
 
     // 2. Trigger milestones as the tape passes them
-    // Helper to add milestone activation
     function activateMilestone(selector, positionPercent) {
-        // Percent of the 3s duration
         let time = (positionPercent / 100) * 3;
-
-        // Use a callback to add class at the right time
         tl.call(() => {
-            $(selector).addClass('active');
+            document.querySelectorAll(selector).forEach(el => el.classList.add('active'));
         }, null, time);
     }
 

@@ -5,38 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>About Us - Ripal Design</title>
     
-    <!-- Typography & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="about_us.css">
 </head>
 <body>
     <div class="grain"></div>
 
-    <!-- Navigation -->
-    <nav class="fixed-top p-4 d-flex justify-content-between align-items-center mixed-blend-mode">
-        <a class="mirrored-logo text-white" href="#">
-            <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
-        </a>
-        <div class="menu-btn" id="menuBtn">
-            <span class="menu-line"></span>
-            <span class="menu-line" style="width: 20px;"></span>
-        </div>
-    </nav>
-
-    <!-- Overlay Navigation -->
-    <div id="navOverlay" class="d-flex flex-column align-items-center justify-content-center">
-        <button class="position-absolute top-0 end-0 m-4 btn btn-link text-white text-decoration-none display-4" id="closeBtn">&times;</button>
-        <nav class="d-flex flex-column text-center gap-4">
-            <a class="display-4 text-white text-decoration-none font-serif" href="#">Home</a>
-            <a class="display-4 text-white text-decoration-none font-serif fst-italic" href="#">About</a>
-            <a class="display-4 text-white text-decoration-none font-serif" href="#">Services</a>
-            <a class="display-4 text-white text-decoration-none font-serif" href="#">Contact</a>
-        </nav>
-    </div>
+    <?php require_once __DIR__ . '/../Common/header.php'; ?>
 
     <main>
         <!-- Hero Section -->

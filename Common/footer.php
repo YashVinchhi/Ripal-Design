@@ -22,7 +22,7 @@
                         </li>
                         <li class="d-flex align-items-center">
                             <i class="bi bi-envelope-fill me-2 text-secondary" aria-hidden="true"></i>
-                            <a href="mailto:projects@ripaldesign.com" class="text-secondary text-decoration-none">projects@ripaldesign.com</a>
+                            <a href="mailto:projects@ripaldesign.com" class="text-secondary text-decoration-none">projects@ripaldesign.in</a>
                         </li>
                     </ul>
                 </div>
@@ -43,6 +43,8 @@
 <?php
 // Server-side: only emit script tags for files that exist on disk (testing helper)
 require_once __DIR__ . '/../includes/config.php';
+
+echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>' . "\n";
 
 $candidates = ['/scripts.js', '/public/scripts.js', '/assets/scripts.js'];
 
