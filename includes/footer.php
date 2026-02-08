@@ -1,6 +1,4 @@
 <?php
-// footer.php - include at bottom of pages
+// Forwarding include: use the single canonical footer in Common/
+require_once __DIR__ . '/../Common/footer.php';
 ?>
-<footer>
-  <p>© 2026 Ripal Design</p>
-</footer>

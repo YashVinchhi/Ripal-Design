@@ -20,28 +20,7 @@
 </head>
 
 <body class="antialiased overflow-x-hidden scrollbar:none ms-overflow-style:none">
-    <header class="site-header fixed top-0 left-0 w-full z-[100] flex justify-between items-center px-10 py-8 mix-blend-difference">
-        <div class="mirrored-logo" aria-hidden="true">
-            <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
-        </div>
-        <button aria-label="Open menu" class="menu-btn group p-2 focus:outline-none" id="menuBtn">
-            <span class="menu-line"></span>
-            <span class="menu-line"></span>
-        </button>
-    </header>
-    <div class="fixed top-0 right-0 bottom-0 w-full md:w-1/4 bg-[var(--primary)] z-[110] flex flex-col items-center justify-center translate-x-[100vw] transition-transform duration-700 ease-in-out"
-        id="navOverlay" aria-hidden="true">
-        <button class="absolute top-10 right-10 text-white hover:rotate-90 transition-transform duration-300"
-            id="closeBtn">
-            <span class="material-symbols-outlined text-5xl">close</span>
-        </button>
-        <nav class="flex flex-col items-center md:items-center gap-10 text-5xl md:text-7xl font-['Cormorant_Garamond']">
-            <a class="hover:italic hover:tracking-widest transition-all duration-300" href="#">Home</a>
-            <a class="hover:italic hover:tracking-widest transition-all duration-300" href="#">Services</a>
-            <a class="hover:italic hover:tracking-widest transition-all duration-300" href="#">About Us</a>
-            <a class="hover:italic hover:tracking-widest transition-all duration-300" href="#">Pro•ects</a>
-        </nav>
-    </div>
+    <?php require_once __DIR__ . '/../Common/header.php'; ?>
     <main>
     <section class="hero relative h-screen w-full overflow-hidden">
             <div class="absolute inset-0 z-0">
@@ -219,43 +198,7 @@
             </div>
         </section>
     </main>
-    <footer class="bg-black py-24 px-10">
-        <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
-            <div class="col-span-1 md:col-span-2">
-                <div class="mirrored-logo mb-10 scale-125 origin-left">
-                        <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2.5rem;">
-                    </div>
-                <p class="text-gray-500 max-w-sm leading-relaxed text-lg">
-                    Creating landmark structures that define the skyline and enrich the human experience.
-                </p>
-            </div>
-            <div>
-                <h4 class="text-[var(--primary)] font-bold uppercase tracking-[0.2em] text-xs mb-8">Contact Us</h4>
-                <ul class="text-gray-400 space-y-6">
-                    <li class="hover:text-white transition-colors cursor-pointer">45 Madison Ave, New York</li>
-                    <li class="hover:text-white transition-colors cursor-pointer">+1 212 555 0198</li>
-                    <li class="hover:text-white transition-colors cursor-pointer">studio@rd-arch.com</li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-[var(--primary)] font-bold uppercase tracking-[0.2em] text-xs mb-8">Navigation</h4>
-                <ul class="text-gray-400 space-y-6">
-                    <li><a class="hover:text-white transition-colors" href="#">Projects</a></li>
-                    <li><a class="hover:text-white transition-colors" href="#">Process</a></li>
-                    <li><a class="hover:text-white transition-colors" href="#">Team</a></li>
-                    <li><a class="hover:text-white transition-colors" href="#">Careers</a></li>
-                </ul>
-            </div>
-        </div>
-        <div
-            class="max-w-[1400px] mx-auto mt-24 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-[0.4em] text-gray-600 gap-6">
-            <p>© 2024 R/D Studio. Masterpiece in every line.</p>
-            <div class="flex gap-10">
-                <a class="hover:text-[var(--primary)] transition-colors" href="#">Privacy Policy</a>
-                <a class="hover:text-[var(--primary)] transition-colors" href="#">Terms of Service</a>
-            </div>
-        </div>
-    </footer>
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="scripts.js"></script>
 

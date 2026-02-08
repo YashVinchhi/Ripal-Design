@@ -1,11 +1,4 @@
 <?php
-// header.php - include this at the top of pages to get shared nav
+// Forwarding include: use the single canonical header in Common/
+require_once __DIR__ . '/../Common/header.php';
 ?>
-<header>
-  <nav>
-    <a href="/ripal_design/public/index.php">Home</a> |
-    <a href="/ripal_design/public/services.php">Services</a> |
-    <a href="/ripal_design/public/about_us.php">About</a> |
-    <a href="/ripal_design/public/contact_us.php">Contact</a>
-  </nav>
-</header>

@@ -12,12 +12,7 @@ $user = $_SESSION['user'] ?? null;
   <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>
-  <header>
-    <nav>
-      <a href="dashboard.php">Dashboard</a> |
-      <a href="../public/logout.php">Logout</a>
-    </nav>
-  </header>
+  <?php require_once __DIR__ . '/../Common/header.php'; ?>
   <main>
     <?php if ($user): ?>
       <h1>Profile: <?php echo htmlspecialchars($user); ?></h1>
@@ -26,5 +21,6 @@ $user = $_SESSION['user'] ?? null;
       <p>Please <a href="../public/login.php">login</a>.</p>
     <?php endif; ?>
   </main>
+  <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 </html>

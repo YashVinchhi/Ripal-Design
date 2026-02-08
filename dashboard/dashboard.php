@@ -15,15 +15,11 @@ if (!$user) {
   <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>
-  <header>
-    <nav>
-      <a href="profile.php">Profile</a> |
-      <a href="../public/logout.php">Logout</a>
-    </nav>
-  </header>
+  <?php require_once __DIR__ . '/../Common/header.php'; ?>
   <main>
     <h1>Dashboard</h1>
     <p>Welcome, <?php echo htmlspecialchars($user); ?></p>
   </main>
+  <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 </html>
