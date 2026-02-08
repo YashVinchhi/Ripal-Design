@@ -11,7 +11,8 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
 } catch (Exception $e) {
-    // In production, log the error and show a friendly message
-    die('Database connection failed.');
+    // In production, log the error and set $pdo to null so pages can fall back to demo data.
+    error_log('DB connection failed: ' . $e->getMessage());
+    $pdo = null;
 }
 ?>

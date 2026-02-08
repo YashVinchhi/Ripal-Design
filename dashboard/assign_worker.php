@@ -3,8 +3,22 @@
 // Receives POST: project_id, worker_id
 header('Content-Type: application/json; charset=utf-8');
 session_start();
-if($_SERVER['REQUEST_METHOD'] !== 'POST'){
-    echo json_encode(['success'=>false, 'message'=>'Invalid method']);
+// Allow CORS preflight and POST from same origin; adjust as needed for production
+header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Respond to preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // no body for preflight
+    http_response_code(204);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN';
+    $raw = @file_get_contents('php://input');
+    echo json_encode(['success'=>false, 'message'=>'Invalid method', 'method'=>$method, 'raw'=>$raw]);
     exit;
 }
 

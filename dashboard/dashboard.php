@@ -9,12 +9,20 @@ $projects = [];
 $workers = [];
 $assignments = [];
 
-try {
-    // Projects table may not exist in the demo DB; using try/catch to keep backwards compatibility.
-    $stmt = $pdo->query("SELECT id, name FROM projects ORDER BY id DESC LIMIT 200");
-    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    // fallback static projects for design/prototyping
+// Load projects from DB when available, otherwise use fallback static data
+if (isset($pdo) && $pdo instanceof PDO) {
+    try {
+        $stmt = $pdo->query("SELECT id, name FROM projects ORDER BY id DESC LIMIT 200");
+        $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Failed loading projects: ' . $e->getMessage());
+        $projects = [
+          ['id' => 1, 'name' => 'Renovation — Oak Street Residence'],
+          ['id' => 2, 'name' => 'Shop Fitout — Market Road'],
+          ['id' => 3, 'name' => 'New Build — Riverfront Villa'],
+        ];
+    }
+} else {
     $projects = [
       ['id' => 1, 'name' => 'Renovation — Oak Street Residence'],
       ['id' => 2, 'name' => 'Shop Fitout — Market Road'],
@@ -22,12 +30,20 @@ try {
     ];
 }
 
-try {
-    $stmt = $pdo->prepare("SELECT id, username FROM users WHERE role = :role ORDER BY username ASC");
-    $stmt->execute(['role' => 'worker']);
-    $workers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    // fallback static workers
+if (isset($pdo) && $pdo instanceof PDO) {
+    try {
+        $stmt = $pdo->prepare("SELECT id, username FROM users WHERE role = :role ORDER BY username ASC");
+        $stmt->execute(['role' => 'worker']);
+        $workers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Failed loading workers: ' . $e->getMessage());
+        $workers = [
+          ['id' => 11, 'username' => 'Ramesh Kumar'],
+          ['id' => 12, 'username' => 'Suresh Bhai'],
+          ['id' => 13, 'username' => 'Mahesh M.'],
+        ];
+    }
+} else {
     $workers = [
       ['id' => 11, 'username' => 'Ramesh Kumar'],
       ['id' => 12, 'username' => 'Suresh Bhai'],
@@ -36,15 +52,22 @@ try {
 }
 
 // Load recent assignments if table exists
-try {
-    $stmt = $pdo->query("SELECT a.project_id, p.name AS project_name, u.username AS worker_name, a.assigned_at
+if (isset($pdo) && $pdo instanceof PDO) {
+    try {
+        $stmt = $pdo->query("SELECT a.project_id, p.name AS project_name, u.username AS worker_name, a.assigned_at
                          FROM project_assignments a
                          LEFT JOIN projects p ON p.id = a.project_id
                          LEFT JOIN users u ON u.id = a.worker_id
                          ORDER BY a.assigned_at DESC LIMIT 20");
-    $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    // fallback static assignments
+        $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Failed loading assignments: ' . $e->getMessage());
+        $assignments = [
+          ['project_name' => 'Renovation — Oak Street Residence', 'worker_name' => 'Ramesh Kumar', 'assigned_at' => '2026-02-01 10:00'],
+          ['project_name' => 'Shop Fitout — Market Road', 'worker_name' => 'Suresh Bhai', 'assigned_at' => '2026-02-05 14:30'],
+        ];
+    }
+} else {
     $assignments = [
       ['project_name' => 'Renovation — Oak Street Residence', 'worker_name' => 'Ramesh Kumar', 'assigned_at' => '2026-02-01 10:00'],
       ['project_name' => 'Shop Fitout — Market Road', 'worker_name' => 'Suresh Bhai', 'assigned_at' => '2026-02-05 14:30'],
@@ -131,6 +154,7 @@ try {
               <div class="card-actions">
                 <a class="btn outline" href="project_details.php?id=<?php echo $p['id']; ?>">Open</a>
                 <a class="btn" href="project_details.php?id=<?php echo $p['id']; ?>">View Details</a>
+                <a class="btn outline" href="goods_list.php?project_id=<?php echo $p['id']; ?>">Goods</a>
                 <a class="btn outline" href="../worker/assigned_projects.php?project_id=<?php echo $p['id']; ?>">Assigned</a>
               </div>
             </div>
@@ -175,13 +199,15 @@ try {
       var projectId = document.getElementById('assign_project_id').value;
       var workerId = document.getElementById('assign_worker_select').value;
       if(!projectId || !workerId){ alert('Please select a worker.'); return; }
-      var btn = document.getElementById('assignSubmitBtn');
+        var btn = document.getElementById('assignSubmitBtn');
       btn.disabled = true; btn.textContent = 'Assigning...';
+      console.log('submitAssign called', { projectId, workerId });
       try{
         var fd = new FormData();
         fd.append('project_id', projectId);
         fd.append('worker_id', workerId);
-        var res = await fetch('assign_worker.php', { method:'POST', body: fd });
+        // use explicit relative path and include X-Requested-With header
+        var res = await fetch('./assign_worker.php', { method:'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         var json = await res.json();
         if(json && json.success){
           alert(json.message || 'Worker assigned.');

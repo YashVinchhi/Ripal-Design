@@ -10,7 +10,7 @@
 <body>
     <div class="grain"></div>
 
-    <?php require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php require_once __DIR__ . '/../includes/header.php'; ?>
 
     <main>
         <!-- Hero Section -->

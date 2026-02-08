@@ -18,7 +18,7 @@ $requests = [
 </head>
 <body>
   <?php require_once __DIR__ . '/../Common/header.php'; ?>
-  <main class="worker-dashboard container">
+  <main class="worker-dashboard">
     <div class="page-header">
       <div class="toolbar justify-content-between">
         <div class="title-wrap">
@@ -50,21 +50,5 @@ $requests = [
 
   </main>
   <?php require_once __DIR__ . '/../Common/footer.php'; ?>
-</body>
-</html>
-<?php
-// Placeholder: clients request reviews or change requests
-require_once __DIR__ . '/../includes/header.php';
-session_start();
-?>
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Review Requests</title></head>
-<body>
-  <main>
-    <h1>Review Requests</h1>
-    <p>List of review requests will appear here.</p>
-  </main>
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
 </body>
 </html>

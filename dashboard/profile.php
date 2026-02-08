@@ -12,7 +12,7 @@ $user = $_SESSION['user'] ?? 'employee01';
 </head>
 <body>
   <?php require_once __DIR__ . '/../Common/header.php'; ?>
-  <main class="worker-dashboard container">
+  <main class="worker-dashboard">
     <div class="page-header">
       <div class="toolbar justify-content-between">
         <div class="title-wrap">

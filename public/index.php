@@ -20,7 +20,7 @@
 </head>
 
 <body class="antialiased overflow-x-hidden scrollbar:none ms-overflow-style:none">
-    <?php require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php require_once __DIR__ . '/../includes/header.php'; ?>
     <main>
     <section class="hero relative h-screen w-full overflow-hidden">
             <div class="absolute inset-0 z-0">

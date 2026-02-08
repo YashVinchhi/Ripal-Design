@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <?php require_once __DIR__ . '/Common/header.php'; ?>
+  <?php require_once __DIR__ . '/includes/header.php'; ?>
   <main>
     <h1>Products</h1>
     <p>List products here.</p>

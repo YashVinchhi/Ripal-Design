@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php require_once __DIR__ . '/../includes/header.php'; ?>
   <main>
     <h1>Contact Us</h1>
     <p>Contact form or details here.</p>

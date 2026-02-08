@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/Common/header.php'; ?>
+<?php require_once __DIR__ . '/includes/header.php'; ?>
 <main>
   <h1>404 Not Found</h1>
   <p>The page you requested could not be found.</p>
