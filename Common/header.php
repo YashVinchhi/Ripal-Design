@@ -2,6 +2,11 @@
 // header.php - include this at the top of pages to get shared nav
 // Load common stylesheet fallbacks so header always appears styled during testing.
 require_once __DIR__ . '/../includes/config.php';
+
+// Ensure session available so header can show user-specific nav
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
 ?>
 <?php
 // Server-side: only emit stylesheet links that exist on disk to avoid client 404s
@@ -37,6 +42,13 @@ foreach ($candidates as $c) {
         <span class="menu-line"></span>
         <span class="menu-line" style="width: 20px;"></span>
     </div>
+    <?php if (!empty($_SESSION['user'])): ?>
+        <div class="d-flex align-items-center gap-3">
+            <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-white text-decoration-none">Dashboard</a>
+            <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-white text-decoration-none">Profile</a>
+            <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="text-white text-decoration-none">Logout</a>
+        </div>
+    <?php endif; ?>
 </nav>
 
 <!-- Overlay Navigation -->
