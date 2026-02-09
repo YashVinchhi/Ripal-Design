@@ -1,0 +1,464 @@
+/* Worker dashboard styles based on Guidelines/UI.md variables */
+:root {
+  --color-primary: #731209;
+  --color-primary-hover: #94180C;
+  --color-primary-light: #F2E6E6;
+  --color-bg-main: #FFFFFF;
+  --color-bg-surface: #F9F9F9;
+  --color-text-main: #1A1A1A;
+  --color-text-muted: #666666;
+  --color-border: #E0E0E0;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
+  --color-danger: #EF4444;
+  --border-radius-card: 12px;
+  --border-radius-btn: 6px;
+  --transition-speed: 0.3s;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-brand: 0 10px 25px -5px rgba(115, 18, 9, 0.25);
+}
+
+/* Layout */
+.worker-dashboard {
+  padding: 120px 20px 20px;
+  /* Top padding for fixed header */
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Ensure muted text inside worker area uses site muted color */
+.worker-dashboard .text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+/* Increase spacing between the top tabs on project details page */
+.worker-dashboard .nav-tabs {
+  gap: 18px;
+  display: flex;
+  align-items: center;
+}
+.worker-dashboard .nav-tabs .nav-link {
+  padding: 12px 26px;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Enlarge info cards (Site Details / Goods / Owner / Team) for better readability */
+.worker-dashboard .info-card {
+  padding: 16px;
+  min-height: auto;
+}
+
+@media (min-width: 992px) {
+  .worker-dashboard .info-card {
+    padding: 20px;
+    min-height: auto;
+  }
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--color-primary);
+  font-size: 28px;
+  margin: 0 0 4px 0;
+  font-weight: 700;
+}
+
+.page-header .muted {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Toolbar & Header */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.hamburger {
+  background: transparent;
+  border: 0;
+  font-size: 24px;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.hamburger:hover {
+  transform: scale(1.1);
+}
+
+.title-wrap {
+  flex: 1;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(115, 18, 9, 0.2);
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Summary Strip */
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.summary-card {
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-btn);
+  padding: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.summary-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+/* Project Cards */
+.card.project-card {
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(115, 18, 9, 0.2);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  background: linear-gradient(to bottom, #fff, #fcfcfc);
+}
+
+.project-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-main);
+  line-height: 1.3;
+  font-family: 'Inter', sans-serif;
+  padding-right: 18px;
+  /* Space for specific long names */
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge.completed {
+  background: var(--color-success);
+}
+
+.status-badge.on-hold {
+  background: var(--color-warning);
+}
+
+.status-badge.ongoing {
+  background: var(--color-info);
+}
+
+.status-badge.overdue {
+  background: var(--color-danger);
+}
+
+.status-badge.info {
+  background: var(--color-info);
+}
+
+.card-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.meta-item label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress {
+  width: 100%;
+  height: 6px;
+  background: #eee;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 99px;
+  transition: width 1s ease-in-out;
+}
+
+.muted {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.due-date {
+  font-weight: 600;
+  color: var(--color-text-main);
+  font-size: 14px;
+}
+
+/* Card Actions */
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-btn);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.btn.primary {
+  background: var(--color-primary);
+  color: #fff;
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 2px 4px rgba(115, 18, 9, 0.2);
+}
+
+.btn.primary:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(115, 18, 9, 0.3);
+}
+
+.btn.outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn.outline:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card.project-card {
+  animation: fadeInUp 0.5s ease backwards;
+}
+
+.card.project-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.card.project-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.card.project-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.card.project-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* Responsive Media Queries */
+
+/* Tablet & Up */
+@media (min-width: 640px) {
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .dashboard-summary {
+    grid-template-columns: repeat(4, 1fr);
+    margin-bottom: 24px;
+    grid-column: 1 / -1;
+  }
+
+  .meta-row {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  .meta-item {
+    flex: 1;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .worker-dashboard {
+    padding: 140px 40px 40px;
+    /* Increased top padding for desktop */
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .page-header h1 {
+    font-size: 36px;
+  }
+
+  .summary-value {
+    font-size: 32px;
+  }
+
+  .card.project-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-brand);
+  }
+}
+
+/* Uniform stacking: make content boxes share the same z-index and ensure footer sits below */
+.worker-dashboard .info-card,
+.worker-dashboard .drawing-card,
+.worker-dashboard .card,
+.worker-dashboard .list-group-item,
+.worker-dashboard .map-container,
+.worker-dashboard .table-responsive,
+.worker-dashboard .drawing-card {
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure footer is rendered below the boxes in stacking order */
+.site-footer {
+  position: relative;
+  z-index: 0;
+}
+
+/* Ensure info cards and related boxes size to their content only */
+.worker-dashboard .info-card,
+.worker-dashboard .map-container,
+.worker-dashboard .drawing-card,
+.worker-dashboard .list-group-item,
+.worker-dashboard .table-responsive {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+/* Use a simple flex layout so footer stays below content */
+html, body {
+  height: 100%;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+main.worker-dashboard {
+  flex: 1 0 auto;
+}
+.site-footer {
+  flex-shrink: 0;
+  margin-top: 24px;
+}

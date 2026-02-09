@@ -1,93 +1,654 @@
-:root{
-  --primary:#731209;
-  --bg-dark:#050505;
+:root {
+  --primary: #731209;
+  --bs-primary: #731209;
+  /* Override Bootstrap variable */
+  --bg-dark: #050505;
+  /* Ensure Bootstrap link color follows brand */
+  --bs-link-color: #731209;
 }
+
+/* Force btn-primary to use our color if bootstrap variables don't cascade correctly from root */
+.btn-primary {
+  --bs-btn-bg: #731209;
+  --bs-btn-border-color: #731209;
+  --bs-btn-hover-bg: #94180C;
+  --bs-btn-hover-border-color: #94180C;
+  background-color: #731209 !important;
+  /* Fallback/Force */
+  border-color: #731209 !important;
+}
+
+/* Force every button control to use the brand primary color */
+button,
+.btn,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn-primary {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+/* Outline buttons: border and text should be brand color; hover fills with brand */
+.btn-outline-primary,
+.btn-outline-primary:focus,
+.btn-outline-primary:hover {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  background-color: transparent !important;
+}
+.btn-outline-primary:hover {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+/* Links styled as buttons should also follow brand */
+.btn-link {
+  color: var(--primary) !important;
+}
+
 /* Prevent any horizontal overflow across the site */
-html, body { overflow-x: hidden !important; width:100%; max-width:100%; }
+html,
+body {
+  overflow-x: hidden !important;
+  width: 100%;
+  max-width: 100%;
+}
 
 /* Use border-box sizing to avoid overflow from padding/margins */
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 /* Nav overlay: avoid using 100vw transforms to prevent horizontal overflow */
-#navOverlay{
+/* Nav overlay: max 1/4 width on desktop, full on mobile */
+#navOverlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  /* Default mobile */
+  background-color: var(--primary) !important;
   transform: translateX(100%);
-  transition: transform .7s ease-in-out;
+  transition: transform .5s cubic-bezier(0.77, 0, 0.175, 1);
+  z-index: 1050;
 }
-#navOverlay.open{ transform: translateX(0); }
+
+@media (min-width: 768px) {
+  #navOverlay {
+    width: 25vw;
+    /* Max 1/4th width on desktop */
+    min-width: 320px;
+    /* Ensure readability */
+  }
+}
+
+#navOverlay.open {
+  transform: translateX(0);
+}
+
 /* Base typography + layout replacements for previous Tailwind @apply usage */
-body{
-  background:#0a0a0a;
-  color:#fff;
+body {
+  background: #0a0a0a;
+  color: #fff;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 html::-webkit-scrollbar,
-body::-webkit-scrollbar{
-  width:0;
-  height:0;
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
-h1,h2,h3,.logo-font{
+
+h1,
+h2,
+h3,
+.logo-font {
   font-family: 'Cormorant Garamond', serif;
 }
-.asymmetric-section{
-  min-height:100vh;
+
+.asymmetric-section {
+  min-height: 100vh;
 }
-.mirrored-logo{
-  display:inline-flex;
-  align-items:center;
-  font-size:2rem;
-  font-weight:600;
-  letter-spacing:-0.05em;
+
+.mirrored-logo {
+  display: inline-flex;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.05em;
 }
-.mirrored-logo__r{ transform:scaleX(-1); display:inline-block; }
-.hide-scrollbar::-webkit-scrollbar{ display:none; }
-.hide-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+.mirrored-logo__r {
+  transform: scaleX(-1);
+  display: inline-block;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Carousel styles */
-.carousel{ position:relative; width:100%; height:100vh; overflow:hidden; left:0; }
-.carousel-track{ display:flex; transition:transform .6s ease; will-change:transform; height:100vh; }
-.carousel-slide{ min-width:100%; height:100vh; flex-shrink:0; }
-.carousel-slide img, .carousel-slide video{ width:100%; height:100vh; object-fit:cover; display:block; }
-.carousel-button{ position:absolute; top:50%; transform:translateY(-50%); width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:9999px; background:rgba(0,0,0,0.45); color:white; border:1px solid rgba(255,255,255,0.18); z-index:40; }
-.carousel-button:hover{ background:rgba(115,18,9,0.9); }
+.carousel {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  left: 0;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform .6s ease;
+  will-change: transform;
+  height: 100vh;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100vh;
+  flex-shrink: 0;
+}
+
+.carousel-slide img,
+.carousel-slide video {
+  width: 100%;
+  height: 100vh;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  z-index: 40;
+}
+
+.carousel-button:hover {
+  background: rgba(115, 18, 9, 0.9);
+}
+
 /* project cards */
-.project__media{ overflow:hidden; }
-.project__media img{ transition:transform .85s ease; }
-.project__media.group:hover img{ transform:scale(1.1); }
+.project__media {
+  overflow: hidden;
+}
+
+.project__media img {
+  transition: transform .85s ease;
+}
+
+.project__media.group:hover img {
+  transform: scale(1.1);
+}
 
 /* Split hamburger button */
-.menu-btn{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  align-items:flex-end;
-  transition:transform .45s cubic-bezier(.2,.8,.2,1);
+.menu-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1);
 }
-.menu-line{
-  width:40px;
-  height:2px;
-  background:#fff;
-  transform-origin:center;
-  transition:transform .6s cubic-bezier(.2,.8,.2,1), background .3s ease, opacity .3s ease;
+
+.menu-line {
+  width: 40px;
+  height: 2px;
+  background: #fff;
+  transform-origin: center;
+  transition: transform .6s cubic-bezier(.2, .8, .2, 1), background .3s ease, opacity .3s ease;
 }
-.menu-btn:hover .menu-line{
-  background:var(--primary);
+
+.menu-btn:hover .menu-line {
+  background: var(--primary);
 }
-.menu-btn.is-active .menu-line{
-  background:var(--primary);
+
+.menu-btn.is-active .menu-line {
+  background: var(--primary);
 }
-.menu-btn.is-active .menu-line:first-child{
-  transform:translateY(6px) rotate(45deg);
+
+.menu-btn.is-active .menu-line:first-child {
+  transform: translateY(6px) rotate(45deg);
 }
-.menu-btn.is-active .menu-line:last-child{
-  transform:translateY(-6px) rotate(-45deg);
+
+.menu-btn.is-active .menu-line:last-child {
+  transform: translateY(-6px) rotate(-45deg);
 }
 
 /* testimonials */
-.testimonials__list{ transition:transform .6s ease; }
+.testimonials__list {
+  transition: transform .6s ease;
+}
 
 /* small helpers used inline in markup */
-.text-\[var\(--primary\)\]{ color:var(--primary); }
+.text-\[var\(--primary\)\] {
+  color: var(--primary);
+}
 
 /* ensure images don't exceed their containers */
-img{ max-width:100%; height:auto; }
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Measuring Tape Styles */
+.timeline-section {
+  background-color: #050505;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  /* Blueprint grid effect */
+}
+
+/* Add a subtle vignette or doodle-like overlay if possible with CSS? 
+   Let's keep it simple and architectural with the grid for now. 
+*/
+
+.tape-strip {
+  transition: width 0.1s linear;
+  /* Smoothness handled by GSAP scrub */
+  border-radius: 0 4px 4px 0;
+}
+
+.tape-case {
+  /* Leaf Shape: Top-Left + Bottom-Right rounded, others sharp. 
+       Tape comes out of "sharp part". In our case, tape comes out Right side. 
+       If we make Top-Right and Bottom-Left sharp, and TL/BR rounded:
+       border-radius: 50% 0 50% 0;
+    */
+  border-radius: 40% 0 40% 0;
+  background: linear-gradient(135deg, #731209, #4a0b05);
+  border: 2px solid #330804;
+  transform: rotate(0deg);
+  /* Ensure no rotation unless needed for effect */
+  box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.6), inset 2px 2px 5px rgba(255, 255, 255, 0.1);
+}
+
+.tape-hook {
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Marker Layering - wrapper is 0-height anchor at tape center */
+.milestone-marker {
+  z-index: 10;
+  top: 50%;
+  /* width: 280px; <-- Defined in PHP or use here */
+  width: 220px;
+  height: 0;
+  /* Anchor point */
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  /* Center horizontally */
+}
+
+/* The Year Box (Above Tape) */
+.year-box {
+  position: absolute;
+  bottom: 40px;
+  /* Sit 40px above center line */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  /* Fill marker width */
+
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.year-box h3 {
+  font-size: 2rem;
+  margin: 0;
+  line-height: 1;
+  color: #fff;
+}
+
+.year-box span {
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--primary);
+  display: block;
+  margin-top: 5px;
+}
+
+/* Hover & Active States for Year Box */
+.milestone-marker:hover .year-box,
+.milestone-marker.active .year-box {
+  border-color: var(--primary);
+  background: black;
+  transform: translateX(-50%) translateY(-5px);
+  /* Keep X centering */
+  box-shadow: 0 10px 20px rgba(115, 18, 9, 0.2);
+}
+
+/* The Detail Box (Below Tape) */
+.milestone-details {
+  position: absolute;
+  top: 40px;
+  /* Sit 40px below center line */
+  left: 50%;
+  width: 100%;
+
+  background: #151515;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--primary);
+  padding: 1.25rem;
+  border-radius: 4px;
+  text-align: left;
+
+  /* Reveal Animation State */
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Reveal Trigger: Only reveal on HOVER when ACTIVE */
+.milestone-marker.active:hover .milestone-details {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Ensure details are hidden by default even if active (unless hovered) */
+.milestone-marker.active .milestone-details {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.95);
+  pointer-events: none;
+}
+
+/* Connecting Line (Optional styling updates) */
+.milestone-marker .v-line {
+  /* If needed, usually connects year to tape. 
+      For now, adhering to user request of "Year on top of tape".
+      We might not need a long v-line if the box sits ON the tape line.
+   */
+  display: none;
+  /* Hiding old line for now as box sits on track */
+}
+
+@media (max-width: 991px) {
+  .timeline-section {
+    min-height: auto;
+    overflow-x: visible;
+  }
+
+  .tape-wrapper {
+    width: 100% !important;
+    max-width: 100%;
+  }
+}
+
+/* Timeline Styles (New) */
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.timeline-dot.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(115, 18, 9, 0.2);
+  transform: scale(1.2);
+}
+
+.timeline-item:hover .timeline-dot {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.font-serif {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.tracking-widest {
+  letter-spacing: 0.2em;
+}
+
+.text-primary {
+  color: var(--primary) !important;
+}
+
+/* Footer-specific overrides: anchors and button-links use brand color; muted text remains gray */
+footer.site-footer a,
+footer.site-footer .btn-link,
+footer.site-footer a.text-primary {
+  color: var(--primary) !important;
+}
+
+/* Footer muted text (addresses, small captions) should be subdued */
+footer.site-footer .text-secondary {
+  color: rgba(255,255,255,0.62) !important;
+}
+
+/* Make sure outline/secondary buttons that use primary styling reflect brand */
+.btn-outline-primary {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Responsive timeline: stack & flow on small screens to avoid overlap */
+@media (max-width: 991px) {
+  .tape-wrapper {
+    width: 100% !important;
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .tape-body {
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: none !important;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 0.75rem;
+  }
+
+  .tape-strip-container {
+    position: relative !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+    margin-bottom: 1rem;
+  }
+
+  .tape-strip {
+    width: 100% !important;
+    height: 36px !important;
+    overflow: visible;
+  }
+
+  .tape-hook {
+    position: absolute !important;
+    left: calc(100% - 10px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+
+  .milestones-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    right: 0 !important;
+    top: 0 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.5rem 0;
+  }
+
+  .milestone-marker {
+    position: relative !important;
+    transform: none !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    display: block;
+  }
+
+  .year-box {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: auto !important;
+    padding: 0.6rem 1rem !important;
+    text-align: left !important;
+  }
+
+  .milestone-details {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    margin-top: 0.5rem !important;
+  }
+
+  .timeline-section {
+    min-height: auto !important;
+  }
+
+  /* Make year box and details full width for readability */
+  .milestone-marker .year-box,
+  .milestone-marker .milestone-details {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+}
+
+/* Strong brand enforcement for all buttons and button-like controls */
+:root {
+  --brand: #731209;
+  --brand-hover: #94180C;
+  --brand-rgb: 115,18,9;
+}
+
+/* Apply brand background and borders to all buttons */
+button,
+.btn,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-warning,
+.btn-danger,
+.btn-info {
+  background-color: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+}
+
+/* Hover / focus / active states */
+button:hover,
+.btn:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-success:hover,
+.btn-warning:hover,
+.btn-danger:hover,
+.btn-info:hover {
+  background-color: var(--brand-hover) !important;
+  border-color: var(--brand-hover) !important;
+  color: #fff !important;
+}
+
+.btn:focus,
+.btn:active,
+.btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 .25rem rgba(var(--brand-rgb), 0.18) !important;
+}
+
+/* Disabled buttons keep brand but reduced opacity */
+.btn[disabled],
+.btn.disabled,
+button[disabled] {
+  opacity: 0.65 !important;
+  background-color: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+}
+
+/* Outline buttons: show brand border/text, fill on hover */
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-info,
+.btn-outline-success,
+.btn-outline-warning,
+.btn-outline-danger {
+  color: var(--brand) !important;
+  border-color: var(--brand) !important;
+  background-color: transparent !important;
+}
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover,
+.btn-outline-info:hover,
+.btn-outline-success:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover {
+  background-color: var(--brand) !important;
+  color: #fff !important;
+}
+
+/* Link-styled buttons */
+.btn-link,
+a.btn-link {
+  color: var(--brand) !important;
+}
+.btn-link:hover,
+a.btn-link:hover {
+  color: var(--brand-hover) !important;
+}
+
+/* Ensure icon-only buttons and bootstrap icon colors align */
+.btn .bi,
+button .bi {
+  color: #fff !important;
+}
+
+/* End brand button enforcement */
