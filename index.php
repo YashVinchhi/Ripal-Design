@@ -23,7 +23,7 @@
 <body class="antialiased overflow-x-hidden scrollbar:none ms-overflow-style:none">
     <?php require_once __DIR__ . '/includes/header.php'; ?>
     <main>
-    <section class="hero relative h-screen w-full overflow-hidden">
+        <section class="hero relative h-screen w-full overflow-hidden">
             <div class="absolute inset-0 z-0">
                 <img alt="Hero Architecture" class="w-full h-full object-cover brightness-50"
                     src="Content/WhatsApp Image 2026-02-02 at 6.55.18 PM.jpeg" />
@@ -42,4 +42,5 @@
     </main>
     <?php require_once __DIR__ . '/Common/footer.php'; ?>
 </body>
+
 </html>
