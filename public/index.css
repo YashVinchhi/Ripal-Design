@@ -1,7 +1,4 @@
-:root {
-  --primary: #731209;
-  --bg-dark: #050505;
-}
+/* Root variables consolidated below */
 
 /* Prevent any horizontal overflow across the site */
 html,
@@ -18,15 +15,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Nav overlay: avoid using 100vw transforms to prevent horizontal overflow */
-#navOverlay {
-  transform: translateX(100%);
-  transition: transform .7s ease-in-out;
-}
-
-#navOverlay.open {
-  transform: translateX(0);
-}
+/* Legacy nav overlay styles removed (unused) */
 
 /* Base typography + layout replacements for previous Tailwind @apply usage */
 body {
@@ -50,22 +39,9 @@ h3,
   font-family: 'Cormorant Garamond', serif;
 }
 
-.asymmetric-section {
-  min-height: 100vh;
-}
+/* Removed unused asymmetric section */
 
-.mirrored-logo {
-  display: inline-flex;
-  align-items: center;
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.05em;
-}
-
-.mirrored-logo__r {
-  transform: scaleX(-1);
-  display: inline-block;
-}
+/* Removed legacy mirrored logo styles (unused) */
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
@@ -127,50 +103,10 @@ h3,
 }
 
 /* project cards */
-.project__media {
-  overflow: hidden;
-}
-
-.project__media img {
-  transition: transform .85s ease;
-}
-
-.project__media.group:hover img {
-  transform: scale(1.1);
-}
+/* Removed unused project media hover effects */
 
 /* Split hamburger button */
-.menu-btn {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
-  transition: transform .45s cubic-bezier(.2, .8, .2, 1);
-}
-
-.menu-line {
-  width: 40px;
-  height: 2px;
-  background: #fff;
-  transform-origin: center;
-  transition: transform .6s cubic-bezier(.2, .8, .2, 1), background .3s ease, opacity .3s ease;
-}
-
-.menu-btn:hover .menu-line {
-  background: var(--primary);
-}
-
-.menu-btn.is-active .menu-line {
-  background: var(--primary);
-}
-
-.menu-btn.is-active .menu-line:first-child {
-  transform: translateY(6px) rotate(45deg);
-}
-
-.menu-btn.is-active .menu-line:last-child {
-  transform: translateY(-6px) rotate(-45deg);
-}
+/* Removed legacy menu button states (unused) */
 
 /* testimonials */
 .testimonials__list {
@@ -188,14 +124,7 @@ img {
   height: auto;
 }
 
-.hero-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(bottom, rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 1));
-}
+/* Duplicate hero overlay (incorrect gradient) removed; see correct version below */
 
 :root {
   --primary: #731209;
@@ -263,63 +192,13 @@ h3,
 }
 
 /* Navigation */
-nav.mixed-blend-mode {
-  mix-blend-mode: difference;
-  z-index: 1000;
-}
+/* Removed unused mixed-blend-mode nav variant */
 
-.mirrored-logo {
-  display: inline-flex;
-  align-items: center;
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.05em;
-  text-decoration: none;
-}
+/* Removed legacy mirrored logo styles (unused) */
 
-.mirrored-logo__r {
-  transform: scaleX(-1);
-  display: inline-block;
-}
+/* Removed legacy menu button styles (unused) */
 
-.menu-btn {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-  cursor: pointer;
-}
-
-.menu-line {
-  width: 32px;
-  height: 1px;
-  background: #fff;
-  transition: all 0.3s ease;
-}
-
-/* Nav Overlay */
-#navOverlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  background-color: var(--primary);
-  transform: translateX(100%);
-  transition: transform .6s cubic-bezier(0.77, 0, 0.175, 1);
-  z-index: 2000;
-}
-
-@media (min-width: 768px) {
-  #navOverlay {
-    width: 25vw;
-    min-width: 350px;
-  }
-}
-
-#navOverlay.open {
-  transform: translateX(0);
-}
+/* Legacy nav overlay block removed (unused) */
 
 /* Hero */
 .hero-section {
@@ -337,92 +216,10 @@ nav.mixed-blend-mode {
 }
 
 /* Timeline (Measuring Tape) */
-.timeline-section {
-  padding: 150px 0;
-  position: relative;
-  z-index: 2;
-}
-
-.tape-case {
-  width: 140px;
-  height: 140px;
-  border-radius: 12px 2px 40px 2px;
-  background: linear-gradient(145deg, #1a1a1a, #000);
-  border: 1px solid #333;
-  box-shadow: 20px 20px 60px #050505;
-  position: relative;
-  overflow: hidden;
-}
-
-.tape-strip {
-  background: #f0f0f0;
-  height: 48px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-  position: relative;
-}
-
-.tape-ticks {
-  width: 100%;
-  height: 100%;
-  background-image: repeating-linear-gradient(90deg, #000 0, #000 1px, transparent 1px, transparent 8px);
-  opacity: 0.2;
-}
-
-.tape-hook {
-  width: 14px;
-  height: 60px;
-  background: linear-gradient(to bottom, #999, #444);
-  border-radius: 0 4px 4px 0;
-  z-index: 5;
-}
-
-/* Milestone Markers */
-.year-box {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 20px;
-  text-align: center;
-  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-  min-width: 180px;
-  position: relative;
-  z-index: 10;
-}
-
-.milestone-marker.active .year-box {
-  border-color: var(--primary);
-  background: rgba(115, 18, 9, 0.15);
-}
-
-.milestone-details {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  width: 280px;
-  background: rgba(10, 10, 10, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--primary);
-  padding: 20px;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.4s ease;
-  z-index: 20;
-}
-
-.milestone-marker:hover .milestone-details {
-  opacity: 1;
-  transform: translateX(-50%) translateY(10px);
-  pointer-events: auto;
-}
+/* Removed timeline/measuring tape components (unused on index) */
 
 /* Stats */
-.stat-item {
-  position: relative;
-  padding: 60px 20px;
-  overflow: hidden;
-}
+/* Removed unused stat item wrapper */
 
 /* Projects cards styles moved from index.php */
 .projects-cards-section .card {
@@ -582,11 +379,7 @@ nav.mixed-blend-mode {
 }
 
 /* Hero small EST label */
-.hero-est {
-  font-size: 30px;
-  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
-  display: block;
-}
+/* Removed unused hero small EST label */
 
 /* Decorative vertical line in hero */
 .hero-decor {
@@ -621,42 +414,4 @@ nav.mixed-blend-mode {
 
 .text-primary-brand {
   color: var(--primary);
-}
-
-@media (max-width: 991px) {
-  .timeline-section {
-    padding: 80px 0;
-  }
-
-  .milestones-wrapper {
-    position: relative !important;
-    width: 100% !important;
-    right: 0 !important;
-    top: 0 !important;
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-    margin-top: 60px;
-  }
-
-  .milestone-marker {
-    position: relative !important;
-    left: 0 !important;
-    transform: none !important;
-  }
-
-  .milestone-details {
-    opacity: 1;
-    position: relative;
-    transform: none;
-    width: 100%;
-    top: 0;
-    margin-top: 10px;
-  }
-
-  .tape-wrapper {
-    display: none;
-  }
-
-  /* Hide technical tape on small mobile to favor readability */
 }

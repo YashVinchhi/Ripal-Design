@@ -1,4 +1,4 @@
-$(document).ready(function () {
+$(document).ready(function(){
     gsap.registerPlugin(ScrollTrigger);
 
     // 1. Navigation Logic
