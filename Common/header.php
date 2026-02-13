@@ -1,11 +1,19 @@
 <?php
 // header.php - include this at the top of pages to get shared nav
 // Load common stylesheet fallbacks so header always appears styled during testing.
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/init.php';
 
-// Ensure session available so header can show user-specific nav
-if (session_status() === PHP_SESSION_NONE) {
-  @session_start();
+// Session is started by includes/init.php when necessary
+
+// Determine header mode. Pages may set $HEADER_MODE = 'public'|'dashboard' before including header.
+$HEADER_MODE = $HEADER_MODE ?? null;
+if (empty($HEADER_MODE)) {
+  $script = $_SERVER['SCRIPT_NAME'] ?? '';
+  if (preg_match('#/(dashboard|worker|admin)/#i', $script)) {
+    $HEADER_MODE = 'dashboard';
+  } else {
+    $HEADER_MODE = 'public';
+  }
 }
 
 // Server-side: only emit stylesheet links that exist on disk to avoid client 404s
@@ -30,55 +38,22 @@ foreach ($candidates as $c) {
     break; // Only include the first match
   }
 }
+// Ensure header stylesheet is always available and enqueue it for head rendering
+if (function_exists('asset_enqueue_css')) {
+    asset_enqueue_css('/assets/css/header.css');
+}
+// Render any page-specific CSS enqueued via asset_enqueue_css()
+if (function_exists('render_head_assets')) {
+    render_head_assets();
+}
 ?>
 <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
-<!-- Inline header styles to ensure sufficient contrast across pages -->
-<style>
-  :root {
-    --header-text-color: var(--color-text-main, #1A1A1A);
-    --header-bg: rgba(255, 255, 255, 0.90);
-    --overlay-bg: rgba(115, 18, 9, 0.95);
-  }
+<!-- Header styles are loaded from assets/css/header.css -->
 
-  /* Make the fixed header readable on light pages by giving it a subtle background and contrasting text */
-  nav.fixed-top {
-    background: var(--header-bg);
-    color: var(--header-text-color);
-    backdrop-filter: blur(4px);
-  }
+<!-- Render header variant based on mode -->
+<?php if ($HEADER_MODE === 'dashboard'): ?>
 
-  nav.fixed-top a.text-white,
-  nav.fixed-top a.text-decoration-none {
-    color: var(--header-text-color) !important;
-  }
-
-  /* Menu button lines use the same contrasting color */
-  .menu-btn .menu-line {
-    background: var(--header-text-color);
-  }
-
-  /* Place hamburger neatly next to logo when grouped */
-  .menu-btn {
-    align-items: center;
-    margin-right: 8px;
-  }
-
-  /* Overlay nav should remain dark and use white text for legibility */
-  #navOverlay {
-    background: var(--overlay-bg);
-  }
-
-  #navOverlay a {
-    color: #fff !important;
-  }
-
-  /* Ensure logo image remains visible regardless of header background */
-  .mirrored-logo img {
-    filter: none;
-  }
-</style>
-
-<!-- Navigation -->
+<!-- Navigation (dashboard mode) -->
 <nav class="fixed-top p-4 mixed-blend-mode">
   <div class="nav-inner">
     <a class="mirrored-logo text-white" href="<?php echo BASE_PATH; ?>/public/index.php">
@@ -158,3 +133,25 @@ foreach ($candidates as $c) {
     if (backdrop) backdrop.addEventListener('click', close);
   })();
 </script>
+
+<?php else: ?>
+
+<!-- Simple public header -->
+<header class="site-header p-3" role="banner">
+  <div class="nav-inner">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="<?php echo BASE_PATH; ?>/public/index.php"><img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="logo" style="height:3rem"></a>
+      <div style="font-weight:700;font-size:1.125rem;color:var(--header-text-color);">Ripal Design</div>
+    </div>
+    <nav style="display:flex;gap:1rem;align-items:center;">
+      <a href="<?php echo BASE_PATH; ?>/public/index.php">Home</a>
+      <a href="<?php echo BASE_PATH; ?>/public/services.php">Services</a>
+      <a href="<?php echo BASE_PATH; ?>/public/products.php">Products</a>
+      <a href="<?php echo BASE_PATH; ?>/public/about_us.php">About</a>
+      <a href="<?php echo BASE_PATH; ?>/public/contact_us.php">Contact</a>
+      <a href="<?php echo BASE_PATH; ?>/public/login.php" class="btn btn-sm btn-outline-secondary">Login</a>
+    </nav>
+  </div>
+</header>
+
+<?php endif; ?>

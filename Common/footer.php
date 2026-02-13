@@ -42,7 +42,7 @@
 </footer>
 <?php
 // Server-side: only emit script tags for files that exist on disk (testing helper)
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/init.php';
 
 echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>' . "\n";
 
@@ -55,4 +55,8 @@ foreach ($candidates as $c) {
         break; // Only include the first match
     }
 }
+    // Render any page-specific scripts enqueued via asset_enqueue_js()
+    if (function_exists('render_footer_scripts')) {
+        render_footer_scripts();
+    }
 ?>

@@ -1,7 +1,7 @@
 <?php
 // dashboard/goods_manage.php - admin page to add goods with SKU/description/unit
 session_start();
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/init.php';
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 if (!$project_id) { header('Location: dashboard.php'); exit; }
 
@@ -65,7 +65,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
 <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-<?php require_once __DIR__ . '/../Common/header.php'; ?>
+<?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 <main class="worker-dashboard">
   <div class="container">
     <div class="page-header">

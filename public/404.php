@@ -1,4 +1,5 @@
 <?php
+$HEADER_MODE = 'public';
 require_once __DIR__ . '/../includes/header.php';
 http_response_code(404);
 ?>

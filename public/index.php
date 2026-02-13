@@ -1,4 +1,5 @@
 <!doctype html>
+<?php require_once __DIR__ . '/../includes/init.php'; ?>
 <html lang="en">
 
 <head>
@@ -6,14 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Home - Ripal Design</title>
 
-    <link rel="stylesheet" href="about_us.css">
-    <link rel="stylesheet" href="index.css">
+    <?php asset_enqueue_css('/public/about_us.css'); ?>
+    <?php asset_enqueue_css('/public/index.css'); ?>
+    <?php if (function_exists('render_head_assets')) { render_head_assets(); } ?>
 </head>
 
 <body>
     <div class="grain"></div>
 
-    <?php require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
 
     <main>
         <!-- Hero Section -->
@@ -189,17 +191,15 @@
         </section>
     </main>
 
+    <?php
+        // enqueue page scripts so Common/footer.php can render them in the footer
+        asset_enqueue_js('https://code.jquery.com/jquery-3.7.1.min.js');
+        asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js');
+        asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js');
+        asset_enqueue_js('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js');
+        asset_enqueue_js('/public/index.js');
+    ?>
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
-
-    <!-- Dependencies -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="index.js"></script>
-    <script>
-
-    </script>
 </body>
 
 </html>

@@ -3,7 +3,7 @@ session_start();
 $user = $_SESSION['user'] ?? 'Demo User';
 
 // Try to load projects and workers from database, fall back to static data when DB not available.
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/init.php';
 
 $projects = [];
 $workers = [];
@@ -80,10 +80,11 @@ if (isset($pdo) && $pdo instanceof PDO) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dashboard - Ripal Design</title>
-  <link rel="stylesheet" href="../worker/worker_dashboard.css">
+  <?php asset_enqueue_css('/worker/worker_dashboard.css'); ?>
+  <?php if (function_exists('render_head_assets')) { render_head_assets(); } ?>
 </head>
 <body>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
   <main class="worker-dashboard">
     <div class="container">
       <div class="page-header">

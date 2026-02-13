@@ -1,5 +1,6 @@
 <?php
-session_start();
+$requireInit = true;
+require_once __DIR__ . '/../includes/init.php';
 $user = $_SESSION['user'] ?? 'worker01';
 
 // Sample assigned projects (UI only)
@@ -14,10 +15,11 @@ $projects = [
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Assigned Projects — <?php echo htmlspecialchars($user); ?></title>
-  <link rel="stylesheet" href="../worker/worker_dashboard.css">
+  <?php asset_enqueue_css('/worker/worker_dashboard.css'); ?>
+  <?php if (function_exists('render_head_assets')) { render_head_assets(); } ?>
 </head>
 <body>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
   <main class="worker-dashboard container-fluid">
     <div class="page-header">
       <h1>Assigned Projects</h1>

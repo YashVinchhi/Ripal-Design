@@ -1,7 +1,7 @@
 <?php
 // dashboard/goods_invoice.php - redesigned invoice layout (printable + responsive)
 session_start();
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/init.php';
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 if (!$project_id) { header('Location: dashboard.php'); exit; }
 

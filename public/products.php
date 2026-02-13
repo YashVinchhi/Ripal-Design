@@ -14,7 +14,7 @@
     </style>
 </head>
 <body class="bg-[#050505] text-white overflow-x-hidden">
-    <?php require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
 
     <main class="min-h-screen pt-32 pb-20">
         <div class="container mx-auto px-6">

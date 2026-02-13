@@ -1,6 +1,6 @@
 <?php
 // Placeholder: worker rating and feedback
-require_once __DIR__ . '/../includes/header.php';
+ $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../includes/header.php';
 session_start();
 ?>
 <!DOCTYPE html>

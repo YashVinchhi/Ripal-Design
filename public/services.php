@@ -20,7 +20,7 @@
 </head>
 <body class="bg-[#050505] text-white overflow-x-hidden">
     <!-- Header/Nav -->
-    <?php require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
 
     <main class="relative min-h-screen pt-24 pb-20">
         <div class="container mx-auto px-6 h-full">

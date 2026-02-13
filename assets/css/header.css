@@ -1,0 +1,138 @@
+/* Modern adaptive header styles */
+:root {
+  --header-text-color: #111218;
+  --header-contrast: rgba(255,255,255,0.96);
+  --header-bg: var(--header-contrast);
+  /* White text used when header is transparent over dark pages */
+  --header-contrast-text: #ffffff;
+  --header-accent: #731209;
+  --header-muted: #6b6f76;
+  --header-shadow: 0 6px 30px rgba(21,24,28,0.12);
+}
+
+nav.fixed-top {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  backdrop-filter: blur(6px) saturate(120%);
+  /* keep nav visually transparent so page content shows through */
+  background: transparent;
+  box-shadow: var(--header-shadow);
+}
+
+/* Ensure the simple public header has a solid light background and readable text */
+header.site-header {
+  background: transparent;
+  color: var(--header-contrast-text);
+  box-shadow: none;
+}
+
+/* Public header links should contrast when header is transparent */
+header.site-header .nav-inner nav a,
+header.site-header .nav-inner a {
+  color: var(--header-contrast-text) !important;
+}
+
+header.site-header .mirrored-logo img { height:48px; }
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  /* Use 90% of the viewport width with 5% margins on each side */
+  width: 90%;
+  /* Do not cap width so 90% works on large displays */
+  max-width: none;
+  margin: 0 5%;
+  padding: 6px 18px;
+}
+
+/* Force the menu button to sit at the right edge of the nav-inner
+   even if other global styles change its display or order. Use
+   specific selectors so this takes precedence project-wide. */
+.nav-inner > .menu-btn,
+nav.fixed-top .nav-inner > .menu-btn {
+  margin-left: auto !important;
+  order: 9999 !important;
+}
+
+.mirrored-logo {
+  display:flex; align-items:center; gap:12px;
+}
+.mirrored-logo img { height:42px; width:auto; display:block; }
+.brand-title { font-weight:700; font-size:1.1rem; color:var(--header-accent); letter-spacing:0.2px; }
+
+/* Primary navigation for public header */
+header.site-header .nav-inner nav a,
+nav.fixed-top .nav-inner nav a {
+  color:var(--header-text-color);
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:8px;
+  transition: all .18s ease;
+  font-weight:500;
+}
+header.site-header .nav-inner nav a:hover,
+nav.fixed-top .nav-inner nav a:hover {
+  background: rgba(115,18,9,0.06);
+  color:var(--header-accent);
+  transform: translateY(-1px);
+}
+
+.nav-actions { display:flex; gap:10px; align-items:center; }
+.btn-header { padding:8px 14px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); background:#fff; color:var(--header-accent); font-weight:600; }
+
+/* Hamburger */
+.menu-btn {
+  display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:10px; background:transparent; border:1px solid rgba(0,0,0,0.04); cursor:pointer; transition:transform .18s ease, background .18s ease;
+}
+.menu-btn:hover { background: rgba(0,0,0,0.03); transform: translateY(-2px); }
+.menu-line { position:relative; display:block; width:20px; height:2px; background:currentColor; border-radius:2px; transition: transform .25s cubic-bezier(.2,.9,.2,1), opacity .15s linear; }
+.menu-line + .menu-line { margin-top:5px; width:14px; }
+.menu-btn.is-active .menu-line:first-child { transform: translateY(5px) rotate(45deg); }
+.menu-btn.is-active .menu-line:last-child { transform: translateY(-5px) rotate(-45deg); }
+
+/* Backdrop & sidebar */
+#sidebarBackdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:9998; }
+#sidebarBackdrop.open { opacity:1; pointer-events:auto; }
+#siteSidebar { position:fixed; top:0; right:-360px; width:360px; height:100%; background:var(--header-contrast); color:var(--header-text-color); box-shadow:-20px 0 60px rgba(17,18,24,0.15); transition:right .32s cubic-bezier(.2,.9,.2,1); z-index:9999; padding:28px 22px; overflow:auto; border-left:1px solid rgba(0,0,0,0.04); }
+#siteSidebar.open { right:0; }
+#siteSidebar h3 { margin-top:0; color:var(--header-accent); font-weight:700; }
+#siteSidebar nav a { display:block; padding:10px 6px; color:var(--header-text-color); border-radius:6px; margin-bottom:6px; }
+#siteSidebar nav a:hover { background: rgba(115,18,9,0.04); color:var(--header-accent); }
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .nav-inner { padding: 8px 12px; }
+  .nav-inner nav { display:none; }
+  .menu-btn { display:inline-flex; }
+}
+
+@media (min-width: 901px) {
+  /* Hide the hamburger on the simple public header but keep it available for dashboard (fixed-top) */
+  .site-header .menu-btn { display: none; }
+  .nav.fixed-top .menu-btn { display: inline-flex; }
+}
+
+/* Strong override for timeline year boxes to ensure they sit above the tape
+   even when per-page CSS defines a `.year-box`. This uses a more specific
+   selector and !important to take precedence project-wide. */
+.milestones-wrapper .milestone-marker .year-box {
+  position: absolute !important;
+  bottom: calc(var(--tape-half, 24px) + var(--year-box-gap, 10px)) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 140px !important;
+  max-width: 420px !important;
+  height: 68px !important;
+  padding: 0 1rem !important;
+  border-radius: 10px !important;
+  z-index: 999 !important;
+  background: rgba(10,10,10,0.95) !important;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.36) !important;
+}
+

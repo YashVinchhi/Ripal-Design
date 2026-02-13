@@ -1,7 +1,7 @@
 <?php
 // Placeholder: upload drawings endpoint (form + handling)
+$HEADER_MODE = 'dashboard';
 require_once __DIR__ . '/../includes/header.php';
-session_start();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // TODO: handle uploaded files securely
     $msg = 'Upload received (not implemented).';

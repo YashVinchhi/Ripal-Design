@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/init.php';
 $projectId = $_GET['id'] ?? 1;
 
 // Sample static project data for UI prototype
@@ -17,7 +17,8 @@ $project = [
 ];
 
   // Handle POST to create/update project in DB
-  require_once __DIR__ . '/../includes/db.php';
+  // use centralized init for config, DB, and helpers
+  require_once __DIR__ . '/../includes/init.php';
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $status = trim($_POST['status'] ?? 'ongoing');
@@ -101,14 +102,14 @@ if (isset($pdo) && $pdo instanceof PDO && !empty($projectId) && is_numeric($proj
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title><?php echo htmlspecialchars($project['name']); ?> — Project Details</title>
-  <link rel="stylesheet" href="../styles.css">
-  <link rel="stylesheet" href="../worker/worker_dashboard.css">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <?php asset_enqueue_css('/styles.css'); ?>
+  <?php asset_enqueue_css('/worker/worker_dashboard.css'); ?>
+  <?php asset_enqueue_js('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js'); ?>
   <!--
     Google Maps: replace YOUR_API_KEY with a valid key that has Maps JavaScript API and Geocoding API enabled.
     Example URL: https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap&libraries=places
   -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap&libraries=places" async defer></script>
+  <?php asset_enqueue_js('https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap&libraries=places', ['defer'=>true]); ?>
   <style>
     .project-header { margin-bottom: 18px; }
     .tab-pane { padding-top: 12px; }
@@ -196,7 +197,7 @@ if (isset($pdo) && $pdo instanceof PDO && !empty($projectId) && is_numeric($proj
   </script>
 </head>
 <body>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
   <main class="worker-dashboard">
     <div class="project-header">
       <div class="toolbar justify-content-between">

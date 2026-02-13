@@ -22,7 +22,7 @@
     </style>
 </head>
 <body class="bg-[#050505] text-white overflow-x-hidden">
-    <?php require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
 
     <main class="relative min-h-screen flex flex-col md:flex-row pt-24">
         <!-- Left: Info -->

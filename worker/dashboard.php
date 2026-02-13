@@ -1,6 +1,6 @@
 <?php
 // Ensure session and constants are loaded first
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/init.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -10,16 +10,18 @@ require_once __DIR__ . '/../includes/config.php';
     <title>Worker Dashboard - Ripal Design</title>
     
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/worker/worker_dashboard.css">
+    <?php asset_enqueue_css('/worker/worker_dashboard.css'); ?>
 </head>
 <body>
 <?php
 // Include navigation header (UI only)
+$HEADER_MODE = 'dashboard';
 require_once __DIR__ . '/../includes/header.php';
 
 // Sample placeholder data — replace with real queries later
 // Try to load real projects from DB if available, otherwise fallback to sample data
-require_once __DIR__ . '/../includes/db.php';
+// DB and config are loaded via init
+require_once __DIR__ . '/../includes/init.php';
 $projects = [];
 if (isset($pdo) && $pdo instanceof PDO) {
     try {

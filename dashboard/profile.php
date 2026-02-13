@@ -11,7 +11,7 @@ $user = $_SESSION['user'] ?? 'employee01';
   <link rel="stylesheet" href="../worker/worker_dashboard.css">
 </head>
 <body>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
   <main class="worker-dashboard">
     <div class="page-header">
       <div class="toolbar justify-content-between">

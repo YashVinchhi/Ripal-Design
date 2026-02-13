@@ -5,6 +5,10 @@
   --bg-dark: #050505;
   /* Ensure Bootstrap link color follows brand */
   --bs-link-color: #731209;
+  /* Tape timeline sizing helpers */
+  --tape-height: 48px; /* must match .tape-strip height */
+  --tape-half: calc(var(--tape-height) / 2);
+  --year-box-gap: 10px; /* minimum gap between tape and year box */
 }
 
 /* Force btn-primary to use our color if bootstrap variables don't cascade correctly from root */
@@ -292,41 +296,51 @@ img {
 /* Marker Layering - wrapper is 0-height anchor at tape center */
 .milestone-marker {
   z-index: 10;
-  top: 50%;
-  /* width: 280px; <-- Defined in PHP or use here */
+  /* Marker must be absolutely positioned within the milestones wrapper so its
+     left/top offsets (set inline in the markup) place it on the tape. Keep height=0
+     so it anchors on the tape line. */
+  position: absolute !important;
   width: 220px;
   height: 0;
-  /* Anchor point */
   pointer-events: none;
   display: flex;
   justify-content: center;
-  /* Center horizontally */
 }
 
 /* The Year Box (Above Tape) */
 .year-box {
   position: absolute;
-  bottom: 40px;
-  /* Sit 40px above center line */
+  /* Place the year box above the tape with a minimum gap (half tape height + desired gap) */
+  bottom: calc(var(--tape-half) + var(--year-box-gap));
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  /* Fill marker width */
-
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  max-width: 420px;
+  height: 68px;
   background: rgba(10, 10, 10, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
+  padding: 0 1rem;
+  border-radius: 10px;
   text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
+  transition: all 0.25s ease;
+  cursor: default;
   pointer-events: auto;
-  z-index: 2;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.36);
+}
+
+/* Responsive: reduce vertical gap on smaller viewports so the layout stays compact */
+@media (max-width: 720px) {
+  .milestone-marker { width: 160px; }
+  .year-box { bottom: calc(var(--tape-half) + var(--year-box-gap)); min-width: 90px; padding: 0.5rem 0.8rem; height:56px; }
+  .milestone-details { top: calc(var(--tape-half) + 56px); width: 220px; }
 }
 
 .year-box h3 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin: 0;
   line-height: 1;
   color: #fff;
@@ -354,24 +368,25 @@ img {
 /* The Detail Box (Below Tape) */
 .milestone-details {
   position: absolute;
-  top: 40px;
-  /* Sit 40px below center line */
+  /* Place details below the tape with a comfortable gap */
+  top: 56px;
   left: 50%;
-  width: 100%;
+  transform: translateX(-50%);
+  width: 260px;
 
   background: #151515;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 3px solid var(--primary);
-  padding: 1.25rem;
-  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 6px;
   text-align: left;
 
   /* Reveal Animation State */
   opacity: 0;
-  transform: translateX(-50%) translateY(10px) scale(0.95);
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transform: translateX(-50%) translateY(6px) scale(0.98);
+  transition: all 0.28s cubic-bezier(0.165, 0.84, 0.44, 1);
   pointer-events: none;
-  z-index: 1;
+  z-index: 10;
 }
 
 /* Reveal Trigger: Only reveal on HOVER when ACTIVE */

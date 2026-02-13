@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
     exit;
 }
 
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/init.php';
 
 $project_id = isset($_POST['project_id']) ? (int) $_POST['project_id'] : 0;
 $worker_id = isset($_POST['worker_id']) ? (int) $_POST['worker_id'] : 0;
