@@ -28,7 +28,6 @@
                 <div class="mt-5 pt-4">
                     <div class="vstack gap-2 align-items-center">
                         <div style="width: 1px; height: 80px; background: linear-gradient(to bottom, var(--primary), transparent);"></div>
-                        <div class="hero-decor"></div>
                         <span class="tracking-architect opacity-50">Discovery</span>
                     </div>
                 </div>

@@ -1,4 +1,3 @@
-// NAV: hamburger open/close
 const menuBtn = document.getElementById('menuBtn');
 const closeBtn = document.getElementById('closeBtn');
 const navOverlay = document.getElementById('navOverlay');
