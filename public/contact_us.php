@@ -33,12 +33,17 @@
                 
                 <div class="space-y-8 mt-12 text-gray-400 font-light">
                     <div>
-                        <h4 class="text-white text-lg font-medium mb-1">Headquarters</h4>
-                        <p>123 Design Avenue, Creative District<br>Mumbai, India 400001</p>
-                    </div>
+                        <h4 class="text-white text-lg font-medium mb-1">Ripal Design Rajkot <br>
+                            <p>
+                                538 Jasal Complex,<br>
+                                Nanavati Chowk,<br>
+                                150ft Ring Road,<br>
+                                Rajkot, Gujarat, India <br>
+                            </p>
+                        </div>
                     <div>
                         <h4 class="text-white text-lg font-medium mb-1">Contact</h4>
-                        <p>+91 98765 43210<br>hello@ripaldesign.com</p>
+                        <p>+91 98765 43210<br>projects@ripaldesign.in</p>
                     </div>
                     <div>
                         <h4 class="text-white text-lg font-medium mb-1">Social</h4>
