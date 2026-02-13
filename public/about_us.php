@@ -1,12 +1,14 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>About Us - Ripal Design</title>
-    
+
     <link rel="stylesheet" href="about_us.css">
 </head>
+
 <body>
     <div class="grain"></div>
 
@@ -17,7 +19,7 @@
         <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
             <div class="hero-overlay"></div>
             <div class="position-relative z-2 text-center container px-4">
-                <span class="tracking-architect text-primary-brand mb-3 d-block">Est. 2017</span>
+                <span class="tracking-architect text-primary-brand mb-3 d-block" style="    font-size: 30px; text-shadow: 2px 2px 5px black;">Est. 2017</span>
                 <h1 class="display-1 mb-4">The Architect's Vision</h1>
                 <p class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
                     Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.
@@ -64,8 +66,8 @@
                     <!-- Tape Case -->
                     <div class="tape-body position-absolute start-0 top-50 translate-middle-y z-3">
                         <div class="tape-case d-flex align-items-center justify-content-center">
-                                <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2.5rem;">
-                            </div>
+                            <img src="../assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2.5rem;">
+                        </div>
                     </div>
 
                     <!-- Tape Strip Container -->
@@ -168,4 +170,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="about_us.js"></script>
 </body>
+
 </html>
