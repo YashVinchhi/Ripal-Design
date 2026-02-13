@@ -11,7 +11,7 @@ session_start();
   <link rel="stylesheet" href="../worker/worker_dashboard.css">
 </head>
 <body>
-  <?php require_once __DIR__ . '/../includes/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../includes/header.php'; ?>
   <main class="worker-dashboard container">
     <div class="page-header">
       <div class="toolbar justify-content-between">

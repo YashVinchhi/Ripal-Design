@@ -1,7 +1,7 @@
 <?php
 // Placeholder: leave/time-off requests management
+$HEADER_MODE = 'dashboard';
 require_once __DIR__ . '/../includes/header.php';
-session_start();
 ?>
 <!DOCTYPE html>
 <html>

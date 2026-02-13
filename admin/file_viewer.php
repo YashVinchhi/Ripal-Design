@@ -1,7 +1,7 @@
 <?php
+$HEADER_MODE = 'dashboard';
 // Placeholder: safe file viewer (implement security checks before use)
 require_once __DIR__ . '/../includes/header.php';
-session_start();
 $file = $_GET['file'] ?? null;
 ?>
 <!DOCTYPE html>
