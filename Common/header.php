@@ -47,25 +47,6 @@ foreach ($candidates as $c) {
     backdrop-filter: blur(4px);
   }
 
-  /* Constrain header width on larger screens so it doesn't span full viewport
-     (prevents dark bars or full-bleed effects on wide displays). On small
-     screens the header remains full-width for mobile layout. */
-  /* Keep the header itself full-width (so visuals like overlays remain edge-to-edge),
-     but constrain the inner content for long viewports so the main page content
-     can use full width independently. */
-  .nav-inner {
-    /* Do not center the header container; allow it to span full width
-       with a small gutter so main content and header align left. */
-    max-width: none;
-    margin: 0;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
   nav.fixed-top a.text-white,
   nav.fixed-top a.text-decoration-none {
     color: var(--header-text-color) !important;
