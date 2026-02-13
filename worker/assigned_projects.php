@@ -18,7 +18,7 @@ $projects = [
 </head>
 <body>
   <?php require_once __DIR__ . '/../Common/header.php'; ?>
-  <main class="worker-dashboard container">
+  <main class="worker-dashboard container-fluid">
     <div class="page-header">
       <h1>Assigned Projects</h1>
       <p class="muted">Projects currently assigned to you</p>

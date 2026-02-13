@@ -45,6 +45,25 @@ foreach ($candidates as $c) {
     color: var(--header-text-color);
     backdrop-filter: blur(4px);
   }
+  /* Constrain header width on larger screens so it doesn't span full viewport
+     (prevents dark bars or full-bleed effects on wide displays). On small
+     screens the header remains full-width for mobile layout. */
+  /* Keep the header itself full-width (so visuals like overlays remain edge-to-edge),
+     but constrain the inner content for long viewports so the main page content
+     can use full width independently. */
+  .nav-inner {
+    /* Do not center the header container; allow it to span full width
+       with a small gutter so main content and header align left. */
+    max-width: none;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
   nav.fixed-top a.text-white, nav.fixed-top a.text-decoration-none {
     color: var(--header-text-color) !important;
   }
@@ -62,20 +81,22 @@ foreach ($candidates as $c) {
 </style>
 
 <!-- Navigation -->
-<nav class="fixed-top p-4 d-flex justify-content-between align-items-center mixed-blend-mode">
-  <a class="mirrored-logo text-white" href="<?php echo BASE_PATH; ?>/public/index.php">
-    <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
-  </a>
-  <?php if (!empty($_SESSION['user'])): ?>
-    <div class="d-flex align-items-center gap-3">
-      <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-white text-decoration-none">Dashboard</a>
-      <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-white text-decoration-none">Profile</a>
-      <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="text-white text-decoration-none">Logout</a>
+<nav class="fixed-top p-4 mixed-blend-mode">
+  <div class="nav-inner">
+    <a class="mirrored-logo text-white" href="<?php echo BASE_PATH; ?>/public/index.php">
+      <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
+    </a>
+    <?php if (!empty($_SESSION['user'])): ?>
+      <div class="d-flex align-items-center gap-3">
+        <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-white text-decoration-none">Dashboard</a>
+        <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-white text-decoration-none">Profile</a>
+        <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="text-white text-decoration-none">Logout</a>
+      </div>
+    <?php endif; ?>
+    <div class="menu-btn" id="menuBtn" aria-label="Open navigation">
+      <span class="menu-line"></span>
+      <span class="menu-line" style="width: 20px;"></span>
     </div>
-  <?php endif; ?>
-  <div class="menu-btn" id="menuBtn" aria-label="Open navigation">
-    <span class="menu-line"></span>
-    <span class="menu-line" style="width: 20px;"></span>
   </div>
 </nav>
 
