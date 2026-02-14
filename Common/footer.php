@@ -5,7 +5,7 @@
             <div class="col-md-6">
                 <h2 class="h4 fw-bold mb-2 font-serif">Ready to build something iconic?</h2>
                 <p class="text-secondary mb-3">Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.</p>
-                <a href="/public/contact_us.php" class="btn btn-primary btn-lg rounded-0 px-4" role="button" aria-label="Start your project" style="background:#731209;border-color:#731209;color:#fff;">Start Your Project <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+                <a href="../public/contact_us.php" class="btn btn-primary btn-lg rounded-0 px-4" role="button" aria-label="Start your project" style="background:#731209;border-color:#731209;color:#fff;">Start Your Project <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
             </div>
 
             <div class="col-md-6">
@@ -42,7 +42,7 @@
 </footer>
 <?php
 // Server-side: only emit script tags for files that exist on disk (testing helper)
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../includes/config.php';
 
 echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>' . "\n";
 
@@ -55,8 +55,4 @@ foreach ($candidates as $c) {
         break; // Only include the first match
     }
 }
-    // Render any page-specific scripts enqueued via asset_enqueue_js()
-    if (function_exists('render_footer_scripts')) {
-        render_footer_scripts();
-    }
 ?>

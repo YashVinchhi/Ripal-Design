@@ -1,10 +1,14 @@
 <?php
-// header_alt.php - alternate header for non-dashboard pages
+// header.php - include this at the top of pages to get shared nav
+// Load common stylesheet fallbacks so header always appears styled during testing.
 require_once __DIR__ . '/../includes/config.php';
+
+// Ensure session available so header can show user-specific nav
 if (session_status() === PHP_SESSION_NONE) {
   @session_start();
 }
 
+// Server-side: only emit stylesheet links that exist on disk to avoid client 404s
 $candidates = [
   '/styles.css',
   '/public/styles.css',
@@ -12,144 +16,145 @@ $candidates = [
   '/assets/styles.css'
 ];
 
+// Typography & Icons (Global)
 echo '<link rel="preconnect" href="https://fonts.googleapis.com" />' . "\n";
 echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />' . "\n";
 echo '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />' . "\n";
 echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">' . "\n";
 echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">' . "\n";
-echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
-echo '<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          primary: "#731209",
-        }
-      }
-    }
-  }
-</script>' . "\n";
 
 foreach ($candidates as $c) {
   $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $c);
   if (file_exists($filePath)) {
     echo '<link rel="stylesheet" href="' . htmlspecialchars(BASE_PATH . $c, ENT_QUOTES) . '">' . "\n";
-    break;
+    break; // Only include the first match
   }
 }
 ?>
 <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
-<link rel="shortcut icon" href="../assets/Content/rd.ico" type="image/x-icon">
+<!-- Inline header styles to ensure sufficient contrast across pages -->
+<style>
+  :root {
+    --header-text-color: var(--color-text-main, #1A1A1A);
+    --header-bg: rgba(255, 255, 255, 0.90);
+    --overlay-bg: rgba(115, 18, 9, 0.95);
+  }
 
-<!-- Alternate header: left hamburger, full-screen overlay, brand-colored -->
-<link rel="stylesheet" href="<?php echo BASE_PATH; ?> /Common/header_alt.css">
-<nav class="alt-header">
-  <div class="alt-logo">
-    <a href="<?php echo BASE_PATH; ?>/public/index.php"><img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="logo" style="height:3rem"></a>
-    <div style="color:var(--alt-text); font-weight:700; font-size:1.5rem; text-shadow: 5px 5px 5px rgba(0,0,0);">Ripal Design</div>
-  </div>
-  <div class="alt-menu">
-    <button id="altMenuBtn" class="alt-btn" aria-label="Open menu" aria-expanded="false" aria-controls="altOverlay">
-      <span class="alt-hamburger">
-        <span></span>
-        <span></span>
-        <span></span>
-      </span>
-    </button>
-  </div>
+  /* Make the fixed header readable on light pages by giving it a subtle background and contrasting text */
+  nav.fixed-top {
+    background: var(--header-bg);
+    color: var(--header-text-color);
+    backdrop-filter: blur(4px);
+  }
 
-</nav>
+  nav.fixed-top a.text-white,
+  nav.fixed-top a.text-decoration-none {
+    color: var(--header-text-color) !important;
+  }
 
-<div id="altOverlay">
-  <div class="alt-panel" role="dialog" aria-modal="true" aria-label="Site menu">
-    <nav>
-      <a href="<?php echo BASE_PATH; ?>/public/index.php">Home</a>
-      <a href="<?php echo BASE_PATH; ?>/public/services.php">Services</a>
-      <a href="<?php echo BASE_PATH; ?>/public/products.php">Products</a>
-      <a href="<?php echo BASE_PATH; ?>/public/about_us.php">About</a>
-      <a href="<?php echo BASE_PATH; ?>/public/contact_us.php">Contact</a>
-    </nav>
-    <div class="panel-footer">
-      <a href="<?php echo BASE_PATH; ?>/public/login.php" class="btn-alt btn-login">Login</a>
-      <a href="<?php echo BASE_PATH; ?>/public/signup.php?action=signup" class="btn-alt btn-signup">Sign Up</a>
+  /* Menu button lines use the same contrasting color */
+  .menu-btn .menu-line {
+    background: var(--header-text-color);
+  }
+
+  /* Place hamburger neatly next to logo when grouped */
+  .menu-btn {
+    align-items: center;
+    margin-right: 8px;
+  }
+
+  /* Overlay nav should remain dark and use white text for legibility */
+  #navOverlay {
+    background: var(--overlay-bg);
+  }
+
+  #navOverlay a {
+    color: #fff !important;
+  }
+
+  /* Ensure logo image remains visible regardless of header background */
+  .mirrored-logo img {
+    filter: none;
+  }
+</style>
+
+<!-- Navigation -->
+<nav class="fixed-top p-4 mixed-blend-mode">
+  <div class="nav-inner">
+    <a class="mirrored-logo text-white" href="<?php echo BASE_PATH; ?>/public/index.php">
+      <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
+    </a>
+    <?php if (!empty($_SESSION['user'])): ?>
+      <div class="d-flex align-items-center gap-3">
+        <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-white text-decoration-none">Dashboard</a>
+        <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-white text-decoration-none">Profile</a>
+        <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="text-white text-decoration-none">Logout</a>
+      </div>
+    <?php endif; ?>
+    <div class="menu-btn" id="menuBtn" aria-label="Open navigation">
+      <span class="menu-line"></span>
+      <span class="menu-line" style="width: 20px;"></span>
     </div>
   </div>
-</div>
+</nav>
+
+<!-- Sidebar Navigation -->
+<div id="sidebarBackdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:9998;"></div>
+<aside id="siteSidebar" style="position:fixed; top:0; right:-320px; width:300px; height:100%; background:var(--header-bg); color:var(--header-text-color); box-shadow:-2px 0 12px rgba(0,0,0,0.12); transition:right .28s ease; z-index:9999; padding:28px; overflow:auto;">
+  <button id="sidebarClose" style="position:absolute; left:12px; top:12px; background:transparent; border:0; font-size:24px; color:var(--header-text-color);">&times;</button>
+  <h3 style="margin-top:8px; color:var(--header-text-color);">Quick Navigation</h3>
+  <nav style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+    <strong style="margin-top:6px;">Dashboard</strong>
+    <a href="<?php echo BASE_PATH; ?>/dashboard/assign_worker.php" class="text-decoration-none" style="color:var(--header-text-color);">Assign Worker</a>
+    <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-decoration-none" style="color:var(--header-text-color);">Dashboard Home</a>
+    <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-decoration-none" style="color:var(--header-text-color);">Profile</a>
+    <a href="<?php echo BASE_PATH; ?>/dashboard/project_details.php" class="text-decoration-none" style="color:var(--header-text-color);">Project Details</a>
+    <a href="<?php echo BASE_PATH; ?>/dashboard/review_requests.php" class="text-decoration-none" style="color:var(--header-text-color);">Review Requests</a>
+
+    <hr style="border-color:rgba(0,0,0,0.06); margin:12px 0;">
+    <strong>Admin</strong>
+    <a href="<?php echo BASE_PATH; ?>/admin/file_viewer.php" class="text-decoration-none" style="color:var(--header-text-color);">File Viewer</a>
+    <a href="<?php echo BASE_PATH; ?>/admin/leave_management.php" class="text-decoration-none" style="color:var(--header-text-color);">Leave Management</a>
+    <a href="<?php echo BASE_PATH; ?>/admin/payment_gateway.php" class="text-decoration-none" style="color:var(--header-text-color);">Payment Gateway</a>
+    <a href="<?php echo BASE_PATH; ?>/admin/project_management.php" class="text-decoration-none" style="color:var(--header-text-color);">Project Management</a>
+    <a href="<?php echo BASE_PATH; ?>/admin/user_management.php" class="text-decoration-none" style="color:var(--header-text-color);">User Management</a>
+
+    <hr style="border-color:rgba(0,0,0,0.06); margin:12px 0;">
+    <strong>Worker</strong>
+    <a href="<?php echo BASE_PATH; ?>/worker/assigned_projects.php" class="text-decoration-none" style="color:var(--header-text-color);">Assigned Projects</a>
+    <a href="<?php echo BASE_PATH; ?>/worker/dashboard.php" class="text-decoration-none" style="color:var(--header-text-color);">Worker Dashboard</a>
+    <a href="<?php echo BASE_PATH; ?>/worker/project_details.php" class="text-decoration-none" style="color:var(--header-text-color);">Worker Project Details</a>
+    <a href="<?php echo BASE_PATH; ?>/worker/worker_rating.php" class="text-decoration-none" style="color:var(--header-text-color);">Worker Ratings</a>
+  </nav>
+</aside>
 
 <script>
   (function() {
-    var btn = document.getElementById('altMenuBtn');
-    var overlay = document.getElementById('altOverlay');
-    var panel = overlay && overlay.querySelector('.alt-panel');
+    var menu = document.getElementById('menuBtn');
+    var sidebar = document.getElementById('siteSidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    var closeBtn = document.getElementById('sidebarClose');
 
     function open() {
-      overlay.classList.add('open');
-      if (btn) {
-        btn.setAttribute('aria-expanded', 'true');
-        var ham = btn.querySelector('.alt-hamburger');
-        if (ham) ham.classList.add('active');
-      }
+      sidebar.style.right = '0';
+      backdrop.style.opacity = '1';
+      backdrop.style.pointerEvents = 'auto';
+      menu.classList.add('is-active');
     }
 
     function close() {
-      overlay.classList.remove('open');
-      if (btn) {
-        btn.setAttribute('aria-expanded', 'false');
-        var ham = btn.querySelector('.alt-hamburger');
-        if (ham) ham.classList.remove('active');
-      }
+      sidebar.style.right = '-320px';
+      backdrop.style.opacity = '0';
+      backdrop.style.pointerEvents = 'none';
+      menu.classList.remove('is-active');
     }
-
-    function toggle() {
-      if (overlay.classList.contains('open')) close();
-      else open();
-    }
-    if (btn) {
-      // ensure initial aria state
-      btn.setAttribute('aria-expanded', 'false');
-      btn.addEventListener('click', toggle);
-    }
-    if (overlay) overlay.addEventListener('click', function(e) {
-      // close when clicking outside the panel
-      if (e.target === overlay) close();
-    });
-    // close on Escape
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') close();
-    });
-
-    // spotlight pointer interaction (throttled via RAF)
-    if (panel) {
-      var rect = null;
-      var mx = 0,
-        my = 0,
-        rafId = null;
-
-      function update() {
-        if (!rect) rect = panel.getBoundingClientRect();
-        panel.style.setProperty('--spot-x', (mx - rect.left) + 'px');
-        panel.style.setProperty('--spot-y', (my - rect.top) + 'px');
-        rafId = null;
-      }
-      panel.addEventListener('mousemove', function(e) {
-        mx = e.clientX;
-        my = e.clientY;
-        if (!rafId) rafId = requestAnimationFrame(update);
-      });
-      panel.addEventListener('touchmove', function(e) {
-        if (e.touches && e.touches[0]) {
-          mx = e.touches[0].clientX;
-          my = e.touches[0].clientY;
-          if (!rafId) rafId = requestAnimationFrame(update);
-        }
-      }, {
-        passive: true
-      });
-      panel.addEventListener('mouseleave', function() {
-        rect = null;
-        panel.style.setProperty('--spot-x', '50%');
-        panel.style.setProperty('--spot-y', '50%');
+    if (menu) {
+      menu.addEventListener('click', function() {
+        if (sidebar.style.right === '0px') close();
+        else open();
       });
     }
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (backdrop) backdrop.addEventListener('click', close);
   })();
 </script>
