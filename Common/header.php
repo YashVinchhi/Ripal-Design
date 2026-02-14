@@ -53,25 +53,17 @@ if (function_exists('render_head_assets')) {
 <!-- Render header variant based on mode -->
 <?php if ($HEADER_MODE === 'dashboard'): ?>
 
-<!-- Navigation (dashboard mode) -->
-<nav class="fixed-top p-4 mixed-blend-mode">
-  <div class="nav-inner">
-    <a class="mirrored-logo text-white" href="<?php echo BASE_PATH; ?>/public/index.php">
-      <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
-    </a>
-    <?php if (!empty($_SESSION['user'])): ?>
-      <div class="d-flex align-items-center gap-3">
-        <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-white text-decoration-none">Dashboard</a>
-        <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-white text-decoration-none">Profile</a>
-        <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="text-white text-decoration-none">Logout</a>
-      </div>
-    <?php endif; ?>
-    <div class="menu-btn" id="menuBtn" aria-label="Open navigation">
-      <span class="menu-line"></span>
-      <span class="menu-line" style="width: 20px;"></span>
-    </div>
+<!-- Logo, Brand and Hamburger Menu (floating at top) -->
+<div style="position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; pointer-events: none;">
+  <a href="<?php echo BASE_PATH; ?>/public/index.php" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;color:inherit;pointer-events:auto;">
+    <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2.25rem;display:inline-block;">
+    <div style="font-weight:700;font-size:1.125rem;color:#111218;">Ripal Design</div>
+  </a>
+  
+  <div class="menu-btn" id="menuBtn" aria-label="Open navigation" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.15);pointer-events:auto;">
+    <span class="bi bi-list" aria-hidden="true" style="font-size:1.5rem;color:#111218;"></span>
   </div>
-</nav>
+</div>
 
 <!-- Sidebar Navigation -->
 <div id="sidebarBackdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:9998;"></div>
@@ -136,22 +128,62 @@ if (function_exists('render_head_assets')) {
 
 <?php else: ?>
 
-<!-- Simple public header -->
-<header class="site-header p-3" role="banner">
-  <div class="nav-inner">
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <a href="<?php echo BASE_PATH; ?>/public/index.php"><img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="logo" style="height:3rem"></a>
-      <div style="font-weight:700;font-size:1.125rem;color:var(--header-text-color);">Ripal Design</div>
-    </div>
-    <nav style="display:flex;gap:1rem;align-items:center;">
-      <a href="<?php echo BASE_PATH; ?>/public/index.php">Home</a>
-      <a href="<?php echo BASE_PATH; ?>/public/services.php">Services</a>
-      <a href="<?php echo BASE_PATH; ?>/public/products.php">Products</a>
-      <a href="<?php echo BASE_PATH; ?>/public/about_us.php">About</a>
-      <a href="<?php echo BASE_PATH; ?>/public/contact_us.php">Contact</a>
-      <a href="<?php echo BASE_PATH; ?>/public/login.php" class="btn btn-sm btn-outline-secondary">Login</a>
-    </nav>
+<!-- Logo, Brand and Hamburger Menu (floating at top) -->
+<div style="position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; pointer-events: none;">
+  <a href="<?php echo BASE_PATH; ?>/public/index.php" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;color:inherit;pointer-events:auto;">
+    <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2.25rem;display:inline-block;">
+    <div style="font-weight:700;font-size:1.125rem;color:#111218;">Ripal Design</div>
+  </a>
+  
+  <div class="menu-btn" id="menuBtn" aria-label="Open navigation" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.15);pointer-events:auto;">
+    <span class="bi bi-list" aria-hidden="true" style="font-size:1.5rem;color:#111218;"></span>
   </div>
-</header>
+</div>
+
+<!-- Sidebar Navigation for public header (same behaviour as dashboard sidebar) -->
+<div id="sidebarBackdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:9998;"></div>
+<aside id="siteSidebar" style="position:fixed; top:0; right:-320px; width:300px; height:100%; background:#ffffff; color:#111218; box-shadow:-2px 0 12px rgba(0,0,0,0.12); transition:right .28s ease; z-index:9999; padding:28px; overflow:auto;">
+  <button id="sidebarClose" style="position:absolute; left:12px; top:12px; background:transparent; border:0; font-size:24px; color:#111218; cursor:pointer;">&times;</button>
+  <h3 style="margin-top:8px; color:#731209;">Menu</h3>
+  <nav style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+    <a href="<?php echo BASE_PATH; ?>/public/index.php" class="text-decoration-none" style="color:#111218; padding:10px; border-radius:6px; display:block;">Home</a>
+    <a href="<?php echo BASE_PATH; ?>/public/services.php" class="text-decoration-none" style="color:#111218; padding:10px; border-radius:6px; display:block;">Services</a>
+    <a href="<?php echo BASE_PATH; ?>/public/products.php" class="text-decoration-none" style="color:#111218; padding:10px; border-radius:6px; display:block;">Products</a>
+    <a href="<?php echo BASE_PATH; ?>/public/about_us.php" class="text-decoration-none" style="color:#111218; padding:10px; border-radius:6px; display:block;">About</a>
+    <a href="<?php echo BASE_PATH; ?>/public/contact_us.php" class="text-decoration-none" style="color:#111218; padding:10px; border-radius:6px; display:block;">Contact</a>
+    <a href="<?php echo BASE_PATH; ?>/public/login.php" class="text-decoration-none" style="color:#111218; padding:10px; border-radius:6px; display:block;">Login</a>
+  </nav>
+</aside>
+
+<script>
+  (function() {
+    var menu = document.getElementById('menuBtn');
+    var sidebar = document.getElementById('siteSidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    var closeBtn = document.getElementById('sidebarClose');
+
+    function open() {
+      sidebar.style.right = '0';
+      backdrop.style.opacity = '1';
+      backdrop.style.pointerEvents = 'auto';
+      if (menu) menu.classList.add('is-active');
+    }
+
+    function close() {
+      sidebar.style.right = '-320px';
+      backdrop.style.opacity = '0';
+      backdrop.style.pointerEvents = 'none';
+      if (menu) menu.classList.remove('is-active');
+    }
+    if (menu) {
+      menu.addEventListener('click', function() {
+        if (sidebar.style.right === '0px' || sidebar.style.right === '0') close();
+        else open();
+      });
+    }
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (backdrop) backdrop.addEventListener('click', close);
+  })();
+</script>
 
 <?php endif; ?>

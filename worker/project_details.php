@@ -116,25 +116,17 @@ $project = [
             margin-bottom: 5px;
         }
         .map-container {
-            height: 300px;
+            height: 350px;
             border-radius: var(--border-radius-card);
             overflow: hidden;
             background: #eee;
             margin-bottom: 15px;
             position: relative;
         }
-        /* Map placeholder image pattern */
-        .map-placeholder {
+        .map-container iframe {
             width: 100%;
             height: 100%;
-            background-color: #e5e3df;
-            background-image: radial-gradient(#d1cfcb 2px, transparent 2px);
-            background-size: 20px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            flex-direction: column;
+            border: 0;
         }
         .drawing-grid {
             display: grid;
@@ -228,11 +220,13 @@ $project = [
                         <section class="info-card mb-4">
                             <h3>Site Details</h3>
                             <div class="map-container">
-                                <div class="map-placeholder">
-                                    <i class="bi bi-geo-alt-fill fs-1 text-danger mb-2"></i>
-                                    <p class="mb-0 fw-bold">123 Oak St, Rajkot</p>
-                                    <small class="text-muted">Interactive map disabled</small>
-                                </div>
+                                <iframe 
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d287.47857098438425!2d70.76867685826322!3d22.30597063170977!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3959c983c4b8aeaf%3A0xf7c6e2439ee00a3f!2sNanavati%20Chowk!5e1!3m2!1sen!2sin!4v1771055842937!5m2!1sen!2sin" 
+                                    allowfullscreen="" 
+                                    loading="lazy" 
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    title="Project Location Map">
+                                </iframe>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>

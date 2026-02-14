@@ -1,7 +1,7 @@
 /* Modern adaptive header styles */
 :root {
   --header-text-color: #111218;
-  --header-contrast: rgba(255,255,255,0.96);
+  --header-contrast: rgba(255,255,255,1);
   --header-bg: var(--header-contrast);
   /* White text used when header is transparent over dark pages */
   --header-contrast-text: #ffffff;
@@ -22,15 +22,21 @@ nav.fixed-top {
 
 /* Ensure the simple public header has a solid light background and readable text */
 header.site-header {
-  background: transparent;
-  color: var(--header-contrast-text);
-  box-shadow: none;
+  /* Force a solid background so the transparent/blurry nav is removed */
+  background: #ffffff !important;
+  color: var(--header-text-color) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  backdrop-filter: none !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9999 !important;
 }
 
-/* Public header links should contrast when header is transparent */
+/* Public header links and text should use dark color on light background */
 header.site-header .nav-inner nav a,
-header.site-header .nav-inner a {
-  color: var(--header-contrast-text) !important;
+header.site-header .nav-inner a,
+header.site-header .nav-inner div {
+  color: var(--header-text-color) !important;
 }
 
 header.site-header .mirrored-logo img { height:48px; }
@@ -46,6 +52,13 @@ header.site-header .mirrored-logo img { height:48px; }
   max-width: none;
   margin: 0 5%;
   padding: 6px 18px;
+}
+
+/* Tighten public header spacing and ensure full-width appearance */
+header.site-header .nav-inner {
+  width: 100%;
+  margin: 0;
+  padding: 10px 18px;
 }
 
 /* Force the menu button to sit at the right edge of the nav-inner
@@ -110,8 +123,8 @@ nav.fixed-top .nav-inner nav a:hover {
 }
 
 @media (min-width: 901px) {
-  /* Hide the hamburger on the simple public header but keep it available for dashboard (fixed-top) */
-  .site-header .menu-btn { display: none; }
+  /* Keep the hamburger visible on the simple public header as requested */
+  .site-header .menu-btn { display: inline-flex !important; }
   .nav.fixed-top .menu-btn { display: inline-flex; }
 }
 
