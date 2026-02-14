@@ -23,12 +23,13 @@
 }
 
 /* Force every button control to use the brand primary color */
-button,
-.btn,
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-.btn-primary {
+/* Only apply to Bootstrap-styled pages, not Tailwind pages */
+body:not(.bg-background-light):not(.bg-background-dark) button:not([class*="border-slate"]):not([class*="bg-slate"]):not([class*="text-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn,
+body:not(.bg-background-light):not(.bg-background-dark) input[type="button"]:not([class*="border-slate"]):not([class*="bg-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) input[type="submit"]:not([class*="border-slate"]):not([class*="bg-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) input[type="reset"]:not([class*="border-slate"]):not([class*="bg-slate"]),
+.btn-primary:not([class*="border-slate"]):not([class*="bg-slate"]) {
   background-color: var(--primary) !important;
   border-color: var(--primary) !important;
   color: #fff !important;
@@ -580,49 +581,50 @@ footer.site-footer .text-secondary {
 }
 
 /* Apply brand background and borders to all buttons */
-button,
-.btn,
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-.btn-primary,
-.btn-secondary,
-.btn-success,
-.btn-warning,
-.btn-danger,
-.btn-info {
+/* Only apply to Bootstrap-styled pages, not Tailwind pages */
+body:not(.bg-background-light):not(.bg-background-dark) button:not([class*="border-slate"]):not([class*="bg-slate"]):not([class*="text-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn,
+body:not(.bg-background-light):not(.bg-background-dark) input[type="button"]:not([class*="border-slate"]):not([class*="bg-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) input[type="submit"]:not([class*="border-slate"]):not([class*="bg-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) input[type="reset"]:not([class*="border-slate"]):not([class*="bg-slate"]),
+.btn-primary:not([class*="border-slate"]):not([class*="bg-slate"]),
+.btn-secondary:not([class*="border-slate"]):not([class*="bg-slate"]),
+.btn-success:not([class*="border-slate"]):not([class*="bg-slate"]),
+.btn-warning:not([class*="border-slate"]):not([class*="bg-slate"]),
+.btn-danger:not([class*="border-slate"]):not([class*="bg-slate"]),
+.btn-info:not([class*="border-slate"]):not([class*="bg-slate"]) {
   background-color: var(--brand) !important;
   border-color: var(--brand) !important;
   color: #fff !important;
 }
 
 /* Hover / focus / active states */
-button:hover,
-.btn:hover,
-input[type="button"]:hover,
-input[type="submit"]:hover,
-.btn-primary:hover,
-.btn-secondary:hover,
-.btn-success:hover,
-.btn-warning:hover,
-.btn-danger:hover,
-.btn-info:hover {
+body:not(.bg-background-light):not(.bg-background-dark) button:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+body:not(.bg-background-light):not(.bg-background-dark) .btn:hover,
+body:not(.bg-background-light):not(.bg-background-dark) input[type="button"]:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+body:not(.bg-background-light):not(.bg-background-dark) input[type="submit"]:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+.btn-primary:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+.btn-secondary:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+.btn-success:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+.btn-warning:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+.btn-danger:not([class*="border-slate"]):not([class*="bg-slate"]):hover,
+.btn-info:not([class*="border-slate"]):not([class*="bg-slate"]):hover {
   background-color: var(--brand-hover) !important;
   border-color: var(--brand-hover) !important;
   color: #fff !important;
 }
 
-.btn:focus,
-.btn:active,
-.btn:focus-visible {
+body:not(.bg-background-light):not(.bg-background-dark) .btn:focus,
+body:not(.bg-background-light):not(.bg-background-dark) .btn:active,
+body:not(.bg-background-light):not(.bg-background-dark) .btn:focus-visible {
   outline: none !important;
   box-shadow: 0 0 0 .25rem rgba(var(--brand-rgb), 0.18) !important;
 }
 
 /* Disabled buttons keep brand but reduced opacity */
-.btn[disabled],
-.btn.disabled,
-button[disabled] {
+body:not(.bg-background-light):not(.bg-background-dark) .btn[disabled]:not([class*="border-slate"]):not([class*="bg-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn.disabled:not([class*="border-slate"]):not([class*="bg-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) button[disabled]:not([class*="border-slate"]):not([class*="bg-slate"]) {
   opacity: 0.65 !important;
   background-color: var(--brand) !important;
   border-color: var(--brand) !important;
@@ -630,39 +632,39 @@ button[disabled] {
 }
 
 /* Outline buttons: show brand border/text, fill on hover */
-.btn-outline-primary,
-.btn-outline-secondary,
-.btn-outline-info,
-.btn-outline-success,
-.btn-outline-warning,
-.btn-outline-danger {
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-primary:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-secondary:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-info:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-success:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-warning:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-danger:not([class*="border-slate"]) {
   color: var(--brand) !important;
   border-color: var(--brand) !important;
   background-color: transparent !important;
 }
-.btn-outline-primary:hover,
-.btn-outline-secondary:hover,
-.btn-outline-info:hover,
-.btn-outline-success:hover,
-.btn-outline-warning:hover,
-.btn-outline-danger:hover {
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-primary:hover:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-secondary:hover:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-info:hover:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-success:hover:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-warning:hover:not([class*="border-slate"]),
+body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-danger:hover:not([class*="border-slate"]) {
   background-color: var(--brand) !important;
   color: #fff !important;
 }
 
 /* Link-styled buttons */
-.btn-link,
-a.btn-link {
+body:not(.bg-background-light):not(.bg-background-dark) .btn-link,
+body:not(.bg-background-light):not(.bg-background-dark) a.btn-link {
   color: var(--brand) !important;
 }
-.btn-link:hover,
-a.btn-link:hover {
+body:not(.bg-background-light):not(.bg-background-dark) .btn-link:hover,
+body:not(.bg-background-light):not(.bg-background-dark) a.btn-link:hover {
   color: var(--brand-hover) !important;
 }
 
 /* Ensure icon-only buttons and bootstrap icon colors align */
-.btn .bi,
-button .bi {
+body:not(.bg-background-light):not(.bg-background-dark) .btn .bi,
+body:not(.bg-background-light):not(.bg-background-dark) button:not([class*="border-slate"]) .bi {
   color: #fff !important;
 }
 

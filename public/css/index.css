@@ -415,3 +415,215 @@ h3,
 .text-primary-brand {
   color: var(--primary);
 }
+
+/* Featured Projects Section - Alternating Layout */
+.featured-projects-section {
+  position: relative;
+}
+
+.project-showcase {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 50vh;
+  min-height: 500px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.project-showcase-image {
+  width: 30vw;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-showcase-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+  opacity: 0.7;
+}
+
+.project-showcase:hover .project-showcase-image img {
+  transform: scale(1.05);
+  opacity: 1;
+}
+
+.project-showcase-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.project-image-left {
+  order: 1;
+}
+
+.project-content-right {
+  order: 2;
+  padding-left: 5vw;
+  padding-right: 8vw;
+}
+
+.project-image-right {
+  order: 2;
+}
+
+.project-content-left {
+  order: 1;
+  padding-left: 8vw;
+  padding-right: 5vw;
+}
+
+.project-showcase-inner {
+  max-width: 600px;
+}
+
+.project-number {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.project-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  color: #fff;
+}
+
+.project-description {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  font-weight: 300;
+}
+
+.project-link {
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.project-link:hover {
+  color: var(--primary) !important;
+  transform: translateX(5px);
+}
+
+.project-arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.project-link:hover .project-arrow {
+  transform: translateX(5px);
+}
+
+/* Responsive adjustments for projects */
+@media (max-width: 1024px) {
+  .project-showcase {
+    height: auto;
+    min-height: 400px;
+  }
+  
+  .project-showcase-image {
+    width: 40vw;
+  }
+  
+  .project-content-right,
+  .project-content-left {
+    padding-left: 4vw;
+    padding-right: 4vw;
+  }
+  
+  .project-title {
+    font-size: 2rem;
+  }
+  
+  .project-description {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .project-showcase {
+    flex-direction: column;
+    height: auto;
+    min-height: 600px;
+  }
+  
+  .project-showcase-image {
+    width: 100%;
+    height: 50%;
+    order: 1 !important;
+  }
+  
+  .project-showcase-content {
+    width: 100%;
+    height: 50%;
+    order: 2 !important;
+    padding: 2rem !important;
+  }
+  
+  .project-showcase-inner {
+    max-width: 100%;
+  }
+  
+  .project-content-left,
+  .project-content-right {
+    padding: 2rem !important;
+  }
+}
+
+/* Testimonials Section */
+.testimonials-section {
+  position: relative;
+}
+
+.testimonial-card {
+  position: relative;
+  border-radius: 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+.testimonial-card:hover {
+  background: #181818 !important;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.testimonial-card:hover .testimonial-image img {
+  opacity: 1 !important;
+  transform: scale(1.05);
+}
+
+.testimonial-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.testimonial-image img {
+  transition: all 0.5s ease;
+}
+
+.testimonial-card blockquote {
+  min-height: 120px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .testimonial-card blockquote {
+    min-height: auto;
+  }
+  
+  .testimonials-section .py-lg-9 {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,22 +9,40 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
+    <script src="./js/validation.js"></script>
+
     <style>
-        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; }
-        .serif { font-family: 'Cormorant Garamond', serif; }
-        input, textarea, select {
+        body {
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .serif {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        input,
+        textarea,
+        select {
             background-color: transparent;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             transition: border-color 0.3s ease;
         }
-        input:focus, textarea:focus, select:focus {
+
+        input:focus,
+        textarea:focus,
+        select:focus {
             outline: none;
             border-color: #731209;
         }
     </style>
 </head>
+
 <body class="bg-[#050505] text-white overflow-x-hidden">
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public';
+    require_once __DIR__ . '/../includes/header.php'; ?>
 
     <main class="relative min-h-screen flex flex-col md:flex-row pt-24">
         <!-- Left: Info -->
@@ -31,7 +50,7 @@
             <div class="max-w-md mx-auto md:mx-0">
                 <span class="text-[#731209] tracking-[0.2em] text-sm uppercase font-semibold">Get in touch</span>
                 <h1 class="text-5xl md:text-7xl serif mt-6 mb-8 leading-tight">Let's Discuss<br>Your Vision.</h1>
-                
+
                 <div class="space-y-8 mt-12 text-gray-400 font-light">
                     <div>
                         <h4 class="text-white text-lg font-medium mb-1">Ripal Design Rajkot <br>
@@ -41,7 +60,7 @@
                                 150ft Ring Road,<br>
                                 Rajkot, Gujarat, India <br>
                             </p>
-                        </div>
+                    </div>
                     <div>
                         <h4 class="text-white text-lg font-medium mb-1">Contact</h4>
                         <p>+91 98765 43210<br>projects@ripaldesign.in</p>
@@ -60,40 +79,45 @@
 
         <!-- Right: Form -->
         <div class="w-full md:w-1/2 p-8 md:p-20 bg-[#050505] flex flex-col justify-center">
-            <form class="max-w-lg w-full mx-auto md:mx-0 space-y-8" action="#" method="POST">
+            <form class="max-w-lg w-full mx-auto md:mx-0 space-y-8" action="" method="POST" id="signupForm" novalidate>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="group">
                         <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">First Name</label>
-                        <input type="text" name="first_name" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" required>
+                        <input type="text" name="first_name" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" data-validation="required min alphabetic" data-min="2">
+                        <span id="first_name_error" class="text-danger"></span>
                     </div>
                     <div class="group">
                         <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Last Name</label>
-                        <input type="text" name="last_name" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" required>
+                        <input type="text" name="last_name" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" data-validation="required min alphabetic" data-min="2">
+                        <span id="last_name_error" class="text-danger"></span>
                     </div>
                 </div>
-
+                
                 <div class="group">
                     <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
-                    <input type="email" name="email" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" required>
+                    <input type="email" name="email" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" data-validation="required email">
+                    <span id="email_error" class="text-danger"></span>
                 </div>
 
                 <div class="group">
                     <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Subject</label>
-                    <select name="subject" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors text-gray-300">
+                    <select name="subject" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors text-gray-300" data-validation="required select">
                         <option value="" class="bg-black">Select Inquiry Type</option>
                         <option value="residential" class="bg-black">Residential Project</option>
                         <option value="commercial" class="bg-black">Commercial Project</option>
                         <option value="consultation" class="bg-black">Design Consultation</option>
                         <option value="other" class="bg-black">Other</option>
                     </select>
+                    <span id="subject_error" class="text-danger"></span>
                 </div>
 
                 <div class="group">
                     <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Message</label>
-                    <textarea name="message" rows="4" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors resize-none"></textarea>
+                    <textarea name="message" rows="4" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors resize-none" data-validation="required min" data-min="10"></textarea>
+                    <span id="message_error" class="text-danger"></span>
                 </div>
 
-                <button type="button" class="mt-8 px-10 py-4 bg-[#731209] hover:bg-[#94180C] text-white uppercase tracking-widest text-sm transition-all duration-300 w-full md:w-auto">
+                <button type="submit" class="mt-8 px-10 py-4 bg-[#731209] hover:bg-[#94180C] text-white uppercase tracking-widest text-sm transition-all duration-300 w-full md:w-auto">
                     Send Message
                 </button>
             </form>
@@ -102,4 +126,5 @@
 
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
+
 </html>

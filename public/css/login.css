@@ -34,6 +34,7 @@ body::before {
 .card-login {
     width: 85%;
     height: 50%;
+    margin-bottom: 24vh
 }
 
 .mb-4 {
@@ -43,19 +44,28 @@ body::before {
 .form-control {
     background: rgba(255, 255, 255, 0);
     border: none;
+    color: #fff;
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.6);
 }
 
 /* WebKit browsers */
 
 .form-control:focus {
-    background: rgba(255, 255, 255, 0.3);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.8);
+    color: #1a1a1a;
     box-shadow: none;
+}
+
+.form-control:focus::placeholder {
+    color: rgba(0, 0, 0, 0.4);
 }
 
 .remider {
     display: flex;
-    gap: 24vh;
+    gap: 19vh;
     margin-bottom: 20px;
     border: none;
 }
