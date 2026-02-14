@@ -5,7 +5,7 @@
             <div class="col-md-6">
                 <h2 class="h4 fw-bold mb-2 font-serif">Ready to build something iconic?</h2>
                 <p class="text-secondary mb-3">Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.</p>
-                <a href="/public/contact_us.php" class="btn btn-primary btn-lg rounded-0 px-4" role="button" aria-label="Start your project" style="background:#731209;border-color:#731209;color:#fff;">Start Your Project <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+                <a href="../public/contact_us.php" class="btn btn-primary btn-lg rounded-0 px-4" role="button" aria-label="Start your project" style="background:#731209;border-color:#731209;color:#fff;">Start Your Project <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
             </div>
 
             <div class="col-md-6">

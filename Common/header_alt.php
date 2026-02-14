@@ -58,7 +58,7 @@ foreach ($candidates as $c) {
     </nav>
     <div class="panel-footer">
       <a href="<?php echo BASE_PATH; ?>/public/login.php" class="btn-alt btn-login">Login</a>
-      <a href="<?php echo BASE_PATH; ?>/public/login.php?action=signup" class="btn-alt btn-signup">Sign Up</a>
+      <a href="<?php echo BASE_PATH; ?>/public/signup.php?action=signup" class="btn-alt btn-signup">Sign Up</a>
     </div>
   </div>
 </div>
