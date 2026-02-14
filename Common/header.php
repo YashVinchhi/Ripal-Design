@@ -79,20 +79,22 @@ foreach ($candidates as $c) {
 </style>
 
 <!-- Navigation -->
-<nav class="fixed-top p-4 d-flex justify-content-between align-items-center mixed-blend-mode">
-  <a class="mirrored-logo text-white" href="<?php echo BASE_PATH; ?>/public/index.php">
-    <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
-  </a>
-  <?php if (!empty($_SESSION['user'])): ?>
-    <div class="d-flex align-items-center gap-3">
-      <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-white text-decoration-none">Dashboard</a>
-      <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-white text-decoration-none">Profile</a>
-      <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="text-white text-decoration-none">Logout</a>
+<nav class="fixed-top p-4 mixed-blend-mode">
+  <div class="nav-inner">
+    <a class="mirrored-logo text-white" href="<?php echo BASE_PATH; ?>/public/index.php">
+      <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:2rem; display:inline-block;">
+    </a>
+    <?php if (!empty($_SESSION['user'])): ?>
+      <div class="d-flex align-items-center gap-3">
+        <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php" class="text-white text-decoration-none">Dashboard</a>
+        <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php" class="text-white text-decoration-none">Profile</a>
+        <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="text-white text-decoration-none">Logout</a>
+      </div>
+    <?php endif; ?>
+    <div class="menu-btn" id="menuBtn" aria-label="Open navigation">
+      <span class="menu-line"></span>
+      <span class="menu-line" style="width: 20px;"></span>
     </div>
-  <?php endif; ?>
-  <div class="menu-btn" id="menuBtn" aria-label="Open navigation">
-    <span class="menu-line"></span>
-    <span class="menu-line" style="width: 20px;"></span>
   </div>
 </nav>
 
