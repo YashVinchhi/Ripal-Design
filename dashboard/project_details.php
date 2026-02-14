@@ -346,7 +346,7 @@ function formatDate($date) {
       theme: {
         extend: {
           colors: {
-            primary: "#94180c",
+            primary: "#731209",
             secondary: "#fdfcf8",
             "background-light": "#fdfcf8",
             "background-dark": "#121212",
@@ -418,7 +418,7 @@ function formatDate($date) {
     
     .chrome-tab.active {
       background: white;
-      color: #94180c;
+      color: #731209;
       font-weight: 600;
       box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
       z-index: 10;
@@ -426,7 +426,7 @@ function formatDate($date) {
     
     .dark .chrome-tab.active {
       background: #0f172a;
-      color: #94180c;
+      color: #731209;
       box-shadow: 0 -2px 4px rgba(0,0,0,0.2);
     }
     
@@ -437,7 +437,7 @@ function formatDate($date) {
       left: 0;
       right: 0;
       height: 3px;
-      background: #94180c;
+      background: #731209;
     }
     
     .tab-content {
@@ -480,7 +480,7 @@ function formatDate($date) {
       </div>
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 class="text-3xl md:text-4xl font-serif text-primary mb-1"><?php echo htmlspecialchars($project['name'] ?: 'New Project'); ?></h1>
+          <h1 class="text-3xl md:text-4xl font-serif mb-1" style="color: #731209;"><?php echo htmlspecialchars($project['name'] ?: 'New Project'); ?></h1>
           <?php if (!empty($project['address'])): ?>
           <p class="text-slate-500 dark:text-slate-400 flex items-center gap-1">
             <span class="material-icons text-sm">location_on</span>
@@ -492,7 +492,7 @@ function formatDate($date) {
           <button class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             Edit Project
           </button>
-          <button class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+          <button class="px-4 py-2 text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: #731209;">
             <span class="material-icons text-sm">share</span> Share
           </button>
         </div>
@@ -520,7 +520,7 @@ function formatDate($date) {
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Budget</p>
-            <p class="text-2xl font-serif text-primary"><?php echo !empty($project['budget']) ? $project['budget'] : '₹ 0'; ?></p>
+            <p class="text-2xl font-serif" style="color: #731209;"><?php echo !empty($project['budget']) ? $project['budget'] : '₹ 0'; ?></p>
           </div>
           <div class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Status</p>
@@ -541,7 +541,7 @@ function formatDate($date) {
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Progress</p>
             <div class="flex items-center gap-3">
               <div class="flex-grow bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-primary h-full" style="width: <?php echo intval($project['progress'] ?? 0); ?>%;"></div>
+                <div class="h-full" style="width: <?php echo intval($project['progress'] ?? 0); ?>%; background-color: #731209;"></div>
               </div>
               <span class="text-sm font-semibold"><?php echo intval($project['progress'] ?? 0); ?>%</span>
             </div>
@@ -629,8 +629,8 @@ function formatDate($date) {
               </div>
             </div>
             <div class="p-6 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
-              <button type="button" class="px-6 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary" onclick="window.location.reload()">Discard Changes</button>
-              <button type="submit" class="px-8 py-2 bg-primary text-white rounded text-sm font-semibold hover:opacity-95 shadow-md">Save Project</button>
+              <button type="button" class="px-6 py-2 border-2 border-slate-300 text-slate-600 dark:text-slate-400 dark:border-slate-600 rounded text-sm font-medium hover:border-slate-400 hover:text-slate-800 transition-colors" onclick="window.location.reload()">Discard Changes</button>
+              <button type="submit" class="px-8 py-2 text-white rounded text-sm font-semibold hover:opacity-95 shadow-md" style="background-color: #731209;">Save Project</button>
             </div>
           </form>
         </div>
@@ -643,7 +643,7 @@ function formatDate($date) {
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Project Owner</h3>
           <?php if (!empty($project['owner']['name'])): ?>
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style="background-color: #731209;">
               <?php 
                 $initials = '';
                 $nameParts = explode(' ', $project['owner']['name']);
@@ -689,7 +689,7 @@ function formatDate($date) {
           <div class="space-y-4">
             <?php foreach($project['milestones'] as $milestone): ?>
             <div class="flex gap-3">
-              <div class="mt-1 w-2 h-2 rounded-full <?php echo ($milestone['status'] === 'completed') ? 'bg-green-500' : (($milestone['status'] === 'active') ? 'bg-primary' : 'bg-slate-300'); ?> shrink-0"></div>
+              <div class="mt-1 w-2 h-2 rounded-full shrink-0" style="<?php echo ($milestone['status'] === 'completed') ? 'background-color: #10B981;' : (($milestone['status'] === 'active') ? 'background-color: #731209;' : 'background-color: #cbd5e1;'); ?>"></div>
               <div>
                 <p class="text-sm font-medium"><?php echo htmlspecialchars($milestone['title']); ?></p>
                 <p class="text-xs text-slate-500"><?php echo formatDate($milestone['target_date']); ?></p>
@@ -711,7 +711,7 @@ function formatDate($date) {
         <div class="p-6">
           <div class="mb-6 flex justify-between items-center">
             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Team Members</h2>
-            <button class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+            <button class="px-4 py-2 text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: #731209;">
               <span class="material-icons text-sm">add</span> Add Member
             </button>
           </div>
@@ -737,7 +737,7 @@ function formatDate($date) {
             ?>
             <div class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow">
               <div class="flex items-start gap-3 mb-3">
-                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold shrink-0">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0" style="background-color: #731209;">
                   <?php echo $initials; ?>
                 </div>
                 <div class="flex-grow min-w-0">
@@ -768,7 +768,7 @@ function formatDate($date) {
         <div class="p-6">
           <div class="mb-6 flex justify-between items-center">
             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Files</h2>
-            <button class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+            <button class="px-4 py-2 text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: #731209;">
               <span class="material-icons text-sm">upload</span> Upload File
             </button>
           </div>
@@ -849,7 +849,7 @@ function formatDate($date) {
         <div class="p-6">
           <div class="mb-6 flex justify-between items-center">
             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Technical Drawings</h2>
-            <button class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+            <button class="px-4 py-2 text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: #731209;">
               <span class="material-icons text-sm">add</span> Upload Drawing
             </button>
           </div>
@@ -885,7 +885,7 @@ function formatDate($date) {
                   <?php echo htmlspecialchars($drawing['status']); ?>
                 </span>
                 <div class="flex gap-2">
-                  <button class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity">
+                  <button class="flex-1 px-3 py-1.5 text-white rounded text-xs font-medium hover:opacity-90 transition-opacity" style="background-color: #731209;">
                     View
                   </button>
                   <button class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -913,7 +913,7 @@ function formatDate($date) {
         <a href="?id=3" class="text-primary hover:underline">Project 3</a>
       </p>
       <?php endif; ?>
-      <a href="dashboard.php" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity">
+      <a href="dashboard.php" class="inline-flex items-center gap-2 px-6 py-3 text-white rounded hover:opacity-90 transition-opacity" style="background-color: #731209;">
         <span class="material-icons text-sm">arrow_back</span>
         Back to Dashboard
       </a>
