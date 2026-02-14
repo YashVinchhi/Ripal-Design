@@ -6,10 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Home - Ripal Design</title>
-
-    <?php asset_enqueue_css('/public/about_us.css'); ?>
-    <?php asset_enqueue_css('/public/index.css'); ?>
-    <?php if (function_exists('render_head_assets')) { render_head_assets(); } ?>
+    <link rel="stylesheet" href="./css/index.css">
 </head>
 
 <body>
@@ -22,7 +19,7 @@
         <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
             <div class="hero-overlay"></div>
             <div class="position-relative z-2 text-center container px-4">
-                <span class="tracking-architect text-primary-brand mb-3 d-block" style="    font-size: 30px; text-shadow: 2px 2px 5px black;">Est. 2017</span>
+                <span class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;">Est. 2017</span>
                 <h1 class="display-1 mb-4">The Architect's Vision</h1>
                 <p class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
                     Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.
@@ -109,7 +106,7 @@
                     <div class="col-12 col-sm-6 col-lg-3">
                         <div class="card bg-dark text-white h-100 border-0">
                             <div class="overflow-hidden">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" width="20%" height="20%"  alt="Vertical Zen">
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" width="20%" height="20%" alt="Vertical Zen">
                             </div>
                             <div class="card-body">
                                 <span class="text-primary-brand fw-semibold">03</span>
@@ -123,7 +120,7 @@
                     <div class="col-12 col-sm-6 col-lg-3">
                         <div class="card bg-dark text-white h-100 border-0">
                             <div class="overflow-hidden">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" width="20%" height="20%"  alt="Loft VII">
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" width="20%" height="20%" alt="Loft VII">
                             </div>
                             <div class="card-body">
                                 <span class="text-primary-brand fw-semibold">04</span>
@@ -187,6 +184,20 @@
                             NYC</p>
                     </div>
                 </div>
+                <div class="testimonial min-w-[calc(33.333%-22px)] bg-[#111] p-12 flex flex-col gap-8 group hover:bg-[#181818] transition-colors duration-500">
+                    <div class="h-64 overflow-hidden">
+                        <img alt="Estate" width="20%" height="20%"
+                            class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                            src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" />
+                    </div>
+                    <p class="text-2xl font-['Cormorant_Garamond'] italic leading-relaxed text-gray-300">"They pushed
+                        the boundaries of what we thought was possible, creating a space that feels both intimate and
+                        grand."</p>
+                    <div class="pt-6 border-t border-[var(--primary)]">
+                        <p class="font-bold text-lg">Elena Rodriguez</p>
+                        <p class="text-xs text-[var(--primary)] uppercase tracking-widest mt-1">Private Collector</p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -200,6 +211,16 @@
         asset_enqueue_js('/public/index.js');
     ?>
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+
+    <!-- Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/index.js"></script>
+    <script>
+
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,231 @@
+:root {
+    --primary: #731209;
+    --primary-light: #94180C;
+    --bg-dark: #0a0a0a;
+    --bg-panel: #121212;
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --blueprint-grid: rgba(255, 255, 255, 0.03);
+}
+
+/* Base Aesthetics */
+body {
+    background-color: var(--bg-dark);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    margin: 0;
+}
+
+/* Film Grain & Grid Overlay */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(var(--blueprint-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--blueprint-grid) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.grain {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: url('https://grainy-gradients.vercel.app/noise.svg');
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Typography */
+h1, h2, h3, .font-serif {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+}
+
+.tracking-architect {
+    letter-spacing: 0.3em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Navigation */
+nav.mixed-blend-mode {
+    mix-blend-mode: difference;
+    z-index: 1000;
+}
+
+.mirrored-logo {
+    display: inline-flex;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.05em;
+    text-decoration: none;
+}
+
+.mirrored-logo__r {
+    transform: scaleX(-1);
+    display: inline-block;
+}
+
+.menu-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    cursor: pointer;
+}
+
+.menu-line {
+    width: 32px;
+    height: 1px;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+/* Nav Overlay */
+#navOverlay {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 100%;
+    background-color: var(--primary);
+    transform: translateX(100%);
+    transition: transform .6s cubic-bezier(0.77, 0, 0.175, 1);
+    z-index: 2000;
+}
+
+@media (min-width: 768px) {
+    #navOverlay { width: 25vw; min-width: 350px; }
+}
+
+#navOverlay.open { transform: translateX(0); }
+
+/* Hero */
+.hero-section {
+    height: 100vh;
+    background: url(Sample\ img-1.png) center/cover no-repeat;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.4), rgba(10,10,10,1));
+}
+
+/* Timeline (Measuring Tape) */
+.timeline-section {
+    padding: 150px 0;
+    position: relative;
+    z-index: 2;
+}
+
+.tape-case {
+    width: 140px; height: 140px;
+    border-radius: 12px 2px 40px 2px;
+    background: linear-gradient(145deg, #1a1a1a, #000);
+    border: 1px solid #333;
+    box-shadow: 20px 20px 60px #050505;
+    position: relative;
+    overflow: hidden;
+}
+
+.tape-strip {
+    background: #f0f0f0;
+    height: 48px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.tape-ticks {
+    width: 100%; height: 100%;
+    background-image: repeating-linear-gradient(90deg, #000 0, #000 1px, transparent 1px, transparent 8px);
+    opacity: 0.2;
+}
+
+.tape-hook {
+    width: 14px; height: 60px;
+    background: linear-gradient(to bottom, #999, #444);
+    border-radius: 0 4px 4px 0;
+    z-index: 5;
+}
+
+/* Milestone Markers */
+.year-box {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    text-align: center;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    min-width: 180px;
+    position: relative;
+    z-index: 10;
+}
+
+.milestone-marker.active .year-box {
+    border-color: var(--primary);
+    background: rgba(115, 18, 9, 0.15);
+}
+
+.milestone-details {
+    position: absolute;
+    top: 100%; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    width: 280px;
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--primary);
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s ease;
+    z-index: 20;
+}
+
+.milestone-marker:hover .milestone-details {
+    opacity: 1;
+    transform: translateX(-50%) translateY(10px);
+    pointer-events: auto;
+}
+
+/* Stats */
+.stat-item {
+    position: relative;
+    padding: 60px 20px;
+    overflow: hidden;
+}
+
+.stat-number-bg {
+    font-size: 8rem;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    -webkit-text-stroke: 1px rgba(255,255,255,0.05);
+    color: transparent;
+    font-family: 'Cormorant Garamond', serif;
+    z-index: 0;
+}
+
+.stat-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Utilities */
+.py-lg-9 { padding-top: 8rem; padding-bottom: 8rem; }
+.text-primary-brand { color: var(--primary); }
+
+@media (max-width: 991px) {
+    .timeline-section { padding: 80px 0; }
+    .milestones-wrapper { position: relative !important; width: 100% !important; right: 0 !important; top: 0 !important; display: flex; flex-direction: column; gap: 40px; margin-top: 60px; }
+    .milestone-marker { position: relative !important; left: 0 !important; transform: none !important; }
+    .milestone-details { opacity: 1; position: relative; transform: none; width: 100%; top: 0; margin-top: 10px; }
+    .tape-wrapper { display: none; } /* Hide technical tape on small mobile to favor readability */
+}
