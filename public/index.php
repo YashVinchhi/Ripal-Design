@@ -70,66 +70,89 @@
             </div>
         </section>
 
-        <!-- Projects cards — simplified row of cards for consistent layout -->
-        <section class="projects-cards-section py-5 bg-black">
-            <div class="container py-5">
-                <div class="row g-4">
-                    <!-- card 1 -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card bg-dark text-white h-100 border-0">
-                            <div class="overflow-hidden">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" width="100%" height="20%" alt="Obsidian Mono">
-                            </div>
-                            <div class="card-body">
-                                <span class="text-primary-brand fw-semibold">01</span>
-                                <h5 class="card-title mt-2">Obsidian Mono</h5>
-                                <p class="card-text text-muted small">A monolith of light and shadow, redefining the urban residential experience.</p>
-                                <a href="#" class="text-primary text-decoration-none">View Project</a>
-                            </div>
-                        </div>
+        <!-- Featured Projects Section -->
+        <section class="featured-projects-section bg-black">
+            <!-- Project 1 - Image Left -->
+            <div class="project-showcase">
+                <div class="project-showcase-image project-image-left">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" alt="Obsidian Mono">
+                </div>
+                <div class="project-showcase-content project-content-right">
+                    <div class="project-showcase-inner">
+                        <span class="project-number text-primary-brand">01</span>
+                        <h2 class="project-title display-4 mb-4">Obsidian Mono</h2>
+                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <p class="project-description text-white-50 mb-5">
+                            A monolith of light and shadow, redefining the urban residential experience through minimalist precision and spatial excellence.
+                        </p>
+                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                            <span class="me-2">View Project</span>
+                            <span class="project-arrow">→</span>
+                        </a>
                     </div>
-                    <!-- card 2 -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card bg-dark text-white h-100 border-0">
-                            <div class="overflow-hidden">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" width="20%" height="20%" alt="Oasis Pavilion">
-                            </div>
-                            <div class="card-body">
-                                <span class="text-primary-brand fw-semibold">02</span>
-                                <h5 class="card-title mt-2">Oasis Pavilion</h5>
-                                <p class="card-text text-muted small">Bridging the gap between tradition and future technology with breathable structure.</p>
-                                <a href="#" class="text-primary text-decoration-none">View Project</a>
-                            </div>
-                        </div>
+                </div>
+            </div>
+
+            <!-- Project 2 - Image Right -->
+            <div class="project-showcase">
+                <div class="project-showcase-content project-content-left">
+                    <div class="project-showcase-inner">
+                        <span class="project-number text-primary-brand">02</span>
+                        <h2 class="project-title display-4 mb-4">Oasis Pavilion</h2>
+                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <p class="project-description text-white-50 mb-5">
+                            Bridging the gap between tradition and future technology with breathable structure and organic integration.
+                        </p>
+                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                            <span class="me-2">View Project</span>
+                            <span class="project-arrow">→</span>
+                        </a>
                     </div>
-                    <!-- crad 3 -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card bg-dark text-white h-100 border-0">
-                            <div class="overflow-hidden">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" width="20%" height="20%" alt="Vertical Zen">
-                            </div>
-                            <div class="card-body">
-                                <span class="text-primary-brand fw-semibold">03</span>
-                                <h5 class="card-title mt-2">Vertical Zen</h5>
-                                <p class="card-text text-muted small mt-4">Urban biophilia integrated into a modular high-rise system.</p>
-                                <a href="#" class="text-primary text-decoration-none">View Project</a>
-                            </div>
-                        </div>
+                </div>
+                <div class="project-showcase-image project-image-right">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" alt="Oasis Pavilion">
+                </div>
+            </div>
+
+            <!-- Project 3 - Image Left -->
+            <div class="project-showcase">
+                <div class="project-showcase-image project-image-left">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" alt="Vertical Zen">
+                </div>
+                <div class="project-showcase-content project-content-right">
+                    <div class="project-showcase-inner">
+                        <span class="project-number text-primary-brand">03</span>
+                        <h2 class="project-title display-4 mb-4">Vertical Zen</h2>
+                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <p class="project-description text-white-50 mb-5">
+                            Urban biophilia integrated into a modular high-rise system, bringing nature into the vertical landscape.
+                        </p>
+                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                            <span class="me-2">View Project</span>
+                            <span class="project-arrow">→</span>
+                        </a>
                     </div>
-                    <!-- card 4 -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card bg-dark text-white h-100 border-0">
-                            <div class="overflow-hidden">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" width="20%" height="20%" alt="Loft VII">
-                            </div>
-                            <div class="card-body">
-                                <span class="text-primary-brand fw-semibold">04</span>
-                                <h5 class="card-title mt-2">Loft VII</h5>
-                                <p class="card-text text-muted small">Raw industrial heritage meeting contemporary refinement.</p>
-                                <a href="#" class="text-primary text-decoration-none">View Project</a>
-                            </div>
-                        </div>
+                </div>
+            </div>
+
+            <!-- Project 4 - Image Right -->
+            <div class="project-showcase">
+                <div class="project-showcase-content project-content-left">
+                    <div class="project-showcase-inner">
+                        <span class="project-number text-primary-brand">04</span>
+                        <h2 class="project-title display-4 mb-4">Loft VII</h2>
+                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <p class="project-description text-white-50 mb-5">
+                            Raw industrial heritage meeting contemporary refinement in a dialogue between past and future.
+                        </p>
+                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                            <span class="me-2">View Project</span>
+                            <span class="project-arrow">→</span>
+                        </a>
                     </div>
+                </div>
+                <div class="project-showcase-image project-image-right">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" alt="Loft VII">
                 </div>
             </div>
         </section>
