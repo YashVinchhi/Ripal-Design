@@ -134,68 +134,87 @@
             </div>
         </section>
 
-        <!-- Client testimonials section below projects, with horizontal scroll and hover effects  -->
-        <section class="testimonials h-screen bg-black flex flex-col justify-center overflow-hidden border-y border-white/5">
-            <div class="px-10 mb-16 text-center">
-                <h2 class="text-5xl font-light">Client Perspectives</h2>
-            </div>
-            <div class="testimonials__list flex gap-8 px-10 overflow-x-auto hide-scrollbar pb-10">
-                <div class="testimonial min-w-[calc(33.333%-22px)] bg-[#111] p-12 flex flex-col gap-8 group hover:bg-[#181818] transition-colors duration-500">
-                    <div class="h-64 overflow-hidden">
-                        <img alt="Estate" width="20%" height="20%"
-                            class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-                            src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" />
-                    </div>
-                    <p class="text-2xl font-['Cormorant_Garamond'] italic leading-relaxed text-gray-300">"The surgical
-                        precision of their design language transformed our site into a masterpiece of modern
-                        architecture."</p>
-                    <div class="pt-6 border-t border-[var(--primary)]">
-                        <p class="font-bold text-lg">Jonathan Vance</p>
-                        <p class="text-xs text-[var(--primary)] uppercase tracking-widest mt-1">CEO, Skyward Holdings
-                        </p>
+        <!-- Client Perspectives Section -->
+        <section class="testimonials-section py-5 py-lg-9 bg-black border-top border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
+            <div class="container py-5">
+                <!-- Section Header -->
+                <div class="row mb-5">
+                    <div class="col-lg-8 mx-auto text-center">
+                        <h2 class="display-3 mb-4">Client Perspectives</h2>
+                        <div style="width: 60px; height: 1px; background: var(--primary); margin: 0 auto;" class="mb-3"></div>
+                        <p class="tracking-architect text-white-50">Voices from our collaborative journey</p>
                     </div>
                 </div>
-                <div class="testimonial min-w-[calc(33.333%-22px)] bg-[#111] p-12 flex flex-col gap-8 group hover:bg-[#181818] transition-colors duration-500">
-                    <div class="h-64 overflow-hidden">
-                        <img alt="Estate" width="20%" height="20%"
-                            class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-                            src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" />
+
+                <!-- Testimonials Grid -->
+                <div class="row g-4">
+                    <!-- Testimonial 1 -->
+                    <div class="col-12 col-lg-4">
+                        <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
+                            <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" 
+                                     alt="Project" 
+                                     class="w-100 h-100 object-fit-cover" 
+                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
+                            </div>
+                            <blockquote class="mb-4">
+                                <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
+                                    "The surgical precision of their design language transformed our site into a masterpiece of modern architecture."
+                                </p>
+                            </blockquote>
+                            <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
+                                <h6 class="text-white fw-bold mb-1">Jonathan Vance</h6>
+                                <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
+                                    CEO, Skyward Holdings
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-2xl font-['Cormorant_Garamond'] italic leading-relaxed text-gray-300">"They pushed
-                        the boundaries of what we thought was possible, creating a space that feels both intimate and
-                        grand."</p>
-                    <div class="pt-6 border-t border-[var(--primary)]">
-                        <p class="font-bold text-lg">Elena Rodriguez</p>
-                        <p class="text-xs text-[var(--primary)] uppercase tracking-widest mt-1">Private Collector</p>
+
+                    <!-- Testimonial 2 -->
+                    <div class="col-12 col-lg-4">
+                        <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
+                            <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" 
+                                     alt="Project" 
+                                     class="w-100 h-100 object-fit-cover" 
+                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
+                            </div>
+                            <blockquote class="mb-4">
+                                <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
+                                    "They pushed the boundaries of what we thought was possible, creating a space that feels both intimate and grand."
+                                </p>
+                            </blockquote>
+                            <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
+                                <h6 class="text-white fw-bold mb-1">Elena Rodriguez</h6>
+                                <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
+                                    Private Collector
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="testimonial min-w-[calc(33.333%-22px)] bg-[#111] p-12 flex flex-col gap-8 group hover:bg-[#181818] transition-colors duration-500">
-                    <div class="h-64 overflow-hidden">
-                        <img alt="Estate" width="20%" height="20%"
-                            class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-                            src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" />
-                    </div>
-                    <p class="text-2xl font-['Cormorant_Garamond'] italic leading-relaxed text-gray-300">"Deeply
-                        committed to sustainability without compromising on aesthetic excellence. Truly leaders in the
-                        new era."</p>
-                    <div class="pt-6 border-t border-[var(--primary)]">
-                        <p class="font-bold text-lg">Marcus Thorne</p>
-                        <p class="text-xs text-[var(--primary)] uppercase tracking-widest mt-1">Director, Urban Planning
-                            NYC</p>
-                    </div>
-                </div>
-                <div class="testimonial min-w-[calc(33.333%-22px)] bg-[#111] p-12 flex flex-col gap-8 group hover:bg-[#181818] transition-colors duration-500">
-                    <div class="h-64 overflow-hidden">
-                        <img alt="Estate" width="20%" height="20%"
-                            class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-                            src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" />
-                    </div>
-                    <p class="text-2xl font-['Cormorant_Garamond'] italic leading-relaxed text-gray-300">"They pushed
-                        the boundaries of what we thought was possible, creating a space that feels both intimate and
-                        grand."</p>
-                    <div class="pt-6 border-t border-[var(--primary)]">
-                        <p class="font-bold text-lg">Elena Rodriguez</p>
-                        <p class="text-xs text-[var(--primary)] uppercase tracking-widest mt-1">Private Collector</p>
+
+                    <!-- Testimonial 3 -->
+                    <div class="col-12 col-lg-4">
+                        <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
+                            <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" 
+                                     alt="Project" 
+                                     class="w-100 h-100 object-fit-cover" 
+                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
+                            </div>
+                            <blockquote class="mb-4">
+                                <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
+                                    "Deeply committed to sustainability without compromising on aesthetic excellence. Truly leaders in the new era."
+                                </p>
+                            </blockquote>
+                            <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
+                                <h6 class="text-white fw-bold mb-1">Marcus Thorne</h6>
+                                <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
+                                    Director, Urban Planning NYC
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,140 @@
+/**
+ * CSS Variables and Design Tokens
+ * 
+ * Central definition of all CSS custom properties used throughout the application.
+ * Import this file first in your stylesheets to ensure consistency.
+ * 
+ * @package RipalDesign
+ * @subpackage Styles
+ */
+
+:root {
+    /* ========================================================================
+       BRAND COLORS
+       ======================================================================== */
+    
+    /* Primary brand color - Ripal Design maroon */
+    --primary: #731209;
+    --primary-light: #94180C;
+    --primary-dark: #5a0e07;
+    
+    /* Ensure Bootstrap uses our brand color */
+    --bs-primary: #731209;
+    --bs-primary-rgb: 115, 18, 9;
+    --bs-link-color: #731209;
+    --bs-link-hover-color: #94180C;
+    
+    /* Legacy alias for backwards compatibility */
+    --brand: #731209;
+    --brand-hover: #94180C;
+    
+    /* ========================================================================
+       BACKGROUND COLORS
+       ======================================================================== */
+    
+    --bg-dark: #0a0a0a;
+    --bg-darker: #050505;
+    --bg-panel: #121212;
+    --bg-card: #1a1a1a;
+    
+    /* ========================================================================
+       TEXT COLORS
+       ======================================================================== */
+    
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --text-disabled: rgba(255, 255, 255, 0.4);
+    
+    /* ========================================================================
+       SURFACE COLORS
+       ======================================================================== */
+    
+    --surface-light: #f8f9fa;
+    --surface-dark: #1a1a1a;
+    
+    /* ========================================================================
+       BORDER COLORS
+       ======================================================================== */
+    
+    --border-light: rgba(255, 255, 255, 0.1);
+    --border-medium: rgba(255, 255, 255, 0.2);
+    --border-dark: rgba(0, 0, 0, 0.1);
+    
+    /* ========================================================================
+       DECORATIVE ELEMENTS
+       ======================================================================== */
+    
+    /* Blueprint grid pattern */
+    --blueprint-grid: rgba(255, 255, 255, 0.03);
+    
+    /* Grain overlay opacity */
+    --grain-opacity: 0.05;
+    
+    /* ========================================================================
+       LAYOUT & SPACING
+       ======================================================================== */
+    
+    /* Measuring tape timeline (used in about_us page) */
+    --tape-height: 48px;
+    --tape-half: calc(var(--tape-height) / 2);
+    --year-box-gap: 10px;
+    
+    /* ========================================================================
+       HEADER & NAVIGATION
+       ======================================================================== */
+    
+    /* Header text color (for light backgrounds) */
+    --header-text-color: #1a1a1a;
+    --header-text-color-light: #ffffff;
+    
+    /* Navigation overlay */
+    --nav-overlay-bg: var(--primary);
+    --alt-text: #ffffff;
+    
+    /* ========================================================================
+       TRANSITIONS & ANIMATIONS
+       ======================================================================== */
+    
+    --transition-fast: 0.15s;
+    --transition-normal: 0.3s;
+    --transition-slow: 0.5s;
+    
+    --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+    --easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+    
+    /* ========================================================================
+       Z-INDEX LAYERS
+       ======================================================================== */
+    
+    --z-base: 0;
+    --z-content: 1;
+    --z-header: 100;
+    --z-overlay: 1000;
+    --z-dropdown: 1050;
+    --z-modal: 1100;
+    --z-grain: 9999;
+}
+
+/* ============================================================================
+   DARK THEME (Default)
+   ========================================================================== */
+
+body {
+    --bg-base: var(--bg-dark);
+    --text-base: var(--text-primary);
+}
+
+/* ============================================================================
+   LIGHT THEME (Optional)
+   ========================================================================== */
+
+body.light-theme,
+.light-theme {
+    --bg-base: #ffffff;
+    --bg-panel: #f8f9fa;
+    --text-base: #1a1a1a;
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --text-muted: rgba(0, 0, 0, 0.6);
+}
