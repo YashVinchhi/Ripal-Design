@@ -29,7 +29,7 @@
                         <span id="email_error" class="text-danger"></span>
                     </div>
                     <button type="submit" class="btn-1">Send Reset Link</button>
-                    <a href="./login.php" class="text-decoration-none text-white mt-3 d-block">Back to login</a>
+                    <a href="./login.php" class="text-decoration-none text-white p-3 d-block">Back to login</a>
                 </form>
             </div>
         </div>

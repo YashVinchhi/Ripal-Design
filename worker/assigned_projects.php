@@ -27,7 +27,7 @@ $projects = [
       --charcoal: #1A1A1A;
       --muted-gold: #A68966;
     }
-    @theme {
+    @theme  {
       --font-display: "Playfair Display", serif;
       --font-sans: "Inter", sans-serif;
     }
@@ -53,7 +53,7 @@ $projects = [
   <?php if (function_exists('render_head_assets')) { render_head_assets(); } ?>
 </head>
 <body class="min-h-screen flex flex-col">
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header_alt.php'; ?>
   
   <main class="flex-grow max-w-[1440px] mx-auto w-full px-6 py-8">
     <!-- Page Header with Tabs -->

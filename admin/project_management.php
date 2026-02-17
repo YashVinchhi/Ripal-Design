@@ -11,7 +11,7 @@ session_start();
   <link rel="stylesheet" href="../worker/worker_dashboard.css">
 </head>
 <body>
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../includes/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
   <main class="worker-dashboard container">
     <div class="page-header">
       <div class="toolbar justify-content-between">
@@ -29,6 +29,6 @@ session_start();
       <div style="margin-top:12px;"><a class="btn primary" href="project_management.php">Open Project Admin</a></div>
     </section>
   </main>
-  <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+  <?php require_once __DIR__ . '/../common/footer.php'; ?>
 </body>
 </html>

@@ -254,7 +254,7 @@ function render_stars($rating, $max = 5) {
 <body>
 <?php 
 $HEADER_MODE = 'dashboard'; 
-require_once __DIR__ . '/../includes/header.php'; 
+require_once __DIR__ . '/../common/header_alt.php'; 
 ?>
 
 <main class="worker-dashboard">
@@ -458,7 +458,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../common/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>

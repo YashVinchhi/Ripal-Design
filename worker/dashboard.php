@@ -16,7 +16,7 @@ require_once __DIR__ . '/../includes/init.php';
 <?php
 // Include navigation header (UI only)
 $HEADER_MODE = 'dashboard';
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../common/header_alt.php';
 
 // Sample placeholder data — replace with real queries later
 // Try to load real projects from DB if available, otherwise fallback to sample data
@@ -196,7 +196,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
 </main>
 
 <?php
-require_once __DIR__ . '/../includes/footer.php';
+require_once __DIR__ . '/../common/footer.php';
 ?>
 </body>
 </html>

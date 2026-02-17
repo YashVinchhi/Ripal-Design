@@ -1,0 +1,94 @@
+:root {
+    --blueprint-grid: rgba(255, 255, 255, 0.05);
+    --brand-red: #731209;
+}
+
+body {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+}
+
+/* Grid background effect */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--blueprint-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--blueprint-grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Grain texture overlay */
+.grain {
+    position: fixed;
+    inset: 0;
+    background: url('https://grainy-gradients.vercel.app/noise.svg');
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+.serif {
+    font-family: 'Cormorant Garamond', serif;
+}
+
+/* Ensure content sits above backgrounds */
+main,
+header,
+.container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Hero Section */
+.hero-section {
+    height: 100vh;
+    background: url(Sample\ img-1.png) center/cover no-repeat;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 1));
+}
+
+/* Service Items */
+.service-item {
+    transition: all 0.5s ease;
+    opacity: 0.5;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.service-item.active {
+    opacity: 1;
+    padding-left: 2rem;
+    border-color: var(--brand-red);
+}
+
+.service-item:hover {
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.text-primary-brand {
+    color: var(--primary);
+}
+
+.tracking-architect {
+    letter-spacing: 0.3em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}

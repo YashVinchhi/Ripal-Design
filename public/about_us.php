@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>About Us - Ripal Design</title>
+    <title>About Us | Ripal Design</title>
 
     <link rel="stylesheet" href="./css/about_us.css">
 </head>
@@ -27,7 +27,6 @@
                 </p>
                 <div class="mt-5 pt-4">
                     <div class="vstack gap-2 align-items-center">
-                        <div style="width: 1px; height: 80px; background: linear-gradient(to bottom, var(--primary), transparent);"></div>
                         <span class="tracking-architect opacity-50">Discovery</span>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 <?php
 $HEADER_MODE = 'dashboard';
 // Placeholder: safe file viewer (implement security checks before use)
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../common/header_alt.php';
 $file = $_GET['file'] ?? null;
 ?>
 <!DOCTYPE html>
@@ -18,6 +18,6 @@ $file = $_GET['file'] ?? null;
       <p>No file specified.</p>
     <?php endif; ?>
   </main>
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../common/footer.php'; ?>
 </body>
 </html>

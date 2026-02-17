@@ -40,7 +40,7 @@
                 <!-- Item 1 -->
                 <div class="product-card group cursor-pointer">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
-                        <img src="assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
+                        <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
                         <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                     </div>
                     <div>
@@ -52,7 +52,7 @@
                 <!-- Item 2 -->
                 <div class="product-card group cursor-pointer">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
-                        <img src="assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
+                        <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
                          <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                     </div>
                     <div>
@@ -64,7 +64,7 @@
                 <!-- Item 3 -->
                 <div class="product-card group cursor-pointer">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
-                        <img src="assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
+                        <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
                          <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                     </div>
                     <div>
@@ -75,7 +75,7 @@
             </div>
             
             <div class="mt-20 text-center">
-                <a href="contact_us.php" class="inline-block border-b border-[#731209] pb-1 text-sm tracking-widest uppercase hover:text-[#731209] transition-colors">Request Catalog</a>
+                <a href="contact_us.php" class="inline-block border-b border-[#731209] pb-1 text-sm tracking-widest uppercase hover:text-[#731209] transition-colors text-decoration-none">Request Catalog</a>
             </div>
         </div>
     </main>

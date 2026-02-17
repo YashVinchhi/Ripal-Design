@@ -5,14 +5,15 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Home - Ripal Design</title>
+    <title>Home | Ripal Design</title>
     <link rel="stylesheet" href="./css/index.css">
 </head>
 
 <body>
     <div class="grain"></div>
 
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public';
+    require_once __DIR__ . '/../includes/header.php'; ?>
 
     <main>
         <!-- Hero Section -->
@@ -26,7 +27,6 @@
                 </p>
                 <div class="mt-5 pt-4">
                     <div class="vstack gap-2 align-items-center">
-                        <div style="width: 1px; height: 80px; background: linear-gradient(to bottom, var(--primary), transparent);"></div>
                         <span class="tracking-architect opacity-50">Discovery</span>
                     </div>
                 </div>
@@ -75,7 +75,7 @@
             <!-- Project 1 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" alt="Obsidian Mono">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" alt="Obsidian Mono" >
                 </div>
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
@@ -83,7 +83,7 @@
                         <h2 class="project-title display-4 mb-4">Obsidian Mono</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            A monolith of light and shadow, redefining the urban residential experience through minimalist precision and spatial excellence.
+                            A monolith of light and shadow, redefining the urban residential  <br>experience through minimalist precision and spatial excellence.
                         </p>
                         <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
@@ -101,7 +101,7 @@
                         <h2 class="project-title display-4 mb-4">Oasis Pavilion</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            Bridging the gap between tradition and future technology with breathable structure and organic integration.
+                            Bridging the gap between tradition and future technology <br> with breathable structure and organic integration.
                         </p>
                         <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
@@ -125,7 +125,7 @@
                         <h2 class="project-title display-4 mb-4">Vertical Zen</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            Urban biophilia integrated into a modular high-rise system, bringing nature into the vertical landscape.
+                            Urban biophilia integrated into a modular high-rise system, <br>bringing nature into the vertical landscape.
                         </p>
                         <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
@@ -143,7 +143,7 @@
                         <h2 class="project-title display-4 mb-4">Loft VII</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            Raw industrial heritage meeting contemporary refinement in a dialogue between past and future.
+                            Raw industrial heritage meeting contemporary <br> refinement in a dialogue between past and future.
                         </p>
                         <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
@@ -175,10 +175,10 @@
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg" 
-                                     alt="Project" 
-                                     class="w-100 h-100 object-fit-cover" 
-                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg"
+                                    alt="Project"
+                                    class="w-100 h-100 object-fit-cover"
+                                    style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
                                 <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
@@ -198,10 +198,10 @@
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" 
-                                     alt="Project" 
-                                     class="w-100 h-100 object-fit-cover" 
-                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg"
+                                    alt="Project"
+                                    class="w-100 h-100 object-fit-cover"
+                                    style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
                                 <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
@@ -221,10 +221,10 @@
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" 
-                                     alt="Project" 
-                                     class="w-100 h-100 object-fit-cover" 
-                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
+                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg"
+                                    alt="Project"
+                                    class="w-100 h-100 object-fit-cover"
+                                    style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
                                 <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
@@ -245,12 +245,12 @@
     </main>
 
     <?php
-        // enqueue page scripts so Common/footer.php can render them in the footer
-        asset_enqueue_js('https://code.jquery.com/jquery-3.7.1.min.js');
-        asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js');
-        asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js');
-        asset_enqueue_js('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js');
-        asset_enqueue_js('/public/index.js');
+    // enqueue page scripts so Common/footer.php can render them in the footer
+    asset_enqueue_js('https://code.jquery.com/jquery-3.7.1.min.js');
+    asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js');
+    asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js');
+    asset_enqueue_js('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js');
+    asset_enqueue_js('/public/index.js');
     ?>
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 

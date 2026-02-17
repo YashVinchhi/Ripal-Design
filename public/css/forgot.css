@@ -26,7 +26,7 @@ body::before {
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
-    height: 44vh;
+    height: auto;
 }
 
 .card-login {
@@ -107,4 +107,32 @@ body::before {
     right: 16px;
     z-index: 9999
 }
+
+/* Responsive adjustments for small screens */
+@media (max-width: 990px) {
+    body { justify-content: center; padding: 20px; }
+    .login-card {
+        width: 100%;
+        max-width: 100vw;
+        padding: 18px 16px;
+        height: auto;
+        margin: 0 auto;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.04);
+        max-height: auto;
+    }
+
+    .card-login { width:100%; }
+
+    .mb-5 { font-size: 1.8rem; }
+
+    .infem { margin-top: 0.25rem; }
+
+    .remider { gap: 8px; }
+
+    .btn-1 { padding: 10px; font-size: 1rem; }
+
+    .top-back-btn { right: 12px; top: 12px; }
+}
+
 

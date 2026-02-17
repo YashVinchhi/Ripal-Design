@@ -77,7 +77,7 @@ foreach ($stylesheetCandidates as $candidate) {
 <link rel="shortcut icon" href="<?php echo esc_attr(BASE_PATH); ?>/assets/Content/Vector.ico" type="image/x-icon">
 
 <!-- Header Navigation (Always loaded) -->
-<link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header_alt.css">
+<link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header.css">
 <nav class="alt-header">
     <div class="alt-logo">
         <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php">
@@ -109,6 +109,8 @@ foreach ($stylesheetCandidates as $candidate) {
             <a href="<?php echo esc_attr(BASE_PATH); ?>/public/about_us.php">About</a>
             <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php">Contact</a>
         </nav>
+  
+
         
         <div class="panel-footer">
             <?php if (is_logged_in()): ?>

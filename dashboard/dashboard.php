@@ -84,7 +84,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
   <?php if (function_exists('render_head_assets')) { render_head_assets(); } ?>
 </head>
 <body>
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header_alt.php'; ?>
   <main class="worker-dashboard">
     <div class="container">
       <div class="page-header">

@@ -1,101 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Services | Ripal Design</title>
-  
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/service.css">
 
-  <style>
-    :root {
-      --blueprint-grid: rgba(255, 255, 255, 0.05);
-      --brand-red: #731209;
-    }
 
-    body {
-      background-color: #000000;
-      color: #ffffff;
-      font-family: 'Inter', sans-serif;
-      position: relative;
-    }
-
-    /* Grid background effect */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(var(--blueprint-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--blueprint-grid) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* Grain texture overlay */
-    .grain {
-      position: fixed;
-      inset: 0;
-      background: url('https://grainy-gradients.vercel.app/noise.svg');
-      opacity: 0.05;
-      pointer-events: none;
-      z-index: 9999;
-    }
-
-    /* Typography */
-    h1, h2, h3, .serif {
-      font-family: 'Cormorant Garamond', serif;
-    }
-
-    /* Ensure content sits above backgrounds */
-    main, header, .container {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Hero Section */
-    .hero-section {
-      height: 100vh;
-      background: url(../assets/Sample\ img-1.png) center/cover no-repeat;
-    }
-
-    .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 1));
-    }
-
-    /* Service Items */
-    .service-item {
-      transition: all 0.5s ease;
-      opacity: 0.5;
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .service-item.active {
-      opacity: 1;
-      padding-left: 2rem;
-      border-color: var(--brand-red);
-    }
-
-    .service-item:hover {
-      opacity: 0.8;
-      cursor: pointer;
-    }
-  </style>
 </head>
 
 <body class="bg-[#050505] text-white overflow-x-hidden">
   <div class="grain"></div>
-  
+
   <?php require_once __DIR__ . '/../includes/header.php'; ?>
 
   <main class="relative min-h-screen pb-20">
@@ -110,7 +33,6 @@
         </p>
         <div class="mt-5 pt-4">
           <div class="vstack gap-2 align-items-center">
-            <div style="width: 1px; height: 80px; background: linear-gradient(to bottom, var(--primary), transparent);"></div>
             <span class="tracking-architect opacity-50">Discovery</span>
           </div>
         </div>
@@ -163,8 +85,8 @@
           <div class="lg:absolute lg:inset-y-0 lg:right-0 w-full lg:w-[90%] h-full overflow-hidden rounded-sm">
             <div id="imageDisplay" class="w-full h-full relative">
               <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg"
-                   class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out scale-105"
-                   alt="Architectural Service">
+                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out scale-105"
+                alt="Architectural Service">
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             </div>
 
@@ -179,7 +101,7 @@
     </div>
   </main>
 
-  <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+  <?php require_once __DIR__ . '/../common/footer.php'; ?>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -218,4 +140,5 @@
     });
   </script>
 </body>
+
 </html>

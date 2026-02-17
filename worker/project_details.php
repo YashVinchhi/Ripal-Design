@@ -168,7 +168,7 @@ $project = [
     </style>
 </head>
 <body>
-<?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../includes/header.php'; ?>
+<?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
 
 <main class="worker-dashboard">
     <div class="container-fluid px-0">
@@ -389,8 +389,8 @@ $project = [
 </main>
 
 <!-- <div class="position-relative" style="z-index: 10;">
-<?php require_once __DIR__ . '/../includes/footer.php'; ?> -->
-</div>
+<?php require_once __DIR__ . '/../common/footer.php'; ?> -->
+
 <?php asset_enqueue_js('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js'); ?>
 
 <!-- Script to handle hash navigation (opening correct tab from dashboard links) -->

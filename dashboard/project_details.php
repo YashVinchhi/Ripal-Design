@@ -435,7 +435,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
     // Allow only header/footer specific external CSS/JS, block all other external resources
     $DISABLE_EXTERNAL_CSS = true;
     $HEADER_MODE = 'dashboard';
-    require_once __DIR__ . '/../Common/header.php'; 
+    require_once __DIR__ . '/../Common/header_alt.php'; 
     ?>
 
     <?php if ($error): ?>

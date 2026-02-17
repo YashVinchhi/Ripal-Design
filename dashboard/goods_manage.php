@@ -65,7 +65,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
 <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-<?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
+<?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header_alt.php'; ?>
 <main class="worker-dashboard">
   <div class="container">
     <div class="page-header">
