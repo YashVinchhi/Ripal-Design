@@ -21,7 +21,7 @@ if (!defined('BASE_PATH')) {
 $currentYear = date('Y');
 ?>
 
-<footer class="site-footer text-white pt-5 pb-4" role="contentinfo" style="background-color: rgba(0, 0, 0, 0.15); position: relative; z-index: 100;">
+<footer class="site-footer text-white pt-5 pb-4" role="contentinfo" style="background-color: #0d0d0d; border-top: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 100;">
     <div class="container">
         <div class="row align-items-center gy-4">
             <div class="col-md-6">
