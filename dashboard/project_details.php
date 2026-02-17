@@ -308,14 +308,24 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             theme: {
                 extend: {
                     colors: {
-                        primary: "#731209",
-                        secondary: "#fdfcf8",
-                        "background-light": "#fdfcf8",
+                        "rajkot-rust": "#94180C",
+                        "foundation-grey": "#2D2D2D",
+                        "canvas-white": "#F9FAFB",
+                        primary: "#94180C",
+                        secondary: "#F9FAFB",
+                        "background-light": "#F9FAFB",
                         "background-dark": "#121212",
+                        "slate-accent": "#334155",
+                        "approval-green": "#15803D",
+                        "pending-amber": "#B45309",
                     },
                     fontFamily: {
-                        display: ["Playfair Display", "serif"],
+                        serif: ["Playfair Display", "serif"],
                         sans: ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
+                        "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
                     },
                     borderRadius: {
                         DEFAULT: "4px",
@@ -454,34 +464,41 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
     </div>
     <?php endif; ?>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <div class="mb-8">
-            <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-                <a class="hover:text-primary" href="dashboard.php">Dashboard</a>
-                <span class="material-icons text-xs">chevron_right</span>
-                <span>Projects</span>
+    <!-- Unified Dark Portal Header -->
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-col">
+            <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">
+                <a href="dashboard.php" class="hover:text-rajkot-rust transition-colors flex items-center gap-1">
+                    <i data-lucide="layout-grid" class="w-3 h-3"></i> Dashboard
+                </a>
+                <i data-lucide="chevron-right" class="w-3 h-3 text-gray-300"></i>
+                <span class="text-rajkot-rust">Project Details</span>
             </div>
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-serif text-primary mb-1"><?php echo htmlspecialchars($project['name']); ?></h1>
-                    <p class="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                        <span class="material-icons text-sm">location_on</span>
+                    <h1 class="text-4xl font-serif font-bold text-white"><?php echo htmlspecialchars($project['name']); ?></h1>
+                    <p class="text-gray-400 mt-2 flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust"></i>
                         <?php echo htmlspecialchars($project['location'] ?? $project['address'] ?? 'Location not set'); ?>
                     </p>
                 </div>
                 <div class="flex gap-2">
                     <button
-                        class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                        class="px-6 py-2.5 bg-white/10 border border-white/20 text-white rounded text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
                         onclick="window.scrollTo({top: document.querySelector('form').offsetTop - 100, behavior: 'smooth'})">
-                        Edit Project
+                        <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Project
                     </button>
                     <button
-                        class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-                        <span class="material-icons text-sm">share</span> Share
+                        class="px-6 py-2.5 bg-rajkot-rust text-white rounded text-sm font-semibold hover:bg-red-700 transition-all shadow-lg flex items-center gap-2 active:scale-95">
+                        <i data-lucide="share-2" class="w-4 h-4"></i> Share
                     </button>
                 </div>
             </div>
         </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
 
         <!-- Tab Navigation -->
         <div class="flex border-b border-slate-200 dark:border-slate-800 mb-8 overflow-x-auto">
@@ -502,7 +519,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-8">
                     <!-- Summary Cards -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div
                             class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
                             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Budget</p>
@@ -537,7 +554,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         </div>
                         <form method="post">
                             <div class="p-6 space-y-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">
                                         <label class="text-xs font-semibold text-slate-500 uppercase">Project Name</label>
                                         <input

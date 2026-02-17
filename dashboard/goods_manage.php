@@ -66,16 +66,22 @@ if (isset($pdo) && $pdo instanceof PDO) {
 </head>
 <body>
 <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header_alt.php'; ?>
+    <!-- Unified Dark Portal Header -->
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg mb-12">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <h1 class="text-4xl font-serif font-bold">Inventory Control</h1>
+                <p class="text-gray-400 mt-2">Managing goods and materials for: <span class="text-rajkot-rust font-bold"><?php echo htmlspecialchars($project['name']); ?></span></p>
+            </div>
+            <div class="bg-white/5 border border-white/10 px-4 py-2 rounded">
+                 <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-1">SKU Count</p>
+                 <p class="text-xl font-bold text-rajkot-rust"><?php echo count($goods); ?></p>
+            </div>
+        </div>
+    </header>
+
 <main class="worker-dashboard">
   <div class="container">
-    <div class="page-header">
-      <div class="toolbar justify-content-between">
-        <div class="title-wrap">
-          <h1>Manage Goods — <?php echo htmlspecialchars($project['name']); ?></h1>
-          <p class="muted">Add SKU, description, unit and prices for goods for this project.</p>
-        </div>
-      </div>
-    </div>
 
     <section class="info-card">
       <form method="post" class="row g-2">

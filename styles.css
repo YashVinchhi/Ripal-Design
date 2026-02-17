@@ -1,25 +1,27 @@
 :root {
-  --primary: #731209;
-  --bs-primary: #731209;
+  --primary: #94180C;
+  --bs-primary: #94180C;
   /* Override Bootstrap variable */
   --bg-dark: #050505;
   /* Ensure Bootstrap link color follows brand */
-  --bs-link-color: #731209;
+  --bs-link-color: #94180C;
   /* Tape timeline sizing helpers */
-  --tape-height: 48px; /* must match .tape-strip height */
+  --tape-height: 48px;
+  /* must match .tape-strip height */
   --tape-half: calc(var(--tape-height) / 2);
-  --year-box-gap: 10px; /* minimum gap between tape and year box */
+  --year-box-gap: 10px;
+  /* minimum gap between tape and year box */
 }
 
 /* Force btn-primary to use our color if bootstrap variables don't cascade correctly from root */
 .btn-primary {
-  --bs-btn-bg: #731209;
-  --bs-btn-border-color: #731209;
-  --bs-btn-hover-bg: #94180C;
-  --bs-btn-hover-border-color: #94180C;
-  background-color: #731209 !important;
+  --bs-btn-bg: #94180C;
+  --bs-btn-border-color: #94180C;
+  --bs-btn-hover-bg: #a11a0d;
+  --bs-btn-hover-border-color: #a11a0d;
+  background-color: #94180C !important;
   /* Fallback/Force */
-  border-color: #731209 !important;
+  border-color: #94180C !important;
 }
 
 /* Force every button control to use the brand primary color */
@@ -43,6 +45,7 @@ body:not(.bg-background-light):not(.bg-background-dark) input[type="reset"]:not(
   border-color: var(--primary) !important;
   background-color: transparent !important;
 }
+
 .btn-outline-primary:hover {
   background-color: var(--primary) !important;
   color: #fff !important;
@@ -116,6 +119,18 @@ html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+h1 {
+  font-size: clamp(2rem, 8vw, 3.5rem);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 5vw, 2rem);
 }
 
 h1,
@@ -290,8 +305,8 @@ img {
        border-radius: 50% 0 50% 0;
     */
   border-radius: 40% 0 40% 0;
-  background: linear-gradient(135deg, #731209, #4a0b05);
-  border: 2px solid #330804;
+  background: linear-gradient(135deg, #94180C, #731209);
+  border: 2px solid #5a0e07;
   transform: rotate(0deg);
   /* Ensure no rotation unless needed for effect */
   box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.6), inset 2px 2px 5px rgba(255, 255, 255, 0.1);
@@ -342,9 +357,21 @@ img {
 
 /* Responsive: reduce vertical gap on smaller viewports so the layout stays compact */
 @media (max-width: 720px) {
-  .milestone-marker { width: 160px; }
-  .year-box { bottom: calc(var(--tape-half) + var(--year-box-gap)); min-width: 90px; padding: 0.5rem 0.8rem; height:56px; }
-  .milestone-details { top: calc(var(--tape-half) + 56px); width: 220px; }
+  .milestone-marker {
+    width: 160px;
+  }
+
+  .year-box {
+    bottom: calc(var(--tape-half) + var(--year-box-gap));
+    min-width: 90px;
+    padding: 0.5rem 0.8rem;
+    height: 56px;
+  }
+
+  .milestone-details {
+    top: calc(var(--tape-half) + 56px);
+    width: 220px;
+  }
 }
 
 .year-box h3 {
@@ -478,7 +505,7 @@ footer.site-footer a.text-primary {
 
 /* Footer muted text (addresses, small captions) should be subdued */
 footer.site-footer .text-secondary {
-  color: rgba(255,255,255,0.5) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .site-footer {
@@ -586,9 +613,9 @@ footer.site-footer .text-secondary {
 
 /* Strong brand enforcement for all buttons and button-like controls */
 :root {
-  --brand: #731209;
-  --brand-hover: #94180C;
-  --brand-rgb: 115,18,9;
+  --brand: #94180C;
+  --brand-hover: #a11a0d;
+  --brand-rgb: 148, 24, 12;
 }
 
 /* Apply brand background and borders to all buttons */
@@ -653,6 +680,7 @@ body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-danger:not(
   border-color: var(--brand) !important;
   background-color: transparent !important;
 }
+
 body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-primary:hover:not([class*="border-slate"]),
 body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-secondary:hover:not([class*="border-slate"]),
 body:not(.bg-background-light):not(.bg-background-dark) .btn-outline-info:hover:not([class*="border-slate"]),
@@ -668,6 +696,7 @@ body:not(.bg-background-light):not(.bg-background-dark) .btn-link,
 body:not(.bg-background-light):not(.bg-background-dark) a.btn-link {
   color: var(--brand) !important;
 }
+
 body:not(.bg-background-light):not(.bg-background-dark) .btn-link:hover,
 body:not(.bg-background-light):not(.bg-background-dark) a.btn-link:hover {
   color: var(--brand-hover) !important;

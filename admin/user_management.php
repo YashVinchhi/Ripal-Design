@@ -1,214 +1,190 @@
 <?php
 // User Management (Redesigned UI)
 session_start();
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/init.php';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-canvas-white">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>User Management | Ripal Design</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'rajkot-rust': '#94180C',
-            'canvas-white': '#F9FAFB',
-            'foundation-grey': '#2D2D2D',
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Playfair Display', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <?php require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
   
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-      <div>
-        <h1 class="text-3xl font-serif font-bold text-rajkot-rust">User Management</h1>
-        <p class="text-gray-500 mt-1">Admin interface for managing user access and roles.</p>
-      </div>
-      <div class="mt-4 md:mt-0">
-        <button class="bg-rajkot-rust text-white px-6 py-2 rounded-md hover:bg-opacity-90 transition shadow-sm font-medium flex items-center gap-2">
-          <i class="bi bi-person-plus text-lg"></i>
-          Add New User
-        </button>
-      </div>
-    </div>
-
-    <!-- Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <p class="text-sm text-gray-500 uppercase tracking-wider font-semibold">Total Users</p>
-        <p class="text-2xl font-bold text-foundation-grey mt-1">124</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-rajkot-rust">
-        <p class="text-sm text-gray-500 uppercase tracking-wider font-semibold">Active Clients</p>
-        <p class="text-2xl font-bold text-foundation-grey mt-1">42</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-green-600">
-        <p class="text-sm text-gray-500 uppercase tracking-wider font-semibold">On-Site Workers</p>
-        <p class="text-2xl font-bold text-foundation-grey mt-1">68</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-amber-500">
-        <p class="text-sm text-gray-500 uppercase tracking-wider font-semibold">Employees</p>
-        <p class="text-2xl font-bold text-foundation-grey mt-1">14</p>
-      </div>
-    </div>
-
-    <!-- Filters & Search -->
-    <div class="bg-white p-4 rounded-t-lg shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
-      <div class="relative w-full md:w-96">
-        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-          <i class="bi bi-search"></i>
-        </span>
-        <input type="text" placeholder="Search users by name or email..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-rajkot-rust focus:border-transparent text-sm">
-      </div>
-      <div class="flex items-center gap-3 w-full md:w-auto">
-        <select class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-rajkot-rust focus:border-rajkot-rust block p-2">
-          <option selected>All Roles</option>
-          <option value="Admin">Admin</option>
-          <option value="Employee">Employee</option>
-          <option value="Client">Client</option>
-          <option value="Worker">Worker</option>
-        </select>
-        <select class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-rajkot-rust focus:border-rajkot-rust block p-2">
-          <option selected>All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="bg-white shadow-sm border-x border-b border-gray-100 rounded-b-lg overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left">
-          <thead class="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">User</th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">Role</th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">Last Active</th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <!-- Sample Rows -->
-            <tr class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-rajkot-rust text-white flex items-center justify-center font-bold">AV</div>
-                  <div>
-                    <p class="font-medium text-foundation-grey">Ashish Vinchhi</p>
-                    <p class="text-xs text-gray-500">ashish@ripaldesign.in</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200">Admin</span>
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span> Active
-                </span>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">Just now</td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end gap-2">
-                  <button class="p-1.5 text-gray-500 hover:text-rajkot-rust transition" title="Edit User">
-                    <i class="bi bi-pencil-square text-lg"></i>
-                  </button>
-                  <button class="p-1.5 text-gray-500 hover:text-red-600 transition" title="Deactivate User">
-                    <i class="bi bi-person-x text-lg"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm">JD</div>
-                  <div>
-                    <p class="font-medium text-foundation-grey">John Doe</p>
-                    <p class="text-xs text-gray-500">john.doe@client.com</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-200">Client</span>
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span> Active
-                </span>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">2 hours ago</td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end gap-2">
-                  <button class="p-1.5 text-gray-500 hover:text-rajkot-rust transition" title="Edit User">
-                    <i class="bi bi-pencil-square text-lg"></i>
-                  </button>
-                  <button class="p-1.5 text-gray-500 hover:text-red-600 transition" title="Deactivate User">
-                    <i class="bi bi-person-x text-lg"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm">RS</div>
-                  <div>
-                    <p class="font-medium text-foundation-grey">Rajesh Sharma</p>
-                    <p class="text-xs text-gray-500">rajesh.s@site.in</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-1 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">Worker</span>
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                  <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Inactive
-                </span>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">3 days ago</td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end gap-2">
-                  <button class="p-1.5 text-gray-500 hover:text-rajkot-rust transition" title="Edit User">
-                    <i class="bi bi-pencil-square text-lg"></i>
-                  </button>
-                  <button class="p-1.5 text-green-600 hover:text-green-700 transition" title="Activate User">
-                    <i class="bi bi-person-check text-lg"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <!-- Pagination -->
-      <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-        <p class="text-xs text-gray-500">Showing 3 of 124 users</p>
-        <div class="flex gap-2">
-          <button class="px-3 py-1 border border-gray-200 rounded text-xs font-medium text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>Previous</button>
-          <button class="px-3 py-1 border border-gray-200 rounded text-xs font-medium text-gray-600 bg-white hover:bg-gray-50">Next</button>
+  <div class="min-h-screen flex flex-col">
+    <!-- Unified Dark Portal Header -->
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-12 border-b-2 border-rajkot-rust">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <h1 class="text-4xl font-serif font-bold">User Management</h1>
+                <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Identity & Authorization Registry</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="add_user.php" class="bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center gap-3 active:scale-95 no-underline">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i> Provision Identity
+                </a>
+            </div>
         </div>
-      </div>
-    </div>
-  </main>
+    </header>
 
-  <?php require_once __DIR__ . '/../common/footer.php'; ?>
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="bg-white p-8 shadow-premium border border-gray-100 relative group overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-gray-50 -mr-8 -mt-8 rotate-45 pointer-events-none"></div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Total Registry</span>
+                <span class="text-3xl font-serif font-bold text-foundation-grey">124</span>
+            </div>
+            <div class="bg-white p-8 shadow-premium border border-gray-100 border-b-2 border-b-rajkot-rust relative group overflow-hidden">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Active Clients</span>
+                <span class="text-3xl font-serif font-bold text-rajkot-rust">42</span>
+            </div>
+            <div class="bg-white p-8 shadow-premium border border-gray-100 border-b-2 border-b-approval-green relative group overflow-hidden">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Field Workers</span>
+                <span class="text-3xl font-serif font-bold text-approval-green">68</span>
+            </div>
+            <div class="bg-white p-8 shadow-premium border border-gray-100 border-b-2 border-b-slate-accent relative group overflow-hidden">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">System Staff</span>
+                <span class="text-3xl font-serif font-bold text-slate-accent">14</span>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="bg-white shadow-premium border border-gray-100 p-6 mb-8 flex flex-col lg:flex-row justify-between items-center gap-6">
+            <div class="relative w-full lg:w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
+                <input type="search" placeholder="Filter identities..." class="w-full pl-12 pr-6 py-4 bg-gray-50 border border-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium">
+            </div>
+            <div class="flex gap-3 w-full lg:w-auto">
+                <select class="flex-1 lg:flex-none py-4 px-6 bg-gray-50 border border-gray-50 text-[10px] font-bold uppercase tracking-widest outline-none focus:bg-white focus:border-rajkot-rust transition-all cursor-pointer">
+                    <option>All Permissions</option>
+                    <option>Administrators</option>
+                    <option>Design Lead</option>
+                    <option>Field Tech</option>
+                    <option>Govt Client</option>
+                </select>
+                <button class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center shadow-lg active:scale-95">
+                    <i data-lucide="filter" class="w-3.5 h-3.5 mr-2"></i> Apply
+                </button>
+            </div>
+        </div>
+
+        <!-- User Table -->
+        <div class="bg-white shadow-premium border border-gray-100 overflow-hidden relative">
+            <!-- CAD-style grid line -->
+            <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rajkot-rust/20 to-transparent"></div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/80 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
+                            <th class="px-8 py-6 font-bold">Identity Profile</th>
+                            <th class="px-8 py-6 font-bold">Authorization Level</th>
+                            <th class="px-8 py-6 font-bold">Signal</th>
+                            <th class="px-8 py-6 font-bold">Last Sync</th>
+                            <th class="px-8 py-6 font-bold text-right">Registry Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        <!-- Row 1 -->
+                        <tr class="group hover:bg-gray-50/50 transition-all duration-300">
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-11 h-11 bg-foundation-grey text-white font-serif font-bold flex items-center justify-center border-b-2 border-rajkot-rust shadow-sm">AV</div>
+                                    <div>
+                                        <p class="font-bold text-foundation-grey group-hover:text-rajkot-rust transition-colors mb-0.5">Ashish Vinchhi</p>
+                                        <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70">admin@ripaldesign.in</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="px-3 py-1 bg-foundation-grey/5 text-foundation-grey text-[9px] font-bold uppercase tracking-[0.15em] border border-foundation-grey/10">Principal Owner</span>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="flex items-center gap-2 text-approval-green text-[9px] font-bold uppercase tracking-widest">
+                                    <span class="w-2 h-2 bg-approval-green rounded-full shadow-[0_0_8px_rgba(21,128,61,0.5)] animate-pulse"></span> Synchronized
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 text-gray-400 text-[11px] font-medium italic">Active Now</td>
+                            <td class="px-8 py-6">
+                                <div class="flex justify-end gap-4">
+                                    <button class="text-gray-300 hover:text-rajkot-rust transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                    <button class="text-gray-300 hover:text-foundation-grey transition-colors"><i data-lucide="settings-2" class="w-4 h-4"></i></button>
+                                    <button class="text-gray-300 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Row 2 -->
+                        <tr class="group hover:bg-gray-50/50 transition-all duration-300">
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-11 h-11 bg-rajkot-rust/10 text-rajkot-rust font-serif font-bold flex items-center justify-center border-b-2 border-rajkot-rust shadow-sm uppercase">RP</div>
+                                    <div>
+                                        <p class="font-bold text-foundation-grey group-hover:text-rajkot-rust transition-colors mb-0.5">Ripal Patel</p>
+                                        <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70">ripal@ripaldesign.in</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="px-3 py-1 bg-foundation-grey/5 text-foundation-grey text-[9px] font-bold uppercase tracking-[0.15em] border border-foundation-grey/10">Chief Architect</span>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="flex items-center gap-2 text-approval-green text-[9px] font-bold uppercase tracking-widest opacity-60">
+                                    <span class="w-2 h-2 bg-approval-green rounded-full"></span> Online
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 text-gray-400 text-[11px] font-medium italic">12 min ago</td>
+                            <td class="px-8 py-6">
+                                <div class="flex justify-end gap-4">
+                                    <button class="text-gray-300 hover:text-rajkot-rust transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                    <button class="text-gray-300 hover:text-foundation-grey transition-colors"><i data-lucide="settings-2" class="w-4 h-4"></i></button>
+                                    <button class="text-gray-300 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Row 3 -->
+                        <tr class="group hover:bg-gray-50/50 transition-all duration-300">
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-11 h-11 bg-slate-accent/10 text-slate-accent font-serif font-bold flex items-center justify-center border-b-2 border-slate-accent shadow-sm uppercase">SK</div>
+                                    <div>
+                                        <p class="font-bold text-foundation-grey group-hover:text-rajkot-rust transition-colors mb-0.5">Sanjay Kumar</p>
+                                        <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70">sanjay@field.ripal.in</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="px-3 py-1 bg-foundation-grey/5 text-foundation-grey text-[9px] font-bold uppercase tracking-[0.15em] border border-foundation-grey/10">Field Engineer</span>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="flex items-center gap-2 text-pending-amber text-[9px] font-bold uppercase tracking-widest">
+                                    <span class="w-2 h-2 bg-pending-amber rounded-full"></span> Away
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 text-gray-400 text-[11px] font-medium italic">4 hours ago</td>
+                            <td class="px-8 py-6">
+                                <div class="flex justify-end gap-4">
+                                    <button class="text-gray-300 hover:text-rajkot-rust transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                    <button class="text-gray-300 hover:text-foundation-grey transition-colors"><i data-lucide="settings-2" class="w-4 h-4"></i></button>
+                                    <button class="text-gray-300 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination / Load More -->
+            <div class="p-10 text-center border-t border-gray-50 bg-gray-50/30">
+                <button class="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-300 hover:text-rajkot-rust transition-all border-b border-transparent hover:border-rajkot-rust pb-1 px-4">Initialize Full Registry Scroll</button>
+            </div>
+        </div>
+    </main>
+
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+  </div>
+
 </body>
 </html>

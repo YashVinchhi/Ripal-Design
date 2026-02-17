@@ -1,180 +1,120 @@
 <?php
 // Project Management (Redesigned UI)
 session_start();
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/init.php';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-canvas-white">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Project Management | Ripal Design</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'rajkot-rust': '#94180C',
-            'canvas-white': '#F9FAFB',
-            'foundation-grey': '#2D2D2D',
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Playfair Display', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <?php require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
   
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-      <div>
-        <h1 class="text-3xl font-serif font-bold text-rajkot-rust">Project Management</h1>
-        <p class="text-gray-500 mt-1">Oversee and manage architectural and construction projects.</p>
-      </div>
-      <div class="mt-4 md:mt-0 flex gap-3">
-        <button class="bg-white text-foundation-grey border border-gray-200 px-4 py-2 rounded-md hover:bg-gray-50 transition shadow-sm font-medium flex items-center gap-2 text-sm">
-          <i class="bi bi-download"></i> Export Report
-        </button>
-        <button class="bg-rajkot-rust text-white px-6 py-2 rounded-md hover:bg-opacity-90 transition shadow-sm font-medium flex items-center gap-2">
-          <i class="bi bi-plus-circle"></i> Create New Project
-        </button>
-      </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="flex flex-wrap items-center gap-4 mb-8">
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-medium text-gray-500">Filter by City:</span>
-        <div class="flex gap-2">
-          <button class="px-3 py-1 bg-rajkot-rust text-white rounded-full text-xs font-medium">All</button>
-          <button class="px-3 py-1 bg-white text-gray-600 border border-gray-200 rounded-full text-xs font-medium hover:border-rajkot-rust transition">Rajkot</button>
-          <button class="px-3 py-1 bg-white text-gray-600 border border-gray-200 rounded-full text-xs font-medium hover:border-rajkot-rust transition">Jam Khambhalia</button>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 ml-auto">
-        <div class="relative">
-          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-            <i class="bi bi-filter"></i>
-          </span>
-          <select class="pl-8 pr-4 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-rajkot-rust text-sm bg-white">
-            <option>All Statuses</option>
-            <option>Design</option>
-            <option>Approval</option>
-            <option>Construction</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Project Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <!-- Project Card 1 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition group">
-        <div class="h-48 bg-gray-200 relative overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800" alt="RMC Smart City Project" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-          <div class="absolute top-4 left-4">
-            <span class="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full shadow-sm uppercase tracking-wider">Construction</span>
-          </div>
-        </div>
-        <div class="p-6">
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-xl font-bold text-foundation-grey">RMC Smart City Plaza</h3>
-            <span class="text-xs font-medium text-gray-400">ID: PRJ-2024-001</span>
-          </div>
-          <p class="text-sm text-gray-500 mb-6 flex items-center gap-1">
-            <i class="bi bi-geo-alt"></i> Rajkot, Gujarat
-          </p>
-          
-          <div class="mb-6">
-            <div class="flex justify-between items-center mb-1 text-xs">
-              <span class="font-medium text-gray-700">Project Progress</span>
-              <span class="font-bold text-rajkot-rust">72%</span>
+  <div class="min-h-screen flex flex-col">
+    <!-- Unified Dark Portal Header -->
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-12">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <h1 class="text-4xl font-serif font-bold">Project Portfolio</h1>
+                <p class="text-gray-400 mt-2">Executive oversight for architectural and infrastructure ventures.</p>
             </div>
-            <div class="w-full bg-gray-100 rounded-full h-2">
-              <div class="bg-rajkot-rust h-2 rounded-full" style="width: 72%"></div>
+            <div class="flex gap-3">
+                <button class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i> Export Report
+                </button>
+                <button class="bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center gap-2 active:scale-95">
+                    <i data-lucide="plus" class="w-4 h-4"></i> New Project
+                </button>
             </div>
-          </div>
+        </div>
+    </header>
 
-          <div class="flex items-center justify-between border-t border-gray-50 pt-4">
-            <div class="flex -space-x-2">
-              <div class="w-8 h-8 rounded-full bg-rajkot-rust border-2 border-white flex items-center justify-center text-[10px] text-white font-bold" title="Lead Architect">AV</div>
-              <div class="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-[10px] text-gray-600 font-bold">JD</div>
-              <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[10px] text-gray-500 font-bold">+3</div>
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Filter Bar -->
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-6 mb-10">
+            <div class="flex items-center gap-3">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Region:</span>
+                <div class="flex gap-2">
+                    <button class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm">Global</button>
+                    <button class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors">Rajkot</button>
+                    <button class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors">Jam Khambhalia</button>
+                </div>
             </div>
-            <a href="project_details.php?id=1" class="text-rajkot-rust text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all">
-              Manage Project <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Project Card 2 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition group">
-        <div class="h-48 bg-gray-200 relative overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800" alt="Saurashtra Heritage Villa" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-          <div class="absolute top-4 left-4">
-             <span class="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full shadow-sm uppercase tracking-wider">Design</span>
-          </div>
-        </div>
-        <div class="p-6">
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-xl font-bold text-foundation-grey">Saurashtra Heritage Villa</h3>
-            <span class="text-xs font-medium text-gray-400">ID: PRJ-2024-008</span>
-          </div>
-          <p class="text-sm text-gray-500 mb-6 flex items-center gap-1">
-            <i class="bi bi-geo-alt"></i> Jam Khambhalia
-          </p>
-          
-          <div class="mb-6">
-            <div class="flex justify-between items-center mb-1 text-xs">
-              <span class="font-medium text-gray-700">Project Progress</span>
-              <span class="font-bold text-rajkot-rust">15%</span>
+            <div class="flex gap-4 w-full lg:w-auto">
+                <div class="relative flex-grow lg:w-64">
+                    <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
+                    <select class="w-full pl-10 pr-4 py-2 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none">
+                        <option>All Statuses</option>
+                        <option>Conceptual Design</option>
+                        <option>Approval Pending</option>
+                        <option>Construction Ongoing</option>
+                        <option>Project Handover</option>
+                    </select>
+                </div>
+                <div class="relative flex-grow lg:w-80">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
+                    <input type="search" placeholder="Search Master Registry..." class="w-full pl-10 pr-4 py-2 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
+                </div>
             </div>
-            <div class="w-full bg-gray-100 rounded-full h-2">
-              <div class="bg-rajkot-rust h-2 rounded-full" style="width: 15%"></div>
+        </div>
+
+        <!-- Project Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Project Card Pattern -->
+            <div class="group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col">
+                <div class="h-56 bg-foundation-grey relative overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800" alt="Executive Overview" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-40 transition duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
+                       <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg">Construction Phase</span>
+                       <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors">RMC Smart City Plaza</h3>
+                    </div>
+                    <div class="absolute top-4 right-4 text-white/50 text-xs font-mono">PRJ-2024-001</div>
+                </div>
+                <div class="p-6 flex-grow">
+                    <div class="flex items-center text-sm text-gray-500 mb-6">
+                        <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-rajkot-rust"></i> Rajkot Infrastructure District
+                    </div>
+                    
+                    <div class="mb-8">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Global Progress</span>
+                            <span class="text-sm font-bold text-rajkot-rust font-sans">72%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-rajkot-rust h-full" style="width: 72%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between py-4 border-t border-gray-50">
+                        <div class="flex -space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-rajkot-rust border-4 border-white flex items-center justify-center text-[10px] text-white font-bold shadow-sm" title="Lead Architect">AV</div>
+                            <div class="w-10 h-10 rounded-full bg-slate-accent border-4 border-white flex items-center justify-center text-[10px] text-white font-bold shadow-sm">JD</div>
+                            <div class="w-10 h-10 rounded-full bg-gray-100 border-4 border-white flex items-center justify-center text-[10px] text-gray-400 font-bold shadow-sm">+3</div>
+                        </div>
+                        <a href="../dashboard/project_details.php?id=1" class="group/btn inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust transition-colors">
+                            Manage Portfolio <i data-lucide="arrow-right" class="w-4 h-4 transform group-hover/btn:translate-x-1 transition-transform"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-          </div>
 
-          <div class="flex items-center justify-between border-t border-gray-50 pt-4">
-            <div class="flex -space-x-2">
-              <div class="w-8 h-8 rounded-full bg-rajkot-rust border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">AV</div>
-              <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[10px] text-gray-500 font-bold">+1</div>
+            <!-- Add Project Card -->
+            <div class="border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center group hover:border-rajkot-rust transition-colors cursor-pointer min-h-[400px]">
+                <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-rajkot-rust transition-colors">
+                    <i data-lucide="plus" class="w-10 h-10 text-gray-300 group-hover:text-white transition-colors"></i>
+                </div>
+                <h4 class="font-serif font-bold text-xl text-gray-400 group-hover:text-foundation-grey">Initialize Venture</h4>
+                <p class="text-sm text-gray-400 mt-2 max-w-[200px]">Start a new architectural record for standard or government infrastructure.</p>
             </div>
-            <a href="project_details.php?id=8" class="text-rajkot-rust text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all">
-              Manage Project <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
         </div>
-      </div>
+    </main>
 
-      <!-- Project Card 3 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition group">
-        <div class="h-48 bg-gray-200 relative overflow-hidden flex items-center justify-center border-b border-gray-100 bg-striped">
-          <div class="text-center p-8">
-            <i class="bi bi-plus-circle text-4xl text-gray-300"></i>
-            <p class="text-gray-400 mt-2 font-medium">Add New Project</p>
-          </div>
-          <button class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" aria-label="Add new project"></button>
-        </div>
-        <div class="p-6 h-full flex flex-col justify-center">
-            <p class="text-sm text-center text-gray-400 italic">Start a new venture for Ripal Design</p>
-        </div>
-      </div>
-    </div>
-  </main>
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+  </div>
 
-  <style>
-    .bg-striped {
-      background-image: repeating-linear-gradient(45deg, #f9fafb, #f9fafb 10px, #f3f4f6 10px, #f3f4f6 20px);
-    }
-  </style>
-
-  <?php require_once __DIR__ . '/../common/footer.php'; ?>
 </body>
 </html>

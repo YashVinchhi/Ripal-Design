@@ -29,10 +29,10 @@
                     src="Content/WhatsApp Image 2026-02-02 at 6.55.18 PM.jpeg" />
             </div>
             <div class="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-                <h1 class="text-7xl md:text-9xl font-light mb-4">Ripal Design</h1>
-                <p class="uppercase tracking-[0.8em] text-sm opacity-80">Visionary Architecture &amp; Design</p>
+                <h1 class="text-7xl md:text-9xl font-light mb-4 text-[#94180C] font-serif">Ripal Design</h1>
+                <p class="uppercase tracking-[0.8em] text-sm opacity-80 text-white">Visionary Architecture &amp; Design</p>
                 <div class="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-4">
-                    <div class="w-16 h-0.5 bg-[var(--primary)]"></div>
+                    <div class="w-16 h-0.5 bg-[#94180C]"></div>
                     <div class="w-16 h-0.5 bg-white/20"></div>
                     <div class="w-16 h-0.5 bg-white/20"></div>
                 </div>

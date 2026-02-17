@@ -30,15 +30,16 @@ $user = $_SESSION['user'] ?? 'Worker';
   </script>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
-  
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-      <div>
-        <h1 class="text-3xl font-serif font-bold text-rajkot-rust">Active Assignments</h1>
-        <p class="text-gray-500 mt-1">Manage your current site projects and structural tasks.</p>
-      </div>
+  <?php require_once __DIR__ . '/../Common/header_alt.php'; ?>
+  <!-- Unified Dark Portal Header -->
+  <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg mb-12">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-serif font-bold">Active Assignments</h1>
+        <p class="text-gray-400 mt-2">Manage your current site projects and structural tasks.</p>
     </div>
+  </header>
+  
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="flex flex-col lg:flex-row gap-8">
       <!-- Project List -->

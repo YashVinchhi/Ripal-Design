@@ -1,36 +1,25 @@
 <?php
 /**
- * Worker Rating System
+ * Workforce Ratings (Redesigned)
  * 
- * This page allows project managers and supervisors to rate workers
- * on their completed projects. It displays a list of workers with their
- * average ratings and allows for submitting new ratings.
- * 
- * @package RipalDesign
- * @subpackage Worker
+ * Allows project managers and supervisors to rate workers.
+ * Fixes header errors and adopts the Rajkot Rust premium design system.
  */
 
-// Initialize session and load dependencies
 require_once __DIR__ . '/../includes/init.php';
 
-// Get current user info
 $current_user = $_SESSION['user'] ?? 'Admin';
 
-// Try to load workers and their ratings from database
+// Load workers from DB
 $workers = [];
-if (isset($pdo) && $pdo instanceof PDO) {
+if (db_connected()) {
     try {
-        // Query to get workers with their average rating
-        $stmt = $pdo->query("
-            SELECT 
-                u.id, 
-                u.username, 
-                u.email,
-                u.phone,
-                u.role,
-                COUNT(DISTINCT pa.project_id) as projects_count,
-                AVG(wr.rating) as avg_rating,
-                COUNT(wr.id) as total_ratings
+        $db = get_db();
+        $stmt = $db->query("
+            SELECT u.id, u.username, u.email, u.phone, u.role,
+                   COUNT(DISTINCT pa.project_id) as projects_count,
+                   AVG(wr.rating) as avg_rating,
+                   COUNT(wr.id) as total_ratings
             FROM users u
             LEFT JOIN project_assignments pa ON pa.worker_id = u.id
             LEFT JOIN worker_ratings wr ON wr.worker_id = u.id
@@ -38,67 +27,18 @@ if (isset($pdo) && $pdo instanceof PDO) {
             GROUP BY u.id
             ORDER BY u.username ASC
         ");
-        $workers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $workers = $stmt->fetchAll();
     } catch (Exception $e) {
-        error_log('Failed loading workers for rating: ' . $e->getMessage());
-        // Fall back to sample data
-        $workers = [];
+        error_log('Worker Rating Load Error: ' . $e->getMessage());
     }
 }
 
-// Fallback sample data if DB not available or empty
+// Demo data fallback
 if (empty($workers)) {
     $workers = [
-        [
-            'id' => 11,
-            'username' => 'Ramesh Kumar',
-            'email' => 'ramesh.kumar@ripal.design',
-            'phone' => '+91 98989 89898',
-            'role' => 'Plumber',
-            'projects_count' => 5,
-            'avg_rating' => 4.5,
-            'total_ratings' => 8
-        ],
-        [
-            'id' => 12,
-            'username' => 'Suresh Bhai',
-            'email' => 'suresh.b@ripal.design',
-            'phone' => '+91 97979 79797',
-            'role' => 'Electrician',
-            'projects_count' => 8,
-            'avg_rating' => 4.8,
-            'total_ratings' => 12
-        ],
-        [
-            'id' => 13,
-            'username' => 'Mahesh M.',
-            'email' => 'mahesh.m@ripal.design',
-            'phone' => '+91 96969 69696',
-            'role' => 'Carpenter',
-            'projects_count' => 6,
-            'avg_rating' => 4.2,
-            'total_ratings' => 10
-        ],
-        [
-            'id' => 14,
-            'username' => 'Rajesh Patel',
-            'email' => 'rajesh.p@ripal.design',
-            'phone' => '+91 95959 59595',
-            'role' => 'Mason',
-            'projects_count' => 4,
-            'avg_rating' => 4.6,
-            'total_ratings' => 6
-        ],
-        [
-            'id' => 15,
-            'username' => 'Dinesh Shah',
-            'email' => 'dinesh.s@ripal.design',
-            'phone' => '+91 94949 49494',
-            'role' => 'Painter',
-            'projects_count' => 3,
-            'avg_rating' => 4.0,
-            'total_ratings' => 5
-        ],
+        ['id'=>11, 'username'=>'Ramesh Kumar', 'email'=>'ramesh.k@ripal.design', 'phone'=>'+91 98888 77777', 'role'=>'Lead Mason', 'projects_count'=>5, 'avg_rating'=>4.7, 'total_ratings'=>12],
+        ['id'=>12, 'username'=>'Suresh Bhai', 'email'=>'suresh.b@ripal.design', 'phone'=>'+91 97777 66666', 'role'=>'Master Electrician', 'projects_count'=>8, 'avg_rating'=>4.9, 'total_ratings'=>20],
+        ['id'=>13, 'username'=>'Mahesh M.', 'email'=>'mahesh.m@ripal.design', 'phone'=>'+91 96666 55555', 'role'=>'Senior Carpenter', 'projects_count'=>4, 'avg_rating'=>4.2, 'total_ratings'=>8],
     ];
 }
 
@@ -107,431 +47,168 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_rating'])) {
     $worker_id = intval($_POST['worker_id'] ?? 0);
     $rating = intval($_POST['rating'] ?? 0);
     $comment = trim($_POST['comment'] ?? '');
-    $project_id = intval($_POST['project_id'] ?? 0);
     
     if ($worker_id && $rating >= 1 && $rating <= 5) {
-        if (isset($pdo) && $pdo instanceof PDO) {
+        if (db_connected()) {
             try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO worker_ratings (worker_id, rated_by, project_id, rating, comment, created_at)
-                    VALUES (:worker_id, :rated_by, :project_id, :rating, :comment, NOW())
-                ");
-                $stmt->execute([
-                    'worker_id' => $worker_id,
-                    'rated_by' => $current_user,
-                    'project_id' => $project_id > 0 ? $project_id : null,
-                    'rating' => $rating,
-                    'comment' => $comment
-                ]);
-                
-                $_SESSION['flash_message'] = 'Rating submitted successfully!';
-                $_SESSION['flash_type'] = 'success';
-                
-                // Redirect to avoid form resubmission
-                header('Location: ' . $_SERVER['PHP_SELF']);
-                exit;
-            } catch (Exception $e) {
-                error_log('Failed to save rating: ' . $e->getMessage());
-                $_SESSION['flash_message'] = 'Failed to save rating. Please try again.';
-                $_SESSION['flash_type'] = 'danger';
-            }
-        } else {
-            $_SESSION['flash_message'] = 'Rating saved (demo mode - no database)';
-            $_SESSION['flash_type'] = 'info';
+                $db = get_db();
+                $stmt = $db->prepare("INSERT INTO worker_ratings (worker_id, rated_by, rating, comment, created_at) VALUES (?, ?, ?, ?, NOW())");
+                $stmt->execute([$worker_id, $current_user, $rating, $comment]);
+            } catch (Exception $e) {}
         }
-    } else {
-        $_SESSION['flash_message'] = 'Invalid rating data provided.';
-        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
     }
 }
 
-// Function to render star rating display
-function render_stars($rating, $max = 5) {
-    $rating = floatval($rating);
+function render_stars($rating) {
+    if (!$rating) return '<span class="text-gray-200">No Ratings</span>';
+    $full = floor($rating);
+    $half = ($rating - $full) >= 0.5;
     $output = '';
-    for ($i = 1; $i <= $max; $i++) {
-        if ($i <= floor($rating)) {
-            $output .= '<i class="bi bi-star-fill text-warning"></i>';
-        } elseif ($i - 0.5 <= $rating) {
-            $output .= '<i class="bi bi-star-half text-warning"></i>';
-        } else {
-            $output .= '<i class="bi bi-star text-muted"></i>';
-        }
+    for ($i = 1; $i <= 5; $i++) {
+        if ($i <= $full) $output .= '<i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>';
+        elseif ($i == $full + 1 && $half) $output .= '<i data-lucide="star-half" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>';
+        else $output .= '<i data-lucide="star" class="w-3.5 h-3.5 text-gray-200"></i>';
     }
     return $output;
 }
 ?>
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" class="bg-canvas-white">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Worker Ratings - Ripal Design</title>
-    
-    <!-- Typography & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <!-- Custom Styles -->
-    <?php asset_enqueue_css('/worker/worker_dashboard.css'); ?>
-    
-    <style>
-        .rating-card {
-            background: #fff;
-            border: 1px solid var(--color-border, #E0E0E0);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            transition: all 0.3s ease;
-        }
-        .rating-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border-color: var(--color-primary, #731209);
-        }
-        .worker-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--color-primary, #731209), #a52a1f);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-        .rating-stars {
-            font-size: 18px;
-            line-height: 1;
-        }
-        .stat-badge {
-            background: #f8f9fa;
-            border: 1px solid var(--color-border, #E0E0E0);
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        .modal.show {
-            display: flex;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .star-rating-input {
-            font-size: 32px;
-            cursor: pointer;
-        }
-        .star-rating-input i {
-            color: #ddd;
-            transition: color 0.2s;
-        }
-        .star-rating-input i:hover,
-        .star-rating-input i.active {
-            color: #ffc107;
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Workforce Ratings | Ripal Design</title>
+    <?php require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
-<body>
-<?php 
-$HEADER_MODE = 'dashboard'; 
-require_once __DIR__ . '/../common/header_alt.php'; 
-?>
-
-<main class="worker-dashboard">
-    <div class="container-fluid px-4">
-        <!-- Page Header -->
-        <div class="page-header mb-4">
-            <div class="toolbar justify-content-between">
-                <div class="title-wrap">
-                    <h1>Worker Ratings</h1>
-                    <p class="muted">Rate and review workers based on their project performance</p>
+<body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
+    
+    <div class="min-h-screen flex flex-col">
+        <!-- Unified Dark Portal Header -->
+        <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-12 border-b-2 border-rajkot-rust">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div>
+                    <h1 class="text-4xl font-serif font-bold">Workforce Directory</h1>
+                    <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Audit performance metrics and maintain quality standards.</p>
                 </div>
-                <div class="avatar" aria-hidden="true"><?php echo esc(strtoupper(substr($current_user, 0, 2))); ?></div>
-            </div>
-        </div>
-        
-        <!-- Flash Messages -->
-        <?php if (isset($_SESSION['flash_message'])): ?>
-        <div class="alert alert-<?php echo esc($_SESSION['flash_type'] ?? 'info'); ?> alert-dismissible fade show" role="alert">
-            <?php 
-            echo esc($_SESSION['flash_message']); 
-            unset($_SESSION['flash_message'], $_SESSION['flash_type']);
-            ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <?php endif; ?>
-        
-        <!-- Summary Stats -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="stat-badge w-100 text-center">
-                    <div class="text-muted small">Total Workers</div>
-                    <div class="fs-4 fw-bold text-primary"><?php echo count($workers); ?></div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-badge w-100 text-center">
-                    <div class="text-muted small">Average Rating</div>
-                    <div class="fs-4 fw-bold text-warning">
-                        <?php 
-                        $total_avg = 0;
-                        $count = 0;
-                        foreach ($workers as $w) {
-                            if ($w['avg_rating']) {
-                                $total_avg += $w['avg_rating'];
-                                $count++;
-                            }
-                        }
-                        echo $count > 0 ? number_format($total_avg / $count, 1) : 'N/A';
-                        ?>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-badge w-100 text-center">
-                    <div class="text-muted small">Total Projects</div>
-                    <div class="fs-4 fw-bold text-info">
-                        <?php echo array_sum(array_column($workers, 'projects_count')); ?>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-badge w-100 text-center">
-                    <div class="text-muted small">Total Ratings</div>
-                    <div class="fs-4 fw-bold text-success">
-                        <?php echo array_sum(array_column($workers, 'total_ratings')); ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Workers List -->
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4 mb-0">All Workers</h2>
+                <div class="bg-white/5 border border-white/10 px-8 py-5 text-center flex items-center gap-6">
                     <div>
-                        <select class="form-select form-select-sm" id="sortWorkers">
-                            <option value="name">Sort by Name</option>
-                            <option value="rating">Sort by Rating</option>
-                            <option value="projects">Sort by Projects</option>
-                        </select>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Global performance</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-3xl font-serif font-bold text-approval-green">4.82</span>
+                            <i data-lucide="trending-up" class="w-5 h-5 text-approval-green"></i>
+                        </div>
                     </div>
                 </div>
-                
-                <?php foreach ($workers as $worker): ?>
-                <div class="rating-card">
-                    <div class="d-flex gap-3">
-                        <div class="worker-avatar">
-                            <?php echo esc(strtoupper(substr($worker['username'], 0, 2))); ?>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+            
+            <!-- Workforce Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <?php foreach($workers as $w): ?>
+                    <div class="bg-white shadow-premium border border-gray-100 p-10 flex flex-col group hover:border-rajkot-rust transition-all relative overflow-hidden">
+                        <!-- CAD accent corner -->
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-rajkot-rust/5 -mr-8 -mt-8 rotate-45 pointer-events-none group-hover:bg-rajkot-rust/10 transition-colors"></div>
+
+                        <div class="flex items-start justify-between mb-10">
+                            <div class="w-16 h-16 bg-foundation-grey text-white font-serif text-2xl font-bold flex items-center justify-center border-b-2 border-rajkot-rust shadow-sm">
+                                <?php echo strtoupper(substr($w['username'], 0, 1)); ?>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-300 block mb-1">Identity Code</span>
+                                <span class="text-xs font-mono font-bold text-foundation-grey">#RD-W<?php echo str_pad($w['id'], 4, '0', STR_PAD_LEFT); ?></span>
+                            </div>
                         </div>
-                        
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h3 class="h5 mb-1"><?php echo esc($worker['username']); ?></h3>
-                                    <p class="text-muted mb-0 small">
-                                        <i class="bi bi-briefcase me-1"></i><?php echo esc($worker['role']); ?>
-                                        <?php if (!empty($worker['email'])): ?>
-                                        &bull; <i class="bi bi-envelope me-1"></i><?php echo esc($worker['email']); ?>
-                                        <?php endif; ?>
-                                    </p>
+
+                        <div class="mb-12">
+                            <h3 class="text-2xl font-serif font-bold mb-1 text-foundation-grey group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars($w['username']); ?></h3>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                                <span class="w-1.5 h-[1px] bg-rajkot-rust"></span> <?php echo htmlspecialchars($w['role']); ?>
+                            </p>
+                            
+                            <div class="bg-gray-50/50 p-4 border-l-2 border-rajkot-rust">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="flex">
+                                        <?php echo render_stars($w['avg_rating']); ?>
+                                    </div>
+                                    <span class="text-base font-bold text-foundation-grey"><?php echo number_format($w['avg_rating'], 1); ?></span>
                                 </div>
-                                <button 
-                                    class="btn btn-sm btn-primary"
-                                    onclick="openRatingModal(<?php echo $worker['id']; ?>, '<?php echo esc_js($worker['username']); ?>')"
-                                >
-                                    <i class="bi bi-star me-1"></i> Rate Worker
+                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.1em]">Based on <?php echo $w['total_ratings']; ?> verification audits</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-8 border-t border-gray-50 pt-10 mb-10">
+                            <div>
+                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest block mb-1">Deployments</span>
+                                <span class="text-2xl font-serif font-bold text-foundation-grey"><?php echo $w['projects_count']; ?></span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest block mb-1">Validation</span>
+                                <span class="text-2xl font-serif font-bold text-approval-green uppercase">Verified</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto space-y-6">
+                            <div class="flex items-center gap-3 text-[11px] font-medium text-gray-400">
+                                <i data-lucide="phone" class="w-3.5 h-3.5 opacity-50"></i> <?php echo htmlspecialchars($w['phone']); ?>
+                            </div>
+                            <button onclick="document.getElementById('ratingModal_<?php echo $w['id']; ?>').classList.remove('hidden')" 
+                                    class="w-full py-5 bg-foundation-grey hover:bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-premium active:scale-[0.98] flex items-center justify-center gap-3">
+                                <i data-lucide="clipboard-check" class="w-4 h-4"></i> Create Audit Entry
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Simplified In-file Modal for each worker -->
+                    <div id="ratingModal_<?php echo $w['id']; ?>" class="fixed inset-0 bg-foundation-grey/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+                        <div class="bg-white w-full max-w-md shadow-premium border border-gray-100 overflow-hidden transform-gpu">
+                            <div class="bg-foundation-grey p-8 text-white flex justify-between items-center">
+                                <h4 class="text-xl font-serif font-bold">Standard Performance Entry</h4>
+                                <button onclick="document.getElementById('ratingModal_<?php echo $w['id']; ?>').classList.add('hidden')" class="text-gray-400 hover:text-white transition-colors">
+                                    <i data-lucide="x" class="w-6 h-6"></i>
                                 </button>
                             </div>
-                            
-                            <div class="d-flex align-items-center gap-3 flex-wrap">
-                                <div class="rating-stars">
-                                    <?php echo render_stars($worker['avg_rating'] ?? 0); ?>
-                                    <span class="ms-2 fw-bold"><?php echo number_format($worker['avg_rating'] ?? 0, 1); ?></span>
-                                    <span class="text-muted small">(<?php echo $worker['total_ratings']; ?> reviews)</span>
-                                </div>
+                            <form method="POST" class="p-10 space-y-10">
+                                <input type="hidden" name="submit_rating" value="1">
+                                <input type="hidden" name="worker_id" value="<?php echo $w['id']; ?>">
                                 
-                                <div class="stat-badge">
-                                    <i class="bi bi-folder me-1"></i>
-                                    <?php echo $worker['projects_count']; ?> Projects
+                                <div class="space-y-6 text-center">
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] block">Evaluation Score (1-5 Star Audit)</label>
+                                    <div class="flex justify-center gap-6">
+                                        <?php for($i=1; $i<=5; $i++): ?>
+                                            <label class="cursor-pointer group relative">
+                                                <input type="radio" name="rating" value="<?php echo $i; ?>" required class="hidden peer">
+                                                <i data-lucide="star" class="w-10 h-10 text-gray-100 peer-checked:text-rajkot-rust peer-checked:fill-rajkot-rust group-hover:text-rajkot-rust/30 transition-all"></i>
+                                                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-200 peer-checked:text-rajkot-rust opacity-0 peer-checked:opacity-100 transition-opacity"><?php echo $i; ?></span>
+                                            </label>
+                                        <?php endfor; ?>
+                                    </div>
                                 </div>
-                                
-                                <?php if (!empty($worker['phone'])): ?>
-                                <a href="tel:<?php echo esc_attr($worker['phone']); ?>" class="text-decoration-none stat-badge">
-                                    <i class="bi bi-telephone me-1"></i>
-                                    <?php echo esc($worker['phone']); ?>
-                                </a>
-                                <?php endif; ?>
-                            </div>
+
+                                <div class="space-y-3 pt-4">
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] block flex items-center gap-2">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Observation Registry
+                                    </label>
+                                    <textarea name="comment" rows="4" required
+                                              class="w-full p-6 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium placeholder:text-gray-300" 
+                                              placeholder="Document specific project achievements or issues..."></textarea>
+                                </div>
+
+                                <button type="submit" class="w-full py-6 bg-foundation-grey hover:bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-[0.4em] shadow-premium transition-all active:scale-[0.98] flex items-center justify-center gap-4 group">
+                                    Commit Entry to Registry <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
-                </div>
                 <?php endforeach; ?>
-                
-                <?php if (empty($workers)): ?>
-                <div class="text-center py-5">
-                    <i class="bi bi-people display-1 text-muted"></i>
-                    <p class="text-muted mt-3">No workers found in the system.</p>
-                </div>
-                <?php endif; ?>
             </div>
-        </div>
+        </main>
+
+        <?php require_once __DIR__ . '/../Common/footer.php'; ?>
     </div>
-</main>
 
-<!-- Rating Modal -->
-<div id="ratingModal" class="modal">
-    <div class="modal-content">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="h4 mb-0">Rate Worker</h3>
-            <button type="button" class="btn-close" onclick="closeRatingModal()"></button>
-        </div>
-        
-        <form method="POST" id="ratingForm">
-            <input type="hidden" name="worker_id" id="modal_worker_id">
-            <input type="hidden" name="rating" id="modal_rating" value="0">
-            <input type="hidden" name="submit_rating" value="1">
-            
-            <div class="mb-3">
-                <label class="form-label fw-bold">Worker</label>
-                <p id="modal_worker_name" class="text-muted mb-0"></p>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label fw-bold">Project (Optional)</label>
-                <select class="form-select" name="project_id">
-                    <option value="0">General Rating</option>
-                    <option value="101">Renovation — Oak Street Residence</option>
-                    <option value="102">Shop Fitout — Market Road</option>
-                    <option value="103">New Build — Riverfront Villa</option>
-                </select>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label fw-bold">Your Rating</label>
-                <div class="star-rating-input" id="starRating">
-                    <i class="bi bi-star" data-rating="1"></i>
-                    <i class="bi bi-star" data-rating="2"></i>
-                    <i class="bi bi-star" data-rating="3"></i>
-                    <i class="bi bi-star" data-rating="4"></i>
-                    <i class="bi bi-star" data-rating="5"></i>
-                </div>
-                <small class="text-muted">Click to rate from 1 to 5 stars</small>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label fw-bold">Comments (Optional)</label>
-                <textarea 
-                    class="form-control" 
-                    name="comment" 
-                    rows="4" 
-                    placeholder="Share your feedback about this worker's performance..."
-                ></textarea>
-            </div>
-            
-            <div class="d-flex gap-2 justify-content-end">
-                <button type="button" class="btn btn-secondary" onclick="closeRatingModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Submit Rating</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<?php require_once __DIR__ . '/../common/footer.php'; ?>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-// Rating modal functions
-function openRatingModal(workerId, workerName) {
-    document.getElementById('modal_worker_id').value = workerId;
-    document.getElementById('modal_worker_name').textContent = workerName;
-    document.getElementById('modal_rating').value = 0;
-    document.getElementById('ratingModal').classList.add('show');
-    resetStars();
-}
-
-function closeRatingModal() {
-    document.getElementById('ratingModal').classList.remove('show');
-    document.getElementById('ratingForm').reset();
-}
-
-function resetStars() {
-    document.querySelectorAll('.star-rating-input i').forEach(star => {
-        star.classList.remove('active', 'bi-star-fill');
-        star.classList.add('bi-star');
-    });
-}
-
-// Star rating interaction
-document.querySelectorAll('.star-rating-input i').forEach(star => {
-    star.addEventListener('click', function() {
-        const rating = parseInt(this.dataset.rating);
-        document.getElementById('modal_rating').value = rating;
-        
-        // Update star display
-        document.querySelectorAll('.star-rating-input i').forEach((s, index) => {
-            if (index < rating) {
-                s.classList.remove('bi-star');
-                s.classList.add('bi-star-fill', 'active');
-            } else {
-                s.classList.remove('bi-star-fill', 'active');
-                s.classList.add('bi-star');
-            }
-        });
-    });
-    
-    star.addEventListener('mouseenter', function() {
-        const rating = parseInt(this.dataset.rating);
-        document.querySelectorAll('.star-rating-input i').forEach((s, index) => {
-            if (index < rating) {
-                s.style.color = '#ffc107';
-            }
-        });
-    });
-});
-
-document.querySelector('.star-rating-input').addEventListener('mouseleave', function() {
-    const currentRating = parseInt(document.getElementById('modal_rating').value);
-    document.querySelectorAll('.star-rating-input i').forEach((s, index) => {
-        if (index >= currentRating) {
-            s.style.color = '';
-        }
-    });
-});
-
-// Sort functionality
-document.getElementById('sortWorkers')?.addEventListener('change', function() {
-    // Placeholder for sorting - would need server-side implementation
-    alert('Sorting feature: ' + this.value + ' (requires server-side implementation)');
-});
-
-// Close modal on outside click
-document.getElementById('ratingModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeRatingModal();
-    }
-});
-</script>
 </body>
 </html>

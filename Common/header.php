@@ -40,27 +40,43 @@ $stylesheetCandidates = [
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<!-- Bootstrap CSS and Icons (needed for footer and header) -->
+<!-- Bootstrap CSS and Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
+<!-- Lucide Icons (CAD style) -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
 <?php if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS): ?>
 <?php
-// Include TailwindCSS for pages that need it
-if ($headerMode === 'public' || $headerMode === 'dashboard') {
-    echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
-    echo '<script>
+// Include TailwindCSS globally for consistent design system
+echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
+echo '<script>
   tailwind.config = {
     theme: {
       extend: {
         colors: {
-          primary: "#731209",
+          "rajkot-rust": "#94180C",
+          "canvas-white": "#F9FAFB",
+          "foundation-grey": "#2D2D2D",
+          "slate-accent": "#334155",
+          "approval-green": "#15803D",
+          "pending-amber": "#B45309",
+          primary: "#94180C",
+          background: "#F9FAFB",
+        },
+        fontFamily: {
+          sans: ["Inter", "sans-serif"],
+          serif: ["Playfair Display", "serif"],
+        },
+        boxShadow: {
+            "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
+            "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
         }
       }
     }
   }
 </script>' . "\n";
-}
 
 // Include main stylesheet
 foreach ($stylesheetCandidates as $candidate) {
@@ -80,12 +96,10 @@ foreach ($stylesheetCandidates as $candidate) {
 <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header.css">
 <nav class="alt-header">
     <div class="alt-logo">
-        <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php">
-            <img src="<?php echo esc_attr(BASE_PATH); ?>/assets/Content/Logo.png" alt="Ripal Design Logo" style="height:3rem">
+        <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php" class="flex items-center gap-3 no-underline">
+            <img src="<?php echo esc_attr(BASE_PATH); ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10">
+            <span class="text-white font-serif font-bold text-xl tracking-tight">Ripal Design</span>
         </a>
-        <div style="color:var(--alt-text, #fff); font-weight:700; font-size:1.5rem; text-shadow: 5px 5px 5px rgba(0,0,0,0.3);">
-            Ripal Design
-        </div>
     </div>
     
     <div class="alt-menu">

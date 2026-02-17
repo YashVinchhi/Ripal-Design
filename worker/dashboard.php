@@ -3,25 +3,17 @@
 require_once __DIR__ . '/../includes/init.php';
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="en" class="bg-canvas-white">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Worker Dashboard - Ripal Design</title>
-    
-    <!-- Custom Styles -->
-    <?php asset_enqueue_css('/worker/worker_dashboard.css'); ?>
+    <title>Worker Dashboard | Ripal Design</title>
+    <?php require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
-<body>
-<?php
-// Include navigation header (UI only)
-$HEADER_MODE = 'dashboard';
-require_once __DIR__ . '/../common/header_alt.php';
+<body class="font-sans text-foundation-grey bg-canvas-white">
 
+<?php
 // Sample placeholder data — replace with real queries later
-// Try to load real projects from DB if available, otherwise fallback to sample data
-// DB and config are loaded via init
-require_once __DIR__ . '/../includes/init.php';
 $projects = [];
 if (isset($pdo) && $pdo instanceof PDO) {
     try {
@@ -40,163 +32,131 @@ if (empty($projects)) {
       'status' => 'ongoing',
       'progress' => 45,
       'due' => '2026-03-15',
-      'location' => '123 Oak St, Rajkot, Gujarat'
+      'location' => '123 Oak St, Rajkot, Gujarat',
+      'latitude' => '22.3039',
+      'longitude' => '70.8022'
     ],
     [
       'id' => 102,
-      'name' => 'Payment Gateway Integration',
-      'status' => 'completed',
-      'progress' => 100,
-      'due' => '2025-12-01',
-      'location' => 'Office HQ, Ripal Design'
-    ],
-    [
-      'id' => 103,
-      'name' => 'Workshop Materials Procurement',
-      'status' => 'on-hold',
-      'progress' => 20,
-      'due' => '2026-04-30',
-      'location' => 'Warehouse, Industrial Park'
-    ],
-    [
-      'id' => 104,
-      'name' => 'Client Revisions — Lakeside Villa',
+      'name' => 'Lakeside Villa Construction',
       'status' => 'overdue',
       'progress' => 70,
       'due' => '2026-01-20',
       'location' => 'Lakeside Villa, Plot 9'
-    ],
-    [
-      'id' => 105,
-      'name' => 'Site Survey — Elm Park',
-      'status' => 'info',
-      'progress' => 10,
-      'due' => '2026-05-10',
-      'location' => 'Elm Park, Sector 3'
-    ],
+    ]
   ];
 }
 
-// small summary counts for quick glance
 $counts = array_count_values(array_map(function($x){return $x['status'];}, $projects));
-
-// Load goods for visible projects (if DB available)
-$goodsMap = [];
-if (isset($pdo) && $pdo instanceof PDO) {
-  $ids = array_map(function($p){return (int)$p['id'];}, $projects);
-  if (!empty($ids)) {
-    $in = implode(',', $ids);
-    try {
-      $stmt = $pdo->query("SELECT project_id, id, name, quantity, unit_price, total_price FROM project_goods WHERE project_id IN ($in) ORDER BY created_at DESC");
-      $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      foreach ($rows as $r) {
-        $goodsMap[$r['project_id']][] = $r;
-      }
-    } catch (Exception $e) {
-      error_log('Failed loading goods: '.$e->getMessage());
-    }
-  }
-}
 ?>
-<main class="worker-dashboard">
-  <div class="page-header">
-    <div class="toolbar justify-content-between">
-      <div class="title-wrap">
-        <h1>Worker Dashboard</h1>
-        <p class="muted">Overview of your assigned projects and current workload</p>
-      </div>
-      <div class="avatar" aria-hidden="true">WD</div>
-    </div>
-  </div>
 
-  <section class="dashboard-grid" aria-label="Assigned projects">
-    <section class="dashboard-summary" aria-hidden="false">
-      <article class="summary-card">
-        <div class="summary-title">Active</div>
-        <div class="summary-value"><?php echo intval($counts['ongoing'] ?? 0); ?></div>
-      </article>
-      <article class="summary-card">
-        <div class="summary-title">Completed</div>
-        <div class="summary-value"><?php echo intval($counts['completed'] ?? 0); ?></div>
-      </article>
-      <article class="summary-card">
-        <div class="summary-title">On Hold</div>
-        <div class="summary-value"><?php echo intval($counts['on-hold'] ?? 0); ?></div>
-      </article>
-      <article class="summary-card">
-        <div class="summary-title">Overdue</div>
-        <div class="summary-value"><?php echo intval($counts['overdue'] ?? 0); ?></div>
-      </article>
-    </section>
-    <?php
-    foreach ($projects as $p):
-    ?>
-    
-    <article class="card project-card">
-      <header class="card-header">
-        <h3 class="project-name"><?php echo htmlspecialchars($p['name']); ?></h3>
-        <span class="status-badge <?php echo htmlspecialchars($p['status']); ?>">
-          <?php
-            $label = ucfirst(str_replace('-', ' ', $p['status']));
-            echo $label;
-          ?>
-        </span>
-      </header>
-
-      <div class="card-body">
-        <div class="meta-row">
-          <div class="meta-item">
-            <label>Progress</label>
-            <div class="progress">
-              <div class="progress-fill" style="width: <?php echo intval($p['progress']); ?>%"></div>
+<div class="min-h-screen flex flex-col">
+    <!-- Unified Dark Portal Header -->
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-serif font-bold">Workforce Portal</h1>
+                <p class="text-gray-400 text-sm mt-1 flex items-center gap-1">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-approval-green"></i> 
+                    On-site Supervisor Mode
+                </p>
             </div>
-            <small class="muted"><?php echo intval($p['progress']); ?>% complete</small>
-          </div>
+            <div class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner">
+                <?php echo strtoupper(substr($_SESSION['user'] ?? 'WD', 0, 2)); ?>
+            </div>
+        </div>
+    </header>
 
-          <div class="meta-item">
-            <label>Due</label>
-            <div class="due-date"><?php echo date('M d, Y', strtotime($p['due'])); ?></div>
-          </div>
-
-            <div class="meta-item">
-              <label>Location</label>
-              <div class="location-line">
-                <?php echo htmlspecialchars($p['location'] ?? ''); ?>
-                <?php if (!empty($p['latitude']) && !empty($p['longitude'])): ?>
-                  <a class="btn outline btn-sm" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=<?php echo urlencode($p['latitude'] . ',' . $p['longitude']); ?>">Get Directions</a>
-                <?php elseif (!empty($p['location'])): ?>
-                  <a class="btn outline btn-sm" target="_blank" href="https://www.google.com/maps/search/?api=1&query=<?php echo urlencode($p['location']); ?>">Get Directions</a>
-                <?php endif; ?>
-                <?php if (!empty($goodsMap[$p['id']])): ?>
-                <div style="margin-top:8px;">
-                  <strong>Goods:</strong>
-                  <ul class="muted" style="margin:6px 0 0; padding-left:18px;">
-                    <?php foreach($goodsMap[$p['id']] as $item): ?>
-                      <li><?php echo htmlspecialchars($item['name']); ?><?php if(!empty($item['sku'])): ?> <small class="muted">(<?php echo htmlspecialchars($item['sku']); ?>)</small><?php endif; ?> — <?php echo intval($item['quantity']); ?> <?php echo htmlspecialchars($item['unit'] ?? 'pcs'); ?> × ₹ <?php echo number_format($item['unit_price'],2); ?> = ₹ <?php echo number_format($item['total_price'],2); ?></li>
-                    <?php endforeach; ?>
-                  </ul>
-                </div>
-                <div style="margin-top:8px;">
-                  <a class="btn outline btn-sm" href="../dashboard/goods_invoice.php?project_id=<?php echo $p['id']; ?>" target="_blank">Invoice</a>
-                </div>
-              <?php endif; ?>
-              </div>
+    <main class="flex-grow p-4 max-w-4xl mx-auto w-full space-y-6">
+        <!-- Quick Glance Stats -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white p-4 border-l-4 border-rajkot-rust shadow-premium">
+                <span class="text-gray-400 text-xs uppercase font-bold">Active Jobs</span>
+                <span class="block text-2xl font-bold mt-1"><?php echo intval($counts['ongoing'] ?? 0); ?></span>
+            </div>
+            <div class="bg-white p-4 border-l-4 border-pending-amber shadow-premium">
+                <span class="text-gray-400 text-xs uppercase font-bold">Overdue</span>
+                <span class="block text-2xl font-bold mt-1 text-red-600"><?php echo intval($counts['overdue'] ?? 0); ?></span>
             </div>
         </div>
 
-        <div class="card-actions">
-          <a class="btn primary" href="project_details.php?id=<?php echo intval($p['id']); ?>#details">View Details</a>
-          <a class="btn outline" href="project_details.php?id=<?php echo intval($p['id']); ?>#drawings">Drawings</a>
-          <a class="btn outline" href="project_details.php?id=<?php echo intval($p['id']); ?>#request">Request Review</a>
-        </div>
-      </div>
-    </article>
-    <?php endforeach; ?>
-  </section>
-</main>
+        <!-- Project List -->
+        <h2 class="text-lg font-bold text-foundation-grey flex items-center gap-2 px-1">
+            <i data-lucide="briefcase" class="w-5 h-5 text-rajkot-rust"></i>
+            Assigned Projects
+        </h2>
 
-<?php
-require_once __DIR__ . '/../common/footer.php';
-?>
+        <div class="space-y-4">
+            <?php foreach ($projects as $p): ?>
+            <div class="bg-white border border-gray-200 shadow-premium overflow-hidden rounded-sm">
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-3">
+                        <?php 
+                        $statusClass = $p['status'] === 'overdue' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200';
+                        ?>
+                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border <?php echo $statusClass; ?>">
+                            <?php echo str_replace('-', ' ', $p['status']); ?>
+                        </span>
+                        <span class="text-xs text-gray-400 font-mono">#JOB-<?php echo $p['id']; ?></span>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-foundation-grey leading-tight mb-4">
+                        <?php echo htmlspecialchars($p['name']); ?>
+                    </h3>
+
+                    <div class="space-y-4">
+                        <!-- Progress -->
+                        <div>
+                            <div class="flex justify-between items-end mb-1">
+                                <span class="text-xs font-bold text-gray-500 uppercase">Completion</span>
+                                <span class="text-xs font-bold text-rajkot-rust"><?php echo intval($p['progress']); ?>%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-rajkot-rust h-full" style="width: <?php echo intval($p['progress']); ?>%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Location & Directions -->
+                        <div class="flex items-center justify-between py-3 border-y border-gray-50">
+                            <div class="flex items-center text-sm text-gray-600 truncate mr-4">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2 shrink-0 text-gray-400"></i>
+                                <span class="truncate"><?php echo htmlspecialchars($p['location']); ?></span>
+                            </div>
+                            <?php if (!empty($p['latitude'])): ?>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=<?php echo urlencode($p['latitude'] . ',' . $p['longitude']); ?>" target="_blank" class="shrink-0 text-rajkot-rust hover:underline text-xs font-bold flex items-center gap-1">
+                                    DIRECTIONS <i data-lucide="external-link" class="w-3 h-3"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Large Mobile Action Buttons -->
+                <div class="grid grid-cols-2 bg-gray-50 border-t border-gray-200">
+                    <a href="project_details.php?id=<?php echo $p['id']; ?>#drawings" class="flex flex-col items-center justify-center py-4 border-r border-gray-200 hover:bg-white transition-colors active:bg-gray-100 h-20">
+                        <i data-lucide="file-text" class="w-6 h-6 text-slate-accent mb-1"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Drawings</span>
+                    </a>
+                    <a href="project_details.php?id=<?php echo $p['id']; ?>" class="flex flex-col items-center justify-center py-4 hover:bg-white transition-colors active:bg-gray-100 h-20">
+                        <i data-lucide="layout-grid" class="w-6 h-6 text-rajkot-rust mb-1"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Open Job</span>
+                    </a>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Material Request Quick Action -->
+        <div class="pt-6">
+            <button class="w-full bg-slate-accent text-white py-5 rounded-lg font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all">
+                <i data-lucide="truck" class="w-6 h-6 text-pending-amber"></i>
+                MATERIAL REQUEST
+            </button>
+        </div>
+    </main>
+
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+</div>
+
 </body>
 </html>

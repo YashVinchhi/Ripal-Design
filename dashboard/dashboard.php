@@ -75,182 +75,122 @@ if (isset($pdo) && $pdo instanceof PDO) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-canvas-white">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard - Ripal Design</title>
-  <?php asset_enqueue_css('/worker/worker_dashboard.css'); ?>
-  <?php if (function_exists('render_head_assets')) { render_head_assets(); } ?>
+  <title>Dashboard | Ripal Design</title>
+  <?php require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
-<body>
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header_alt.php'; ?>
-  <main class="worker-dashboard">
-    <div class="container">
-      <div class="page-header">
-        <div class="toolbar justify-content-between">
-          <div class="title-wrap">
-            <h1>Dashboard</h1>
-            <p class="muted">Overview of projects and quick actions</p>
-          </div>
-          <div class="avatar" aria-hidden="true"><?php echo strtoupper(substr($user,0,2)); ?></div>
-        </div>
-      </div>
-
-      <!-- Summary KPIs -->
-      <div class="dashboard-summary">
-        <div class="summary-card">
-          <div class="summary-title">Active Projects</div>
-          <div class="summary-value"><?php echo count($projects); ?></div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-title">Assigned Workers</div>
-          <div class="summary-value"><?php echo count($workers); ?></div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-title">Open Assignments</div>
-          <div class="summary-value"><?php echo count($assignments); ?></div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-title">Pending Reviews</div>
-          <div class="summary-value">2</div>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="toolbar" style="margin-bottom:24px;">
-        <button class="btn primary" onclick="location.href='project_details.php'">Create Project</button>
-        <a class="btn outline" href="../admin/project_management.php">Manage Projects</a>
-        <a class="btn outline" href="profile.php">Profile</a>
-        <a class="btn outline" href="review_requests.php">Review Requests</a>
-        <div style="flex:1"></div>
-        <input type="search" placeholder="Search projects..." style="padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; width:260px;">
-      </div>
-
-      <!-- Projects Grid -->
-      <div class="dashboard-grid">
-        <?php foreach($projects as $p): ?>
-          <article class="card project-card">
-            <div class="card-header">
-              <div>
-                <h3 class="project-name"><?php echo htmlspecialchars($p['name']); ?></h3>
-                <div class="muted">Project ID: <?php echo $p['id']; ?> &middot; Area: 2,400 sq.ft.</div>
-              </div>
-              <div>
-                <span class="status-badge ongoing">Ongoing</span>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="meta-row">
-                <div class="meta-item">
-                  <label>Budget</label>
-                  <div class="due-date">₹ 45,00,000</div>
+<body class="font-sans text-foundation-grey">
+    
+    <div class="min-h-screen flex flex-col">
+        <!-- Dashboard Header -->
+        <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 shadow-lg">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h1 class="text-4xl font-serif font-bold">System Dashboard</h1>
+                    <p class="text-gray-400 mt-2">Welcome back, <span class="text-rajkot-rust font-semibold"><?php echo htmlspecialchars($user); ?></span>. Here's your project overview.</p>
                 </div>
-                <div class="meta-item">
-                  <label>Owner</label>
-                  <div class="muted">Amitbhai Patel</div>
+                <div class="flex gap-3">
+                    <button class="bg-rajkot-rust hover:bg-red-700 text-white px-6 py-2.5 flex items-center gap-2 transition-all shadow-lg active:scale-95" onclick="location.href='project_details.php'">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Project
+                    </button>
+                    <a href="profile.php" class="bg-white/10 border border-white/20 text-white px-6 py-2.5 flex items-center gap-2 hover:bg-white/20 transition-all">
+                        <i data-lucide="user" class="w-5 h-5"></i> Profile
+                    </a>
                 </div>
-              </div>
-
-              <div class="card-actions">
-                <a class="btn outline" href="project_details.php?id=<?php echo $p['id']; ?>">Open</a>
-                <a class="btn" href="project_details.php?id=<?php echo $p['id']; ?>">View Details</a>
-                <a class="btn outline" href="goods_list.php?project_id=<?php echo $p['id']; ?>">Goods</a>
-                <a class="btn outline" href="../worker/assigned_projects.php?project_id=<?php echo $p['id']; ?>">Assigned</a>
-              </div>
             </div>
-          </article>
-        <?php endforeach; ?>
-      </div>
+        </header>
 
+        <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white p-6 shadow-premium border-l-4 border-rajkot-rust">
+                    <p class="text-gray-500 text-sm uppercase tracking-wider font-semibold">Active Projects</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <span class="text-3xl font-bold"><?php echo count($projects); ?></span>
+                        <i data-lucide="layout" class="text-rajkot-rust/20 w-8 h-8"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-6 shadow-premium border-l-4 border-slate-accent">
+                    <p class="text-gray-500 text-sm uppercase tracking-wider font-semibold">Assigned Workers</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <span class="text-3xl font-bold"><?php echo count($workers); ?></span>
+                        <i data-lucide="users" class="text-slate-accent/20 w-8 h-8"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-6 shadow-premium border-l-4 border-approval-green">
+                    <p class="text-gray-500 text-sm uppercase tracking-wider font-semibold">Pending Approvals</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <span class="text-3xl font-bold">12</span>
+                        <i data-lucide="check-square" class="text-approval-green/20 w-8 h-8"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-6 shadow-premium border-l-4 border-pending-amber">
+                    <p class="text-gray-500 text-sm uppercase tracking-wider font-semibold">Invoices Pending</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <span class="text-3xl font-bold">₹ 4.2L</span>
+                        <i data-lucide="indian-rupee" class="text-pending-amber/20 w-8 h-8"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+                <div class="flex gap-2">
+                    <a href="../admin/project_management.php" class="px-4 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50 flex items-center gap-2">
+                        <i data-lucide="settings" class="w-4 h-4"></i> Admin Panel
+                    </a>
+                    <a href="review_requests.php" class="px-4 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50 flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="w-4 h-4"></i> Review Requests
+                    </a>
+                </div>
+                <div class="relative w-full md:w-96">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                    <input type="search" placeholder="Search projects..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-rajkot-rust focus:border-transparent outline-none">
+                </div>
+            </div>
+
+            <!-- Projects Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <?php foreach($projects as $p): ?>
+                <div class="group bg-white border border-gray-200 shadow-premium hover:shadow-premium-hover transition-all duration-300 flex flex-col">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-3 py-1 bg-approval-green/10 text-approval-green text-xs font-bold uppercase tracking-widest border border-approval-green/20">Ongoing</span>
+                            <span class="text-xs text-gray-400 font-mono">#PRJ-0<?php echo $p['id']; ?></span>
+                        </div>
+                        <h3 class="text-xl font-serif font-bold group-hover:text-rajkot-rust transition-colors line-clamp-2 min-h-[3.5rem] mb-2">
+                            <?php echo htmlspecialchars($p['name']); ?>
+                        </h3>
+                        <div class="space-y-3 mt-4">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i> Rajkot, Gujarat
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i data-lucide="maximize" class="w-4 h-4 mr-2"></i> 2,400 sq.ft.
+                            </div>
+                            <div class="flex items-center text-sm text-gray-800 font-semibold">
+                                <i data-lucide="indian-rupee" class="w-4 h-4 mr-2 text-rajkot-rust"></i> ₹ 45,00,000
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-auto p-6 pt-0 flex gap-2 border-t border-gray-50 pt-6">
+                        <a href="project_details.php?id=<?php echo $p['id']; ?>" class="flex-1 bg-foundation-grey hover:bg-black text-white text-center py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="external-link" class="w-4 h-4"></i> View
+                        </a>
+                        <a href="goods_list.php?project_id=<?php echo $p['id']; ?>" class="flex-1 border border-gray-300 hover:bg-gray-50 text-center py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="package" class="w-4 h-4"></i> Goods
+                        </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </main>
+
+        <?php require_once __DIR__ . '/../Common/footer.php'; ?>
     </div>
-  </main>
 
-  <!-- Assign Worker Modal -->
-  <div id="assignModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:9999;">
-    <div style="width:420px; background:#fff; border-radius:10px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
-      <h3 style="margin-top:0; color:var(--color-primary, #731209);">Assign Worker</h3>
-      <p id="assignProjectName" style="margin:6px 0 12px; color:#333;">Select a worker to assign to the project.</p>
-      <input type="hidden" id="assign_project_id" value="">
-      <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:14px; margin-bottom:6px; color:#666;">Worker</label>
-        <select id="assign_worker_select" style="width:100%; padding:8px 10px; border:1px solid var(--color-border,#E0E0E0); border-radius:8px;">
-          <?php foreach($workers as $w): ?>
-            <option value="<?php echo $w['id']; ?>"><?php echo htmlspecialchars($w['username']); ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
-        <button class="btn outline" onclick="hideAssignModal();">Cancel</button>
-        <button class="btn primary" id="assignSubmitBtn" onclick="submitAssign();">Assign</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function openAssignModal(projectId, projectName){
-      document.getElementById('assign_project_id').value = projectId;
-      document.getElementById('assignProjectName').textContent = projectName || 'Select a worker to assign to the project.';
-      document.getElementById('assignModal').style.display = 'flex';
-    }
-    function hideAssignModal(){
-      document.getElementById('assignModal').style.display = 'none';
-    }
-    async function submitAssign(){
-      var projectId = document.getElementById('assign_project_id').value;
-      var workerId = document.getElementById('assign_worker_select').value;
-      if(!projectId || !workerId){ alert('Please select a worker.'); return; }
-        var btn = document.getElementById('assignSubmitBtn');
-      btn.disabled = true; btn.textContent = 'Assigning...';
-      console.log('submitAssign called', { projectId, workerId });
-      try{
-        var fd = new FormData();
-        fd.append('project_id', projectId);
-        fd.append('worker_id', workerId);
-        // use explicit relative path and include X-Requested-With header
-        var res = await fetch('./assign_worker.php', { method:'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        var json = await res.json();
-        if(json && json.success){
-          alert(json.message || 'Worker assigned.');
-          hideAssignModal();
-          // simple UI update: reload to reflect new assignment counts
-          location.reload();
-        } else {
-          alert(json.message || 'Assignment failed.');
-        }
-      }catch(e){
-        alert('Network error: ' + e.message);
-      }finally{
-        btn.disabled = false; btn.textContent = 'Assign';
-      }
-    }
-    // Attach assign buttons to project cards
-    document.addEventListener('DOMContentLoaded', function(){
-      var cards = document.querySelectorAll('.project-card');
-      cards.forEach(function(card){
-        var idText = card.querySelector('.muted');
-        // attempt to read project id from the muted line
-        var projectId = null;
-        if(idText){
-          var m = idText.textContent.match(/Project ID:\s*(\d+)/);
-          if(m) projectId = m[1];
-        }
-        if(projectId){
-          var assignBtn = document.createElement('button');
-          assignBtn.className = 'btn outline';
-          assignBtn.style.marginLeft = '8px';
-          assignBtn.textContent = 'Assign Worker';
-          assignBtn.onclick = function(){
-            var nameEl = card.querySelector('.project-name');
-            openAssignModal(projectId, nameEl ? nameEl.textContent.trim() : 'Project ' + projectId);
-          };
-          var actions = card.querySelector('.card-actions');
-          if(actions) actions.appendChild(assignBtn);
-        }
-      });
-    });
-  </script>
-
-  <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 </html>

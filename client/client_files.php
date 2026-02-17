@@ -1,173 +1,215 @@
 <?php
 // Client Files (Redesigned UI)
 session_start();
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/init.php';
 $projectId = $_GET['project_id'] ?? 'PRJ-2024-001';
+
+// Sample drawing data
+$drawings = [
+    [
+        'id' => 1,
+        'title' => 'Site Layout Plan - GF',
+        'file' => 'Blueprint_SLP_01.pdf',
+        'size' => '4.2 MB',
+        'version' => 'v1.8',
+        'date' => 'Feb 14, 2026',
+        'status' => 'approved'
+    ],
+    [
+        'id' => 2,
+        'title' => 'Electrical Conduit Plan',
+        'file' => 'Blueprint_ELE_04.pdf',
+        'size' => '2.8 MB',
+        'version' => 'v2.1',
+        'date' => 'Just Now',
+        'status' => 'pending'
+    ],
+    [
+        'id' => 3,
+        'title' => 'Plumbing & Drainage Layout',
+        'file' => 'Blueprint_PLM_02.pdf',
+        'size' => '3.5 MB',
+        'version' => 'v1.4',
+        'date' => 'Feb 10, 2026',
+        'status' => 'approved'
+    ]
+];
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-canvas-white">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Design Studio | Ripal Design</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'rajkot-rust': '#94180C',
-            'canvas-white': '#F9FAFB',
-            'foundation-grey': '#2D2D2D',
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Playfair Display', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <?php require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
   
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
-    <div class="mb-8">
-      <div class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-         <a href="dashboard.php" class="hover:text-rajkot-rust transition">Dashboard</a>
-         <i class="bi bi-chevron-right text-[8px]"></i>
-         <span>Design Studio</span>
-      </div>
-      <h1 class="text-3xl font-serif font-bold text-rajkot-rust">Design Studio</h1>
-      <p class="text-gray-500 mt-1">Review and approve architectural drawings for <strong><?php echo htmlspecialchars($projectId); ?></strong>.</p>
-    </div>
-
-    <!-- Project Status Progress Bar -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-      <div class="flex justify-between items-end mb-4">
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Phase</p>
-          <h2 class="text-lg font-bold text-foundation-grey">Detailed Design & Engineering</h2>
+  <div class="min-h-screen flex flex-col">
+    <!-- Unified Dark Portal Header -->
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg border-b-2 border-rajkot-rust">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+                <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">
+                    <a href="../dashboard/dashboard.php" class="hover:text-rajkot-rust transition-colors flex items-center gap-2 no-underline">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Repository
+                    </a>
+                    <i data-lucide="slash" class="w-3 h-3 text-gray-600 rotate-[15deg]"></i>
+                    <span class="text-rajkot-rust">Design Studio</span>
+                </div>
+                <h1 class="text-4xl font-serif font-bold text-white leading-tight">Design Studio</h1>
+                <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Transparency Engine • <strong class="text-rajkot-rust font-mono"><?php echo htmlspecialchars($projectId); ?></strong></p>
+            </div>
+            <div class="flex gap-3">
+                <button class="bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center gap-3 active:scale-95">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i> Export manifest
+                </button>
+            </div>
         </div>
-        <div class="text-right">
-          <span class="text-2xl font-black text-rajkot-rust">65%</span>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- Transparency Engine: Progress Bar -->
+        <div class="bg-white p-10 mb-12 shadow-premium border border-gray-100 relative group overflow-hidden">
+            <!-- Background CAD line -->
+            <div class="absolute bottom-0 right-0 w-1/2 h-[1px] bg-gradient-to-l from-rajkot-rust/20 to-transparent"></div>
+            
+            <div class="flex justify-between items-end mb-8 relative">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-2 font-mono">Architecture Lifecycle Phase</p>
+                    <h2 class="text-2xl font-serif font-bold text-foundation-grey flex items-center gap-4">
+                        Detailed Engineering & IFC 
+                        <span class="text-[9px] bg-approval-green/5 text-approval-green px-3 py-1 border border-approval-green/10 uppercase tracking-[0.2em] font-sans font-bold">In Progress</span>
+                    </h2>
+                </div>
+                <div class="text-right">
+                    <span class="text-5xl font-black text-gray-50 absolute -mt-10 right-0 select-none font-serif opacity-50">03</span>
+                    <span class="text-3xl font-black text-rajkot-rust font-sans relative flex items-baseline gap-1">75<span class="text-xs font-bold uppercase tracking-widest text-gray-300">%</span></span>
+                </div>
+            </div>
+            <div class="relative pt-2">
+                <div class="overflow-hidden h-2 mb-6 text-xs flex rounded-full bg-gray-50 border border-gray-100">
+                    <div style="width:75%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-rajkot-rust transition-all duration-1000 relative">
+                        <div class="absolute top-0 right-0 w-2 h-2 bg-white rounded-full border-2 border-rajkot-rust -mr-1"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-[9px] font-bold text-gray-300 uppercase tracking-[0.2em] font-mono">
+                    <span class="flex items-center gap-2">01 <span class="hidden sm:inline">Concept</span></span>
+                    <span class="flex items-center gap-2">02 <span class="hidden sm:inline">Schematic</span></span>
+                    <span class="flex items-center gap-2 text-rajkot-rust bg-rajkot-rust/5 px-3 py-1 -mt-1 border-b border-rajkot-rust">03 <span class="hidden sm:inline">Detailed Design</span></span>
+                    <span class="flex items-center gap-2">04 <span class="hidden sm:inline">Construction</span></span>
+                    <span class="flex items-center gap-2">05 <span class="hidden sm:inline">Delivery</span></span>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-        <div class="bg-rajkot-rust h-full rounded-full transition-all duration-1000" style="width: 65%"></div>
-      </div>
-      <div class="flex justify-between mt-3 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-        <span>Concept</span>
-        <span>Schematic</span>
-        <span class="text-rajkot-rust">Detailed Design</span>
-        <span>Construction</span>
-        <span>Handover</span>
-      </div>
-    </div>
 
-    <!-- Files Table -->
-    <div class="bg-white shadow-sm border border-gray-100 rounded-xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 class="font-bold text-foundation-grey">Latest Drawings</h3>
-        <div class="flex gap-2">
-           <button class="p-2 hover:bg-gray-50 rounded text-gray-400" title="Grid View"><i class="bi bi-grid"></i></button>
-           <button class="p-2 bg-gray-50 rounded text-rajkot-rust" title="List View"><i class="bi bi-list-ul"></i></button>
+        <!-- Drawings Table -->
+        <div class="bg-white shadow-premium border border-gray-100 overflow-hidden">
+            <div class="px-10 py-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+                <h3 class="text-[10px] font-bold uppercase tracking-[0.4em] text-foundation-grey flex items-center gap-3">
+                    <i data-lucide="layers" class="w-4 h-4 text-rajkot-rust"></i> Revision Registry
+                </h3>
+                <div class="flex bg-white shadow-sm ring-1 ring-gray-100 p-1">
+                    <button class="p-2 text-rajkot-rust bg-gray-50"><i data-lucide="rows" class="w-4 h-4"></i></button>
+                    <button class="p-2 text-gray-300 hover:text-gray-500 transition-colors"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/20 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
+                            <th class="px-10 py-6 font-bold">Document Metadata</th>
+                            <th class="px-8 py-6 font-bold">Iteration</th>
+                            <th class="px-8 py-6 font-bold">Timestamp</th>
+                            <th class="px-8 py-6 font-bold">Registry Status</th>
+                            <th class="px-10 py-6 font-bold text-right">Commit Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        <?php foreach($drawings as $d): ?>
+                        <tr class="group hover:bg-gray-50/30 transition-all duration-300">
+                            <td class="px-10 py-8">
+                                <div class="flex items-center gap-5">
+                                    <div class="w-12 h-16 bg-foundation-grey flex flex-col items-center justify-center text-white shrink-0 relative overflow-hidden group-hover:bg-rajkot-rust transition-colors shadow-premium border-b-2 border-rajkot-rust/20 group-hover:border-white/20">
+                                        <i data-lucide="file-text" class="w-6 h-6 mb-1 opacity-80"></i>
+                                        <span class="text-[7px] font-bold uppercase tracking-tighter">CAD DATA</span>
+                                        <div class="absolute bottom-0 left-0 w-full h-1 bg-white/10"></div>
+                                    </div>
+                                    <div>
+                                        <p class="font-serif font-bold text-lg text-foundation-grey group-hover:text-rajkot-rust transition-colors mb-1"><?php echo htmlspecialchars($d['title']); ?></p>
+                                        <div class="flex items-center gap-3">
+                                            <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70"><?php echo $d['file']; ?></p>
+                                            <span class="text-[8px] bg-gray-50 text-gray-400 px-2 py-0.5 font-bold border border-gray-100"><?php echo $d['size']; ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-8">
+                                <span class="text-xs font-mono font-bold text-foundation-grey bg-gray-50 px-2 py-1"><?php echo $d['version']; ?></span>
+                            </td>
+                            <td class="px-8 py-8">
+                                <span class="text-[11px] font-medium text-gray-400 italic"><?php echo $d['date']; ?></span>
+                            </td>
+                            <td class="px-8 py-8">
+                                <?php if($d['status'] === 'approved'): ?>
+                                    <span class="inline-flex items-center gap-2 text-approval-green text-[9px] font-bold uppercase tracking-[0.2em]">
+                                        <i data-lucide="check" class="w-3.5 h-3.5"></i> Synchronized
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center gap-2 text-pending-amber text-[9px] font-bold uppercase tracking-[0.2em] animate-pulse">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i> Under Review
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-10 py-8 text-right">
+                                <?php if($d['status'] === 'pending'): ?>
+                                    <div class="flex justify-end gap-3">
+                                        <button class="bg-approval-green hover:bg-green-700 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
+                                            Authorize
+                                        </button>
+                                        <button class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
+                                            Request Redline
+                                        </button>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="flex justify-end gap-3">
+                                        <button class="text-gray-300 hover:text-rajkot-rust transition-colors p-2"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                                        <button class="text-gray-300 hover:text-foundation-grey transition-colors p-2"><i data-lucide="history" class="w-5 h-5"></i></button>
+                                        <button class="text-gray-300 hover:text-blue-600 transition-colors p-2"><i data-lucide="download" class="w-5 h-5"></i></button>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left">
-          <thead class="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            <tr>
-              <th class="px-6 py-4">Document</th>
-              <th class="px-6 py-4">Version</th>
-              <th class="px-6 py-4">Date</th>
-              <th class="px-6 py-4">Preview</th>
-              <th class="px-6 py-4">Status</th>
-              <th class="px-6 py-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            <!-- Approved Item -->
-            <tr class="group hover:bg-gray-50/50 transition">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center text-xl border border-blue-100">
-                    <i class="bi bi-file-earmark-pdf"></i>
-                  </div>
-                  <div>
-                    <p class="text-sm font-bold text-foundation-grey">Site Layout Plan - GF</p>
-                    <p class="text-[10px] text-gray-400">Blueprint_SLP_01.pdf (4.2 MB)</p>
-                  </div>
+        <!-- Change Order / Advisory Box -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="md:col-span-2 bg-slate-accent text-white p-8 flex items-center gap-6 shadow-premium relative overflow-hidden group">
+                <i data-lucide="info" class="w-16 h-16 text-white/10 absolute -right-4 -top-4 transform rotate-12 group-hover:scale-110 transition-transform"></i>
+                <div class="shrink-0 w-16 h-16 bg-white/10 flex items-center justify-center">
+                    <i data-lucide="alert-triangle" class="w-8 h-8 text-pending-amber"></i>
                 </div>
-              </td>
-              <td class="px-6 py-4 text-xs font-mono text-gray-500">v1.8</td>
-              <td class="px-6 py-4 text-xs text-gray-500">Feb 14, 2024</td>
-              <td class="px-6 py-4">
-                <div class="w-16 h-10 bg-gray-100 rounded border border-gray-200 overflow-hidden relative group-hover:border-rajkot-rust transition">
-                  <div class="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-zoom-in">
-                    <i class="bi bi-search text-xs text-rajkot-rust"></i>
-                  </div>
-                  <div class="h-full w-full bg-striped opacity-20"></div>
+                <div>
+                    <h4 class="text-lg font-serif font-bold mb-1">Standard Transparency Protocol</h4>
+                    <p class="text-sm text-gray-300">Approving a drawing digitally locks the record. All subsequent changes will be tracked as separate Change Orders to ensure billing transparency.</p>
                 </div>
-              </td>
-              <td class="px-6 py-4">
-                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-green-50 text-green-700 border border-green-100">
-                   <i class="bi bi-lock-fill"></i> Approved
-                 </span>
-              </td>
-              <td class="px-6 py-4 text-right">
-                 <button class="bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded text-xs font-bold hover:border-rajkot-rust hover:text-rajkot-rust transition shadow-sm">
-                   View
-                 </button>
-              </td>
-            </tr>
+            </div>
+            <div class="bg-white p-8 border border-gray-100 shadow-premium flex flex-col justify-center text-center">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Pending Impacts</p>
+                <span class="text-4xl font-serif font-bold text-rajkot-rust mb-2">02</span>
+                <p class="text-xs text-gray-500">Unresolved Change Orders</p>
+            </div>
+        </div>
+    </main>
 
-            <!-- Pending Review -->
-            <tr class="group hover:bg-gray-50/50 transition">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded bg-amber-50 text-amber-600 flex items-center justify-center text-xl border border-amber-100">
-                    <i class="bi bi-file-earmark-pdf"></i>
-                  </div>
-                  <div>
-                    <p class="text-sm font-bold text-foundation-grey">Electrical Conduit Plan</p>
-                    <p class="text-[10px] text-gray-400">Blueprint_ELE_04.pdf (2.8 MB)</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-xs font-mono text-gray-500">v2.1</td>
-              <td class="px-6 py-4 text-xs text-gray-500">Just Now</td>
-              <td class="px-6 py-4 text-xs text-gray-500 italic">Processing...</td>
-              <td class="px-6 py-4">
-                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
-                   Pending Review
-                 </span>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end gap-2">
-                   <button class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700 transition shadow-sm">
-                     Approve
-                   </button>
-                   <button class="bg-white border border-rajkot-rust text-rajkot-rust px-3 py-1 rounded text-xs font-bold hover:bg-red-50 transition shadow-sm">
-                     Revision
-                   </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+  </div>
 
-  <style>
-    .bg-striped {
-      background-image: repeating-linear-gradient(45deg, #000, #000 1px, transparent 1px, transparent 5px);
-    }
-  </style>
-
-  <?php require_once __DIR__ . '/../common/footer.php'; ?>
 </body>
 </html>
