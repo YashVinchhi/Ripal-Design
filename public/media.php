@@ -56,7 +56,7 @@ require_once __DIR__ . '/../includes/config.php';
        <!-- Project 1 -->
        <div class="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500">
           <div class="aspect-[4/5] overflow-hidden">
-             <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800" alt="Crystal Mall Extension" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+             <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" alt="Crystal Mall Extension" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col justify-end p-8">
                 <span class="text-rajkot-rust text-[10px] font-black uppercase tracking-widest mb-2">Commercial</span>
                 <h3 class="text-white text-2xl font-serif font-bold mb-4">Crystal Mall Extension</h3>
@@ -70,7 +70,7 @@ require_once __DIR__ . '/../includes/config.php';
        <!-- Project 2 -->
        <div class="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500">
           <div class="aspect-[4/5] overflow-hidden">
-             <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800" alt="Heritage Restoration" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+             <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg" alt="Heritage Restoration" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col justify-end p-8">
                 <span class="text-rajkot-rust text-[10px] font-black uppercase tracking-widest mb-2">Heritage</span>
                 <h3 class="text-white text-2xl font-serif font-bold mb-4">Wankaner Royal Estate</h3>
@@ -84,7 +84,7 @@ require_once __DIR__ . '/../includes/config.php';
        <!-- Project 3 -->
        <div class="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500">
           <div class="aspect-[4/5] overflow-hidden">
-             <img src="https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=800" alt="Industrial Shed Design" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+             <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" alt="Industrial Shed Design" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col justify-end p-8">
                 <span class="text-rajkot-rust text-[10px] font-black uppercase tracking-widest mb-2">Industrial</span>
                 <h3 class="text-white text-2xl font-serif font-bold mb-4">Metoda GIDC Plant-4</h3>

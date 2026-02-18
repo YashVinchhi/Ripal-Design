@@ -38,9 +38,34 @@ $project = [
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php echo htmlspecialchars($project['name']); ?> | Ripal Design</title>
-    <?php require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; 
+    
+    // Handle review request submission
+    $request_sent = false;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_details'])) {
+        $request_sent = true;
+    }
+    ?>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <style>
+        .error { color: #94180C; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
+    </style>
 </head>
 <body class="font-sans text-foundation-grey bg-canvas-white">
+
+<?php if ($request_sent): ?>
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+        <div class="bg-white p-12 max-w-lg w-full text-center border-b-4 border-rajkot-rust shadow-premium">
+            <i data-lucide="check-circle" class="w-16 h-16 text-approval-green mx-auto mb-6"></i>
+            <h2 class="text-3xl font-serif font-bold text-foundation-grey mb-4">Verification Submitted</h2>
+            <p class="text-gray-500 mb-8">Your review request has been logged. An architect will inspect the site shortly.</p>
+            <button onclick="window.location.href='dashboard.php'" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all">
+                Continue
+            </button>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="min-h-screen flex flex-col">
     <!-- Unified Dark Portal Header -->
@@ -164,7 +189,7 @@ $project = [
             </h2>
             <div class="grid grid-cols-1 gap-3">
                 <?php foreach($project['drawings'] as $d): ?>
-                <div class="bg-white p-4 shadow-premium border border-gray-100 flex items-center gap-4 group hover:border-rajkot-rust transition-colors cursor-pointer">
+                <div class="bg-white p-4 shadow-premium border border-gray-100 flex items-center gap-4 group hover:border-rajkot-rust transition-colors cursor-pointer" onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['title']); ?>&project=<?php echo urlencode($project['name']); ?>', '_blank')">
                     <div class="w-12 h-12 bg-foundation-grey group-hover:bg-rajkot-rust transition-colors flex items-center justify-center text-white shrink-0">
                         <i data-lucide="<?php echo $d['type'] == 'pdf' ? 'file-text' : 'image'; ?>" class="w-6 h-6"></i>
                     </div>
@@ -191,15 +216,15 @@ $project = [
         <div id="content-request" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 shadow-premium border border-gray-100">
                 <h3 class="text-lg font-bold font-serif mb-4">New Review Request</h3>
-                <form class="space-y-4">
+                <form class="space-y-4" method="POST" action="" id="requestForm">
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Subject</label>
-                        <input type="text" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="e.g. Beam Reinforcement Ready">
+                        <input type="text" name="request_subject" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="e.g. Beam Reinforcement Ready">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Urgency</label>
-                            <select class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
+                            <select name="request_urgency" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
                                 <option>Normal</option>
                                 <option>High</option>
                                 <option>Critical</option>
@@ -207,7 +232,7 @@ $project = [
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Trade</label>
-                            <select class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
+                            <select name="request_trade" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
                                 <option>Structural</option>
                                 <option>Plumbing</option>
                                 <option>Electrical</option>
@@ -217,7 +242,7 @@ $project = [
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Details</label>
-                        <textarea rows="4" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="Explain what requires immediate inspection..."></textarea>
+                        <textarea name="request_details" rows="4" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="Explain what requires immediate inspection..."></textarea>
                     </div>
                     <button type="submit" class="w-full bg-rajkot-rust text-white py-4 font-bold uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all">
                         Submit for Verification
@@ -254,6 +279,34 @@ $project = [
     window.addEventListener('load', () => {
         const hash = window.location.hash.replace('#', '') || 'overview';
         switchTab(hash);
+    });
+
+    $(document).ready(function() {
+        $("#requestForm").validate({
+            rules: {
+                request_subject: {
+                    required: true,
+                    minlength: 5
+                },
+                request_details: {
+                    required: true,
+                    minlength: 10
+                }
+            },
+            messages: {
+                request_subject: {
+                    required: "Subject is required for registry",
+                    minlength: "Subject must be at least 5 characters"
+                },
+                request_details: {
+                    required: "Detailed context is mandatory",
+                    minlength: "Please provide more detail for the architect"
+                }
+            },
+            errorPlacement: function(error, element) {
+                error.insertAfter(element);
+            }
+        });
     });
 </script>
 

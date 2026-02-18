@@ -24,9 +24,9 @@ if (isset($pdo) && $pdo instanceof PDO) {
     }
 } else {
     $projects = [
-      ['id' => 1, 'name' => 'Renovation — Oak Street Residence'],
-      ['id' => 2, 'name' => 'Shop Fitout — Market Road'],
-      ['id' => 3, 'name' => 'New Build — Riverfront Villa'],
+      ['id' => 1, 'name' => 'Shanti Sadan'],
+      ['id' => 2, 'name' => 'Dharmendra Road Shopping Hub'],
+      ['id' => 3, 'name' => 'Gokul Nivas (Nyari Dam)'],
     ];
 }
 
@@ -45,9 +45,9 @@ if (isset($pdo) && $pdo instanceof PDO) {
     }
 } else {
     $workers = [
-      ['id' => 11, 'username' => 'Ramesh Kumar'],
-      ['id' => 12, 'username' => 'Suresh Bhai'],
-      ['id' => 13, 'username' => 'Mahesh M.'],
+      ['id' => 11, 'username' => 'Rameshbhai Patel'],
+      ['id' => 12, 'username' => 'Sureshbhai'],
+      ['id' => 13, 'username' => 'Maheshbhai Mehta'],
     ];
 }
 
@@ -69,8 +69,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
     }
 } else {
     $assignments = [
-      ['project_name' => 'Renovation — Oak Street Residence', 'worker_name' => 'Ramesh Kumar', 'assigned_at' => '2026-02-01 10:00'],
-      ['project_name' => 'Shop Fitout — Market Road', 'worker_name' => 'Suresh Bhai', 'assigned_at' => '2026-02-05 14:30'],
+      ['project_name' => 'Shanti Sadan', 'worker_name' => 'Rameshbhai Patel', 'assigned_at' => '2026-02-01 10:00'],
+      ['project_name' => 'Dharmendra Road Shopping Hub', 'worker_name' => 'Sureshbhai', 'assigned_at' => '2026-02-05 14:30'],
     ];
 }
 ?>
@@ -80,7 +80,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dashboard | Ripal Design</title>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="font-sans text-foundation-grey">
     

@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/init.php';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>User Management | Ripal Design</title>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   
@@ -111,9 +111,9 @@ require_once __DIR__ . '/../includes/init.php';
                             <td class="px-8 py-6 text-gray-400 text-[11px] font-medium italic">Active Now</td>
                             <td class="px-8 py-6">
                                 <div class="flex justify-end gap-4">
-                                    <button class="text-gray-300 hover:text-rajkot-rust transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                    <button class="text-gray-300 hover:text-foundation-grey transition-colors"><i data-lucide="settings-2" class="w-4 h-4"></i></button>
-                                    <button class="text-gray-300 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <a href="../dashboard/profile.php?user=ashish" class="text-gray-300 hover:text-rajkot-rust transition-colors" title="View Profile"><i data-lucide="eye" class="w-4 h-4"></i></a>
+                                    <a href="add_user.php?id=1" class="text-gray-300 hover:text-foundation-grey transition-colors" title="Edit Permissions"><i data-lucide="settings-2" class="w-4 h-4"></i></a>
+                                    <button class="text-gray-300 hover:text-red-600 transition-colors" onclick="confirmDelete('Ashish Vinchhi')"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -139,9 +139,9 @@ require_once __DIR__ . '/../includes/init.php';
                             <td class="px-8 py-6 text-gray-400 text-[11px] font-medium italic">12 min ago</td>
                             <td class="px-8 py-6">
                                 <div class="flex justify-end gap-4">
-                                    <button class="text-gray-300 hover:text-rajkot-rust transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                    <button class="text-gray-300 hover:text-foundation-grey transition-colors"><i data-lucide="settings-2" class="w-4 h-4"></i></button>
-                                    <button class="text-gray-300 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <a href="../dashboard/profile.php?user=ripal" class="text-gray-300 hover:text-rajkot-rust transition-colors" title="View Profile"><i data-lucide="eye" class="w-4 h-4"></i></a>
+                                    <a href="add_user.php?id=2" class="text-gray-300 hover:text-foundation-grey transition-colors" title="Edit Permissions"><i data-lucide="settings-2" class="w-4 h-4"></i></a>
+                                    <button class="text-gray-300 hover:text-red-600 transition-colors" onclick="confirmDelete('Ripal Patel')"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -149,10 +149,10 @@ require_once __DIR__ . '/../includes/init.php';
                         <tr class="group hover:bg-gray-50/50 transition-all duration-300">
                             <td class="px-8 py-6">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-11 h-11 bg-slate-accent/10 text-slate-accent font-serif font-bold flex items-center justify-center border-b-2 border-slate-accent shadow-sm uppercase">SK</div>
+                                    <div class="w-11 h-11 bg-slate-accent/10 text-slate-accent font-serif font-bold flex items-center justify-center border-b-2 border-slate-accent shadow-sm uppercase">SA</div>
                                     <div>
-                                        <p class="font-bold text-foundation-grey group-hover:text-rajkot-rust transition-colors mb-0.5">Sanjay Kumar</p>
-                                        <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70">sanjay@field.ripal.in</p>
+                                        <p class="font-bold text-foundation-grey group-hover:text-rajkot-rust transition-colors mb-0.5">Sanjaybhai Ahir</p>
+                                        <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70">sanjay.ahir@field.ripal.in</p>
                                     </div>
                                 </div>
                             </td>
@@ -167,9 +167,9 @@ require_once __DIR__ . '/../includes/init.php';
                             <td class="px-8 py-6 text-gray-400 text-[11px] font-medium italic">4 hours ago</td>
                             <td class="px-8 py-6">
                                 <div class="flex justify-end gap-4">
-                                    <button class="text-gray-300 hover:text-rajkot-rust transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                    <button class="text-gray-300 hover:text-foundation-grey transition-colors"><i data-lucide="settings-2" class="w-4 h-4"></i></button>
-                                    <button class="text-gray-300 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <a href="../dashboard/profile.php?user=sanjay" class="text-gray-300 hover:text-rajkot-rust transition-colors" title="View Profile"><i data-lucide="eye" class="w-4 h-4"></i></a>
+                                    <a href="add_user.php?id=3" class="text-gray-300 hover:text-foundation-grey transition-colors" title="Edit Permissions"><i data-lucide="settings-2" class="w-4 h-4"></i></a>
+                                    <button class="text-gray-300 hover:text-red-600 transition-colors" onclick="confirmDelete('Sanjaybhai Ahir')"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -178,13 +178,31 @@ require_once __DIR__ . '/../includes/init.php';
             </div>
             <!-- Pagination / Load More -->
             <div class="p-10 text-center border-t border-gray-50 bg-gray-50/30">
-                <button class="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-300 hover:text-rajkot-rust transition-all border-b border-transparent hover:border-rajkot-rust pb-1 px-4">Initialize Full Registry Scroll</button>
+                <button onclick="this.innerText='Full Registry Loaded'; this.classList.remove('text-gray-300'); this.classList.add('text-approval-green');" class="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-300 hover:text-rajkot-rust transition-all border-b border-transparent hover:border-rajkot-rust pb-1 px-4">Initialize Full Registry Scroll</button>
             </div>
         </div>
     </main>
 
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
   </div>
+
+  <script>
+    function confirmDelete(userName) {
+        if (confirm('Are you sure you want to remove ' + userName + ' from the registry? This action cannot be revoked.')) {
+            // Simulated delete action
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-24 right-8 bg-foundation-grey text-white px-8 py-4 shadow-2xl border-l-4 border-rajkot-rust z-50 animate-bounce';
+            notification.innerHTML = '<p class="text-[10px] font-bold uppercase tracking-widest mb-1">Registry Synchronization</p><p class="text-sm">Identity for <b>' + userName + '</b> has been decommissioned.</p>';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('animate-bounce');
+                notification.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
+                setTimeout(() => notification.remove(), 1000);
+            }, 3000);
+        }
+    }
+  </script>
 
 </body>
 </html>

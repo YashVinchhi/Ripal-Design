@@ -41,7 +41,7 @@ $drawings = [
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Design Studio | Ripal Design</title>
-  <?php require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   
@@ -166,18 +166,18 @@ $drawings = [
                             <td class="px-10 py-8 text-right">
                                 <?php if($d['status'] === 'pending'): ?>
                                     <div class="flex justify-end gap-3">
-                                        <button class="bg-approval-green hover:bg-green-700 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
+                                        <button onclick="handleClientAction('authorize', '<?php echo addslashes($d['title']); ?>')" class="bg-approval-green hover:bg-green-700 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
                                             Authorize
                                         </button>
-                                        <button class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
+                                        <button onclick="handleClientAction('redline', '<?php echo addslashes($d['title']); ?>')" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
                                             Request Redline
                                         </button>
                                     </div>
                                 <?php else: ?>
                                     <div class="flex justify-end gap-3">
-                                        <button class="text-gray-300 hover:text-rajkot-rust transition-colors p-2"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                                        <button onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['file']); ?>&project=Client Registry', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
                                         <button class="text-gray-300 hover:text-foundation-grey transition-colors p-2"><i data-lucide="history" class="w-5 h-5"></i></button>
-                                        <button class="text-gray-300 hover:text-blue-600 transition-colors p-2"><i data-lucide="download" class="w-5 h-5"></i></button>
+                                        <button onclick="handleDownload('<?php echo addslashes($d['file']); ?>')" class="text-gray-300 hover:text-blue-600 transition-colors p-2" title="Registry Download"><i data-lucide="download" class="w-5 h-5"></i></button>
                                     </div>
                                 <?php endif; ?>
                             </td>

@@ -137,10 +137,30 @@
 </head>
 
 <body class="bg-[#050505] text-white overflow-x-hidden">
-    <?php $HEADER_MODE = 'public';
-    require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php 
+    $HEADER_MODE = 'public';
+    require_once __DIR__ . '/../includes/header.php'; 
+    
+    // Simple POST handling for feedback
+    $form_success = false;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
+        $form_success = true;
+    }
+    ?>
 
     <main class="relative min-h-screen flex flex-col md:flex-row pt-24">
+        <?php if ($form_success): ?>
+            <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+                <div class="bg-white p-12 max-w-lg w-full text-center border-b-4 border-rajkot-rust shadow-premium">
+                    <i data-lucide="check-circle" class="w-16 h-16 text-approval-green mx-auto mb-6"></i>
+                    <h2 class="text-3xl font-serif font-bold text-foundation-grey mb-4">Message Sent</h2>
+                    <p class="text-gray-500 mb-8">Thank you for reaching out. Our design team will review your inquiry and contact you shortly.</p>
+                    <button onclick="window.location.href='index.php'" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all">
+                        Return Home
+                    </button>
+                </div>
+            </div>
+        <?php endif; ?>
         <!-- Left: Info -->
         <div class="w-full md:w-1/2 p-8 md:p-20 flex flex-col justify-content-center text-align-center bg-[#0a0a0a] left-responsive-img" style="background-image: url('../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg');  background-size: cover; background-position: center; background-repeat: no-repeat;">
 
@@ -163,7 +183,7 @@
                         </div>
                         <div>
                             <h4 class="text-white text-lg font-medium mb-1">Contact</h4>
-                            <p>+91 98765 43210<br>projects@ripaldesign.in</p>
+                            <p>+91 94267 89012<br>projects@ripaldesign.in</p>
                         </div>
                         <div>
                             <h4 class="text-white text-lg font-medium mb-1">Social</h4>

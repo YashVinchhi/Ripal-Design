@@ -37,8 +37,7 @@
 
             <!-- Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Item 1 -->
-                <div class="product-card group cursor-pointer">
+                <a href="contact_us.php?subject=residential" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
                         <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
                         <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
@@ -47,10 +46,10 @@
                         <h3 class="text-2xl serif mb-1">Italian Marble Series</h3>
                         <p class="text-gray-500 text-sm tracking-wide uppercase">Flooring & Cladding</p>
                     </div>
-                </div>
+                </a>
+                <div class="hidden">
 
-                <!-- Item 2 -->
-                <div class="product-card group cursor-pointer">
+                <a href="contact_us.php?subject=commercial" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
                         <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
                          <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
@@ -59,10 +58,10 @@
                         <h3 class="text-2xl serif mb-1">Lumina Pendant</h3>
                         <p class="text-gray-500 text-sm tracking-wide uppercase">Lighting</p>
                     </div>
-                </div>
+                </a>
+                <div class="hidden">
 
-                <!-- Item 3 -->
-                <div class="product-card group cursor-pointer">
+                <a href="contact_us.php?subject=consultation" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
                         <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Product">
                          <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
@@ -71,7 +70,8 @@
                         <h3 class="text-2xl serif mb-1">Oak Wood Panels</h3>
                         <p class="text-gray-500 text-sm tracking-wide uppercase">Interiors</p>
                     </div>
-                </div>
+                </a>
+                <div class="hidden">
             </div>
             
             <div class="mt-20 text-center">

@@ -80,12 +80,12 @@
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">01</span>
-                        <h2 class="project-title display-4 mb-4">Obsidian Mono</h2>
+                        <h2 class="project-title display-4 mb-4">Shanti Sadan</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            A monolith of light and shadow, redefining the urban residential  <br>experience through minimalist precision and spatial excellence.
+                            A masterpiece of modern residential architecture in the heart of Rajkot, <br>redefining spatial excellence through minimalist precision.
                         </p>
-                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
                             <span class="project-arrow">→</span>
                         </a>
@@ -98,12 +98,12 @@
                 <div class="project-showcase-content project-content-left">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">02</span>
-                        <h2 class="project-title display-4 mb-4">Oasis Pavilion</h2>
+                        <h2 class="project-title display-4 mb-4">Matru Ashish</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            Bridging the gap between tradition and future technology <br> with breathable structure and organic integration.
+                            A landmark in Jam Khambhalia, bridging the gap between <br> tradition and contemporary living with breathable structure.
                         </p>
-                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
                             <span class="project-arrow">→</span>
                         </a>
@@ -122,12 +122,12 @@
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">03</span>
-                        <h2 class="project-title display-4 mb-4">Vertical Zen</h2>
+                        <h2 class="project-title display-4 mb-4">Rajkot Smart City Plaza</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            Urban biophilia integrated into a modular high-rise system, <br>bringing nature into the vertical landscape.
+                            State-of-the-art multi-institutional system integrated <br>into Rajkot's burgeoning urban landscape.
                         </p>
-                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
                             <span class="project-arrow">→</span>
                         </a>
@@ -140,12 +140,12 @@
                 <div class="project-showcase-content project-content-left">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">04</span>
-                        <h2 class="project-title display-4 mb-4">Loft VII</h2>
+                        <h2 class="project-title display-4 mb-4">Morbi Ceramic Hub</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            Raw industrial heritage meeting contemporary <br> refinement in a dialogue between past and future.
+                            Industrial refinement meeting contemporary <br> aesthetics in the heart of India's ceramic capital.
                         </p>
-                        <a href="#" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
                             <span class="project-arrow">→</span>
                         </a>
@@ -186,9 +186,9 @@
                                 </p>
                             </blockquote>
                             <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
-                                <h6 class="text-white fw-bold mb-1">Jonathan Vance</h6>
+                                <h6 class="text-white fw-bold mb-1">Amitbhai Patel</h6>
                                 <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
-                                    CEO, Skyward Holdings
+                                    Chairman, Rajkot Realty Group
                                 </p>
                             </div>
                         </div>
@@ -209,9 +209,9 @@
                                 </p>
                             </blockquote>
                             <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
-                                <h6 class="text-white fw-bold mb-1">Elena Rodriguez</h6>
+                                <h6 class="text-white fw-bold mb-1">Anilbhai Sharma</h6>
                                 <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
-                                    Private Collector
+                                    Founder, Khambhalia Arts
                                 </p>
                             </div>
                         </div>
@@ -232,9 +232,9 @@
                                 </p>
                             </blockquote>
                             <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
-                                <h6 class="text-white fw-bold mb-1">Marcus Thorne</h6>
+                                <h6 class="text-white fw-bold mb-1">Sureshbhai</h6>
                                 <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
-                                    Director, Urban Planning NYC
+                                    Director, Regional Urban Planning
                                 </p>
                             </div>
                         </div>

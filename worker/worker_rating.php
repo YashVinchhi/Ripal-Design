@@ -80,7 +80,7 @@ function render_stars($rating) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Workforce Ratings | Ripal Design</title>
-    <?php require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
     

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../includes/init.php';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Worker Dashboard | Ripal Design</title>
-    <?php require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="font-sans text-foundation-grey bg-canvas-white">
 
@@ -28,21 +28,21 @@ if (empty($projects)) {
   $projects = [
     [
       'id' => 101,
-      'name' => 'Renovation — Oak Street Residence',
+      'name' => 'Shanti Sadan',
       'status' => 'ongoing',
       'progress' => 45,
       'due' => '2026-03-15',
-      'location' => '123 Oak St, Rajkot, Gujarat',
+      'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
       'latitude' => '22.3039',
       'longitude' => '70.8022'
     ],
     [
       'id' => 102,
-      'name' => 'Lakeside Villa Construction',
+      'name' => 'Sukh Sagar (Nyari Dam)',
       'status' => 'overdue',
       'progress' => 70,
       'due' => '2026-01-20',
-      'location' => 'Lakeside Villa, Plot 9'
+      'location' => 'Nyari Dam Road, Rajkot'
     ]
   ];
 }

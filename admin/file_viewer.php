@@ -61,7 +61,7 @@ $fileName = $file ? basename($file) : 'Blueprint_A1_01.pdf';
       <div class="p-6">
         <h2 class="text-sm font-bold uppercase tracking-widest text-rajkot-rust mb-4">Revision History</h2>
         <div class="space-y-3">
-          <div class="flex items-start gap-3 p-2 bg-gray-50 rounded border-l-2 border-l-rajkot-rust">
+          <div class="flex items-start gap-3 p-2 bg-gray-50 rounded border-l-2 border-l-rajkot-rust shadow-sm">
              <div class="mt-1"><i class="bi bi-file-earmark-pdf text-rajkot-rust"></i></div>
              <div>
                <p class="text-xs font-bold text-foundation-grey">v2.4 - Feb 15</p>
@@ -73,6 +73,20 @@ $fileName = $file ? basename($file) : 'Blueprint_A1_01.pdf';
              <div>
                <p class="text-xs font-medium text-gray-600">v2.3 - Feb 02</p>
                <p class="text-[10px] text-gray-400 italic">Initial submission</p>
+             </div>
+          </div>
+          <div class="flex items-start gap-3 p-2 hover:bg-gray-50 transition cursor-pointer rounded">
+             <div class="mt-1"><i class="bi bi-file-earmark text-gray-400"></i></div>
+             <div>
+               <p class="text-xs font-medium text-gray-600">v2.2 - Jan 20</p>
+               <p class="text-[10px] text-gray-400 italic">Schematic approval</p>
+             </div>
+          </div>
+          <div class="flex items-start gap-3 p-2 hover:bg-gray-50 transition cursor-pointer rounded opacity-50">
+             <div class="mt-1"><i class="bi bi-file-earmark text-gray-300"></i></div>
+             <div>
+               <p class="text-xs font-medium text-gray-400">v2.1 - Jan 05</p>
+               <p class="text-[10px] text-gray-300 italic">Conceptual draft</p>
              </div>
           </div>
         </div>
@@ -88,18 +102,18 @@ $fileName = $file ? basename($file) : 'Blueprint_A1_01.pdf';
            <span class="text-xs text-gray-300 truncate max-w-xs"><?php echo htmlspecialchars($fileName); ?></span>
         </div>
         <div class="flex items-center gap-2">
-           <button class="p-2 hover:bg-white/10 rounded transition text-lg" title="Zoom Out"><i class="bi bi-dash"></i></button>
-           <span class="text-xs font-medium px-2">100%</span>
-           <button class="p-2 hover:bg-white/10 rounded transition text-lg" title="Zoom In"><i class="bi bi-plus"></i></button>
+           <button class="p-2 hover:bg-white/10 rounded transition text-lg" title="Zoom Out" onclick="updateZoom(-10)"><i class="bi bi-dash"></i></button>
+           <span class="text-xs font-medium px-2 w-12 text-center" id="zoom-level">100%</span>
+           <button class="p-2 hover:bg-white/10 rounded transition text-lg" title="Zoom In" onclick="updateZoom(10)"><i class="bi bi-plus"></i></button>
            <div class="w-px h-4 bg-white/20 mx-2"></div>
-           <button class="p-2 hover:bg-white/10 rounded transition" title="Print"><i class="bi bi-printer"></i></button>
-           <button class="p-2 hover:bg-white/10 rounded transition" title="Download"><i class="bi bi-download"></i></button>
+           <button class="p-2 hover:bg-white/10 rounded transition" title="Print" onclick="window.print()"><i class="bi bi-printer"></i></button>
+           <button class="p-2 hover:bg-white/10 rounded transition" title="Download" onclick="handleDownload()"><i class="bi bi-download"></i></button>
         </div>
       </div>
 
       <!-- PDF Canvas Mock -->
-      <div class="flex-grow overflow-auto flex items-center justify-center p-8 bg-foundation-grey">
-        <div class="bg-white shadow-2xl w-full max-w-4xl aspect-[1/1.414] relative flex flex-col border border-gray-300 overflow-hidden">
+      <div class="flex-grow overflow-auto flex items-center justify-center p-8 bg-foundation-grey print:p-0 print:bg-white">
+        <div id="pdf-container" class="bg-white shadow-2xl w-full max-w-4xl aspect-[1/1.414] relative flex flex-col border border-gray-300 overflow-hidden transition-transform duration-200">
            <!-- Placeholder for PDF.js Canvas -->
            <div class="absolute inset-0 bg-striped-dots opacity-5"></div>
            <div class="absolute bottom-4 left-4 flex flex-col items-start gap-1">
@@ -141,6 +155,28 @@ $fileName = $file ? basename($file) : 'Blueprint_A1_01.pdf';
       background-size: 20px 20px;
     }
   </style>
+
+  <script>
+    let currentZoom = 100;
+    
+    function updateZoom(delta) {
+        currentZoom = Math.min(Math.max(currentZoom + delta, 50), 200);
+        document.getElementById('zoom-level').textContent = currentZoom + '%';
+        document.getElementById('pdf-container').style.transform = `scale(${currentZoom / 100})`;
+    }
+
+    function handleDownload() {
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        
+        // Simulated download
+        setTimeout(() => {
+            alert('File: <?php echo addslashes($fileName); ?> is being prepared for secure download. Please check your browser downloads.');
+            btn.innerHTML = originalContent;
+        }, 1200);
+    }
+  </script>
 
   <?php require_once __DIR__ . '/../common/footer.php'; ?>
 </body>

@@ -156,7 +156,7 @@
             <div class="container py-5">
                 <h2 class="display-3 font-serif mb-4">Build the Extraordinary</h2>
                 <p class="lead mb-5 opacity-75">Ready to start your next project with Ripal Design?</p>
-                <a href="#" class="btn btn-primary rounded-0 px-5 py-3 tracking-architect" style="background:#731209;border-color:#731209;color:#fff;">Contact Our Studio</a>
+                <a href="contact_us.php" class="btn btn-primary rounded-0 px-5 py-3 tracking-architect" style="background:#731209;border-color:#731209;color:#fff;">Contact Our Studio</a>
             </div>
         </section>
     </main>

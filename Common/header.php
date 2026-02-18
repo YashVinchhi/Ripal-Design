@@ -117,19 +117,41 @@ foreach ($stylesheetCandidates as $candidate) {
 <div id="altOverlay">
     <div class="alt-panel" role="dialog" aria-modal="true" aria-label="Site menu">
         <nav>
-            <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php">Home</a>
-            <a href="<?php echo esc_attr(BASE_PATH); ?>/public/services.php">Services</a>
-            <a href="<?php echo esc_attr(BASE_PATH); ?>/public/products.php">Products</a>
-            <a href="<?php echo esc_attr(BASE_PATH); ?>/public/about_us.php">About</a>
-            <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php">Contact</a>
+            <?php if ($headerMode === 'dashboard'): ?>
+                <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Dashboard</strong>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php">Dashboard Home</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/profile.php">Profile Settings</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/review_requests.php">Review Requests</a>
+
+                <hr class="border-white/10 my-4 mx-4">
+                <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Worker Portal</strong>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/dashboard.php">Worker Dashboard</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/assigned_projects.php">Assigned Projects</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/worker_rating.php">My Ratings</a>
+
+                <hr class="border-white/10 my-4 mx-4">
+                <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Administration</strong>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/project_management.php">Project Portfolio</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/user_management.php">User Controls</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/leave_management.php">Leave Manager</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/payment_gateway.php">Financial Gateway</a>
+            <?php else: ?>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php">Home</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/services.php">Services</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/products.php">Products</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/about_us.php">About</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php">Contact</a>
+            <?php endif; ?>
         </nav>
   
 
         
         <div class="panel-footer">
             <?php if (is_logged_in()): ?>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php" class="btn-alt btn-login">Dashboard</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt btn-signup">Logout</a>
+                <?php if ($headerMode !== 'dashboard'): ?>
+                    <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php" class="btn-alt btn-login">Dashboard</a>
+                <?php endif; ?>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>">Logout</a>
             <?php else: ?>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/login.php" class="btn-alt btn-login">Login</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/signup.php" class="btn-alt btn-signup">Sign Up</a>

@@ -232,25 +232,25 @@ if ($projectId && isset($pdo) && $pdo instanceof PDO) {
 if (!$project) {
   $project = [
     'id' => $projectId ?? 1,
-    'name' => 'Renovation — Oak Street Residence',
+    'name' => 'Shanti Sadan',
     'status' => 'ongoing',
     'budget' => 4500000,
     'progress' => 45,
     'due' => date('Y-m-d', strtotime('+30 days')),
-    'location' => '123 Oak St, Rajkot, Gujarat',
-    'address' => '123 Oak St, Rajkot, Gujarat',
+    'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
+    'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
     'owner' => [
       'name' => 'Amitbhai Patel',
       'contact' => '+91 98765 43210',
       'email' => 'amit.patel@example.com'
     ],
     'workers' => [
-      ['worker_name' => 'Ramesh Kumar', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
-      ['worker_name' => 'Suresh Bhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
-      ['worker_name' => 'Mohan Das', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
-      ['worker_name' => 'Vijay Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
-      ['worker_name' => 'Kiran Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
-      ['worker_name' => 'Anil Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
+      ['worker_name' => 'Rameshbhai Patel', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
+      ['worker_name' => 'Sureshbhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
+      ['worker_name' => 'Mohanbhai Ahir', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
+      ['worker_name' => 'Vijaybhai Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
+      ['worker_name' => 'Kiranbhai Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
+      ['worker_name' => 'Anilbhai Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
     ],
     'milestones' => [
       ['title' => 'Foundation Completion', 'target_date' => '2026-02-28', 'status' => 'active'],
@@ -264,10 +264,10 @@ if (!$project) {
       ['id' => 4, 'name' => 'Contract Agreement.pdf', 'type' => 'PDF', 'size' => '1.8 MB', 'uploaded_at' => '2026-01-28 09:00:00', 'uploaded_by' => 'Legal Team', 'file_path' => '#']
     ],
     'activities' => [
-      ['id' => 1, 'user' => 'Ramesh Kumar', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
+      ['id' => 1, 'user' => 'Rameshbhai Patel', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
       ['id' => 2, 'user' => 'Admin', 'action' => 'uploaded file', 'item' => 'Progress Photos.zip', 'created_at' => date('Y-m-d H:i:s', strtotime('-4 hours'))],
-      ['id' => 3, 'user' => 'Suresh Bhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
-      ['id' => 4, 'user' => 'Vijay Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
+      ['id' => 3, 'user' => 'Sureshbhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
+      ['id' => 4, 'user' => 'Vijaybhai Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
     ],
     'drawings' => [
       ['id' => 1, 'name' => 'Floor Plan - Ground Floor', 'version' => 'v2.3', 'uploaded_at' => '2026-02-10 12:00:00', 'status' => 'Approved', 'file_path' => '#'],
@@ -600,7 +600,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                                     <div
                                         class="bg-slate-100 dark:bg-slate-800 rounded-lg aspect-video flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
                                         <div
-                                            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&amp;fit=crop&amp;q=80&amp;w=2000')] bg-cover opacity-20 group-hover:opacity-30 transition-opacity">
+                                            class="absolute inset-0 bg-[url('../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM (1).jpeg')] bg-cover opacity-20 group-hover:opacity-30 transition-opacity">
                                         </div>
                                         <div class="z-10 text-center px-4">
                                             <span class="material-icons text-4xl mb-2 opacity-50">map</span>
@@ -752,7 +752,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         <span><?php echo htmlspecialchars($member['worker_contact']); ?></span>
                     </div>
                     <div class="flex gap-2">
-                        <button
+                        <button onclick="viewMemberProfile('<?php echo addslashes($member['worker_name']); ?>', '<?php echo addslashes($member['worker_role']); ?>')"
                             class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             View Profile
                         </button>
@@ -940,7 +940,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         </span>
                         <div class="flex gap-2">
                             <?php if (!empty($drawing['file_path'])): ?>
-                            <a href="<?php echo htmlspecialchars($drawing['file_path']); ?>" target="_blank"
+                            <a href="../admin/file_viewer.php?file=<?php echo urlencode($drawing['name']); ?>&project=<?php echo urlencode($project['name']); ?>" target="_blank"
                                 class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">
                                 View
                             </a>
@@ -1019,6 +1019,54 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
     </div>
 
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+
+    <!-- Member Profile Modal -->
+    <div id="memberProfileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div class="h-32 bg-rajkot-rust relative">
+                <div class="absolute -bottom-12 left-8 w-24 h-24 rounded-full bg-white border-4 border-white dark:border-slate-900 shadow-lg flex items-center justify-center text-3xl font-bold text-rajkot-rust" id="modal-member-initials">
+                    ??
+                </div>
+            </div>
+            <div class="pt-16 p-8">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100" id="modal-member-name">Member Name</h3>
+                        <p class="text-rajkot-rust font-medium" id="modal-member-role">Position</p>
+                    </div>
+                    <button onclick="closeMemberProfileModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                        <span class="material-icons text-lg">verified</span>
+                        <span>Verified Field Representative</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                        <span class="material-icons text-lg">history</span>
+                        <span>Joined: Jan 2024</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                        <span class="material-icons text-lg">task_alt</span>
+                        <span>12 Projects Completed</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg mb-8">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Registry Bio</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                        "Committed to architectural excellence and structural integrity. Specializing in high-precision field implementations for Ripal Design's premium ventures."
+                    </p>
+                </div>
+
+                <button class="w-full py-3 bg-foundation-grey text-white rounded font-bold uppercase tracking-widest text-xs hover:bg-rajkot-rust transition-all active:scale-[0.98]">
+                    Contact via Internal Signal
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Hidden file upload inputs -->
     <input type="file" id="fileUploadInput" style="display: none;" accept="*/*" onchange="uploadFile(this)" />
@@ -1341,10 +1389,25 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             }
         });
 
+        // Member profile modal functions
+        function viewMemberProfile(name, role) {
+            document.getElementById('modal-member-name').textContent = name;
+            document.getElementById('modal-member-role').textContent = role;
+            
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            document.getElementById('modal-member-initials').textContent = initials;
+            
+            document.getElementById('memberProfileModal').classList.remove('hidden');
+        }
+
+        function closeMemberProfileModal() {
+            document.getElementById('memberProfileModal').classList.add('hidden');
+        }
+
         // Close modal on backdrop click
-        document.getElementById('addTeamMemberModal')?.addEventListener('click', function(e) {
+        document.getElementById('memberProfileModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
-                closeAddTeamMemberModal();
+                closeMemberProfileModal();
             }
         });
     </script>

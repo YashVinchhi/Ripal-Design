@@ -127,10 +127,10 @@ require_once __DIR__ . '/../includes/config.php';
               </td>
               <td class="px-6 py-4 text-right">
                 <div class="flex justify-end gap-2">
-                  <button class="w-8 h-8 rounded bg-green-600 text-white flex items-center justify-center shadow-sm hover:bg-green-700 transition" title="Approve">
+                  <button onclick="handleLeaveAction('<?php echo addslashes($leave['name'] ?? 'Bhavin Karia'); ?>', 'approved')" class="w-8 h-8 rounded bg-green-600 text-white flex items-center justify-center shadow-sm hover:bg-green-700 transition" title="Approve">
                     <i class="bi bi-check-lg"></i>
                   </button>
-                  <button class="w-8 h-8 rounded bg-rajkot-rust text-white flex items-center justify-center shadow-sm hover:bg-red-800 transition" title="Reject">
+                  <button onclick="handleLeaveAction('<?php echo addslashes($leave['name'] ?? 'Bhavin Karia'); ?>', 'rejected')" class="w-8 h-8 rounded bg-rajkot-rust text-white flex items-center justify-center shadow-sm hover:bg-red-800 transition" title="Reject">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 </div>
@@ -176,5 +176,41 @@ require_once __DIR__ . '/../includes/config.php';
   </main>
 
   <?php require_once __DIR__ . '/../common/footer.php'; ?>
+    <script>
+        function handleLeaveAction(employeeName, action) {
+            const verb = action === 'approved' ? 'Authorize' : 'Decline';
+            const color = action === 'approved' ? 'bg-green-600' : 'bg-rajkot-rust';
+            
+            if (confirm(`Are you sure you want to ${verb} the leave request for ${employeeName}?`)) {
+                // Simulated status update
+                const btn = event.currentTarget;
+                const row = btn.closest('tr');
+                const statusCell = row.cells[4];
+                
+                if (statusCell) {
+                    statusCell.innerHTML = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${action === 'approved' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}">
+                        <i class="bi ${action === 'approved' ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i> ${action.toUpperCase()}
+                    </span>`;
+                }
+                
+                // Feedback notification
+                const notification = document.createElement('div');
+                notification.className = `fixed bottom-8 right-8 ${color} text-white px-8 py-4 shadow-2xl z-50 animate-fade-in`;
+                notification.innerHTML = `<p class="text-[10px] font-bold uppercase tracking-widest mb-1">Leave Registry Updated</p><p class="text-sm">Request for <b>${employeeName}</b> has been ${action}.</p>`;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => notification.remove(), 500);
+                }, 3000);
+                
+                // Remove action buttons
+                const actionContainer = row.querySelector('.flex.justify-end.gap-2');
+                if (actionContainer) {
+                    actionContainer.innerHTML = `<span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Processed</span>`;
+                }
+            }
+        }
+    </script>
 </body>
 </html>

@@ -44,8 +44,8 @@ if (db_connected() && $user_id > 0) {
 
 // Demo data if DB is empty or not connected
 if (empty($user_data['full_name'])) {
-    $user_data['full_name'] = 'Demo Employee';
-    $user_data['email'] = 'demo.employee@ripal.design';
+    $user_data['full_name'] = 'Yashbhai Vinchhi';
+    $user_data['email'] = 'yash.vinchhi@ripal.design';
     $user_data['joined_date'] = '2024-01-15';
 }
 
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>My Profile | Ripal Design</title>
-    <?php require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
     

@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Review Requests | Ripal Design</title>
-    <?php require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
     
@@ -113,12 +113,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                 <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
                     <h2 class="text-xl font-serif font-bold">Request Registry</h2>
                     <div class="flex gap-2">
-                        <button class="p-2 hover:bg-gray-50 text-gray-400 transition-colors"><i data-lucide="filter" class="w-5 h-5"></i></button>
-                        <button class="p-2 hover:bg-gray-50 text-gray-400 transition-colors"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+                        <button class="p-2 hover:bg-gray-50 text-gray-400 transition-colors" onclick="toggleFilters()" title="Filter Registry"><i data-lucide="filter" class="w-5 h-5"></i></button>
+                        <button class="p-2 hover:bg-gray-50 text-gray-400 transition-colors" onclick="window.location.reload()" title="Refresh Registry"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
                     </div>
                 </div>
 
-                <div class="divide-y divide-gray-50">
+                <div id="filter-panel" class="hidden px-8 py-6 bg-gray-50/50 border-b border-gray-50 flex flex-wrap gap-4 items-center animate-fade-in">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Filter by:</span>
+                    <select id="status-filter" class="text-xs bg-white border border-gray-200 px-3 py-1 outline-none focus:border-rajkot-rust">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="changes_requested">Revisions</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <select id="urgency-filter" class="text-xs bg-white border border-gray-200 px-3 py-1 outline-none focus:border-rajkot-rust">
+                        <option value="all">All Urgency Levels</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                    <button onclick="applyFilters()" class="bg-foundation-grey text-white px-4 py-1 text-[10px] font-bold uppercase tracking-widest hover:bg-rajkot-rust transition-all">Apply Registry Sync</button>
+                </div>
+
+                <div class="divide-y divide-gray-50" id="requests-registry">
                     <?php if (empty($requests)): ?>
                         <div class="p-20 text-center">
                             <i data-lucide="clipboard-check" class="w-16 h-16 text-gray-100 mx-auto mb-4"></i>
@@ -126,7 +144,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                         </div>
                     <?php else: ?>
                         <?php foreach($requests as $r): ?>
-                            <div class="p-8 group hover:bg-gray-50/50 transition-all">
+                            <div class="request-row p-8 group hover:bg-gray-50/50 transition-all" 
+                                 data-status="<?php echo htmlspecialchars($r['status']); ?>" 
+                                 data-urgency="<?php echo htmlspecialchars($r['urgency']); ?>">
                                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                     <div class="flex-grow space-y-3">
                                         <div class="flex flex-wrap items-center gap-3">
@@ -165,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                         <?php else: ?>
                                             <button class="p-3 border border-gray-100 text-gray-300 cursor-not-allowed"><i data-lucide="lock" class="w-5 h-5"></i></button>
                                         <?php endif; ?>
-                                        <button class="p-3 bg-foundation-grey hover:bg-rajkot-rust text-white transition-all shadow-md"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                                        <button class="p-3 bg-foundation-grey hover:bg-rajkot-rust text-white transition-all shadow-md" onclick="alert('Viewing comprehensive audit details for: <?php echo addslashes($r['subject']); ?>')"><i data-lucide="eye" class="w-5 h-5"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -178,5 +198,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         <?php require_once __DIR__ . '/../Common/footer.php'; ?>
     </div>
 
+    <script>
+        function toggleFilters() {
+            const panel = document.getElementById('filter-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function applyFilters() {
+            const statusFilter = document.getElementById('status-filter').value;
+            const urgencyFilter = document.getElementById('urgency-filter').value;
+            
+            document.querySelectorAll('.request-row').forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                const rowUrgency = row.getAttribute('data-urgency');
+                
+                const matchesStatus = (statusFilter === 'all' || rowStatus === statusFilter);
+                const matchesUrgency = (urgencyFilter === 'all' || rowUrgency === urgencyFilter);
+                
+                if (matchesStatus && matchesUrgency) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

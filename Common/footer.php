@@ -61,8 +61,8 @@ $currentYear = date('Y');
         <div class="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
             <div>&copy; <?php echo $currentYear; ?> Ripal Design. All rights reserved.</div>
             <div class="flex gap-6 mt-4 md:mt-0">
-                <a href="#" class="hover:text-white transition-colors no-underline">Privacy</a>
-                <a href="#" class="hover:text-white transition-colors no-underline">Terms</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="hover:text-white transition-colors no-underline">Privacy</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="hover:text-white transition-colors no-underline">Terms</a>
             </div>
         </div>
     </div>
