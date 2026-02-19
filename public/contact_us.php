@@ -188,7 +188,7 @@
                         <div>
                             <h4 class="text-white text-lg font-medium mb-1">Social</h4>
                             <div class="social-icons">
-                                <a class="icon-button" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                <a class="icon-button" href="https://www.instagram.com/ripal_design12/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                                     <span class="sr-only">Instagram</span>
                                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                         <rect x="3" y="3" width="18" height="18" rx="5" />
@@ -208,7 +208,7 @@
                                     </svg>
                                 </a>
 
-                                <a class="icon-button" href="https://www.behance.net" target="_blank" rel="noopener noreferrer" aria-label="Behance">
+                                <a class="icon-button" href="https://www.behance.net/mayankvinchhi" target="_blank" rel="noopener noreferrer" aria-label="Behance">
                                     <span class="sr-only">Behance</span>
                                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                         <rect x="2.5" y="6.5" width="19" height="11.5" rx="2" />
