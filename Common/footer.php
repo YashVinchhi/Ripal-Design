@@ -25,7 +25,7 @@ $currentYear = date('Y');
     <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-                <h2 class="text-3xl font-serif font-bold mb-4">Ready to build something iconic?</h2>
+                <h2 class="text-3xl font-serif font-bold mb-4">Ready to build something Iconic?</h2>
                 <p class="text-gray-400 mb-8 max-w-lg">
                     Whether it's a private residence or a large-scale government infrastructure project, 
                     Ripal Design brings the expertise to make it happen.
@@ -78,6 +78,7 @@ $currentYear = date('Y');
 <?php
 // Include Bootstrap JavaScript (needed for footer and header)
 echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>' . "\n";
+// echo '<script src="js/bootstrap.bundle.min.js"></script>' . "\n";
 
 // Include main application script if it exists
 if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {

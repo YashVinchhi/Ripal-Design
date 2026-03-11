@@ -101,6 +101,19 @@ body::before {
     z-index: 9999
 }
 
+.input-with-icon { position: relative; }
+.input-with-icon .form-control { padding-right: 3rem; }
+.input-with-icon .toggle-password {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 0.9;
+    cursor: pointer;
+}
+
 @media (max-width: 990px) {
     body { justify-content: center; padding: 20px; }
     .login-card {
@@ -114,4 +127,6 @@ body::before {
      .remider { gap: 12vh; }
      .mb-4 { font-size: 3rem; }
      .top-back-btn { right: 12px; top: 12px; }
+         .input-with-icon .form-control { padding-right: 3rem; }
+         .input-with-icon .toggle-password { right: 1rem; width: 1.5rem; height: 1.5rem; }
 }

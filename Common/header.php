@@ -42,7 +42,8 @@ $stylesheetCandidates = [
 
 <!-- Bootstrap CSS and Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"> 
+<!-- <link rel="stylesheet" href="css/bootstrap.min.css"> -->
 
 <!-- Lucide Icons (CAD style) -->
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -120,6 +121,7 @@ foreach ($stylesheetCandidates as $candidate) {
             <?php if ($headerMode === 'dashboard'): ?>
                 <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Dashboard</strong>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php">Dashboard Home</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/project_details.php">Project Details</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/profile.php">Profile Settings</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/review_requests.php">Review Requests</a>
 
@@ -127,6 +129,7 @@ foreach ($stylesheetCandidates as $candidate) {
                 <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Worker Portal</strong>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/dashboard.php">Worker Dashboard</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/assigned_projects.php">Assigned Projects</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/project_details.php">Project Details</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/worker_rating.php">My Ratings</a>
 
                 <hr class="border-white/10 my-4 mx-4">

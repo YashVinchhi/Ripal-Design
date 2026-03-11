@@ -1,9 +1,25 @@
 <?php
 session_start();
-$user = $_SESSION['user'] ?? 'Demo User';
+// Ensure $user is a displayable string (first name or email) — avoid passing arrays to htmlspecialchars
+$user = 'Demo User';
+if (!empty($_SESSION['user'])) {
+    if (is_array($_SESSION['user'])) {
+        $user = $_SESSION['user']['first_name'] ?? $_SESSION['user']['email'] ?? 'Demo User';
+    } else {
+        $user = (string) $_SESSION['user'];
+    }
+}
 
 // Try to load projects and workers from database, fall back to static data when DB not available.
 require_once __DIR__ . '/../includes/init.php';
+
+// Development debug: append ?debug=1 to URL to inspect session contents (remove in production)
+if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+    echo '<pre style="background:#fff;padding:1rem;border:1px solid #ddd;">';
+    echo "SESSION:\n";
+    var_dump($_SESSION);
+    echo '</pre>';
+}
 
 $projects = [];
 $workers = [];

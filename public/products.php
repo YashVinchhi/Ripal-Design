@@ -47,7 +47,7 @@
                         <p class="text-gray-500 text-sm tracking-wide uppercase">Flooring & Cladding</p>
                     </div>
                 </a>
-                <div class="hidden">
+                
 
                 <a href="contact_us.php?subject=commercial" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
@@ -59,7 +59,7 @@
                         <p class="text-gray-500 text-sm tracking-wide uppercase">Lighting</p>
                     </div>
                 </a>
-                <div class="hidden">
+         
 
                 <a href="contact_us.php?subject=consultation" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
@@ -71,7 +71,7 @@
                         <p class="text-gray-500 text-sm tracking-wide uppercase">Interiors</p>
                     </div>
                 </a>
-                <div class="hidden">
+               
             </div>
             
             <div class="mt-20 text-center">
@@ -82,4 +82,4 @@
 
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
-</html>
+</html> 

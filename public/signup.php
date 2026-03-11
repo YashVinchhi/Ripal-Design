@@ -1,3 +1,29 @@
+<?php
+
+session_start();
+
+$errors = [
+    'login' => $_SESSION['login_error'] ?? '',
+    'signup' => $_SESSION['register_error'] ?? ''
+];
+$active_form = $_SESSION['active_form'] ?? 'login';
+
+session_unset();
+
+function showError($error)
+{
+    return !empty($error) ? "<p class='alert alert-danger'>$error</p>" : '';
+}
+
+function showActive($form, $active_form)
+{
+    return $active_form === $form ? 'active' : '';
+}
+?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,7 +34,7 @@
     <link rel="stylesheet" href="./css/login.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
-    <script src="./js/validation.js"></script>  
+    <script src="./js/validation.js"></script>
 </head>
 
 <body>
@@ -20,8 +46,8 @@
         <div class="login-card text-center">
             <div class="card-login" style="margin-bottom: 30vh;">
                 <h3 class="mb-4">Signup</h3>
-                <form id="signupForm" method="post" novalidate>
-
+                <form id="signupForm" method="post" action="login_register.php" novalidate class="<?= showActive('signup', $active_form) ? 'active' : '' ?>">
+                    <?= showError($errors['signup']); ?>
                     <!-- first and last name side-by-side -->
                     <div class="row g-3">
                         <div class="col-md-6 text-start">
@@ -45,13 +71,19 @@
                     <!-- for password  -->
                     <div class="mb-3 text-start">
                         <label class="Password">Password</label>
-                        <input id="confirmPassword" name="password" type="password" class="form-control" placeholder="Enter your password" data-validation="required strongPassword">
+                        <div class="input-with-icon">
+                            <input id="confirmPassword_confirm" name="password" type="password" class="form-control" placeholder="Enter your password" data-validation="required strongPassword">
+                            <img src="./css/eye/eye_close.svg" alt="Show password" id="eyeicon" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="Toggle password visibility">
+                        </div>
                         <span id="password_error" class="text-danger"></span>
                     </div>
                     <!-- for confirm password  -->
                     <div class="mb-3 text-start">
                         <label class="Password">Confirm Password</label>
-                        <input id="password" name="confirmPassword" type="password" class="form-control" placeholder="Confirm your password" data-validation="required confirmPassword">
+                        <div class="input-with-icon">
+                            <input id="Password" name="confirmPassword" type="password" class="form-control" placeholder="Confirm your password" data-validation="required confirmPassword">
+                            <img src="./css/eye/eye_close.svg" alt="Show password" id="eyeicon1" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="Toggle password visibility">
+                        </div>
                         <span id="confirmPassword_error" class="text-danger"></span>
                     </div>
 
@@ -71,7 +103,7 @@
                             <span id="terms_error" class="text-danger d-none"></span>
                         </div>
                     </div>
-                    <button type="submit" class="btn-1">Create Account</button>
+                    <button type="submit" name="signup" class="btn-1">Create Account</button>
                     <p class="mt-4">Already have an account? <a href="./login.php" class="text-decoration-none text-white">login</a> </p>
 
                 </form>
@@ -80,5 +112,32 @@
     </main>
 
 </body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggles = document.querySelectorAll('.toggle-password');
+        if (!toggles || toggles.length === 0) return;
+        const openSrc = './css/eye/eye_open.svg';
+        const closeSrc = './css/eye/eye_close.svg';
+
+        toggles.forEach(function(toggle){
+            const container = toggle.closest('.input-with-icon');
+            const input = container ? container.querySelector('input') : null;
+            if (!input) return;
+            toggle.style.cursor = 'pointer';
+
+            function doToggle(){
+                const showing = input.type === 'text';
+                input.type = showing ? 'password' : 'text';
+                toggle.src = showing ? closeSrc : openSrc;
+                toggle.alt = showing ? 'Show password' : 'Hide password';
+            }
+
+            toggle.addEventListener('click', doToggle);
+            toggle.addEventListener('keydown', function(e){
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doToggle(); }
+            });
+        });
+    });
+</script>
 
 </html>

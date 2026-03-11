@@ -1,13 +1,27 @@
-<?php
+<?php 
+
 session_start();
-// Simple login placeholder - implement authentication logic
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // TODO: validate credentials
-  $_SESSION['user'] = $_POST['username'] ?? 'user';
-  header('Location: ../dashboard/dashboard.php');
-  exit;
+
+$errors = [
+    'login' => $_SESSION['login_error'] ?? '',
+    'signup' => $_SESSION['register_error'] ?? ''
+];
+$active_form = $_SESSION['active_form'] ?? 'login';
+
+session_unset();
+
+function showError($error){
+    return !empty($error) ? "<p class='alert alert-danger'>$error</p>" : '';
+}
+
+function showActive($form, $active_form){
+    return $active_form === $form ? 'active' : '';
 }
 ?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -30,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="card-login">
         <h3 class="mb-4">Login</h3>
-        <form id="loginForm" method="post" novalidate>
-
+        <form id="loginForm" method="post" novalidate action="login_register.php">
+        <?=  showError($errors['login']); ?>
           <!-- for email  -->
           <div class="mb-3 text-start">
             <label class="email">Email</label>
@@ -42,7 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <!-- for password  -->
           <div class="mb-3 text-start">
             <label class="Password">Password</label>
-            <input id="password" name="password" type="password" class="form-control" placeholder="Enter your password" data-validation="required strongPassword">
+            <div class="input-with-icon">
+              <input id="password" name="password" type="password" class="form-control" placeholder="Enter your password" data-validation="required strongPassword">
+              <img src="./css/eye/eye_close.svg" alt="Show password" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="Toggle password visibility">
+            </div>
             <span id="password_error" class="text-danger"></span>
           </div>
 
@@ -55,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <a href="./forgot.php" class="text-decoration-none text-white">Forgot password?</a>
           </div>
-          <button type="submit" class="btn-1">Login</button>
+          <button type="submit" name="login" class="btn-1">Login</button>
           <p class="mt-4">Don't have an account? <a href="./signup.php" class="text-decoration-none text-white">Sign up</a></p>
         </form>
 
@@ -64,6 +81,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const toggle = document.querySelector('.toggle-password');
+      const pwd = document.getElementById('password');
+      if (!toggle || !pwd) return;
+      toggle.style.cursor = 'pointer';
+      function doToggle(){
+        const showing = pwd.type === 'text';
+        pwd.type = showing ? 'password' : 'text';
+        // swap icon
+        const openSrc = './css/eye/eye_open.svg';
+        const closeSrc = './css/eye/eye_close.svg';
+        toggle.src = showing ? closeSrc : openSrc;
+        toggle.alt = showing ? 'Show password' : 'Hide password';
+      }
+      toggle.addEventListener('click', doToggle);
+      // keyboard accessibility
+      toggle.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doToggle(); }
+      });
+    });
+  </script>
 
 </body>
 

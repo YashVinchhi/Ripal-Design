@@ -24,8 +24,32 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
 
 require_once __DIR__ . '/../includes/init.php';
 
-$project_id = isset($_POST['project_id']) ? (int) $_POST['project_id'] : 0;
-$worker_id = isset($_POST['worker_id']) ? (int) $_POST['worker_id'] : 0;
+// Support both form-encoded and JSON request bodies
+$rawInput = file_get_contents('php://input');
+$data = [];
+if (!empty($_POST)) {
+    $data = $_POST;
+} elseif (!empty($rawInput)) {
+    $decoded = json_decode($rawInput, true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $data = $decoded;
+    }
+}
+
+$project_id = isset($data['project_id']) ? (int) $data['project_id'] : 0;
+$worker_id = isset($data['worker_id']) ? (int) $data['worker_id'] : 0;
+
+// Ensure we have a valid PDO instance
+if (!function_exists('get_db')) {
+    echo json_encode(['success' => false, 'message' => 'Server misconfiguration: database helper missing.']);
+    exit;
+}
+$pdo = get_db();
+if ($pdo === null) {
+    http_response_code(503);
+    echo json_encode(['success' => false, 'message' => 'Database connection unavailable.']);
+    exit;
+}
 
 if($project_id <= 0 || $worker_id <= 0){
     echo json_encode(['success'=>false, 'message'=>'Missing project or worker id']);

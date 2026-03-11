@@ -12,6 +12,14 @@ require_once __DIR__ . '/../includes/init.php';
 $user = $_SESSION['user'] ?? 'employee01';
 $user_id = $_SESSION['user_id'] ?? 0;
 
+// Development debug: show session contents when ?debug=1 is used (remove in production)
+if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+    echo '<pre style="background:#fff;padding:1rem;border:1px solid #ddd;">';
+    echo "SESSION:\n";
+    var_dump($_SESSION);
+    echo '</pre>';
+}
+
 // Initialize user data default
 $user_data = [
     'id' => $user_id,

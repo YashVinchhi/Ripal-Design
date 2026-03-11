@@ -14,6 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Upload Drawings | Ripal Design</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
+  <script src="../public/js/validation.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -54,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <div class="max-w-3xl mx-auto">
-      <form method="post" enctype="multipart/form-data" class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <form method="post" enctype="multipart/form-data" class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden" novalidate>
         <div class="absolute top-0 right-0 w-32 h-32 bg-rajkot-rust opacity-[0.03] -mr-16 -mt-16 rounded-full pointer-events-none"></div>
         
         <div class="mb-8">
@@ -68,7 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mb-8">
           <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Upload Drawing (PDF/DWG)</label>
           <div class="border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center group hover:border-rajkot-rust transition cursor-pointer relative">
-             <input type="file" name="drawing" class="absolute inset-0 opacity-0 cursor-pointer" id="fileInput">
+             <input type="file" name="drawing" class="absolute inset-0 opacity-0 cursor-pointer" id="fileInput" data-validation="required fileType:pdf,dwg fileSize:51200">
+             <span id="name_error" class="text-danger"></span>
              <div class="space-y-4">
                 <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto group-hover:bg-red-50 group-hover:text-rajkot-rust transition">
                    <i class="bi bi-cloud-arrow-up text-3xl"></i>

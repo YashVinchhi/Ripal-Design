@@ -60,7 +60,7 @@
                     </div>
                     <div class="col-lg-7">
                         <p class="lead text-white-50 mb-4" style="font-size: 1.4rem; font-weight: 300;">
-                            Founded by two brothers — a designer and a builder — we bridge creative ambition with practical delivery.
+                            Founded by two brothers - A Designer and A Builder, we bridge creative ambition with practical delivery.
                         </p>
                         <p class="text-white-50">
                             Our combined experience across municipal, institutional, and private works ensures designs that stand up to real-world constraints while remaining beautiful and timeless. We eliminate the gap between concept and creation by controlling the measure of every detail.
@@ -101,7 +101,7 @@
                         <h2 class="project-title display-4 mb-4">Matru Ashish</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            A landmark in Jam Khambhalia, bridging the gap between <br> tradition and contemporary living with breathable structure.
+                            A landmark in Jam Khambhalia, bridging the gap between <br> Tradition and contemporary living with breathable structure.
                         </p>
                         <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
@@ -125,7 +125,7 @@
                         <h2 class="project-title display-4 mb-4">Rajkot Smart City Plaza</h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            State-of-the-art multi-institutional system integrated <br>into Rajkot's burgeoning urban landscape.
+                            State-of-the-art Multi-Institutional System integrated <br>into Rajkot's burgeoning urban landscape.
                         </p>
                         <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2">View Project</span>
@@ -205,7 +205,7 @@
                             </div>
                             <blockquote class="mb-4">
                                 <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
-                                    "They pushed the boundaries of what we thought was possible, creating a space that feels both intimate and grand."
+                                    "They pushed the boundaries of what we thought was possible, creating a space that feels both Intimate and Grand."
                                 </p>
                             </blockquote>
                             <div class="pt-4 border-top" style="border-color: var(--primary) !important;">

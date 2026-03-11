@@ -3,6 +3,11 @@
       --alt-text: #fff;
   }
 
+  /* Prevent accidental horizontal scrolling caused by large decorative elements */
+  html, body {
+      overflow-x: hidden;
+  }
+
   nav.alt-header {
       position: fixed;
       top: 0;
@@ -120,14 +125,31 @@
       gap: 14px;
       padding: 32px;
       padding-top: 48px;
-      overflow: auto;
+      /* allow only vertical scrolling; prevent horizontal scrollbars */
+      overflow-y: auto;
+      overflow-x: hidden;
       margin-top: 56px;
+  }
+
+  /* Hide visual scrollbar in the side panel while preserving scroll functionality */
+  .alt-panel nav {
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
+  }
+
+  .alt-panel nav::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+      background: transparent;
   }
 
   .alt-panel a {
       color: var(--alt-text);
       font-size: 18px;
       text-decoration: none;
+      /* ensure long link text wraps instead of causing horizontal overflow */
+      word-wrap: break-word;
+      white-space: normal;
   }
 
   .alt-panel .panel-footer {
