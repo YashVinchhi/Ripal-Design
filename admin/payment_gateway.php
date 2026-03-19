@@ -67,14 +67,15 @@ $transactions = [
     
     <div class="min-h-screen flex flex-col">
         <!-- Unified Dark Portal Header -->
-        <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-12 border-b-2 border-rajkot-rust">
+        <!-- Unified Dark Portal Header -->
+        <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div>
-                    <h1 class="text-4xl font-serif font-bold">Financial Gateway</h1>
+                    <h1 class="text-3xl md:text-4xl font-serif font-bold">Financial Gateway</h1>
                     <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Unified ledger for collections and disbursements.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button class="bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center gap-3 active:scale-95">
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button class="w-full md:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center justify-center gap-3 active:scale-95">
                         <i data-lucide="upload" class="w-4 h-4"></i> Batch Disbursement
                     </button>
                 </div>
@@ -85,46 +86,46 @@ $transactions = [
             
             <!-- Financial Insight Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                <div class="bg-white p-8 shadow-premium border border-gray-100 relative group overflow-hidden">
+                <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative group overflow-hidden">
                     <div class="absolute top-0 right-0 w-16 h-16 bg-gray-50 -mr-8 -mt-8 rotate-45 pointer-events-none"></div>
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Total Revenue</span>
-                    <span class="text-3xl font-serif font-bold text-foundation-grey"><?php echo $stats['total_revenue']; ?></span>
+                    <span class="text-2xl md:text-3xl font-serif font-bold text-foundation-grey"><?php echo $stats['total_revenue']; ?></span>
                     <div class="mt-4 flex items-center gap-1.5 text-approval-green text-[10px] font-bold">
                         <i data-lucide="trending-up" class="w-3 h-3"></i> +12.4% vs Last Qtr
                     </div>
                 </div>
-                <div class="bg-white p-8 shadow-premium border border-gray-100 border-b-2 border-b-rajkot-rust relative group overflow-hidden">
+                <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 border-b-2 border-b-rajkot-rust relative group overflow-hidden">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Pending Collections</span>
-                    <span class="text-3xl font-serif font-bold text-rajkot-rust"><?php echo $stats['pending_collections']; ?></span>
+                    <span class="text-2xl md:text-3xl font-serif font-bold text-rajkot-rust"><?php echo $stats['pending_collections']; ?></span>
                     <div class="mt-4 text-[10px] text-gray-400 font-medium">8 Outstanding Invoices</div>
                 </div>
-                <div class="bg-white p-8 shadow-premium border border-gray-100 border-b-2 border-b-pending-amber relative group overflow-hidden">
+                <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 border-b-2 border-b-pending-amber relative group overflow-hidden">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Scheduled Payouts</span>
-                    <span class="text-3xl font-serif font-bold text-pending-amber"><?php echo $stats['workforce_payouts']; ?></span>
+                    <span class="text-2xl md:text-3xl font-serif font-bold text-pending-amber"><?php echo $stats['workforce_payouts']; ?></span>
                     <div class="mt-4 text-[10px] text-gray-400 font-medium">Next run: Friday, 2 PM</div>
                 </div>
-                <div class="bg-white p-8 shadow-premium border border-gray-100 border-b-2 border-b-slate-accent relative group overflow-hidden">
+                <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 border-b-2 border-b-slate-accent relative group overflow-hidden">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Active Contracts</span>
-                    <span class="text-3xl font-serif font-bold text-slate-accent"><?php echo $stats['active_contracts']; ?></span>
+                    <span class="text-2xl md:text-3xl font-serif font-bold text-slate-accent"><?php echo $stats['active_contracts']; ?></span>
                     <div class="mt-4 text-[10px] text-gray-400 font-medium">Audit complete</div>
                 </div>
             </div>
 
             <!-- Transaction Audit Ledger -->
             <div class="bg-white shadow-premium border border-gray-100 overflow-hidden relative">
-                <div class="px-10 py-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+                <div class="px-6 md:px-10 py-6 md:py-8 border-b border-gray-50 flex flex-col md:flex-row items-center justify-between bg-gray-50/50 gap-4">
                     <h3 class="text-[10px] font-bold uppercase tracking-[0.4em] text-foundation-grey flex items-center gap-3">
                         <i data-lucide="book-open" class="w-4 h-4 text-rajkot-rust"></i> Transaction Registry
                     </h3>
-                    <div class="relative w-72">
+                    <div class="relative w-full md:w-72">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
                         <input type="search" placeholder="Filter ledger..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-100 outline-none focus:border-rajkot-rust text-xs transition-all">
                     </div>
                 </div>
                 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead>
+                    <table class="w-full text-left text-sm border-collapse admin-table">
+                        <thead class="hidden md:table-header-group">
                             <tr class="bg-gray-50/20 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
                                 <th class="px-10 py-6 font-bold">Transaction Code</th>
                                 <th class="px-8 py-6 font-bold">Venture / Project</th>
@@ -136,24 +137,24 @@ $transactions = [
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             <?php foreach($transactions as $t): ?>
-                            <tr class="group hover:bg-gray-50/30 transition-all duration-300">
-                                <td class="px-10 py-8">
+                            <tr class="group hover:bg-gray-50/30 transition-all duration-300 block md:table-row mb-4 md:mb-0 border md:border-0 rounded-lg md:rounded-none bg-white md:bg-transparent">
+                                <td class="px-6 md:px-10 py-4 md:py-8 block md:table-cell" data-label="Transaction Code">
                                     <span class="text-xs font-mono font-bold text-foundation-grey"><?php echo $t['id']; ?></span>
                                     <div class="text-[9px] text-gray-400 uppercase tracking-tighter mt-1"><?php echo $t['type']; ?> Event</div>
                                 </td>
-                                <td class="px-8 py-8">
+                                <td class="px-6 md:px-8 py-4 md:py-8 block md:table-cell" data-label="Venture / Project">
                                     <p class="font-bold text-foundation-grey mb-1"><?php echo $t['project']; ?></p>
                                     <p class="text-[10px] text-gray-400 font-medium italic"><?php echo $t['date']; ?></p>
                                 </td>
-                                <td class="px-8 py-8">
+                                <td class="px-6 md:px-8 py-4 md:py-8 block md:table-cell" data-label="Involved Party">
                                     <p class="text-[11px] font-medium text-gray-600"><?php echo $t['party']; ?></p>
                                 </td>
-                                <td class="px-8 py-8">
+                                <td class="px-6 md:px-8 py-4 md:py-8 block md:table-cell" data-label="Quantum">
                                     <span class="text-base font-serif font-bold <?php echo $t['type'] === 'Collection' ? 'text-approval-green' : 'text-foundation-grey'; ?>">
                                         <?php echo $t['type'] === 'Payout' ? '-' : '+'; ?><?php echo $t['amount']; ?>
                                     </span>
                                 </td>
-                                <td class="px-8 py-8">
+                                <td class="px-6 md:px-8 py-4 md:py-8 block md:table-cell" data-label="Status Signal">
                                     <?php if ($t['status'] === 'synchronized'): ?>
                                         <span class="flex items-center gap-2 text-approval-green text-[9px] font-bold uppercase tracking-widest">
                                             <span class="w-2 h-2 bg-approval-green rounded-full shadow-[0_0_8px_rgba(21,128,61,0.5)]"></span> Synchronized
@@ -168,9 +169,15 @@ $transactions = [
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="px-10 py-8 text-right">
-                                    <button class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Receipt"><i data-lucide="receipt" class="w-4 h-4"></i></button>
-                                    <button class="text-gray-300 hover:text-foundation-grey transition-colors p-2" title="Audit Trail"><i data-lucide="history" class="w-4 h-4"></i></button>
+                                <td class="px-6 md:px-10 py-6 md:py-8 block md:table-cell" data-label="Ledger Actions">
+                                    <div class="flex flex-row md:justify-end gap-3 mt-4 md:mt-0">
+                                        <button class="flex-grow md:flex-grow-0 h-11 w-11 bg-gray-50 md:bg-transparent text-gray-400 hover:text-rajkot-rust transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded-lg" title="View Receipt">
+                                            <i data-lucide="receipt" class="w-5 h-5 md:w-4 md:h-4"></i>
+                                        </button>
+                                        <button class="flex-grow md:flex-grow-0 h-11 w-11 bg-gray-50 md:bg-transparent text-gray-400 hover:text-foundation-grey transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded-lg" title="Audit Trail">
+                                            <i data-lucide="history" class="w-5 h-5 md:w-4 md:h-4"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -178,7 +185,7 @@ $transactions = [
                     </table>
                 </div>
                 
-                <div class="p-10 text-center border-t border-gray-50 bg-gray-50/30">
+                <div class="p-6 md:p-10 text-center border-t border-gray-50 bg-gray-50/30">
                     <button class="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-300 hover:text-rajkot-rust transition-all border-b border-transparent hover:border-rajkot-rust pb-1 px-4">Initialize Ledger Pagination</button>
                 </div>
             </div>
@@ -193,9 +200,9 @@ $transactions = [
                     <div>
                         <h4 class="text-2xl font-serif font-bold mb-3">Merchant Integration Terminal</h4>
                         <p class="text-sm text-gray-400 mb-6 leading-relaxed">System is currently operating with a <strong class="text-white">Unified Payment Interface (UPI)</strong> bridge. All administrative disbursements require dual-approval hash verification before release.</p>
-                        <div class="flex gap-4">
-                            <button class="bg-white text-foundation-grey px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-rajkot-rust hover:text-white transition-all shadow-lg active:scale-95">Configure Provider</button>
-                            <button class="border border-white/20 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95">Security Audit</button>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <button class="bg-white text-foundation-grey px-8 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-rajkot-rust hover:text-white transition-all shadow-lg active:scale-95 flex items-center justify-center">Configure Provider</button>
+                            <button class="border border-white/20 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95 flex items-center justify-center">Security Audit</button>
                         </div>
                     </div>
                 </div>

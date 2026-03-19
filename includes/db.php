@@ -14,8 +14,8 @@
 // In production, set these in your web server config or .env file
 $DB_HOST = getenv('DB_HOST') ?: 'localhost';
 $DB_NAME = getenv('DB_NAME') ?: 'ripal_db';
-$DB_USER = getenv('DB_USER') ?: 'dbuser';
-$DB_PASS = getenv('DB_PASS') ?: 'dbpass';
+$DB_USER = getenv('DB_USER') ?: 'root';
+$DB_PASS = getenv('DB_PASS') ?: '';
 $DB_PORT = getenv('DB_PORT') ?: '3306';
 
 // Initialize PDO connection

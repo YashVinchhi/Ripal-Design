@@ -22,17 +22,17 @@ require_once __DIR__ . '/../includes/init.php';
   
   <div class="min-h-screen flex flex-col">
     <!-- Unified Dark Portal Header -->
-    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-12">
+    <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-                <h1 class="text-4xl font-serif font-bold">Project Portfolio</h1>
-                <p class="text-gray-400 mt-2">Executive oversight for architectural and infrastructure ventures.</p>
+                <h1 class="text-3xl md:text-4xl font-serif font-bold">Project Portfolio</h1>
+                <p class="text-gray-400 mt-2 text-sm md:text-base">Executive oversight for architectural and infrastructure ventures.</p>
             </div>
-            <div class="flex gap-3">
-                <button class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i> Export Report
                 </button>
-                <button class="bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center gap-2 active:scale-95">
+                <button class="w-full sm:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
                     <i data-lucide="plus" class="w-4 h-4"></i> New Project
                 </button>
             </div>
@@ -42,19 +42,19 @@ require_once __DIR__ . '/../includes/init.php';
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Filter Bar -->
-        <div class="flex flex-col lg:flex-row items-center justify-between gap-6 mb-10">
-            <div class="flex items-center gap-3">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Region:</span>
-                <div class="flex gap-2" id="region-filters">
-                    <button onclick="filterRegion('Global')" class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm filter-btn active-filter">Global</button>
-                    <button onclick="filterRegion('Rajkot')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn">Rajkot</button>
-                    <button onclick="filterRegion('Jam Khambhalia')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn">Jam Khambhalia</button>
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 mb-10">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Region Select:</span>
+                <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto no-scrollbar" id="region-filters">
+                    <button onclick="filterRegion('Global')" class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm filter-btn active-filter whitespace-nowrap">Global</button>
+                    <button onclick="filterRegion('Rajkot')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Rajkot</button>
+                    <button onclick="filterRegion('Jam Khambhalia')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Jam Khambhalia</button>
                 </div>
             </div>
-            <div class="flex gap-4 w-full lg:w-auto">
+            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                 <div class="relative flex-grow lg:w-64">
                     <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <select class="w-full pl-10 pr-4 py-2 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none">
+                    <select class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer">
                         <option>All Statuses</option>
                         <option>Conceptual Design</option>
                         <option>Approval Pending</option>
@@ -64,7 +64,7 @@ require_once __DIR__ . '/../includes/init.php';
                 </div>
                 <div class="relative flex-grow lg:w-80">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <input type="search" placeholder="Search Master Registry..." class="w-full pl-10 pr-4 py-2 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
+                    <input type="search" placeholder="Search Master Registry..." class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
                 </div>
             </div>
         </div>
@@ -94,9 +94,9 @@ require_once __DIR__ . '/../includes/init.php';
                             <div class="bg-rajkot-rust h-full" style="width: 72%"></div>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between py-4 border-t border-gray-50">
+                    <div class="flex items-center justify-between py-5 md:py-4 border-t border-gray-50">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Status</span>
-                        <a href="../dashboard/project_details.php?id=1" class="text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust">Open Record</a>
+                        <a href="../dashboard/project_details.php?id=1" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
                     </div>
                 </div>
             </div>
@@ -123,9 +123,9 @@ require_once __DIR__ . '/../includes/init.php';
                             <div class="bg-rajkot-rust h-full" style="width: 15%"></div>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between py-4 border-t border-gray-50">
+                    <div class="flex items-center justify-between py-5 md:py-4 border-t border-gray-50">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Design Lock</span>
-                        <a href="../dashboard/project_details.php?id=2" class="text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust">Open Record</a>
+                        <a href="../dashboard/project_details.php?id=2" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
                     </div>
                 </div>
             </div>
@@ -152,9 +152,9 @@ require_once __DIR__ . '/../includes/init.php';
                             <div class="bg-rajkot-rust h-full" style="width: 88%"></div>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between py-4 border-t border-gray-50">
+                    <div class="flex items-center justify-between py-5 md:py-4 border-t border-gray-50">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Final Stage</span>
-                        <a href="../dashboard/project_details.php?id=3" class="text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust">Open Record</a>
+                        <a href="../dashboard/project_details.php?id=3" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
                     </div>
                 </div>
             </div>
@@ -233,9 +233,9 @@ require_once __DIR__ . '/../includes/init.php';
                     </div>
                 </div>
 
-                <div class="pt-6 flex justify-end gap-4 border-t border-gray-100">
-                    <button type="button" onclick="closeVentureModal()" class="px-8 py-3 text-gray-400 font-bold uppercase tracking-widest text-[10px] hover:text-foundation-grey transition-colors">Abort</button>
-                    <button type="submit" class="bg-rajkot-rust text-white px-10 py-3 font-bold uppercase tracking-widest text-[10px] shadow-premium hover:bg-foundation-grey transition-all">Initialize Construction Record</button>
+                <div class="pt-6 flex flex-col md:flex-row justify-end gap-4 border-t border-gray-100">
+                    <button type="button" onclick="closeVentureModal()" class="w-full md:w-auto px-8 py-4 md:py-3 text-gray-400 font-bold uppercase tracking-widest text-[10px] hover:text-foundation-grey transition-colors border border-gray-100 md:border-0">Abort Initialization</button>
+                    <button type="submit" class="w-full md:w-auto bg-rajkot-rust text-white px-10 py-4 md:py-3 font-bold uppercase tracking-widest text-[10px] shadow-premium hover:bg-foundation-grey transition-all">Initialize Construction Record</button>
                 </div>
             </form>
         </div>

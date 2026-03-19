@@ -95,6 +95,9 @@ foreach ($stylesheetCandidates as $candidate) {
 
 <!-- Header Navigation (Always loaded) -->
 <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header.css">
+<?php if ($headerMode === 'dashboard'): ?>
+    <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/admin-responsive.css">
+<?php endif; ?>
 <nav class="alt-header">
     <div class="alt-logo">
         <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php" class="flex items-center gap-3 no-underline">
@@ -117,6 +120,8 @@ foreach ($stylesheetCandidates as $candidate) {
 <!-- Navigation Overlay -->
 <div id="altOverlay">
     <div class="alt-panel" role="dialog" aria-modal="true" aria-label="Site menu">
+        <?php include __DIR__ . '/notifications.php'; ?>
+
         <nav>
             <?php if ($headerMode === 'dashboard'): ?>
                 <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Dashboard</strong>
@@ -134,6 +139,7 @@ foreach ($stylesheetCandidates as $candidate) {
 
                 <hr class="border-white/10 my-4 mx-4">
                 <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Administration</strong>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/dashboard.php">Admin Dashboard</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/project_management.php">Project Portfolio</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/user_management.php">User Controls</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/leave_management.php">Leave Manager</a>

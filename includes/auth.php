@@ -72,7 +72,18 @@ function has_role($role) {
     if (!$user) {
         return false;
     }
-    return isset($user['role']) && $user['role'] === $role;
+
+    $userRole = $user['role'] ?? null;
+    if (!$userRole) {
+        return false;
+    }
+
+    // Admin is a superuser: allow access to any role-guarded area.
+    if ($userRole === 'admin') {
+        return true;
+    }
+
+    return $userRole === $role;
 }
 
 /**
