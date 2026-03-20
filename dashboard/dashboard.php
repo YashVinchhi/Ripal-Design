@@ -120,6 +120,13 @@ if (isset($pdo) && $pdo instanceof PDO) {
         </header>
 
         <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <?php if (!empty($_SESSION['login_success'])): ?>
+            <div class="max-w-7xl mx-auto mb-6 px-4">
+                <div class="alert alert-success" role="alert">
+                    <?php echo htmlspecialchars($_SESSION['login_success']); ?>
+                </div>
+            </div>
+            <?php unset($_SESSION['login_success']); endif; ?>
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <div class="bg-white p-6 shadow-premium border-l-4 border-rajkot-rust">

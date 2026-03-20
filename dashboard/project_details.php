@@ -17,278 +17,27 @@ function formatDate($dateString) {
   $date = strtotime($dateString);
   return date('M d, Y', $date);
 }
-
+require_once "../sql/db_config.php";
 // Create tables if they don't exist
-if (isset($pdo) && $pdo instanceof PDO) {
-  try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS projects (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      status ENUM('planning', 'ongoing', 'paused', 'completed') DEFAULT 'ongoing',
-      budget DECIMAL(15,2),
-      progress INT DEFAULT 0,
-      due DATE,
-      location TEXT,
-      address TEXT,
-      owner_name VARCHAR(255),
-      owner_contact VARCHAR(50),
-      owner_email VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
+session_start();
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_workers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      worker_name VARCHAR(255),
-      worker_role VARCHAR(100),
-      worker_contact VARCHAR(50),
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_milestones (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      title VARCHAR(255) NOT NULL,
-      target_date DATE,
-      status ENUM('active', 'completed', 'pending') DEFAULT 'pending',
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_files (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      name VARCHAR(255) NOT NULL,
-      type VARCHAR(50),
-      size VARCHAR(20),
-      file_path VARCHAR(500),
-      uploaded_by VARCHAR(255),
-      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_activity (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      user VARCHAR(255) NOT NULL,
-      action VARCHAR(100) NOT NULL,
-      item VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_drawings (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      name VARCHAR(255) NOT NULL,
-      version VARCHAR(20),
-      status ENUM('Approved', 'Under Review', 'Revision Needed') DEFAULT 'Under Review',
-      file_path VARCHAR(500),
-      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-  } catch (PDOException $e) {
-    $error = "Database Error: " . $e->getMessage();
-  }
-}
-
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($pdo) && $pdo instanceof PDO) {
-  $name = $_POST['name'] ?? '';
-  $status = $_POST['status'] ?? 'ongoing';
-  $budget = $_POST['budget'] ?? 0;
-  $progress = $_POST['progress'] ?? 0;
-  $due = $_POST['due'] ?? null;
-  $location = $_POST['location'] ?? '';
-  $ownerName = $_POST['owner_name'] ?? '';
-  $ownerContact = $_POST['owner_contact'] ?? '';
-  $ownerEmail = $_POST['owner_email'] ?? '';
-
-  if (empty($name)) {
-    $error = 'Project name is required';
-  } else {
-    try {
-      if ($projectId) {
-        // Update existing project
-        $stmt = $pdo->prepare('
-          UPDATE projects 
-          SET name = :name, status = :status, budget = :budget, 
-              progress = :progress, due = :due, location = :location, address = :location,
-              owner_name = :owner_name, owner_contact = :owner_contact, owner_email = :owner_email
-          WHERE id = :id
-        ');
-        $stmt->execute([
-          'id' => $projectId,
-          'name' => $name,
-          'status' => $status,
-          'budget' => $budget,
-          'progress' => $progress,
-          'due' => $due,
-          'location' => $location,
-          'owner_name' => $ownerName,
-          'owner_contact' => $ownerContact,
-          'owner_email' => $ownerEmail
-        ]);
-        $success = "Project updated successfully!";
-        
-        // Log activity
-        $activityStmt = $pdo->prepare('
-          INSERT INTO project_activity (project_id, user, action, item, created_at)
-          VALUES (:project_id, :user, :action, :item, NOW())
-        ');
-        $activityStmt->execute([
-          'project_id' => $projectId,
-          'user' => $_SESSION['user_name'] ?? 'Admin',
-          'action' => 'updated project',
-          'item' => 'Project details'
-        ]);
-      } else {
-        // Create new project
-        $stmt = $pdo->prepare('
-          INSERT INTO projects (name, status, budget, progress, due, location, address, owner_name, owner_contact, owner_email)
-          VALUES (:name, :status, :budget, :progress, :due, :location, :location, :owner_name, :owner_contact, :owner_email)
-        ');
-        $stmt->execute([
-          'name' => $name,
-          'status' => $status,
-          'budget' => $budget,
-          'progress' => $progress,
-          'due' => $due,
-          'location' => $location,
-          'owner_name' => $ownerName,
-          'owner_contact' => $ownerContact,
-          'owner_email' => $ownerEmail
-        ]);
-        $projectId = $pdo->lastInsertId();
-        
-        // Log activity for new project
-        $activityStmt = $pdo->prepare('
-          INSERT INTO project_activity (project_id, user, action, item, created_at)
-          VALUES (:project_id, :user, :action, :item, NOW())
-        ');
-        $activityStmt->execute([
-          'project_id' => $projectId,
-          'user' => $_SESSION['user_name'] ?? 'Admin',
-          'action' => 'created project',
-          'item' => $name
-        ]);
-        
-        header("Location: project_details.php?id=$projectId");
-        exit;
-      }
-    } catch (PDOException $e) {
-      $error = "Database Error: " . $e->getMessage();
-    }
-  }
-}
-
-// Load project data
-$project = null;
-if ($projectId && isset($pdo) && $pdo instanceof PDO) {
-  try {
-    $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
-    $stmt->execute(['id' => $projectId]);
-    $project = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($project) {
-      // Load workers
-      $stmt = $pdo->prepare('SELECT * FROM project_workers WHERE project_id = :id');
-      $stmt->execute(['id' => $projectId]);
-      $project['workers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load milestones
-      $stmt = $pdo->prepare('SELECT * FROM project_milestones WHERE project_id = :id ORDER BY target_date ASC');
-      $stmt->execute(['id' => $projectId]);
-      $project['milestones'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load project files
-      $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
-      $stmt->execute(['id' => $projectId]);
-      $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load activity log
-      $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
-      $stmt->execute(['id' => $projectId]);
-      $project['activities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load drawings
-      $stmt = $pdo->prepare('SELECT * FROM project_drawings WHERE project_id = :id ORDER BY uploaded_at DESC');
-      $stmt->execute(['id' => $projectId]);
-      $project['drawings'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Format owner data
-      $project['owner'] = [
-        'name' => $project['owner_name'] ?? '',
-        'contact' => $project['owner_contact'] ?? '',
-        'email' => $project['owner_email'] ?? ''
-      ];
-    }
-  } catch (PDOException $e) {
-    $error = "Database Error: " . $e->getMessage();
-  }
-}
-
-// Sample data fallback
-if (!$project) {
-  $project = [
-    'id' => $projectId ?? 1,
-    'name' => 'Shanti Sadan',
-    'status' => 'ongoing',
-    'budget' => 4500000,
-    'progress' => 45,
-    'due' => date('Y-m-d', strtotime('+30 days')),
-    'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-    'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-    'owner' => [
-      'name' => 'Amitbhai Patel',
-      'contact' => '+91 98765 43210',
-      'email' => 'amit.patel@example.com'
-    ],
-    'workers' => [
-      ['worker_name' => 'Rameshbhai Patel', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
-      ['worker_name' => 'Sureshbhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
-      ['worker_name' => 'Mohanbhai Ahir', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
-      ['worker_name' => 'Vijaybhai Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
-      ['worker_name' => 'Kiranbhai Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
-      ['worker_name' => 'Anilbhai Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
-    ],
-    'milestones' => [
-      ['title' => 'Foundation Completion', 'target_date' => '2026-02-28', 'status' => 'active'],
-      ['title' => 'Material Procurement', 'target_date' => '2026-03-15', 'status' => 'pending'],
-      ['title' => 'Electrical Rough-in', 'target_date' => '2026-04-05', 'status' => 'pending']
-    ],
-    'files' => [
-      ['id' => 1, 'name' => 'Site Plan.pdf', 'type' => 'PDF', 'size' => '2.4 MB', 'uploaded_at' => '2026-02-10 14:30:00', 'uploaded_by' => 'Admin', 'file_path' => '#'],
-      ['id' => 2, 'name' => 'Budget Estimate.xlsx', 'type' => 'Excel', 'size' => '856 KB', 'uploaded_at' => '2026-02-08 10:15:00', 'uploaded_by' => 'Amit Patel', 'file_path' => '#'],
-      ['id' => 3, 'name' => 'Design Mockup.jpg', 'type' => 'Image', 'size' => '4.2 MB', 'uploaded_at' => '2026-02-05 16:45:00', 'uploaded_by' => 'Architect', 'file_path' => '#'],
-      ['id' => 4, 'name' => 'Contract Agreement.pdf', 'type' => 'PDF', 'size' => '1.8 MB', 'uploaded_at' => '2026-01-28 09:00:00', 'uploaded_by' => 'Legal Team', 'file_path' => '#']
-    ],
-    'activities' => [
-      ['id' => 1, 'user' => 'Rameshbhai Patel', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
-      ['id' => 2, 'user' => 'Admin', 'action' => 'uploaded file', 'item' => 'Progress Photos.zip', 'created_at' => date('Y-m-d H:i:s', strtotime('-4 hours'))],
-      ['id' => 3, 'user' => 'Sureshbhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
-      ['id' => 4, 'user' => 'Vijaybhai Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
-    ],
-    'drawings' => [
-      ['id' => 1, 'name' => 'Floor Plan - Ground Floor', 'version' => 'v2.3', 'uploaded_at' => '2026-02-10 12:00:00', 'status' => 'Approved', 'file_path' => '#'],
-      ['id' => 2, 'name' => 'Elevation - Front View', 'version' => 'v1.8', 'uploaded_at' => '2026-02-08 11:30:00', 'status' => 'Under Review', 'file_path' => '#'],
-      ['id' => 3, 'name' => 'Electrical Layout', 'version' => 'v3.1', 'uploaded_at' => '2026-02-05 14:20:00', 'status' => 'Approved', 'file_path' => '#'],
-      ['id' => 4, 'name' => 'Plumbing Schematic', 'version' => 'v2.0', 'uploaded_at' => '2026-01-30 09:45:00', 'status' => 'Approved', 'file_path' => '#']
-    ]
-  ];
-}
-
-// Format budget for display
-$budgetFormatted = '₹ ' . number_format($project['budget'] ?? 0, 0, '.', ',');
-
-// Status badge colors
-$statusColors = [
-  'planning' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-  'ongoing' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-  'paused' => 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
-  'completed' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+$errors = [
+    'projects' => $_SESSION['project_error'] ?? null,
 ];
-$statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
+$active_form = $_SESSION['active_form'] ?? 'projects';
+
+session_unset();
+
+function showError($error)
+{
+    return !empty($error) ? "<p class='alert alert-danger'>$error</p>" : '';
+}
+
+function showActive($form, $active_form)
+{
+    return $active_form === $form ? 'active' : '';
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -552,7 +301,9 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         <div class="p-6 border-b border-slate-200 dark:border-slate-800">
                             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
-                        <form method="post">
+                        <form method="post" id="project-details-form" action="project_owerview_db.php">
+                            <input type="hidden" name="projects" value="1" />
+                             <?= showError($errors['projects']); ?>
                             <div class="p-6 space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">
@@ -1097,41 +848,13 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             });
         });
 
-        // AJAX form submission for project updates
-        const projectForm = document.querySelector('form');
+        // Submit project form normally so PHP handler can persist data and redirect.
+        const projectForm = document.getElementById('project-details-form');
         if (projectForm) {
-            projectForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(this);
+            projectForm.addEventListener('submit', function() {
                 const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Saving...';
-                
-                try {
-                    const response = await fetch(window.location.href, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (response.ok) {
-                        showNotification('Project updated successfully!', 'success');
-                        // Log activity
-                        logActivity('updated project', 'Project details');
-                        // Refresh the page to show updated data
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        showNotification('Error updating project', 'error');
-                    }
-                } catch (error) {
-                    showNotification('Network error occurred', 'error');
-                    console.error('Error:', error);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
             });
         }
 

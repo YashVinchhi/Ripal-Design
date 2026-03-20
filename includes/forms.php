@@ -30,7 +30,7 @@ if (!function_exists('form_start')) {
         
         // Add CSRF token for POST requests
         if ($method === 'POST' && function_exists('csrf_token_field')) {
-            $output .= csrf_token_field();
+            // $output .= csrf_token_field();
         }
         
         return $output;

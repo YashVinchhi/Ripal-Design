@@ -84,6 +84,8 @@ if (isset($_POST['login'])) {
                 'username' => $user['email'] ?? $user['first_name'] ?? '',
             ];
             $_SESSION['user_id'] = $user['id'];
+            // Flash a success message for display after redirect
+            $_SESSION['login_success'] = 'Logged in successfully.';
             header("Location: ../dashboard/dashboard.php");
             exit();
         } else {
@@ -101,6 +103,8 @@ if (isset($_POST['login'])) {
             'username' => $email,
         ];
         $_SESSION['user_id'] = 0;
+        // For local/dev fallback, still provide a success flash
+        $_SESSION['login_success'] = 'Logged in (development fallback).';
         header("Location: ../dashboard/dashboard.php");
         exit();
 
