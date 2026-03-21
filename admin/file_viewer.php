@@ -155,6 +155,7 @@ $fileName = $file ? basename($file) : 'Blueprint_A1_01.pdf';
          </button>
       </div>
     </div>
+  </main>
   <script>
     let currentZoom = 100;
     
