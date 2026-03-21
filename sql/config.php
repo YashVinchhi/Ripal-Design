@@ -1,12 +1,15 @@
 <?php
-$host = "192.168.1.64";
+$host = "localhost";
 $username = "devadmin";
-$password = "";
-$datbase = "ripal_db_user";
+$password = "Ro0t1234";
+$database = "ripal_db_user";
 
-$conn = new mysqli($host, $username, $password, $datbase);
-
-if($conn->connect_error){
-    die("Connection failed: " . $conn->connect_error);
+$conn = null;
+try {
+    $conn = new mysqli($host, $username, $password, $database);
+    if ($conn->connect_error) {
+        $conn = null;
+    }
+} catch (Exception $e) {
+    $conn = null;
 }
-?>
