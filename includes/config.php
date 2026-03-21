@@ -112,6 +112,16 @@ define('BASE_URL', getBaseUrl());
 define('BASE_PATH', getBasePath());
 define('PROJECT_ROOT', dirname(__DIR__));
 
+// Public entry path prefix:
+// - '' when Apache DocumentRoot points to /public
+// - '/public' when Apache DocumentRoot points to project root
+if (!defined('PUBLIC_PATH_PREFIX')) {
+    $documentRoot = str_replace('\\', '/', (string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+    $documentRoot = rtrim($documentRoot, '/');
+    $isPublicDocRoot = (bool) preg_match('~/public$~i', $documentRoot);
+    define('PUBLIC_PATH_PREFIX', $isPublicDocRoot ? '' : '/public');
+}
+
 // Application environment (development, staging, production)
 // Set this via environment variable or web server config
 if (!defined('APP_ENV')) {

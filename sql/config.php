@@ -1,6 +1,6 @@
 <?php
-$host = "localhost";
-$username = "root";
+$host = "192.168.1.64";
+$username = "devadmin";
 $password = "";
 $datbase = "ripal_db_user";
 

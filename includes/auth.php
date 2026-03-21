@@ -30,8 +30,10 @@ function require_login($redirect_to = null) {
             $_SESSION['redirect_after_login'] = $redirect_to;
         }
         
-        // Determine the correct path to login.php
-        $login_url = defined('BASE_PATH') ? rtrim(BASE_PATH, '/') . '/public/login.php' : '/public/login.php';
+        // Determine the correct path to login.php for both docroot modes
+        $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/') : '';
+        $publicPrefix = defined('PUBLIC_PATH_PREFIX') ? PUBLIC_PATH_PREFIX : '/public';
+        $login_url = $basePath . $publicPrefix . '/login.php';
         header('Location: ' . $login_url);
         exit;
     }

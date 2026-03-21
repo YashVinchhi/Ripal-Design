@@ -162,8 +162,8 @@ foreach ($stylesheetCandidates as $candidate) {
                 <?php endif; ?>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>">Logout</a>
             <?php else: ?>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/login.php" class="btn-alt btn-login">Login</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/signup.php" class="btn-alt btn-signup">Sign Up</a>
+                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login">Login</a>
+                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/signup.php" class="btn-alt btn-signup">Sign Up</a>
             <?php endif; ?>
         </div>
     </div>
