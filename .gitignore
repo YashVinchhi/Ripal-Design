@@ -20,3 +20,5 @@ DATABASE_SCHEMA_EXPLANATION.md
 .gitignore
 DATABASE.erd
 Database.md
+sql/database.sql
+
