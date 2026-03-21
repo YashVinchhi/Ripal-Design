@@ -183,6 +183,8 @@ $fileName = $file ? basename($file) : 'Blueprint_A1_01.pdf';
             alert('File: <?php echo addslashes($fileName); ?> is being prepared for secure download. Please check your browser downloads.');
             btn.innerHTML = originalContent;
         }, 1200);
+        //edited by Yash
+
     }
   </script>
 
