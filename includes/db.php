@@ -13,11 +13,36 @@
 
 // Load database credentials from environment or use defaults
 // In production, set these in your web server config or .env file
-$DB_HOST = getenv('DB_HOST') ?: 'localhost';
-$DB_NAME = getenv('DB_NAME') ?: 'ripal_db_user';
+$envHost = getenv('DB_HOST');
+$DB_HOST = $envHost ?: 'localhost';
+$DB_NAME = getenv('DB_NAME') ?: 'Ripal-Design';
 $DB_USER = getenv('DB_USER') ?: 'devadmin';
 $DB_PASS = getenv('DB_PASS') ?: 'Ro0t1234';
 $DB_PORT = getenv('DB_PORT') ?: '3306';
+
+// If environment vars are not set (or host is still localhost), prefer project sql/config.php
+// This lets the local webapp pick up the remote DB credential file used by CLI scripts.
+$sqlConfigPath = __DIR__ . '/../sql/config.php';
+if (file_exists($sqlConfigPath) && (!$envHost || $DB_HOST === 'localhost')) {
+    // sql/config.php defines $host, $username, $password, $database, and $port
+    /** @noinspection PhpIncludeInspection */
+    require_once $sqlConfigPath;
+    if (!empty($host)) {
+        $DB_HOST = $host;
+    }
+    if (!empty($database)) {
+        $DB_NAME = $database;
+    }
+    if (!empty($username)) {
+        $DB_USER = $username;
+    }
+    if (!empty($password)) {
+        $DB_PASS = $password;
+    }
+    if (!empty($port)) {
+        $DB_PORT = (string)$port;
+    }
+}
 
 // Initialize PDO connection
 $pdo = null;

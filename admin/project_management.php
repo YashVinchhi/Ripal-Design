@@ -2,6 +2,26 @@
 // Project Management (Redesigned UI)
 session_start();
 require_once __DIR__ . '/../includes/init.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
+    $name = trim((string)($_POST['project_name'] ?? ''));
+    $projectType = trim((string)($_POST['project_type'] ?? 'Residential'));
+    $budget = (float)preg_replace('/[^0-9.]/', '', (string)($_POST['project_budget'] ?? '0'));
+    $location = trim((string)($_POST['project_location'] ?? ''));
+    $ownerName = trim((string)($_POST['client_name'] ?? ''));
+    $ownerContact = trim((string)($_POST['client_contact'] ?? ''));
+    $ownerEmail = trim((string)($_POST['client_email'] ?? ''));
+
+    if ($name !== '' && db_connected()) {
+        db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?)', [
+            $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType,
+        ]);
+    }
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+$projects = get_projects_basic(200);
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
@@ -29,10 +49,10 @@ require_once __DIR__ . '/../includes/init.php';
                 <p class="text-gray-400 mt-2 text-sm md:text-base">Executive oversight for architectural and infrastructure ventures.</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
-                <button class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <button id="exportProjectsBtn" type="button" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i> Export Report
                 </button>
-                <button class="w-full sm:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
+                <button id="newProjectBtn" type="button" class="w-full sm:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
                     <i data-lucide="plus" class="w-4 h-4"></i> New Project
                 </button>
             </div>
@@ -71,93 +91,35 @@ require_once __DIR__ . '/../includes/init.php';
 
         <!-- Project Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Project Card Pattern -->
-            <!-- Project 1: RMC Smart City Plaza -->
-            <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Rajkot" data-status="Construction Ongoing">
+            <?php foreach ($projects as $p): ?>
+            <?php $pStatus = strtolower((string)($p['status'] ?? 'planning')); ?>
+            <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Global" data-status="<?php echo htmlspecialchars($pStatus); ?>">
                 <div class="h-56 bg-foundation-grey relative overflow-hidden">
-                    <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" alt="Executive Overview" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-40 transition duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
-                       <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg">Construction Phase</span>
-                       <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors">Rajkot Smart City Plaza</h3>
+                       <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg"><?php echo htmlspecialchars(strtoupper($pStatus)); ?></span>
+                       <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars((string)$p['name']); ?></h3>
                     </div>
                 </div>
                 <div class="p-6 flex-grow">
                     <div class="flex items-center text-sm text-gray-500 mb-6">
-                        <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-rajkot-rust"></i> Rajkot Infrastructure District
+                        <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-rajkot-rust"></i> <?php echo htmlspecialchars((string)($p['location'] ?: 'Location not set')); ?>
                     </div>
                     <div class="mb-8">
                         <div class="flex justify-between items-end mb-2">
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progress</span>
-                            <span class="text-sm font-bold text-rajkot-rust font-sans">72%</span>
+                            <span class="text-sm font-bold text-rajkot-rust font-sans"><?php echo (int)($p['progress'] ?? 0); ?>%</span>
                         </div>
                         <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-rajkot-rust h-full" style="width: 72%"></div>
+                            <div class="bg-rajkot-rust h-full" style="width: <?php echo (int)($p['progress'] ?? 0); ?>%"></div>
                         </div>
                     </div>
                     <div class="flex items-center justify-between py-5 md:py-4 border-t border-gray-50">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Status</span>
-                        <a href="../dashboard/project_details.php?id=1" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Budget: ₹ <?php echo number_format((float)($p['budget'] ?? 0), 0, '.', ','); ?></span>
+                        <a href="../dashboard/project_details.php?id=<?php echo (int)$p['id']; ?>" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Project 2: Jam Towers -->
-            <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Jam Khambhalia" data-status="Conceptual Design">
-                <div class="h-56 bg-foundation-grey relative overflow-hidden">
-                    <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM.jpeg" alt="Executive Overview" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-40 transition duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
-                       <span class="px-3 py-1 bg-pending-amber text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg">Pre-Approval</span>
-                       <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors">Matru Ashish</h3>
-                    </div>
-                </div>
-                <div class="p-6 flex-grow">
-                    <div class="flex items-center text-sm text-gray-500 mb-6">
-                        <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-rajkot-rust"></i> Khambhalia Heights
-                    </div>
-                    <div class="mb-8">
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progress</span>
-                            <span class="text-sm font-bold text-rajkot-rust font-sans">15%</span>
-                        </div>
-                        <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-rajkot-rust h-full" style="width: 15%"></div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between py-5 md:py-4 border-t border-gray-50">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Design Lock</span>
-                        <a href="../dashboard/project_details.php?id=2" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project 3: Morvi Ceramic Hub -->
-            <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Global" data-status="Construction Ongoing">
-                <div class="h-56 bg-foundation-grey relative overflow-hidden">
-                    <img src="../assets/Content/WhatsApp Image 2026-02-02 at 6.55.18 PM.jpeg" alt="Industrial" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-40 transition duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
-                       <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg">Industrial</span>
-                       <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors">Morbi Ceramic Hub</h3>
-                    </div>
-                </div>
-                <div class="p-6 flex-grow">
-                    <div class="flex items-center text-sm text-gray-500 mb-6">
-                        <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-rajkot-rust"></i> Morvi District
-                    </div>
-                    <div class="mb-8">
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progress</span>
-                            <span class="text-sm font-bold text-rajkot-rust font-sans">88%</span>
-                        </div>
-                        <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-rajkot-rust h-full" style="width: 88%"></div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between py-5 md:py-4 border-t border-gray-50">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Final Stage</span>
-                        <a href="../dashboard/project_details.php?id=3" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
-                    </div>
-                </div>
-            </div>
+            <?php endforeach; ?>
 
             <!-- Add Project Card -->
             <div class="border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center group hover:border-rajkot-rust transition-colors cursor-pointer min-h-[400px]" onclick="openVentureModal()">
@@ -268,8 +230,7 @@ require_once __DIR__ . '/../includes/init.php';
                     project_location: "Site location must be specified"
                 },
                 submitHandler: function(form) {
-                    alert('Venture initialization sequence complete. Project record created in registry (Demo Mode).');
-                    closeVentureModal();
+                    form.submit();
                 }
             });
         });
@@ -340,6 +301,32 @@ require_once __DIR__ . '/../includes/init.php';
             // Handled by jQuery Validation's submitHandler
             return false;
         }
+
+        document.getElementById('newProjectBtn').addEventListener('click', function () {
+            openVentureModal();
+        });
+
+        document.getElementById('exportProjectsBtn').addEventListener('click', function () {
+            const rows = [['Project', 'Status', 'Location', 'Progress', 'Budget']];
+            <?php foreach ($projects as $p): ?>
+            rows.push([
+                <?php echo json_encode((string)($p['name'] ?? '')); ?>,
+                <?php echo json_encode((string)($p['status'] ?? '')); ?>,
+                <?php echo json_encode((string)($p['location'] ?? '')); ?>,
+                <?php echo json_encode((string)($p['progress'] ?? 0)); ?>,
+                <?php echo json_encode((string)($p['budget'] ?? 0)); ?>
+            ]);
+            <?php endforeach; ?>
+
+            const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'projects_report.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
 
         // Close on backdrop click
         document.getElementById('ventureModal').addEventListener('click', function(e) {

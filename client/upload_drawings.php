@@ -1,7 +1,9 @@
 <?php
 // Upload Drawings (Redesigned UI)
 session_start();
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/init.php';
+
+$projectOptions = db_connected() ? db_fetch_all('SELECT id, name FROM projects ORDER BY id DESC LIMIT 200') : [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $msg = 'Blueprint received and queued for architectural review.';
@@ -36,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </script>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header_alt.php'; ?>
   
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
     <div class="mb-12">
@@ -62,9 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <div class="mb-8">
           <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Project Selection</label>
-          <select class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rajkot-rust focus:border-transparent outline-none transition">
-             <option>PRJ-2024-001: RMC Smart City Plaza</option>
-             <option>PRJ-2024-008: Saurashtra Heritage Villa</option>
+           <select class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rajkot-rust focus:border-transparent outline-none transition" name="project_id">
+             <?php foreach ($projectOptions as $p): ?>
+             <option value="<?php echo (int)$p['id']; ?>">PRJ-<?php echo str_pad((string)$p['id'], 6, '0', STR_PAD_LEFT); ?>: <?php echo htmlspecialchars((string)$p['name']); ?></option>
+             <?php endforeach; ?>
           </select>
         </div>
 
@@ -111,6 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   </style>
 
-  <?php require_once __DIR__ . '/../common/footer.php'; ?>
+  <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 </html>

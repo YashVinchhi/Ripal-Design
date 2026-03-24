@@ -2,7 +2,7 @@
 $host = "localhost";
 $username = "root";
 $password = "Ro0t1234";
-$database = "ripal_db";
+$database = "Ripal-Design";
 
 $conn = new mysqli($host, $username, $password, $database);
 

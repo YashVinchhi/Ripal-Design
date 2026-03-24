@@ -23,17 +23,7 @@ function post_login_redirect_url(array $user): string
     }
 
     $role = $user['role'] ?? '';
-    if ($role === 'admin') {
-        return rtrim(BASE_PATH, '/') . '/admin/dashboard.php';
-    }
-    if ($role === 'worker') {
-        return rtrim(BASE_PATH, '/') . '/worker/dashboard.php';
-    }
-    if ($role === 'client') {
-        return rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php';
-    }
-
-    // Safe default
+    // Single dashboard route for all roles; UI is role-based inside dashboard renderer.
     return rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php';
 }
 

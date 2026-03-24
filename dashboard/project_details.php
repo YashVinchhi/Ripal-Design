@@ -228,54 +228,23 @@ if ($projectId && isset($pdo) && $pdo instanceof PDO) {
   }
 }
 
-// Sample data fallback
 if (!$project) {
-  $project = [
-    'id' => $projectId ?? 1,
-    'name' => 'Shanti Sadan',
-    'status' => 'ongoing',
-    'budget' => 4500000,
-    'progress' => 45,
-    'due' => date('Y-m-d', strtotime('+30 days')),
-    'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-    'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-    'owner' => [
-      'name' => 'Amitbhai Patel',
-      'contact' => '+91 98765 43210',
-      'email' => 'amit.patel@example.com'
-    ],
-    'workers' => [
-      ['worker_name' => 'Rameshbhai Patel', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
-      ['worker_name' => 'Sureshbhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
-      ['worker_name' => 'Mohanbhai Ahir', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
-      ['worker_name' => 'Vijaybhai Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
-      ['worker_name' => 'Kiranbhai Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
-      ['worker_name' => 'Anilbhai Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
-    ],
-    'milestones' => [
-      ['title' => 'Foundation Completion', 'target_date' => '2026-02-28', 'status' => 'active'],
-      ['title' => 'Material Procurement', 'target_date' => '2026-03-15', 'status' => 'pending'],
-      ['title' => 'Electrical Rough-in', 'target_date' => '2026-04-05', 'status' => 'pending']
-    ],
-    'files' => [
-      ['id' => 1, 'name' => 'Site Plan.pdf', 'type' => 'PDF', 'size' => '2.4 MB', 'uploaded_at' => '2026-02-10 14:30:00', 'uploaded_by' => 'Admin', 'file_path' => '#'],
-      ['id' => 2, 'name' => 'Budget Estimate.xlsx', 'type' => 'Excel', 'size' => '856 KB', 'uploaded_at' => '2026-02-08 10:15:00', 'uploaded_by' => 'Amit Patel', 'file_path' => '#'],
-      ['id' => 3, 'name' => 'Design Mockup.jpg', 'type' => 'Image', 'size' => '4.2 MB', 'uploaded_at' => '2026-02-05 16:45:00', 'uploaded_by' => 'Architect', 'file_path' => '#'],
-      ['id' => 4, 'name' => 'Contract Agreement.pdf', 'type' => 'PDF', 'size' => '1.8 MB', 'uploaded_at' => '2026-01-28 09:00:00', 'uploaded_by' => 'Legal Team', 'file_path' => '#']
-    ],
-    'activities' => [
-      ['id' => 1, 'user' => 'Rameshbhai Patel', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
-      ['id' => 2, 'user' => 'Admin', 'action' => 'uploaded file', 'item' => 'Progress Photos.zip', 'created_at' => date('Y-m-d H:i:s', strtotime('-4 hours'))],
-      ['id' => 3, 'user' => 'Sureshbhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
-      ['id' => 4, 'user' => 'Vijaybhai Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
-    ],
-    'drawings' => [
-      ['id' => 1, 'name' => 'Floor Plan - Ground Floor', 'version' => 'v2.3', 'uploaded_at' => '2026-02-10 12:00:00', 'status' => 'Approved', 'file_path' => '#'],
-      ['id' => 2, 'name' => 'Elevation - Front View', 'version' => 'v1.8', 'uploaded_at' => '2026-02-08 11:30:00', 'status' => 'Under Review', 'file_path' => '#'],
-      ['id' => 3, 'name' => 'Electrical Layout', 'version' => 'v3.1', 'uploaded_at' => '2026-02-05 14:20:00', 'status' => 'Approved', 'file_path' => '#'],
-      ['id' => 4, 'name' => 'Plumbing Schematic', 'version' => 'v2.0', 'uploaded_at' => '2026-01-30 09:45:00', 'status' => 'Approved', 'file_path' => '#']
-    ]
-  ];
+    $project = [
+        'id' => (int)($projectId ?? 0),
+        'name' => 'Project Not Found',
+        'status' => 'planning',
+        'budget' => 0,
+        'progress' => 0,
+        'due' => null,
+        'location' => '',
+        'address' => '',
+        'owner' => ['name' => '', 'contact' => '', 'email' => ''],
+        'workers' => [],
+        'milestones' => [],
+        'files' => [],
+        'activities' => [],
+        'drawings' => [],
+    ];
 }
 
 // Format budget for display
@@ -670,7 +639,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                             </div>
                             <?php endif; ?>
                         </div>
-                        <button
+                        <button type="button" onclick="viewOwnerContactDetails()"
                             class="w-full mt-6 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             View Contact Details
                         </button>
@@ -756,7 +725,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                             class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             View Profile
                         </button>
-                        <button
+                        <button type="button" onclick="showMemberMenu('<?php echo addslashes($member['worker_name']); ?>')"
                             class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             <span class="material-icons text-sm">more_vert</span>
                         </button>
@@ -1061,7 +1030,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                     </p>
                 </div>
 
-                <button class="w-full py-3 bg-foundation-grey text-white rounded font-bold uppercase tracking-widest text-xs hover:bg-rajkot-rust transition-all active:scale-[0.98]">
+                <button type="button" onclick="contactViaInternalSignal()" class="w-full py-3 bg-foundation-grey text-white rounded font-bold uppercase tracking-widest text-xs hover:bg-rajkot-rust transition-all active:scale-[0.98]">
                     Contact via Internal Signal
                 </button>
             </div>
@@ -1402,6 +1371,21 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
 
         function closeMemberProfileModal() {
             document.getElementById('memberProfileModal').classList.add('hidden');
+        }
+
+        function viewOwnerContactDetails() {
+            const ownerName = <?php echo json_encode((string)($project['owner']['name'] ?? 'Client')); ?>;
+            const ownerContact = <?php echo json_encode((string)($project['owner']['contact'] ?? 'Not available')); ?>;
+            const ownerEmail = <?php echo json_encode((string)($project['owner']['email'] ?? 'Not available')); ?>;
+            showNotification('Owner: <b>' + ownerName + '</b><br>Phone: ' + ownerContact + '<br>Email: ' + ownerEmail, 'info');
+        }
+
+        function showMemberMenu(memberName) {
+            showNotification('Actions available for <b>' + memberName + '</b>: view profile, call, assign task.', 'info');
+        }
+
+        function contactViaInternalSignal() {
+            showNotification('Internal signal drafted successfully. You can continue from the communication center.', 'success');
         }
 
         // Close modal on backdrop click

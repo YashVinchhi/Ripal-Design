@@ -1,19 +1,19 @@
 <?php
 echo "Testing localhost with root:Ro0t1234\n";
-$conn = @mysqli_connect("localhost", "root", "Ro0t1234", "ripal_db");
+$conn = @mysqli_connect("localhost", "root", "Ro0t1234", "Ripal-Design");
 if ($conn) {
     echo "✓ Connection SUCCESS\n\n";
     
     $result = mysqli_query($conn, "SHOW TABLES;");
     if ($result) {
-        echo "Tables in ripal_db:\n";
+        echo "Tables in Ripal-Design:\n";
         while ($row = mysqli_fetch_array($result)) {
             echo "  - " . $row[0] . "\n";
         }
     }
     
     // Check signup table
-    $result = mysqli_query($conn, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='ripal_db' AND TABLE_NAME='signup'");
+    $result = mysqli_query($conn, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='Ripal-Design' AND TABLE_NAME='signup'");
     $row = mysqli_fetch_array($result);
     if ($row[0] > 0) {
         echo "\n✓ 'signup' table EXISTS\n";

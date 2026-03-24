@@ -3,7 +3,7 @@ ini_set('default_socket_timeout', 2);
 echo "=== Checking MySQL Connectivity ===\n\n";
 
 echo "1. Testing 192.168.1.64 with devadmin:Ro0t1234\n";
-$conn1 = @mysqli_connect("192.168.1.64", "devadmin", "Ro0t1234", "ripal_db_user", 3306);
+$conn1 = @mysqli_connect("192.168.1.64", "devadmin", "Ro0t1234", "Ripal-Design", 3306);
 if ($conn1) {
     echo "   ✓ Connection SUCCESS\n";
 
@@ -44,7 +44,7 @@ if ($conn1) {
 }
 
 echo "\n\n2. Testing localhost with root:Ro0t1234\n";
-$conn2 = @mysqli_connect("localhost", "root", "Ro0t1234", "ripal_db");
+$conn2 = @mysqli_connect("localhost", "root", "Ro0t1234", "Ripal-Design");
 if ($conn2) {
     echo "   ✓ Connection SUCCESS\n";
     $result = mysqli_query($conn2, "SHOW TABLES;");

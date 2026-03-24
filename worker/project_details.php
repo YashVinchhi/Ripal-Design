@@ -1,36 +1,63 @@
 <?php
 require_once __DIR__ . '/../includes/init.php';
+$sessionUser = $_SESSION['user'] ?? null;
+$sessionRole = is_array($sessionUser) ? (string)($sessionUser['role'] ?? '') : '';
+$isWorkerReadOnly = ($sessionRole === 'worker') || (isset($_GET['readonly']) && $_GET['readonly'] === '1');
 
-// Mock data for demonstration - in production this would come from DB based on $_GET['id']
-$project = [
-    'id' => 101,
-    'name' => 'Renovation — Oak Street Residence',
-    'status' => 'ongoing',
-    'address' => '123 Oak St, Rajkot, Gujarat',
-    'lat' => 22.3039, 
-    'lng' => 70.8022, // Rajkot coords
-    'area' => '2,400 sq. ft.',
-    'budget' => '₹ 45,00,000',
-    'owner' => [
-        'name' => 'Amitbhai Patel',
-        'contact' => '+91 98765 43210'
-    ],
-    'workers' => [
-        ['role' => 'Plumber', 'name' => 'Ramesh Kumar', 'contact' => '+91 98989 89898'],
-        ['role' => 'Electrician', 'name' => 'Suresh Bhai', 'contact' => '+91 97979 79797'],
-        ['role' => 'Carpenter', 'name' => 'Mahesh M.', 'contact' => '+91 96969 69696'],
-    ],
-    'goods' => [
-        ['item' => 'Cement Bags (Ultratech)', 'qty' => '50 bags', 'status' => 'Delivered'],
-        ['item' => 'Teak Wood Logs', 'qty' => '200 cft', 'status' => 'Pending'],
-        ['item' => 'Ceramic Tiles (2x2)', 'qty' => '150 boxes', 'status' => 'Ordered'],
-    ],
-    'drawings' => [
-        ['title' => 'Ground Floor Plan', 'type' => 'pdf', 'date' => '2025-01-15', 'status' => 'construction_issued'],
-        ['title' => 'Electrical Layout', 'type' => 'pdf', 'date' => '2025-01-20', 'status' => 'construction_issued'],
-        ['title' => 'Plumbing Diagram', 'type' => 'img', 'date' => '2025-01-22', 'status' => 'construction_issued'],
-    ]
-];
+$projectId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$project = get_project_full_data($projectId);
+
+if (!$project) {
+    http_response_code(404);
+    $project = [
+        'id' => 0,
+        'name' => 'Project Not Found',
+        'status' => 'unknown',
+        'address' => 'N/A',
+        'area' => 'N/A',
+        'budget' => '₹ 0',
+        'owner' => ['name' => 'N/A', 'contact' => ''],
+        'workers' => [],
+        'goods' => [],
+        'drawings' => [],
+    ];
+}
+
+// Normalize DB rows to template keys.
+$project['address'] = $project['address'] ?? ($project['location'] ?? '');
+$project['area'] = $project['area'] ?? 'N/A';
+$project['budget'] = isset($project['budget']) ? ('₹ ' . number_format((float)$project['budget'], 0, '.', ',')) : '₹ 0';
+$project['lat'] = $project['latitude'] ?? null;
+$project['lng'] = $project['longitude'] ?? null;
+
+$project['workers'] = array_map(function($w) {
+    return [
+        'role' => $w['worker_role'] ?? 'Worker',
+        'name' => $w['worker_name'] ?? '',
+        'contact' => $w['worker_contact'] ?? '',
+    ];
+}, $project['workers'] ?? []);
+
+$project['goods'] = array_map(function($g) {
+    $qty = (int)($g['quantity'] ?? 0);
+    $unit = (string)($g['unit'] ?? 'pcs');
+    return [
+        'item' => $g['name'] ?? '',
+        'qty' => trim($qty . ' ' . $unit),
+        'status' => 'Ordered',
+    ];
+}, $project['goods'] ?? []);
+
+$project['drawings'] = array_map(function($d) {
+    $path = strtolower((string)($d['file_path'] ?? ''));
+    $type = (substr($path, -4) === '.pdf') ? 'pdf' : 'img';
+    return [
+        'title' => $d['name'] ?? '',
+        'type' => $type,
+        'date' => $d['uploaded_at'] ?? date('Y-m-d H:i:s'),
+        'status' => strtolower((string)($d['status'] ?? 'under_review')),
+    ];
+}, $project['drawings'] ?? []);
 ?>
 <!doctype html>
 <html lang="en" class="bg-canvas-white">
@@ -40,9 +67,20 @@ $project = [
     <title><?php echo htmlspecialchars($project['name']); ?> | Ripal Design</title>
     <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; 
     
-    // Handle review request submission
+    // Handle review request submission (blocked in read-only worker mode)
     $request_sent = false;
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_details'])) {
+    if (!$isWorkerReadOnly && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_details'])) {
+        if (db_connected() && !empty($project['id'])) {
+            $subject = trim((string)($_POST['request_subject'] ?? 'Site Review'));
+            $details = trim((string)($_POST['request_details'] ?? ''));
+            $urgency = strtolower(trim((string)($_POST['request_urgency'] ?? 'normal')));
+            if (!in_array($urgency, ['critical', 'high', 'normal', 'low'], true)) {
+                $urgency = 'normal';
+            }
+            db_query('INSERT INTO review_requests (project_id, submitted_by, subject, description, urgency, status) VALUES (?, NULL, ?, ?, ?, "pending")', [
+                (int)$project['id'], $subject, $details, $urgency,
+            ]);
+        }
         $request_sent = true;
     }
     ?>
@@ -60,7 +98,7 @@ $project = [
             <i data-lucide="check-circle" class="w-16 h-16 text-approval-green mx-auto mb-6"></i>
             <h2 class="text-3xl font-serif font-bold text-foundation-grey mb-4">Verification Submitted</h2>
             <p class="text-gray-500 mb-8">Your review request has been logged. An architect will inspect the site shortly.</p>
-            <button onclick="window.location.href='dashboard.php'" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all">
+            <button onclick="window.location.href='dashboard.php'" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all" type="button">
                 Continue
             </button>
         </div>
@@ -96,9 +134,11 @@ $project = [
             <button onclick="switchTab('drawings')" id="tab-drawings" class="flex-1 py-4 px-2 border-b-2 border-transparent text-gray-400 tab-btn transition-colors uppercase tracking-wider">
                 Drawings
             </button>
-            <button onclick="switchTab('request')" id="tab-request" class="flex-1 py-4 px-2 border-b-2 border-transparent text-gray-400 tab-btn transition-colors uppercase tracking-wider">
-                Requests
-            </button>
+            <?php if (!$isWorkerReadOnly): ?>
+                <button onclick="switchTab('request')" id="tab-request" class="flex-1 py-4 px-2 border-b-2 border-transparent text-gray-400 tab-btn transition-colors uppercase tracking-wider">
+                    Requests
+                </button>
+            <?php endif; ?>
         </div>
     </nav>
 
@@ -212,44 +252,50 @@ $project = [
             </div>
         </div>
 
-        <!-- 3. REQUEST TAB -->
-        <div id="content-request" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 shadow-premium border border-gray-100">
-                <h3 class="text-lg font-bold font-serif mb-4">New Review Request</h3>
-                <form class="space-y-4" method="POST" action="" id="requestForm">
-                    <div>
-                        <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Subject</label>
-                        <input type="text" name="request_subject" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="e.g. Beam Reinforcement Ready">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
+        <?php if (!$isWorkerReadOnly): ?>
+            <!-- 3. REQUEST TAB -->
+            <div id="content-request" class="tab-content hidden space-y-6">
+                <div class="bg-white p-6 shadow-premium border border-gray-100">
+                    <h3 class="text-lg font-bold font-serif mb-4">New Review Request</h3>
+                    <form class="space-y-4" method="POST" action="" id="requestForm">
                         <div>
-                            <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Urgency</label>
-                            <select name="request_urgency" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
-                                <option>Normal</option>
-                                <option>High</option>
-                                <option>Critical</option>
-                            </select>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Subject</label>
+                            <input type="text" name="request_subject" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="e.g. Beam Reinforcement Ready">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Urgency</label>
+                                <select name="request_urgency" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
+                                    <option>Normal</option>
+                                    <option>High</option>
+                                    <option>Critical</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Trade</label>
+                                <select name="request_trade" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
+                                    <option>Structural</option>
+                                    <option>Plumbing</option>
+                                    <option>Electrical</option>
+                                    <option>Finishing</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Trade</label>
-                            <select name="request_trade" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors appearance-none">
-                                <option>Structural</option>
-                                <option>Plumbing</option>
-                                <option>Electrical</option>
-                                <option>Finishing</option>
-                            </select>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Details</label>
+                            <textarea name="request_details" rows="4" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="Explain what requires immediate inspection..."></textarea>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Details</label>
-                        <textarea name="request_details" rows="4" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="Explain what requires immediate inspection..."></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-rajkot-rust text-white py-4 font-bold uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all">
-                        Submit for Verification
-                    </button>
-                </form>
+                        <button type="submit" class="w-full bg-rajkot-rust text-white py-4 font-bold uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all">
+                            Submit for Verification
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
+        <?php else: ?>
+            <div class="mt-6 bg-white border border-gray-100 shadow-premium p-5 text-xs uppercase tracking-widest text-gray-400 text-center">
+                Worker access is read-only. Editing and new request submissions are disabled.
+            </div>
+        <?php endif; ?>
 
     </main>
 
@@ -278,10 +324,18 @@ $project = [
     // Initialize from Hash
     window.addEventListener('load', () => {
         const hash = window.location.hash.replace('#', '') || 'overview';
+        if (hash === 'request' && !document.getElementById('tab-request')) {
+            switchTab('overview');
+            return;
+        }
         switchTab(hash);
     });
 
     $(document).ready(function() {
+        if (!document.getElementById('requestForm')) {
+            return;
+        }
+
         $("#requestForm").validate({
             rules: {
                 request_subject: {

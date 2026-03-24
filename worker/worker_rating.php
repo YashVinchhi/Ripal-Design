@@ -33,15 +33,6 @@ if (db_connected()) {
     }
 }
 
-// Demo data fallback
-if (empty($workers)) {
-    $workers = [
-        ['id'=>11, 'username'=>'Ramesh Kumar', 'email'=>'ramesh.k@ripal.design', 'phone'=>'+91 98888 77777', 'role'=>'Lead Mason', 'projects_count'=>5, 'avg_rating'=>4.7, 'total_ratings'=>12],
-        ['id'=>12, 'username'=>'Suresh Bhai', 'email'=>'suresh.b@ripal.design', 'phone'=>'+91 97777 66666', 'role'=>'Master Electrician', 'projects_count'=>8, 'avg_rating'=>4.9, 'total_ratings'=>20],
-        ['id'=>13, 'username'=>'Mahesh M.', 'email'=>'mahesh.m@ripal.design', 'phone'=>'+91 96666 55555', 'role'=>'Senior Carpenter', 'projects_count'=>4, 'avg_rating'=>4.2, 'total_ratings'=>8],
-    ];
-}
-
 // Handle rating submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_rating'])) {
     $worker_id = intval($_POST['worker_id'] ?? 0);

@@ -132,14 +132,14 @@ foreach ($stylesheetCandidates as $candidate) {
 
                 <hr class="border-white/10 my-4 mx-4">
                 <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Worker Portal</strong>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/dashboard.php">Worker Dashboard</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php">Worker Dashboard</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/assigned_projects.php">Assigned Projects</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/project_details.php">Project Details</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/worker_rating.php">My Ratings</a>
 
                 <hr class="border-white/10 my-4 mx-4">
                 <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Administration</strong>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/dashboard.php">Admin Dashboard</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php">Admin Dashboard</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/project_management.php">Project Portfolio</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/user_management.php">User Controls</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/leave_management.php">Leave Manager</a>

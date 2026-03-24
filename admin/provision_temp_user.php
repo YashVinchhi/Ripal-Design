@@ -272,7 +272,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if(!el) return;
             const text = el.innerText;
             navigator.clipboard.writeText(text).then(() => {
-                alert('Password copied to clipboard: ' + text);
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-8 right-8 bg-foundation-grey text-white px-6 py-3 shadow-2xl z-50 rounded-lg border-l-4 border-approval-green';
+                notification.innerHTML = '<p class="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">Credential Copied</p><p class="text-sm">Temporary password copied to clipboard.</p>';
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => notification.remove(), 500);
+                }, 2200);
             });
         }
     </script>

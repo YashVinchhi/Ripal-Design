@@ -1,8 +1,8 @@
 -- Full database schema for TheFinal_Thefinal2
 -- Compatibility-first schema based on active PHP usage (legacy + new flows).
 
-CREATE DATABASE IF NOT EXISTS thefinal_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE thefinal_db;
+CREATE DATABASE IF NOT EXISTS `Ripal-Design` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `Ripal-Design`;
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
