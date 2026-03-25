@@ -349,4 +349,144 @@ if (!function_exists('format_date')) {
     }
 }
 
+if (!function_exists('db_table_exists')) {
+    /**
+     * Check whether a table exists in current database.
+     *
+     * @param string $table Table name
+     * @return bool
+     */
+    function db_table_exists($table) {
+        $row = db_fetch("SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?", [$table]);
+        return !empty($row) && (int)($row['c'] ?? 0) > 0;
+    }
+}
+
+if (!function_exists('get_user_role_counts')) {
+    /**
+     * Return user totals and per-role counts.
+     *
+     * @return array
+     */
+    function get_user_role_counts() {
+        $counts = [
+            'total' => 0,
+            'client' => 0,
+            'worker' => 0,
+            'employee' => 0,
+            'admin' => 0,
+        ];
+
+        if (!db_connected() || !db_table_exists('users')) {
+            return $counts;
+        }
+
+        $row = db_fetch('SELECT COUNT(*) AS c FROM users');
+        $counts['total'] = (int)($row['c'] ?? 0);
+
+        $rows = db_fetch_all('SELECT role, COUNT(*) AS c FROM users GROUP BY role');
+        foreach ($rows as $r) {
+            $role = (string)($r['role'] ?? '');
+            if (array_key_exists($role, $counts)) {
+                $counts[$role] = (int)($r['c'] ?? 0);
+            }
+        }
+
+        return $counts;
+    }
+}
+
+if (!function_exists('get_projects_basic')) {
+    /**
+     * Fetch project cards data.
+     *
+     * @param int $limit
+     * @return array
+     */
+    function get_projects_basic($limit = 200) {
+        if (!db_connected() || !db_table_exists('projects')) {
+            return [];
+        }
+
+        $limit = max(1, min(500, (int)$limit));
+        return db_fetch_all("SELECT id, name, status, COALESCE(progress,0) AS progress, budget, due, COALESCE(location,'') AS location, COALESCE(address,'') AS address, COALESCE(latitude, NULL) AS latitude, COALESCE(longitude, NULL) AS longitude, COALESCE(owner_name,'') AS owner_name, COALESCE(owner_contact,'') AS owner_contact FROM projects ORDER BY id DESC LIMIT {$limit}");
+    }
+}
+
+if (!function_exists('get_project_full_data')) {
+    /**
+     * Fetch project details with related rows.
+     *
+     * @param int $projectId
+     * @return array|null
+     */
+    function get_project_full_data($projectId) {
+        $projectId = (int)$projectId;
+        if ($projectId <= 0 || !db_connected() || !db_table_exists('projects')) {
+            return null;
+        }
+
+        $project = db_fetch('SELECT * FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+        if (!$project) {
+            return null;
+        }
+
+        $project['owner'] = [
+            'name' => $project['owner_name'] ?? '',
+            'contact' => $project['owner_contact'] ?? '',
+            'email' => $project['owner_email'] ?? '',
+        ];
+
+        $project['workers'] = db_table_exists('project_workers')
+            ? db_fetch_all('SELECT worker_name, worker_role, worker_contact FROM project_workers WHERE project_id = ? ORDER BY id DESC', [$projectId])
+            : [];
+        $project['goods'] = db_table_exists('project_goods')
+            ? db_fetch_all('SELECT id, sku, name, description, unit, quantity, unit_price, total_price, created_at FROM project_goods WHERE project_id = ? ORDER BY created_at DESC', [$projectId])
+            : [];
+        $project['drawings'] = db_table_exists('project_drawings')
+            ? db_fetch_all('SELECT * FROM project_drawings WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId])
+            : [];
+        $project['files'] = db_table_exists('project_files')
+            ? db_fetch_all('SELECT * FROM project_files WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId])
+            : [];
+        $project['activities'] = db_table_exists('project_activity')
+            ? db_fetch_all('SELECT * FROM project_activity WHERE project_id = ? ORDER BY created_at DESC LIMIT 30', [$projectId])
+            : [];
+        $project['milestones'] = db_table_exists('project_milestones')
+            ? db_fetch_all('SELECT * FROM project_milestones WHERE project_id = ? ORDER BY target_date ASC', [$projectId])
+            : [];
+
+        return $project;
+    }
+}
+
+if (!function_exists('get_leave_dashboard_data')) {
+    /**
+     * Return leave stats and rows.
+     *
+     * @return array
+     */
+    function get_leave_dashboard_data() {
+        $out = [
+            'stats' => ['pending' => 0, 'approved' => 0, 'on_leave' => 0],
+            'rows' => [],
+        ];
+
+        if (!db_connected() || !db_table_exists('leave_requests')) {
+            return $out;
+        }
+
+        $statRows = db_fetch_all('SELECT status, COUNT(*) AS c FROM leave_requests GROUP BY status');
+        foreach ($statRows as $r) {
+            $k = (string)($r['status'] ?? '');
+            if (isset($out['stats'][$k])) {
+                $out['stats'][$k] = (int)($r['c'] ?? 0);
+            }
+        }
+
+        $out['rows'] = db_fetch_all('SELECT lr.*, u.full_name, u.username, u.role FROM leave_requests lr LEFT JOIN users u ON u.id = lr.user_id ORDER BY lr.requested_at DESC LIMIT 100');
+        return $out;
+    }
+}
+
 ?>

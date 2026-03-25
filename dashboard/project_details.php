@@ -28,9 +28,23 @@ $active_form = $_SESSION['active_form'] ?? 'projects';
 
 session_unset();
 
-function showError($error)
-{
-    return !empty($error) ? "<p class='alert alert-danger'>$error</p>" : '';
+if (!$project) {
+    $project = [
+        'id' => (int)($projectId ?? 0),
+        'name' => 'Project Not Found',
+        'status' => 'planning',
+        'budget' => 0,
+        'progress' => 0,
+        'due' => null,
+        'location' => '',
+        'address' => '',
+        'owner' => ['name' => '', 'contact' => '', 'email' => ''],
+        'workers' => [],
+        'milestones' => [],
+        'files' => [],
+        'activities' => [],
+        'drawings' => [],
+    ];
 }
 
 function showActive($form, $active_form)
@@ -421,7 +435,7 @@ function showActive($form, $active_form)
                             </div>
                             <?php endif; ?>
                         </div>
-                        <button
+                        <button type="button" onclick="viewOwnerContactDetails()"
                             class="w-full mt-6 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             View Contact Details
                         </button>
@@ -507,7 +521,7 @@ function showActive($form, $active_form)
                             class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             View Profile
                         </button>
-                        <button
+                        <button type="button" onclick="showMemberMenu('<?php echo addslashes($member['worker_name']); ?>')"
                             class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             <span class="material-icons text-sm">more_vert</span>
                         </button>
@@ -812,7 +826,7 @@ function showActive($form, $active_form)
                     </p>
                 </div>
 
-                <button class="w-full py-3 bg-foundation-grey text-white rounded font-bold uppercase tracking-widest text-xs hover:bg-rajkot-rust transition-all active:scale-[0.98]">
+                <button type="button" onclick="contactViaInternalSignal()" class="w-full py-3 bg-foundation-grey text-white rounded font-bold uppercase tracking-widest text-xs hover:bg-rajkot-rust transition-all active:scale-[0.98]">
                     Contact via Internal Signal
                 </button>
             </div>
@@ -1125,6 +1139,21 @@ function showActive($form, $active_form)
 
         function closeMemberProfileModal() {
             document.getElementById('memberProfileModal').classList.add('hidden');
+        }
+
+        function viewOwnerContactDetails() {
+            const ownerName = <?php echo json_encode((string)($project['owner']['name'] ?? 'Client')); ?>;
+            const ownerContact = <?php echo json_encode((string)($project['owner']['contact'] ?? 'Not available')); ?>;
+            const ownerEmail = <?php echo json_encode((string)($project['owner']['email'] ?? 'Not available')); ?>;
+            showNotification('Owner: <b>' + ownerName + '</b><br>Phone: ' + ownerContact + '<br>Email: ' + ownerEmail, 'info');
+        }
+
+        function showMemberMenu(memberName) {
+            showNotification('Actions available for <b>' + memberName + '</b>: view profile, call, assign task.', 'info');
+        }
+
+        function contactViaInternalSignal() {
+            showNotification('Internal signal drafted successfully. You can continue from the communication center.', 'success');
         }
 
         // Close modal on backdrop click

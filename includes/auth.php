@@ -30,8 +30,10 @@ function require_login($redirect_to = null) {
             $_SESSION['redirect_after_login'] = $redirect_to;
         }
         
-        // Determine the correct path to login.php
-        $login_url = defined('BASE_PATH') ? rtrim(BASE_PATH, '/') . '/public/login.php' : '/public/login.php';
+        // Determine the correct path to login.php for both docroot modes
+        $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/') : '';
+        $publicPrefix = defined('PUBLIC_PATH_PREFIX') ? PUBLIC_PATH_PREFIX : '/public';
+        $login_url = $basePath . $publicPrefix . '/login.php';
         header('Location: ' . $login_url);
         exit;
     }
@@ -72,7 +74,18 @@ function has_role($role) {
     if (!$user) {
         return false;
     }
-    return isset($user['role']) && $user['role'] === $role;
+
+    $userRole = $user['role'] ?? null;
+    if (!$userRole) {
+        return false;
+    }
+
+    // Admin is a superuser: allow access to any role-guarded area.
+    if ($userRole === 'admin') {
+        return true;
+    }
+
+    return $userRole === $role;
 }
 
 /**
@@ -90,5 +103,306 @@ function require_role($role, $redirect_to = null) {
         header('Location: ' . $redirect_to);
         exit;
     }
+}
+
+/**
+ * True when current request is a write request.
+ *
+ * @return bool
+ */
+function auth_is_write_method() {
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    return in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true);
+}
+
+/**
+ * Check table existence without relying on util.php helpers.
+ *
+ * @param string $table
+ * @return bool
+ */
+function auth_table_exists($table) {
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        return false;
+    }
+
+    static $cache = [];
+    $table = (string)$table;
+    if (isset($cache[$table])) {
+        return $cache[$table];
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?');
+        $stmt->execute([$table]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $cache[$table] = !empty($row) && (int)($row['c'] ?? 0) > 0;
+    } catch (Exception $e) {
+        $cache[$table] = false;
+    }
+
+    return $cache[$table];
+}
+
+/**
+ * Fetch RBAC role context for logged-in user.
+ *
+ * @param int $userId
+ * @return array
+ */
+function auth_get_user_rbac_context($userId) {
+    $ctx = [
+        'role_code' => '',
+        'group_code' => '',
+    ];
+
+    $userId = (int)$userId;
+    if ($userId <= 0 || !auth_table_exists('user_roles') || !auth_table_exists('roles') || !auth_table_exists('role_groups')) {
+        return $ctx;
+    }
+
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        return $ctx;
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT r.code AS role_code, rg.code AS group_code
+            FROM user_roles ur
+            INNER JOIN roles r ON r.id = ur.role_id
+            INNER JOIN role_groups rg ON rg.id = r.role_group_id
+            WHERE ur.user_id = ?
+            ORDER BY ur.is_primary DESC, ur.assigned_at DESC
+            LIMIT 1');
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            $ctx['role_code'] = (string)($row['role_code'] ?? '');
+            $ctx['group_code'] = (string)($row['group_code'] ?? '');
+        }
+    } catch (Exception $e) {
+        return $ctx;
+    }
+
+    return $ctx;
+}
+
+/**
+ * Detect if user should be treated as admin.
+ *
+ * @param array|null $user
+ * @param array $rbacCtx
+ * @return bool
+ */
+function auth_is_admin_like($user, $rbacCtx = []) {
+    $sessionRole = is_array($user) ? (string)($user['role'] ?? '') : '';
+    if ($sessionRole === 'admin') {
+        return true;
+    }
+
+    $roleCode = (string)($rbacCtx['role_code'] ?? '');
+    return $roleCode !== '' && strpos($roleCode, 'admin') !== false;
+}
+
+/**
+ * Detect if user should be treated as worker/site-ops.
+ *
+ * @param array|null $user
+ * @param array $rbacCtx
+ * @return bool
+ */
+function auth_is_worker_like($user, $rbacCtx = []) {
+    $sessionRole = is_array($user) ? (string)($user['role'] ?? '') : '';
+    if ($sessionRole === 'worker') {
+        return true;
+    }
+
+    $roleCode = (string)($rbacCtx['role_code'] ?? '');
+    $groupCode = (string)($rbacCtx['group_code'] ?? '');
+
+    if ($groupCode === 'site_ops') {
+        return true;
+    }
+
+    return $roleCode !== '' && strpos($roleCode, 'site_') === 0;
+}
+
+/**
+ * Resolve dashboard module code from current script path.
+ *
+ * @return string
+ */
+function auth_resolve_module_code_from_request() {
+    if (!auth_table_exists('dashboard_modules')) {
+        return '';
+    }
+
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        return '';
+    }
+
+    $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    if ($script === '') {
+        return '';
+    }
+
+    try {
+        $stmt = $db->query('SELECT code, route FROM dashboard_modules WHERE route IS NOT NULL AND route <> ""');
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        $best = '';
+        $bestLen = 0;
+        foreach ($rows as $r) {
+            $route = str_replace('\\', '/', (string)($r['route'] ?? ''));
+            if ($route === '') {
+                continue;
+            }
+            if (strpos($script, $route) !== false && strlen($route) > $bestLen) {
+                $best = (string)($r['code'] ?? '');
+                $bestLen = strlen($route);
+            }
+        }
+        return $best;
+    } catch (Exception $e) {
+        return '';
+    }
+}
+
+/**
+ * Check module write access from role_dashboard_access table.
+ *
+ * @param int $userId
+ * @param string $moduleCode
+ * @return bool
+ */
+function auth_user_can_write_module($userId, $moduleCode) {
+    $userId = (int)$userId;
+    $moduleCode = (string)$moduleCode;
+    if ($userId <= 0 || $moduleCode === '') {
+        return false;
+    }
+
+    if (!auth_table_exists('user_roles') || !auth_table_exists('dashboard_modules') || !auth_table_exists('role_dashboard_access')) {
+        return false;
+    }
+
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        return false;
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT 1
+            FROM user_roles ur
+            INNER JOIN role_dashboard_access rda ON rda.role_id = ur.role_id
+            INNER JOIN dashboard_modules dm ON dm.id = rda.module_id
+            WHERE ur.user_id = ?
+              AND dm.code = ?
+              AND (rda.can_create = 1 OR rda.can_update = 1 OR rda.can_delete = 1)
+            LIMIT 1');
+        $stmt->execute([$userId, $moduleCode]);
+        return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+/**
+ * Check if user has any explicit write-like permission in role_permissions.
+ *
+ * @param int $userId
+ * @return bool
+ */
+function auth_user_has_any_write_permission($userId) {
+    $userId = (int)$userId;
+    if ($userId <= 0) {
+        return false;
+    }
+
+    if (!auth_table_exists('user_roles') || !auth_table_exists('role_permissions') || !auth_table_exists('permissions')) {
+        return false;
+    }
+
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        return false;
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT 1
+            FROM user_roles ur
+            INNER JOIN role_permissions rp ON rp.role_id = ur.role_id
+            INNER JOIN permissions p ON p.id = rp.permission_id
+            WHERE ur.user_id = ?
+              AND rp.is_allowed = 1
+              AND LOWER(p.action) IN ("create", "update", "delete", "write", "manage")
+            LIMIT 1');
+        $stmt->execute([$userId]);
+        return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+/**
+ * Enforce write access by DB permissions with worker-safe default deny.
+ *
+ * Policy:
+ * - Non-write requests are ignored.
+ * - Admin-like users always allowed.
+ * - Worker-like users are denied unless module write access or explicit write permission exists.
+ *
+ * @return void
+ */
+function enforce_request_write_permission() {
+    if (!auth_is_write_method()) {
+        return;
+    }
+
+    $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    // Do not interfere with auth entry point where session may be created.
+    if (strpos($script, '/public/login_register.php') !== false) {
+        return;
+    }
+
+    $user = current_user();
+    if (!is_array($user)) {
+        return;
+    }
+
+    $userId = (int)($user['id'] ?? 0);
+    $rbacCtx = auth_get_user_rbac_context($userId);
+
+    if (auth_is_admin_like($user, $rbacCtx)) {
+        return;
+    }
+
+    $moduleCode = auth_resolve_module_code_from_request();
+    $allowedByModule = auth_user_can_write_module($userId, $moduleCode);
+    $allowedByPermission = auth_user_has_any_write_permission($userId);
+    if ($allowedByModule || $allowedByPermission) {
+        return;
+    }
+
+    if (!auth_is_worker_like($user, $rbacCtx)) {
+        return;
+    }
+
+    http_response_code(403);
+    $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
+    $isAjax = strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+    if ($isAjax || strpos($accept, 'application/json') !== false) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => false,
+            'error' => 'forbidden',
+            'message' => 'Write access denied for worker role.',
+        ]);
+        exit;
+    }
+
+    echo '403 Forbidden: Write access denied for worker role.';
+    exit;
 }
 ?>

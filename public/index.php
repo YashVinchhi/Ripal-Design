@@ -1,5 +1,11 @@
 <!doctype html>
 <?php require_once __DIR__ . '/../includes/init.php'; ?>
+<?php
+$featuredProjects = db_connected() ? db_fetch_all('SELECT name, COALESCE(location, "") AS location FROM projects ORDER BY created_at DESC LIMIT 4') : [];
+for ($i = count($featuredProjects); $i < 4; $i++) {
+    $featuredProjects[] = ['name' => 'Project', 'location' => ''];
+}
+?>
 <html lang="en">
 
 <head>
@@ -80,7 +86,7 @@
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">01</span>
-                        <h2 class="project-title display-4 mb-4">Shanti Sadan</h2>
+                        <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[0]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             A masterpiece of modern residential architecture in the heart of Rajkot, <br>redefining spatial excellence through minimalist precision.
@@ -98,7 +104,7 @@
                 <div class="project-showcase-content project-content-left">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">02</span>
-                        <h2 class="project-title display-4 mb-4">Matru Ashish</h2>
+                        <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[1]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             A landmark in Jam Khambhalia, bridging the gap between <br> Tradition and contemporary living with breathable structure.
@@ -122,7 +128,7 @@
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">03</span>
-                        <h2 class="project-title display-4 mb-4">Rajkot Smart City Plaza</h2>
+                        <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[2]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             State-of-the-art Multi-Institutional System integrated <br>into Rajkot's burgeoning urban landscape.
@@ -140,7 +146,7 @@
                 <div class="project-showcase-content project-content-left">
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">04</span>
-                        <h2 class="project-title display-4 mb-4">Morbi Ceramic Hub</h2>
+                        <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[3]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             Industrial refinement meeting contemporary <br> aesthetics in the heart of India's ceramic capital.

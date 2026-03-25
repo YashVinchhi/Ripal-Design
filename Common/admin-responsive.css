@@ -1,0 +1,34 @@
+/* Small responsive tweaks for admin/dashboard pages */
+:root{
+  --admin-header-mobile-padding-top: 4rem; /* 64px */
+}
+
+/* Reduce top spacing and table paddings on small screens */
+@media (max-width: 767px) {
+  header[role="banner"], header { padding-top: 5rem !important; padding-bottom: 1rem !important; }
+  .admin-main { margin-top: 4rem !important; }
+  /* Make dense table cells for mobile */
+  .admin-table th,
+  .admin-table td {
+    padding: .5rem .6rem !important;
+    font-size: .85rem !important;
+  }
+
+  /* Make toolbar inputs more compact */
+  .admin-toolbar-input { padding-left: .75rem !important; padding-right: .75rem !important; }
+
+  /* Resize header logo image on small screens */
+  .alt-logo img { height: 36px; }
+}
+
+/* Improve overflow and scaling for tables */
+.admin-table { border-collapse: collapse; width: 100%; }
+.admin-table td img, .admin-table th img { max-width: 100%; height: auto; }
+
+/* Provide a subtle stacking fallback for very narrow screens */
+@media (max-width:420px) {
+  .admin-table thead { display: none; }
+  .admin-table tbody tr { display: block; border-bottom: 1px solid #eee; margin-bottom: 8px; }
+  .admin-table tbody td { display: block; width: 100%; box-sizing: border-box; }
+  .admin-table tbody td::before { content: attr(data-label) ": "; font-weight:600; display:block; margin-bottom:4px; }
+}

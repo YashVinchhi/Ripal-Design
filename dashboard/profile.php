@@ -8,9 +8,37 @@
 
 require_once __DIR__ . '/../includes/init.php';
 
-// Get current user info from session
-$user = $_SESSION['user'] ?? 'employee01';
-$user_id = $_SESSION['user_id'] ?? 0;
+// Get current user info from session (support multiple session shapes)
+$session_user = $_SESSION['user'] ?? null;
+$session_user_id = $_SESSION['user_id'] ?? ($session_user['id'] ?? null);
+$session_username = $session_user['username'] ?? ($_SESSION['username'] ?? null);
+$session_role = $_SESSION['role'] ?? ($session_user['role'] ?? null);
+
+$current_user_id = (int)($session_user_id ?? 0);
+$current_username = $session_username ?? '';
+$current_role = $session_role ?? 'guest';
+
+// Determine which profile to view: allow admins to view others via ?id or ?user
+$view_user_id = $current_user_id;
+$view_username = $current_username;
+
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $requested_id = (int)$_GET['id'];
+    if ($requested_id > 0 && $current_role === 'admin') {
+        $view_user_id = $requested_id;
+        $view_username = null;
+    }
+} elseif (!empty($_GET['user'])) {
+    $requested_user = trim((string)$_GET['user']);
+    if ($requested_user !== '' && $current_role === 'admin') {
+        $view_username = $requested_user;
+        $view_user_id = 0;
+    }
+}
+
+// Legacy compatibility variables
+$user = $current_username ?: ($view_username ?? 'employee01');
+$user_id = $view_user_id ?? 0;
 
 // Development debug: show session contents when ?debug=1 is used (remove in production)
 if (isset($_GET['debug']) && $_GET['debug'] === '1') {
@@ -35,14 +63,34 @@ $user_data = [
     'joined_date' => date('Y-m-d'),
 ];
 
-// Load user data from database if available
-if (db_connected() && $user_id > 0) {
+// Load user data from database if available. Support admin viewing others via username or id.
+if (db_connected()) {
     try {
         $db = get_db();
-        $stmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
-        $stmt->execute([$user_id]);
-        $db_user = $stmt->fetch();
-        if ($db_user) {
+        $db_user = null;
+
+        // If an admin requested a username, load by username
+        if (!empty($view_username) && $current_role === 'admin') {
+            $stmt = $db->prepare("SELECT * FROM users WHERE username = ? LIMIT 1");
+            $stmt->execute([$view_username]);
+            $db_user = $stmt->fetch();
+        }
+
+        // If a specific id is requested (admin) or fallback to resolved id
+        if (empty($db_user) && $view_user_id > 0) {
+            $stmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+            $stmt->execute([$view_user_id]);
+            $db_user = $stmt->fetch();
+        }
+
+        // Final fallback: if still empty but session user exists, load session user
+        if (empty($db_user) && $current_user_id > 0) {
+            $stmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+            $stmt->execute([$current_user_id]);
+            $db_user = $stmt->fetch();
+        }
+
+        if (!empty($db_user)) {
             $user_data = array_merge($user_data, $db_user);
         }
     } catch (Exception $e) {
@@ -50,11 +98,8 @@ if (db_connected() && $user_id > 0) {
     }
 }
 
-// Demo data if DB is empty or not connected
-if (empty($user_data['full_name'])) {
-    $user_data['full_name'] = 'Yashbhai Vinchhi';
-    $user_data['email'] = 'yash.vinchhi@ripal.design';
-    $user_data['joined_date'] = '2024-01-15';
+if (empty($user_data['joined_date'])) {
+    $user_data['joined_date'] = date('Y-m-d');
 }
 
 $message = '';

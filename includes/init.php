@@ -44,6 +44,11 @@ if (session_status() === PHP_SESSION_NONE) {
     @session_start();
 }
 
+// Global write guard: enforces DB-backed role permissions for mutating requests.
+if (function_exists('enforce_request_write_permission')) {
+    enforce_request_write_permission();
+}
+
 // Make $pdo available as a global for legacy code that expects it
 global $pdo;
 

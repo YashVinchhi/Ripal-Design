@@ -240,9 +240,17 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 </div>
 <script>
 (function(){
+  function showToast(message){
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;right:16px;bottom:16px;background:#2d2d2d;color:#fff;padding:10px 14px;border-radius:6px;z-index:9999;font-size:12px;box-shadow:0 8px 20px rgba(0,0,0,0.2)';
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 2200);
+  }
+
   const shareUrl = '<?php echo addslashes($share_url); ?>';
   document.getElementById('copyLink').addEventListener('click', function(){
-    navigator.clipboard?.writeText(shareUrl).then(()=>{ alert('Invoice link copied to clipboard'); }).catch(()=>{ prompt('Copy this link', shareUrl); });
+    navigator.clipboard?.writeText(shareUrl).then(()=>{ showToast('Invoice link copied to clipboard'); }).catch(()=>{ prompt('Copy this link', shareUrl); });
   });
   document.getElementById('emailLink').addEventListener('click', function(){
     const subject = encodeURIComponent('Goods Invoice: <?php echo addslashes($project['name']); ?>');

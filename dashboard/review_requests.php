@@ -28,15 +28,6 @@ if (db_connected()) {
     }
 }
 
-// Demo data fallback
-if (empty($requests)) {
-    $requests = [
-        ['id'=>1, 'subject'=>'Foundation Inspection', 'description'=>'Foundation ready for audit.', 'project_name'=>'Oak St Residence', 'urgency'=>'high', 'status'=>'pending', 'submitted_by'=>'Ramesh K.', 'created_at'=>'2026-02-15 10:00:00'],
-        ['id'=>2, 'subject'=>'Electrical Layout', 'description'=>'Conduits placed.', 'project_name'=>'Market Rd Shop', 'urgency'=>'normal', 'status'=>'approved', 'submitted_by'=>'Suresh B.', 'created_at'=>'2026-02-14 14:00:00'],
-        ['id'=>3, 'subject'=>'Plumbing Test', 'description'=>'Pressure test required.', 'project_name'=>'Riverfront Villa', 'urgency'=>'critical', 'status'=>'changes_requested', 'submitted_by'=>'Dinesh S.', 'created_at'=>'2026-02-16 09:30:00'],
-    ];
-}
-
 $counts = ['pending'=>0, 'approved'=>0, 'changes_requested'=>0, 'rejected'=>0];
 foreach($requests as $r) {
     if(isset($counts[$r['status']])) $counts[$r['status']]++;
@@ -146,7 +137,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                         <?php foreach($requests as $r): ?>
                             <div class="request-row p-8 group hover:bg-gray-50/50 transition-all" 
                                  data-status="<?php echo htmlspecialchars($r['status']); ?>" 
-                                 data-urgency="<?php echo htmlspecialchars($r['urgency']); ?>">
+                                 data-urgency="<?php echo htmlspecialchars($r['urgency']); ?>"
+                                 data-subject="<?php echo htmlspecialchars((string)$r['subject']); ?>"
+                                 data-description="<?php echo htmlspecialchars((string)$r['description']); ?>"
+                                 data-project="<?php echo htmlspecialchars((string)$r['project_name']); ?>"
+                                 data-submitted-by="<?php echo htmlspecialchars((string)$r['submitted_by']); ?>"
+                                 data-created-at="<?php echo htmlspecialchars(date('M d, H:i', strtotime((string)$r['created_at']))); ?>">
                                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                     <div class="flex-grow space-y-3">
                                         <div class="flex flex-wrap items-center gap-3">
@@ -185,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                         <?php else: ?>
                                             <button class="p-3 border border-gray-100 text-gray-300 cursor-not-allowed"><i data-lucide="lock" class="w-5 h-5"></i></button>
                                         <?php endif; ?>
-                                        <button class="p-3 bg-foundation-grey hover:bg-rajkot-rust text-white transition-all shadow-md" onclick="alert('Viewing comprehensive audit details for: <?php echo addslashes($r['subject']); ?>')"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                                        <button type="button" class="p-3 bg-foundation-grey hover:bg-rajkot-rust text-white transition-all shadow-md view-details-btn"><i data-lucide="eye" class="w-5 h-5"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -194,6 +190,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                 </div>
             </div>
         </main>
+
+        <div id="request-detail-modal" class="fixed inset-0 hidden bg-black/40 z-50 items-center justify-center p-4">
+            <div class="bg-white w-full max-w-xl shadow-premium border border-gray-100 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-serif font-bold text-foundation-grey">Request Details</h3>
+                    <button id="close-request-modal" type="button" class="text-gray-400 hover:text-foundation-grey text-xl leading-none">&times;</button>
+                </div>
+                <div id="request-modal-content" class="space-y-2 text-sm text-gray-600"></div>
+            </div>
+        </div>
 
         <?php require_once __DIR__ . '/../Common/footer.php'; ?>
     </div>
@@ -222,6 +228,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                 }
             });
         }
+
+        function openRequestModal(contentHtml) {
+            const modal = document.getElementById('request-detail-modal');
+            const content = document.getElementById('request-modal-content');
+            content.innerHTML = contentHtml;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeRequestModal() {
+            const modal = document.getElementById('request-detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.querySelectorAll('.view-details-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = btn.closest('.request-row');
+                openRequestModal(
+                    '<p><strong>Subject:</strong> ' + row.dataset.subject + '</p>' +
+                    '<p><strong>Project:</strong> ' + row.dataset.project + '</p>' +
+                    '<p><strong>Submitted By:</strong> ' + row.dataset.submittedBy + '</p>' +
+                    '<p><strong>Created:</strong> ' + row.dataset.createdAt + '</p>' +
+                    '<p><strong>Description:</strong> ' + row.dataset.description + '</p>'
+                );
+            });
+        });
+
+        document.getElementById('close-request-modal').addEventListener('click', closeRequestModal);
+        document.getElementById('request-detail-modal').addEventListener('click', function (e) {
+            if (e.target.id === 'request-detail-modal') {
+                closeRequestModal();
+            }
+        });
     </script>
 </body>
 </html>

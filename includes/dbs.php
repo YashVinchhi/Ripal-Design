@@ -7,7 +7,7 @@ if(!$con){
     echo "Connected successfully";
 }
 
-// $create_db = "CREATE DATABASE IF NOT EXISTS ripal_db";
+// $create_db = "CREATE DATABASE IF NOT EXISTS `Ripal-Design`";
 
 // if(mysqli_query($con,$create_db)){
 //     echo "Database created successfully";
@@ -15,7 +15,7 @@ if(!$con){
 //     echo "Error creating database: ".mysqli_error($con);    
 // }
 
-// mysqli_select_db( $con, "ripal_db");
+// mysqli_select_db( $con, "Ripal-Design");
 
 // $table = "CREATE TABLE IF NOT EXISTS signup(
 //     id INT(11) AUTO_INCREMENT PRIMARY KEY,

@@ -1,116 +1,64 @@
 <?php
-// Client Revisions (Redesigned UI)
 session_start();
-require_once __DIR__ . '/../includes/config.php';
-$projectId = $_GET['project_id'] ?? 'PRJ-2024-001';
+require_once __DIR__ . '/../includes/init.php';
+
+$projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
+$projectName = 'Project';
+$revisions = [];
+
+if (db_connected() && $projectId > 0) {
+    $p = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+    if ($p) {
+        $projectName = (string)$p['name'];
+    }
+
+    $revisions = db_fetch_all('SELECT id, name, version, status, file_path, uploaded_at FROM project_drawings WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId]);
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-canvas-white">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Revision Archive | Ripal Design</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'rajkot-rust': '#94180C',
-            'canvas-white': '#F9FAFB',
-            'foundation-grey': '#2D2D2D',
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Playfair Display', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../common/header_alt.php'; ?>
-  
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
-    <div class="mb-12">
-      <div class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-         <a href="client_files.php" class="hover:text-rajkot-rust transition">Design Studio</a>
-         <i class="bi bi-chevron-right text-[8px]"></i>
-         <span>Revision History</span>
+  <div class="min-h-screen flex flex-col">
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg mb-12 border-b-2 border-rajkot-rust">
+      <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-serif font-bold">Revision Archive</h1>
+        <p class="text-gray-400 mt-2">Timeline of drawing revisions for <?php echo htmlspecialchars($projectName); ?>.</p>
       </div>
-      <h1 class="text-3xl font-serif font-bold text-rajkot-rust">Revision Archive</h1>
-      <p class="text-gray-500 mt-1">Timeline of design evolutions for <strong><?php echo htmlspecialchars($projectId); ?></strong>.</p>
-    </div>
+    </header>
 
-    <!-- Timeline UI -->
-    <div class="relative">
-      <!-- Vertical Line -->
-      <div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gray-200 -translate-x-1/2"></div>
-
-      <!-- Revision 3 (Latest) -->
-      <div class="relative mb-16">
-        <div class="flex flex-col md:flex-row items-center">
-          <div class="flex-grow md:w-1/2 md:pr-12 mb-4 md:mb-0">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:text-right hover:shadow-md transition group">
-               <span class="text-[10px] font-black font-mono text-rajkot-rust tracking-tighter uppercase mb-2 block">Feb 15, 2024 • 11:30 AM</span>
-               <h3 class="text-lg font-bold text-foundation-grey mb-2 group-hover:text-rajkot-rust transition">Structural Optimization v2.4</h3>
-               <p class="text-xs text-gray-500 leading-relaxed italic">
-                 "Adjusted steel column placements in Section B-B to improve open-floor visibility as requested."
-               </p>
-               <div class="mt-4 flex flex-wrap justify-end gap-2">
-                 <span class="px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded uppercase border border-green-100">Approved</span>
-                 <span class="px-2 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded uppercase border border-gray-200">2 Files</span>
-               </div>
+    <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <?php if (empty($revisions)): ?>
+      <div class="bg-white border border-gray-100 shadow-premium p-10 text-center text-gray-500">No revision records found.</div>
+      <?php else: ?>
+      <div class="space-y-4">
+        <?php foreach ($revisions as $r): ?>
+        <?php $status = strtolower((string)($r['status'] ?? 'under review')); ?>
+        <div class="bg-white border border-gray-100 shadow-premium p-6">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h3 class="text-lg font-serif font-bold"><?php echo htmlspecialchars((string)$r['name']); ?></h3>
+              <p class="text-xs text-gray-400 mt-1">Version: <?php echo htmlspecialchars((string)($r['version'] ?: 'v1')); ?> � <?php echo date('M d, Y H:i', strtotime((string)$r['uploaded_at'])); ?></p>
             </div>
+            <span class="text-[10px] uppercase tracking-widest px-2 py-1 border border-gray-100 bg-gray-50"><?php echo htmlspecialchars($status); ?></span>
           </div>
-          <div class="absolute left-4 md:left-1/2 w-4 h-4 rounded-full bg-rajkot-rust border-4 border-white shadow-sm -translate-x-1/2"></div>
-          <div class="flex-grow md:w-1/2 md:pl-12"></div>
+          <?php if (!empty($r['file_path'])): ?>
+          <div class="mt-4">
+            <a class="text-rajkot-rust text-xs font-bold uppercase tracking-widest" href="../admin/file_viewer.php?file=<?php echo urlencode((string)$r['file_path']); ?>" target="_blank">Open File</a>
+          </div>
+          <?php endif; ?>
         </div>
+        <?php endforeach; ?>
       </div>
+      <?php endif; ?>
+    </main>
 
-      <!-- Revision 2 -->
-      <div class="relative mb-16">
-        <div class="flex flex-col md:flex-row items-center">
-          <div class="flex-grow md:w-1/2 md:pr-12"></div>
-          <div class="absolute left-4 md:left-1/2 w-4 h-4 rounded-full bg-gray-300 border-4 border-white shadow-sm -translate-x-1/2"></div>
-          <div class="flex-grow md:w-1/2 md:pl-12">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition group">
-               <span class="text-[10px] font-black font-mono text-gray-400 tracking-tighter uppercase mb-2 block">Feb 08, 2024 • 04:15 PM</span>
-               <h3 class="text-lg font-bold text-foundation-grey mb-2 group-hover:text-rajkot-rust transition">Façade Material Update v2.1</h3>
-               <p class="text-xs text-gray-500 leading-relaxed italic">
-                 "Updated the GRC panel textures and added Saurashtra pattern detailing to the north elevation."
-               </p>
-               <div class="mt-4 flex flex-wrap gap-2">
-                 <span class="px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded uppercase border border-amber-100">Revision Requested</span>
-                 <span class="px-2 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded uppercase border border-gray-200">1 File</span>
-               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Start of Project -->
-      <div class="relative">
-        <div class="flex flex-col md:flex-row items-center">
-           <div class="flex-grow md:w-1/2 md:pr-12 mb-4 md:mb-0">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:text-right hover:shadow-md transition group">
-               <span class="text-[10px] font-black font-mono text-gray-400 tracking-tighter uppercase mb-2 block">Jan 20, 2024</span>
-               <h3 class="text-lg font-bold text-foundation-grey mb-2 group-hover:text-rajkot-rust transition">Project Genesis</h3>
-               <p class="text-xs text-gray-500 leading-relaxed italic">
-                 Initial schematic drawings and conceptual site plan.
-               </p>
-            </div>
-          </div>
-          <div class="absolute left-4 md:left-1/2 w-8 h-8 rounded-full bg-foundation-grey flex items-center justify-center -translate-x-1/2">
-             <i class="bi bi-flag-fill text-white text-xs"></i>
-          </div>
-          <div class="flex-grow md:w-1/2 md:pl-12"></div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <?php require_once __DIR__ . '/../common/footer.php'; ?>
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+  </div>
 </body>
 </html>
