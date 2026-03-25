@@ -1,6 +1,17 @@
 <?php
-$message = $_GET['message'] ?? '';
-$type = $_GET['type'] ?? '';
+$message = '';
+$type = '';
+
+if (isset($_COOKIE['flash_message'])) {
+    $message = $_COOKIE['flash_message'];
+    $type = $_COOKIE['flash_type'] ?? 'error';
+
+    setcookie('flash_message', '', time() - 3600, '/');
+    setcookie('flash_type', '', time() - 3600, '/');
+} else {
+    $message = $_GET['message'] ?? '';
+    $type = $_GET['type'] ?? '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

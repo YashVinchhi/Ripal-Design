@@ -1,51 +1,20 @@
 <?php
-$host = "192.168.1.64";
-$username = "devadmin";
-$password = "Ro0t1234";
-$database = "Ripal-Design";
+$host = "localhost";
+$username = "root";
+$password = "";
+$database = "ripal-design";
 
 // Do not instantiate connections at include-time if extensions are missing.
-$conn = null;
-if (class_exists('mysqli')) {
-    try {
-        $tmp = @new mysqli($host, $username, $password, $database, $port);
-        if (!($tmp->connect_error ?? false)) {
-            $conn = $tmp;
-        } else {
-            $conn = null;
-        }
-    } catch (Throwable $e) {
-        $conn = null;
-    }
-} else {
-    $conn = null;
-}
+$conn = new mysqli($host, $username, $password, $database) or die("Connection failed: " . mysqli_connect_error());
 
-/**
- * get_db_connection(): returns a mysqli object, a PDO object, or null.
- * Callers should check the returned value and handle accordingly.
- */
-function get_db_connection()
+// Must be called after every $stmt->execute() that uses CALL ProcedureName()
+function flush_stored_results($conn)
 {
-    global $host, $username, $password, $database;
-
-    if (class_exists('mysqli')) {
-        $conn = @new mysqli($host, $username, $password, $database, $port);
-        if (!($conn->connect_error ?? false)) {
-            return $conn;
-        }
-        return null;
-    }
-
-    if (extension_loaded('pdo') && in_array('mysql', PDO::getAvailableDrivers())) {
-        try {
-            $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
-            $pdo = new PDO($dsn, $username, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-            return $pdo;
-        } catch (PDOException $e) {
-            return null;
+    while ($conn->more_results() && $conn->next_result()) {
+        $extra = $conn->use_result();
+        if ($extra instanceof mysqli_result) {
+            $extra->free();
         }
     }
-
-    return null;
 }
+?>
