@@ -1,0 +1,10 @@
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error:  - SMTP credentials are missing. Set SMTP_USER and SMTP_PASS environment variables. For Gmail, use a 16-character App Password in SMTP_PASS.
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+Message could not be sent. SMTP credentials are not configured. Set real values in includes/smtp_config.php or SMTP_USER/SMTP_PASS environment variables.PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
