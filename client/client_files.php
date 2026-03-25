@@ -2,38 +2,33 @@
 // Client Files (Redesigned UI)
 session_start();
 require_once __DIR__ . '/../includes/init.php';
-$projectId = $_GET['project_id'] ?? 'PRJ-2024-001';
+$projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 
-// Sample drawing data
-$drawings = [
-    [
-        'id' => 1,
-        'title' => 'Site Layout Plan - GF',
-        'file' => 'Blueprint_SLP_01.pdf',
-        'size' => '4.2 MB',
-        'version' => 'v1.8',
-        'date' => 'Feb 14, 2026',
-        'status' => 'approved'
-    ],
-    [
-        'id' => 2,
-        'title' => 'Electrical Conduit Plan',
-        'file' => 'Blueprint_ELE_04.pdf',
-        'size' => '2.8 MB',
-        'version' => 'v2.1',
-        'date' => 'Just Now',
-        'status' => 'pending'
-    ],
-    [
-        'id' => 3,
-        'title' => 'Plumbing & Drainage Layout',
-        'file' => 'Blueprint_PLM_02.pdf',
-        'size' => '3.5 MB',
-        'version' => 'v1.4',
-        'date' => 'Feb 10, 2026',
-        'status' => 'approved'
-    ]
-];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST['client_action']) && db_connected()) {
+    $drawingId = (int)$_POST['drawing_id'];
+    $clientAction = (string)$_POST['client_action'];
+    if ($drawingId > 0 && in_array($clientAction, ['authorize', 'redline'], true)) {
+        $status = $clientAction === 'authorize' ? 'approved' : 'changes_requested';
+        db_query('UPDATE project_drawings SET status = ? WHERE id = ?', [$status, $drawingId]);
+    }
+    header('Location: ' . $_SERVER['REQUEST_URI']);
+    exit;
+}
+
+$drawings = [];
+if ($projectId > 0 && db_connected()) {
+    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(file_path,'') AS file, COALESCE(version,'v1') AS version, uploaded_at AS date, LOWER(REPLACE(status,' ', '_')) AS status
+        FROM project_drawings
+        WHERE project_id = ?
+        ORDER BY uploaded_at DESC", [$projectId]);
+}
+
+if (empty($drawings) && $projectId > 0 && db_connected()) {
+    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(filename,'') AS file, CONCAT('v', COALESCE(version,1)) AS version, uploaded_at AS date, 'approved' AS status
+        FROM project_files
+        WHERE project_id = ?
+        ORDER BY uploaded_at DESC", [$projectId]);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
@@ -61,7 +56,7 @@ $drawings = [
                 <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Transparency Engine • <strong class="text-rajkot-rust font-mono"><?php echo htmlspecialchars($projectId); ?></strong></p>
             </div>
             <div class="flex gap-3">
-                <button class="bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center gap-3 active:scale-95">
+                <button id="exportManifestBtn" type="button" class="bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center gap-3 active:scale-95">
                     <i data-lucide="download-cloud" class="w-4 h-4"></i> Export manifest
                 </button>
             </div>
@@ -111,8 +106,8 @@ $drawings = [
                     <i data-lucide="layers" class="w-4 h-4 text-rajkot-rust"></i> Revision Registry
                 </h3>
                 <div class="flex bg-white shadow-sm ring-1 ring-gray-100 p-1">
-                    <button class="p-2 text-rajkot-rust bg-gray-50"><i data-lucide="rows" class="w-4 h-4"></i></button>
-                    <button class="p-2 text-gray-300 hover:text-gray-500 transition-colors"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                    <button id="rowsViewBtn" type="button" class="p-2 text-rajkot-rust bg-gray-50"><i data-lucide="rows" class="w-4 h-4"></i></button>
+                    <button id="compactViewBtn" type="button" class="p-2 text-gray-300 hover:text-gray-500 transition-colors"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
                 </div>
             </div>
 
@@ -129,7 +124,7 @@ $drawings = [
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         <?php foreach($drawings as $d): ?>
-                        <tr class="group hover:bg-gray-50/30 transition-all duration-300">
+                        <tr class="group hover:bg-gray-50/30 transition-all duration-300 drawing-row">
                             <td class="px-10 py-8">
                                 <div class="flex items-center gap-5">
                                     <div class="w-12 h-16 bg-foundation-grey flex flex-col items-center justify-center text-white shrink-0 relative overflow-hidden group-hover:bg-rajkot-rust transition-colors shadow-premium border-b-2 border-rajkot-rust/20 group-hover:border-white/20">
@@ -166,18 +161,21 @@ $drawings = [
                             <td class="px-10 py-8 text-right">
                                 <?php if($d['status'] === 'pending'): ?>
                                     <div class="flex justify-end gap-3">
-                                        <button onclick="handleClientAction('authorize', '<?php echo addslashes($d['title']); ?>')" class="bg-approval-green hover:bg-green-700 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
-                                            Authorize
-                                        </button>
-                                        <button onclick="handleClientAction('redline', '<?php echo addslashes($d['title']); ?>')" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
-                                            Request Redline
-                                        </button>
+                                        <form method="post" class="flex gap-3">
+                                            <input type="hidden" name="drawing_id" value="<?php echo (int)$d['id']; ?>">
+                                            <button type="submit" name="client_action" value="authorize" class="bg-approval-green hover:bg-green-700 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
+                                                Authorize
+                                            </button>
+                                            <button type="submit" name="client_action" value="redline" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
+                                                Request Redline
+                                            </button>
+                                        </form>
                                     </div>
                                 <?php else: ?>
                                     <div class="flex justify-end gap-3">
                                         <button onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['file']); ?>&project=Client Registry', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
                                         <!-- <button class="text-gray-300 hover:text-foundation-grey transition-colors p-2"><i data-lucide="history" class="w-5 h-5"></i></button> -->
-                                        <button onclick="handleDownload('<?php echo addslashes($d['file']); ?>')" class="text-gray-300 hover:text-blue-600 transition-colors p-2" title="Registry Download"><i data-lucide="download" class="w-5 h-5"></i></button>
+                                        <button type="button" onclick="handleDownload('<?php echo addslashes($d['file']); ?>')" class="text-gray-300 hover:text-blue-600 transition-colors p-2" title="Registry Download"><i data-lucide="download" class="w-5 h-5"></i></button>
                                     </div>
                                 <?php endif; ?>
                             </td>
@@ -210,6 +208,65 @@ $drawings = [
 
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
   </div>
+
+    <script>
+        (function () {
+            const exportBtn = document.getElementById('exportManifestBtn');
+            const rowsViewBtn = document.getElementById('rowsViewBtn');
+            const compactViewBtn = document.getElementById('compactViewBtn');
+            const drawingRows = document.querySelectorAll('.drawing-row');
+
+            exportBtn.addEventListener('click', function () {
+                const rows = [['Title', 'File', 'Version', 'Date', 'Status']];
+                <?php foreach ($drawings as $d): ?>
+                rows.push([
+                    <?php echo json_encode((string)$d['title']); ?>,
+                    <?php echo json_encode((string)$d['file']); ?>,
+                    <?php echo json_encode((string)$d['version']); ?>,
+                    <?php echo json_encode((string)$d['date']); ?>,
+                    <?php echo json_encode((string)$d['status']); ?>
+                ]);
+                <?php endforeach; ?>
+
+                const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'project_' + <?php echo (int)$projectId; ?> + '_manifest.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            rowsViewBtn.addEventListener('click', function () {
+                rowsViewBtn.classList.add('text-rajkot-rust', 'bg-gray-50');
+                rowsViewBtn.classList.remove('text-gray-300');
+                compactViewBtn.classList.add('text-gray-300');
+                compactViewBtn.classList.remove('text-rajkot-rust', 'bg-gray-50');
+                drawingRows.forEach(row => {
+                    row.classList.remove('compact-row');
+                });
+            });
+
+            compactViewBtn.addEventListener('click', function () {
+                compactViewBtn.classList.add('text-rajkot-rust', 'bg-gray-50');
+                compactViewBtn.classList.remove('text-gray-300');
+                rowsViewBtn.classList.add('text-gray-300');
+                rowsViewBtn.classList.remove('text-rajkot-rust', 'bg-gray-50');
+                drawingRows.forEach(row => {
+                    row.classList.add('compact-row');
+                });
+            });
+        })();
+
+        function handleDownload(fileName) {
+            if (!fileName) {
+                return;
+            }
+            const path = '../uploads/' + encodeURIComponent(fileName);
+            window.open(path, '_blank');
+        }
+    </script>
 
 </body>
 </html>

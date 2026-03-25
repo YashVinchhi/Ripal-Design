@@ -1,5 +1,7 @@
 <?php 
 
+require_once __DIR__ . '/../includes/config.php';
+
 session_start();
 
 $errors = [
@@ -44,7 +46,7 @@ function showActive($form, $active_form){
 
       <div class="card-login">
         <h3 class="mb-4">Login</h3>
-        <form id="loginForm" method="post" novalidate action="login_register.php">
+        <form id="loginForm" method="post" novalidate action="<?= htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX . '/login_register.php', ENT_QUOTES, 'UTF-8'); ?>">
         <?=  showError($errors['login']); ?>
           <!-- for email  -->
           <div class="mb-3 text-start">

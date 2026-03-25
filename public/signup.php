@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../includes/config.php';
+
 session_start();
 
 $errors = [
@@ -46,7 +48,7 @@ function showActive($form, $active_form)
         <div class="login-card text-center">
             <div class="card-login" style="margin-bottom: 30vh;">
                 <h3 class="mb-4">Signup</h3>
-                <form id="signupForm" method="post" action="login_register.php" novalidate class="<?= showActive('signup', $active_form) ? 'active' : '' ?>">
+                <form id="signupForm" method="post" action="<?= htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX . '/login_register.php', ENT_QUOTES, 'UTF-8'); ?>" novalidate class="<?= showActive('signup', $active_form) ? 'active' : '' ?>">
                     <?= showError($errors['signup']); ?>
                     <!-- first and last name side-by-side -->
                     <div class="row g-3">
