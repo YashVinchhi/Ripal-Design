@@ -18,7 +18,7 @@ function formatDate($dateString) {
   $date = strtotime($dateString);
   return date('M d, Y', $date);
 }
-<<<<<<< HEAD
+
 
 // Schema changes are managed by deploy-time migrations (see sql/migrations/).
 
@@ -160,7 +160,7 @@ if ($projectId && isset($pdo) && $pdo instanceof PDO) {
         $error = 'Unable to load project details right now.';
   }
 }
-=======
+
 require_once "../sql/db_config.php";
 // Create tables if they don't exist
 session_start();
@@ -171,7 +171,7 @@ $errors = [
 $active_form = $_SESSION['active_form'] ?? 'projects';
 
 session_unset();
->>>>>>> e40d25d4e6575badb418f0adf2a0f75f0f0a2982
+
 
 if (!$project) {
     $project = [
@@ -460,14 +460,13 @@ function showActive($form, $active_form)
                         <div class="p-6 border-b border-slate-200 dark:border-slate-800">
                             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
-<<<<<<< HEAD
+
                         <form method="post">
                             <?php echo csrf_token_field(); ?>
-=======
                         <form method="post" id="project-details-form" action="project_owerview_db.php">
                             <input type="hidden" name="projects" value="1" />
                              <?= showError($errors['projects']); ?>
->>>>>>> e40d25d4e6575badb418f0adf2a0f75f0f0a2982
+
                             <div class="p-6 space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">
