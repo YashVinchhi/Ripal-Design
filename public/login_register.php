@@ -141,47 +141,10 @@ if (isset($_POST['signup'])) {
 
 
 if (isset($_POST['login'])) {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $email = trim((string)($_POST['email'] ?? ''));
+    $user_password = (string)($_POST['password'] ?? '');
 
-    $result = $conn->query("SELECT * FROM signup WHERE email = '$email'");
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        if (password_verify($password, $user['password'])) {
-            // Set session user array expected by `is_logged_in()` and header
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'first_name' => $user['first_name'] ?? '',
-                'last_name' => $user['last_name'] ?? '',
-                'email' => $user['email'],
-                'username' => $user['email'] ?? $user['first_name'] ?? '',
-            ];
-            $_SESSION['user_id'] = $user['id'];
-            // Flash a success message for display after redirect
-            $_SESSION['login_success'] = 'Logged in successfully.';
-            header("Location: ../dashboard/dashboard.php");
-            exit();
-        } else {
-            $_SESSION['login_error'] = "Invalid email or password.";
-            $_SESSION['active_form'] = 'login';
-        }
-    } else {
-        // If DB returned no rows, as a fallback allow a local dev login (optional)
-        // Do NOT enable this on production. It creates a session without verifying credentials.
-        $_SESSION['user'] = [
-            'id' => 0,
-            'first_name' => '',
-            'last_name' => '',
-            'email' => $email,
-            'username' => $email,
-        ];
-        $_SESSION['user_id'] = 0;
-        // For local/dev fallback, still provide a success flash
-        $_SESSION['login_success'] = 'Logged in (development fallback).';
-        header("Location: ../dashboard/dashboard.php");
-        exit();
-
-    if (empty($email) || empty($user_password)) {
+    if ($email === '' || $user_password === '') {
         $_SESSION['login_error'] = 'Please enter email and password.';
         $_SESSION['active_form'] = 'login';
         header('Location: login.php');
@@ -197,15 +160,15 @@ if (isset($_POST['login'])) {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($user && !empty($user['password_hash']) && password_verify($user_password, $user['password_hash'])) {
                 $_SESSION['user'] = [
-                    'id' => (int) ($user['id'] ?? 0),
+                    'id' => (int)($user['id'] ?? 0),
                     'first_name' => '',
                     'last_name' => '',
                     'email' => $email,
-                    'username' => (string) ($user['username'] ?? $email),
-                    'role' => (string) ($user['role'] ?? 'client'),
-                    'name' => (string) ($user['username'] ?? $email),
+                    'username' => (string)($user['username'] ?? $email),
+                    'role' => (string)($user['role'] ?? 'client'),
+                    'name' => (string)($user['username'] ?? $email),
                 ];
-                $_SESSION['user_id'] = (int) ($user['id'] ?? 0);
+                $_SESSION['user_id'] = (int)($user['id'] ?? 0);
                 header('Location: ' . post_login_redirect_url($_SESSION['user']));
                 exit();
             }
@@ -227,18 +190,18 @@ if (isset($_POST['login'])) {
             $stmt->close();
 
             if ($user && !empty($user['password']) && password_verify($user_password, $user['password'])) {
-                    $_SESSION['user'] = [
-                        'id' => (int) ($user['s_id'] ?? $user['id'] ?? 0),
-                        'first_name' => $user['first_name'] ?? '',
-                        'last_name' => $user['lats_name'] ?? $user['last_name'] ?? '',
-                        'email' => $user['email'] ?? $email,
-                        'username' => $user['email'] ?? $email,
-                        'role' => $user['role'] ?? 'client',
-                        'name' => trim(($user['first_name'] ?? '') . ' ' . ($user['lats_name'] ?? $user['last_name'] ?? '')) ?: $email,
-                    ];
-                    $_SESSION['user_id'] = (int) ($user['s_id'] ?? $user['id'] ?? 0);
-                    header('Location: ' . post_login_redirect_url($_SESSION['user']));
-                    exit();
+                $_SESSION['user'] = [
+                    'id' => (int)($user['s_id'] ?? $user['id'] ?? 0),
+                    'first_name' => $user['first_name'] ?? '',
+                    'last_name' => $user['lats_name'] ?? $user['last_name'] ?? '',
+                    'email' => $user['email'] ?? $email,
+                    'username' => $user['email'] ?? $email,
+                    'role' => $user['role'] ?? 'client',
+                    'name' => trim(($user['first_name'] ?? '') . ' ' . ($user['lats_name'] ?? $user['last_name'] ?? '')) ?: $email,
+                ];
+                $_SESSION['user_id'] = (int)($user['s_id'] ?? $user['id'] ?? 0);
+                header('Location: ' . post_login_redirect_url($_SESSION['user']));
+                exit();
             }
         } catch (Exception $e) {
             error_log('Legacy login failed: ' . $e->getMessage());
