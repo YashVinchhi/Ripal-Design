@@ -1,5 +1,43 @@
+<?php
+require_once __DIR__ . '/../includes/init.php';
+
+$form_success = false;
+$form_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
+    $firstName = trim((string)($_POST['first_name'] ?? ''));
+    $lastName = trim((string)($_POST['last_name'] ?? ''));
+    $email = trim((string)($_POST['email'] ?? ''));
+    $subject = trim((string)($_POST['subject'] ?? ''));
+    $message = trim((string)($_POST['message'] ?? ''));
+
+    if ($firstName === '' || $email === '' || $subject === '' || $message === '') {
+        $form_error = 'Please complete all required fields.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $form_error = 'Please enter a valid email address.';
+    } else {
+        $logDir = PROJECT_ROOT . '/logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+        $entry = json_encode([
+            'submitted_at' => date('c'),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
+            'subject' => $subject,
+            'message' => $message,
+        ], JSON_UNESCAPED_SLASHES);
+        $writeOk = @file_put_contents($logDir . '/contact_messages.log', $entry . PHP_EOL, FILE_APPEND | LOCK_EX);
+        if ($writeOk === false) {
+            $form_error = 'Unable to submit your message right now. Please try again.';
+        } else {
+            $form_success = true;
+        }
+    }
+}
+?>
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
 <html lang="en" class="scroll-smooth">
 
 <head>
@@ -9,7 +47,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="./js/validation.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./css/contact_us.css">
@@ -19,13 +57,13 @@
     <?php 
     $HEADER_MODE = 'public';
     require_once __DIR__ . '/../includes/header.php'; 
-    
-    // Simple POST handling for feedback
-    $form_success = false;
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
-        $form_success = true;
-    }
     ?>
+        <?php if ($form_error): ?>
+            <div class="fixed top-24 right-6 z-[100] bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
+                <?php echo htmlspecialchars($form_error); ?>
+            </div>
+        <?php endif; ?>
+
 
     <main class="relative min-h-screen flex flex-col md:flex-row pt-24">
         <?php if ($form_success): ?>
@@ -126,6 +164,7 @@
         <div class="w-full md:w-1/2 p-8 md:p-20 bg-[#050505] flex flex-col justify-center">
             <h1 class="text-3xl md:text-4xl font-bold text-white text-align-start mb-8">Send us a message</h1>
             <form class="max-w-lg w-full mx-0 space-y-8" action="" method="POST" id="signupForm" novalidate>
+                <?php echo csrf_token_field(); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="group">
                         <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">First Name</label>

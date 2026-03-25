@@ -1,8 +1,9 @@
 <?php
-$host = "192.168.1.64";
-$username = "devadmin";
-$password = "Ro0t1234";
-$database = "Ripal-Design";
+$host = getenv('DB_HOST') ?: 'localhost';
+$username = getenv('DB_USER') ?: '';
+$password = getenv('DB_PASS') ?: '';
+$database = getenv('DB_NAME') ?: 'Ripal-Design';
+$port = (int) (getenv('DB_PORT') ?: 3306);
 
 // Do not instantiate connections at include-time if extensions are missing.
 $conn = null;
@@ -27,7 +28,7 @@ if (class_exists('mysqli')) {
  */
 function get_db_connection()
 {
-    global $host, $username, $password, $database;
+    global $host, $username, $password, $database, $port;
 
     if (class_exists('mysqli')) {
         $conn = @new mysqli($host, $username, $password, $database, $port);

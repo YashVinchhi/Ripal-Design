@@ -27,9 +27,9 @@ $headerMode = $HEADER_MODE ?? 'public';
 
 // Find and include the main stylesheet
 $stylesheetCandidates = [
-    '/styles.css',
     '/public/css/index.css',
     '/assets/css/styles.css',
+    '/assets/css/tailwind.css',
     '/assets/styles.css'
 ];
 

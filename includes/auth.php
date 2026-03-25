@@ -9,6 +9,70 @@
  * @subpackage Auth
  */
 
+if (!function_exists('csrf_token')) {
+    /**
+     * Get or generate CSRF token for current session.
+     *
+     * @return string
+     */
+    function csrf_token() {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+
+        if (empty($_SESSION['_csrf_token']) || !is_string($_SESSION['_csrf_token'])) {
+            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        return $_SESSION['_csrf_token'];
+    }
+}
+
+if (!function_exists('csrf_token_field')) {
+    /**
+     * Render hidden CSRF field for HTML forms.
+     *
+     * @return string
+     */
+    function csrf_token_field() {
+        $token = htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8');
+        return '<input type="hidden" name="csrf_token" value="' . $token . '">';
+    }
+}
+
+if (!function_exists('csrf_validate')) {
+    /**
+     * Validate incoming CSRF token.
+     *
+     * @param string|null $token
+     * @return bool
+     */
+    function csrf_validate($token) {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+
+        $stored = $_SESSION['_csrf_token'] ?? '';
+        return is_string($token) && $token !== '' && is_string($stored) && $stored !== '' && hash_equals($stored, $token);
+    }
+}
+
+if (!function_exists('require_csrf')) {
+    /**
+     * Enforce CSRF validation for mutating form requests.
+     *
+     * @return void
+     */
+    function require_csrf() {
+        $token = $_POST['csrf_token'] ?? '';
+        if (!csrf_validate($token)) {
+            http_response_code(419);
+            echo 'Invalid CSRF token.';
+            exit;
+        }
+    }
+}
+
 /**
  * Ensure user is logged in, redirect to login page if not
  * 
@@ -49,6 +113,35 @@ function current_user() {
         @session_start();
     }
     return $_SESSION['user'] ?? null;
+}
+
+/**
+ * Resolve current user id from normalized session shape.
+ *
+ * @return int
+ */
+function current_user_id() {
+    $user = current_user();
+    if (is_array($user) && isset($user['id'])) {
+        return (int)$user['id'];
+    }
+    return (int)($_SESSION['user_id'] ?? 0);
+}
+
+/**
+ * Resolve current username from normalized session shape.
+ *
+ * @return string
+ */
+function current_username() {
+    $user = current_user();
+    if (is_array($user)) {
+        $username = (string)($user['username'] ?? $user['email'] ?? '');
+        if ($username !== '') {
+            return $username;
+        }
+    }
+    return (string)($_SESSION['username'] ?? '');
 }
 
 /**

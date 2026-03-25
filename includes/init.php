@@ -41,6 +41,10 @@ if (file_exists(__DIR__ . '/util.php')) {
 // Start session if not already started
 // Use @ to suppress warnings if session already started
 if (session_status() === PHP_SESSION_NONE) {
+    // Ensure cookie is available across the site root so pages in different
+    // folders share the same session (helps when app is served from a subpath).
+    // Keep this minimal to avoid interfering with user's environment.
+    @session_set_cookie_params(0, '/');
     @session_start();
 }
 

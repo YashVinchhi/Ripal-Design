@@ -16,8 +16,8 @@
 $envHost = getenv('DB_HOST');
 $DB_HOST = $envHost ?: 'localhost';
 $DB_NAME = getenv('DB_NAME') ?: 'Ripal-Design';
-$DB_USER = getenv('DB_USER') ?: 'devadmin';
-$DB_PASS = getenv('DB_PASS') ?: 'Ro0t1234';
+$DB_USER = getenv('DB_USER') ?: '';
+$DB_PASS = getenv('DB_PASS') ?: '';
 $DB_PORT = getenv('DB_PORT') ?: '3306';
 
 // If environment vars are not set (or host is still localhost), prefer project sql/config.php

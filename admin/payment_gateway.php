@@ -7,8 +7,11 @@
  */
 
 require_once __DIR__ . '/../includes/init.php';
+require_login();
+require_role('admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    require_csrf();
     $action = (string)$_POST['action'];
     if ($action === 'batch_disbursement') {
         set_flash('Batch disbursement run initialized successfully.', 'success');
@@ -65,6 +68,7 @@ if (empty($transactions)) {
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <form method="post" class="w-full md:w-auto">
+                        <?php echo csrf_token_field(); ?>
                         <input type="hidden" name="action" value="batch_disbursement">
                         <button type="submit" class="w-full md:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center justify-center gap-3 active:scale-95">
                             <i data-lucide="upload" class="w-4 h-4"></i> Batch Disbursement

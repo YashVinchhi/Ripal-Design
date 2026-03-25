@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../includes/init.php';
+require_login();
 
 // Get project ID from URL
 $projectId = $_GET['id'] ?? null;
@@ -18,82 +19,11 @@ function formatDate($dateString) {
   return date('M d, Y', $date);
 }
 
-// Create tables if they don't exist
-if (isset($pdo) && $pdo instanceof PDO) {
-  try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS projects (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      status ENUM('planning', 'ongoing', 'paused', 'completed') DEFAULT 'ongoing',
-      budget DECIMAL(15,2),
-      progress INT DEFAULT 0,
-      due DATE,
-      location TEXT,
-      address TEXT,
-      owner_name VARCHAR(255),
-      owner_contact VARCHAR(50),
-      owner_email VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_workers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      worker_name VARCHAR(255),
-      worker_role VARCHAR(100),
-      worker_contact VARCHAR(50),
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_milestones (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      title VARCHAR(255) NOT NULL,
-      target_date DATE,
-      status ENUM('active', 'completed', 'pending') DEFAULT 'pending',
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_files (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      name VARCHAR(255) NOT NULL,
-      type VARCHAR(50),
-      size VARCHAR(20),
-      file_path VARCHAR(500),
-      uploaded_by VARCHAR(255),
-      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_activity (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      user VARCHAR(255) NOT NULL,
-      action VARCHAR(100) NOT NULL,
-      item VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_drawings (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      project_id INT NOT NULL,
-      name VARCHAR(255) NOT NULL,
-      version VARCHAR(20),
-      status ENUM('Approved', 'Under Review', 'Revision Needed') DEFAULT 'Under Review',
-      file_path VARCHAR(500),
-      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    )");
-
-  } catch (PDOException $e) {
-    $error = "Database Error: " . $e->getMessage();
-  }
-}
+// Schema changes are managed by deploy-time migrations (see sql/migrations/).
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($pdo) && $pdo instanceof PDO) {
+    require_csrf();
   $name = $_POST['name'] ?? '';
   $status = $_POST['status'] ?? 'ongoing';
   $budget = $_POST['budget'] ?? 0;
@@ -176,8 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($pdo) && $pdo instanceof PDO)
         header("Location: project_details.php?id=$projectId");
         exit;
       }
-    } catch (PDOException $e) {
-      $error = "Database Error: " . $e->getMessage();
+        } catch (PDOException $e) {
+            error_log('Project details save error: ' . $e->getMessage());
+            $error = 'Unable to save project details right now.';
     }
   }
 }
@@ -224,7 +155,8 @@ if ($projectId && isset($pdo) && $pdo instanceof PDO) {
       ];
     }
   } catch (PDOException $e) {
-    $error = "Database Error: " . $e->getMessage();
+        error_log('Project details load error: ' . $e->getMessage());
+        $error = 'Unable to load project details right now.';
   }
 }
 
@@ -522,6 +454,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
                         <form method="post">
+                            <?php echo csrf_token_field(); ?>
                             <div class="p-6 space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">

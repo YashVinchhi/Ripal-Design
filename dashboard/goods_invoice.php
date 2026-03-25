@@ -1,38 +1,13 @@
 <?php
 // dashboard/goods_invoice.php - redesigned invoice layout (printable + responsive)
-session_start();
 require_once __DIR__ . '/../includes/init.php';
+require_login();
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 if (!$project_id) { header('Location: dashboard.php'); exit; }
 
-// ensure project_goods table exists with required columns (in case goods_manage wasn't used)
-if (isset($pdo) && $pdo instanceof PDO) {
-  $pdo->exec("CREATE TABLE IF NOT EXISTS project_goods (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    project_id INT NOT NULL,
-    sku VARCHAR(100) DEFAULT NULL,
-    name VARCHAR(255) NOT NULL,
-    description TEXT DEFAULT NULL,
-    unit VARCHAR(50) DEFAULT 'pcs',
-    quantity INT DEFAULT 1,
-    unit_price DECIMAL(12,2) DEFAULT 0,
-    total_price DECIMAL(12,2) DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX(project_id)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-}
-
-// ensure projects table has worker_name column; add if missing
-if (isset($pdo) && $pdo instanceof PDO) {
-  $colCheck = $pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'projects' AND COLUMN_NAME = 'worker_name'");
-  try { $colCheck->execute(); $cnt = (int)$colCheck->fetchColumn(); } catch(Exception $e){ $cnt = 0; }
-  if ($cnt === 0) {
-    try { $pdo->exec("ALTER TABLE projects ADD COLUMN worker_name VARCHAR(255) DEFAULT NULL"); } catch(Exception $e) { /* ignore */ }
-  }
-}
-
 // Handle form submissions: add item or save meta
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  require_csrf();
   $action = $_POST['action'] ?? '';
   if ($action === 'add_item') {
     $sku = trim($_POST['sku'] ?? '');
@@ -84,7 +59,7 @@ $tax_rate = 0.18; // example 18%
 $tax = round($subtotal * $tax_rate, 2);
 $total = round($subtotal + $tax, 2);
 $invoice_id = 'INV-' . str_pad($project_id, 6, '0', STR_PAD_LEFT) . '-' . date('Ymd');
-$share_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . '/goods_invoice.php?project_id=' . $project_id;
+$share_url = rtrim(BASE_URL, '/') . '/dashboard/goods_invoice.php?project_id=' . $project_id;
 
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
@@ -94,7 +69,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Invoice <?php echo h($invoice_id); ?></title>
-  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../assets/css/tailwind.css">
   <style>
     :root{--brand:#731209;--muted:#666;--card-bg:#fff;--surface:#f8f9fa}
     body{background:var(--surface);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:#222;margin:0;padding:18px}
@@ -152,6 +127,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
       <?php if (!empty($project['owner_contact'])): ?><div class="small"><?php echo h($project['owner_contact']); ?></div><?php endif; ?>
       <?php if (!empty($project['location'])): ?><div class="small" style="margin-top:6px"><?php echo h($project['location']); ?></div><?php endif; ?>
       <form method="post" style="margin-top:10px">
+        <?php echo csrf_token_field(); ?>
         <input type="hidden" name="action" value="save_meta">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input name="client_name" placeholder="Client name" class="form-control" value="<?php echo h($project['owner_name'] ?? ''); ?>">
@@ -225,6 +201,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   <div style="margin-top:18px" class="panel">
     <h3 style="margin:0 0 8px">Add item</h3>
     <form id="addItemForm" method="post" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <?php echo csrf_token_field(); ?>
       <input type="hidden" name="action" value="add_item">
       <input id="sku" name="sku" class="form-control" placeholder="SKU (optional)" style="width:120px">
       <input id="name" name="name" class="form-control" placeholder="Item name" required style="min-width:220px;flex:1">

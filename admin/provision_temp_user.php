@@ -10,15 +10,20 @@
  */
 
 require_once __DIR__ . '/../includes/init.php';
-
-// Static mode (no login/role enforcement for now)
-$DEMO_MODE = true;
+require_login();
+require_role('admin');
 
 $error = '';
 $success = '';
 $generated = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!function_exists('require_csrf')) {
+        $error = 'Security validation unavailable.';
+    } else {
+        require_csrf();
+    }
+
     $firstName = trim($_POST['firstName'] ?? '');
     $lastName = trim($_POST['lastName'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -105,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
 
                 <form method="POST" id="tempProvisionForm" class="space-y-6 md:space-y-8">
+                    <?php echo csrf_token_field(); ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         <div class="space-y-2">
                             <label for="firstName" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">First Name</label>

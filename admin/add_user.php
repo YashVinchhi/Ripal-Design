@@ -10,11 +10,15 @@
  */
 
 require_once __DIR__ . '/../includes/init.php';
+require_login();
+require_role('admin');
 
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
+
     $firstName = trim($_POST['firstName'] ?? '');
     $lastName = trim($_POST['lastName'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -43,18 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $db->prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)");
                     $stmt->execute([$email, $passwordHash, $role]);
                     
-                    $success = 'User created successfully!';
-                    
-                    // Redirect after a short delay or immediately
-                    header("Refresh: 2; url=user_management.php");
+                    set_flash('User created successfully!', 'success');
+                    header('Location: user_management.php');
+                    exit;
                 }
             } else {
                 // Demo mode fallback if DB not connected
-                $success = 'User created successfully! (Demo Mode)';
-                header("Refresh: 2; url=user_management.php");
+                set_flash('User created successfully! (Demo Mode)', 'success');
+                header('Location: user_management.php');
+                exit;
             }
         } catch (PDOException $e) {
-            $error = 'Database error: ' . $e->getMessage();
+            error_log('Add user failed: ' . $e->getMessage());
+            $error = 'Unable to create user right now. Please try again.';
         }
     }
 }
@@ -105,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
 
                 <form method="POST" class="space-y-6 md:space-y-10" id="addUserForm">
+                    <?php echo csrf_token_field(); ?>
                     <!-- Name Group -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                         <div class="space-y-3">

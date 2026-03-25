@@ -1,10 +1,14 @@
 <?php
 
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
 $con = mysqli_connect("localhost", "root", "");
-if(!$con){
-    die("Connection Failed: " . mysqli_connect_error());
-}else{
-    echo "Connected successfully";
+if (!$con) {
+    fwrite(STDERR, "Connection Failed: " . mysqli_connect_error() . PHP_EOL);
+    exit(1);
 }
 
 // $create_db = "CREATE DATABASE IF NOT EXISTS `Ripal-Design`";
@@ -27,8 +31,6 @@ if(!$con){
     
 // )";
 
-if(mysqli_query($con, $update)){
-    echo "Table updated successfully";
-}
+mysqli_close($con);
 
 ?>

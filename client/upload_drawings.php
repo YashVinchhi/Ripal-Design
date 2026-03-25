@@ -1,11 +1,12 @@
 <?php
 // Upload Drawings (Redesigned UI)
-session_start();
 require_once __DIR__ . '/../includes/init.php';
+require_login();
 
 $projectOptions = db_connected() ? db_fetch_all('SELECT id, name FROM projects ORDER BY id DESC LIMIT 200') : [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  require_csrf();
     $msg = 'Blueprint received and queued for architectural review.';
 }
 ?>
@@ -16,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Upload Drawings | Ripal Design</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="../public/js/validation.js"></script>
 
   <script>
@@ -60,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="max-w-3xl mx-auto">
       <form method="post" enctype="multipart/form-data" class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden" novalidate>
+        <?php echo csrf_token_field(); ?>
         <div class="absolute top-0 right-0 w-32 h-32 bg-rajkot-rust opacity-[0.03] -mr-16 -mt-16 rounded-full pointer-events-none"></div>
         
         <div class="mb-8">

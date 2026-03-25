@@ -189,12 +189,7 @@ if (isset($_POST['login'])) {
             $user = $result ? $result->fetch_assoc() : null;
             $stmt->close();
 
-            if ($user && !empty($user['password'])) {
-                // Support both hashed and plain text passwords (for legacy data)
-                $passwordMatches = password_verify($user_password, $user['password']) || 
-                                  ($user['password'] === $user_password);
-                
-                if ($passwordMatches) {
+            if ($user && !empty($user['password']) && password_verify($user_password, $user['password'])) {
                     $_SESSION['user'] = [
                         'id' => (int) ($user['s_id'] ?? $user['id'] ?? 0),
                         'first_name' => $user['first_name'] ?? '',
@@ -207,7 +202,6 @@ if (isset($_POST['login'])) {
                     $_SESSION['user_id'] = (int) ($user['s_id'] ?? $user['id'] ?? 0);
                     header('Location: ' . post_login_redirect_url($_SESSION['user']));
                     exit();
-                }
             }
         } catch (Exception $e) {
             error_log('Legacy login failed: ' . $e->getMessage());
