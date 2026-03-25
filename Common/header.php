@@ -141,7 +141,7 @@ foreach ($stylesheetCandidates as $candidate) {
             <?php else: ?>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php">Home</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/services.php">Services</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/products.php">Products</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/project_view.php">Projects</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/about_us.php">About</a>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php">Contact</a>
             <?php endif; ?>
