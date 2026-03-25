@@ -18,6 +18,7 @@ function formatDate($dateString) {
   $date = strtotime($dateString);
   return date('M d, Y', $date);
 }
+<<<<<<< HEAD
 
 // Schema changes are managed by deploy-time migrations (see sql/migrations/).
 
@@ -159,6 +160,18 @@ if ($projectId && isset($pdo) && $pdo instanceof PDO) {
         $error = 'Unable to load project details right now.';
   }
 }
+=======
+require_once "../sql/db_config.php";
+// Create tables if they don't exist
+session_start();
+
+$errors = [
+    'projects' => $_SESSION['project_error'] ?? null,
+];
+$active_form = $_SESSION['active_form'] ?? 'projects';
+
+session_unset();
+>>>>>>> e40d25d4e6575badb418f0adf2a0f75f0f0a2982
 
 if (!$project) {
     $project = [
@@ -179,17 +192,11 @@ if (!$project) {
     ];
 }
 
-// Format budget for display
-$budgetFormatted = '₹ ' . number_format($project['budget'] ?? 0, 0, '.', ',');
+function showActive($form, $active_form)
+{
+    return $active_form === $form ? 'active' : '';
+}
 
-// Status badge colors
-$statusColors = [
-  'planning' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-  'ongoing' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-  'paused' => 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
-  'completed' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-];
-$statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -453,8 +460,14 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         <div class="p-6 border-b border-slate-200 dark:border-slate-800">
                             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
+<<<<<<< HEAD
                         <form method="post">
                             <?php echo csrf_token_field(); ?>
+=======
+                        <form method="post" id="project-details-form" action="project_owerview_db.php">
+                            <input type="hidden" name="projects" value="1" />
+                             <?= showError($errors['projects']); ?>
+>>>>>>> e40d25d4e6575badb418f0adf2a0f75f0f0a2982
                             <div class="p-6 space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">
@@ -999,41 +1012,13 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             });
         });
 
-        // AJAX form submission for project updates
-        const projectForm = document.querySelector('form');
+        // Submit project form normally so PHP handler can persist data and redirect.
+        const projectForm = document.getElementById('project-details-form');
         if (projectForm) {
-            projectForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(this);
+            projectForm.addEventListener('submit', function() {
                 const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Saving...';
-                
-                try {
-                    const response = await fetch(window.location.href, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (response.ok) {
-                        showNotification('Project updated successfully!', 'success');
-                        // Log activity
-                        logActivity('updated project', 'Project details');
-                        // Refresh the page to show updated data
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        showNotification('Error updating project', 'error');
-                    }
-                } catch (error) {
-                    showNotification('Network error occurred', 'error');
-                    console.error('Error:', error);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
             });
         }
 
