@@ -7,6 +7,20 @@ function redirect_with_message($message, $type = 'error') {
 	exit;
 }
 
+function redirect_with_flash_cookie($message, $type = 'error') {
+	$cookieOptions = [
+		'expires' => time() + 5,
+		'path' => '/',
+		'httponly' => true,
+		'samesite' => 'Lax'
+	];
+
+	setcookie('flash_message', $message, $cookieOptions);
+	setcookie('flash_type', $type, $cookieOptions);
+	header('Location: ./forgot.php');
+	exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	redirect_with_message('Method not allowed.');
 }
@@ -45,10 +59,11 @@ if ($stmt->affected_rows) {
 	END;
 	try {
 		$mail->send();
-		redirect_with_message('Reset link sent. Please check your email.', 'success');
+		redirect_with_flash_cookie('Reset link sent. Please check your email.', 'success');
+
 	} catch (\Throwable $e) {
 		error_log("PHPMailer error: {$mail->ErrorInfo} - {$e->getMessage()}\n", 3, __DIR__ . '/mail_errors.log');
-		redirect_with_message('Message could not be sent. Mailer Error: ' . $mail->ErrorInfo);
+		redirect_with_flash_cookie('Failed to send reset link.', 'error');
 	}
 } else {
 	redirect_with_message('Email not found.');

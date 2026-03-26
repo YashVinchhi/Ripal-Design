@@ -8,3 +8,12 @@ PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not aut
 PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
 Message could not be sent. SMTP credentials are not configured. Set real values in includes/smtp_config.php or SMTP_USER/SMTP_PASS environment variables.PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
 PHPMailer error: SMTP Error: Could not authenticate. - SMTP Error: Could not authenticate.
+PHPMailer error: SMTP Error: data not accepted. SMTP server error: DATA command failed Detail: Temporary System Problem. Try again later. For more information, go to
+ https://support.google.com/a/answer/3221692 d2e1a72fcca58-82b0410b1bdsm20115729b3a.57 - gsmtp
+ SMTP code: 421 Additional SMTP info: 4.3.0 - SMTP Error: data not accepted.
+PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
+PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
+PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
+PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
+PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
+PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
