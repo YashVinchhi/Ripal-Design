@@ -27,3 +27,11 @@ issues.md
 # Local environment secrets
 .env
 !.env.example
+.idea/copilot.data.migration.ask2agent.xml
+.idea/laravel-idea.xml
+.idea/modules.xml
+.idea/php.xml
+.idea/Thefinal.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/Project_Default.xml
+logs/contact_messages.log
