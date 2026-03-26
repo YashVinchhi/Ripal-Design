@@ -15,6 +15,63 @@
  */
 
 /**
+ * Load environment variables from project .env file.
+ * Existing process-level environment variables are preserved.
+ *
+ * @return void
+ */
+function load_project_env_file() {
+    static $loaded = false;
+    if ($loaded) {
+        return;
+    }
+    $loaded = true;
+
+    $envPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env';
+    if (!is_file($envPath) || !is_readable($envPath)) {
+        return;
+    }
+
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!is_array($lines)) {
+        return;
+    }
+
+    foreach ($lines as $line) {
+        $line = trim((string)$line);
+        if ($line === '' || strpos($line, '#') === 0) {
+            continue;
+        }
+
+        $parts = explode('=', $line, 2);
+        if (count($parts) !== 2) {
+            continue;
+        }
+
+        $key = trim($parts[0]);
+        $value = trim($parts[1]);
+        if ($key === '' || !preg_match('/^[A-Z0-9_]+$/', $key)) {
+            continue;
+        }
+
+        // Do not override env vars already provided by OS/web server.
+        if (getenv($key) !== false) {
+            continue;
+        }
+
+        if ((str_starts_with($value, '"') && str_ends_with($value, '"')) || (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
+            $value = substr($value, 1, -1);
+        }
+
+        putenv($key . '=' . $value);
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
+    }
+}
+
+load_project_env_file();
+
+/**
  * Detect and return the base URL for the application
  * 
  * Automatically detects the scheme, host, and path where the application is installed.
@@ -29,10 +86,19 @@ function getBaseUrl() {
     if ($baseUrl !== null) {
         return $baseUrl;
     }
+
+    $configuredBaseUrl = trim((string)(getenv('APP_BASE_URL') ?: ''));
+    if ($configuredBaseUrl !== '') {
+        $baseUrl = rtrim($configuredBaseUrl, '/');
+        return $baseUrl;
+    }
     
     // Detect scheme (http or https)
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+    if (!preg_match('/^[a-z0-9.-]+(?::[0-9]{1,5})?$/i', $host)) {
+        $host = 'localhost';
+    }
     
     // Get the directory of the current script
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';

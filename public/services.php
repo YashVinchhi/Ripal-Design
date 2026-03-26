@@ -101,7 +101,7 @@
     </div>
   </main>
 
-  <?php require_once __DIR__ . '/../common/footer.php'; ?>
+  <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {

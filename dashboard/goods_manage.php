@@ -1,29 +1,25 @@
 <?php
 // dashboard/goods_manage.php - admin page to add goods with SKU/description/unit
-session_start();
 require_once __DIR__ . '/../includes/init.php';
+require_login();
+require_role('admin');
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 if (!$project_id) { header('Location: dashboard.php'); exit; }
 
-// Ensure table exists with extended columns
-if (isset($pdo) && $pdo instanceof PDO) {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_goods (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        project_id INT NOT NULL,
-        sku VARCHAR(100) DEFAULT NULL,
-        name VARCHAR(255) NOT NULL,
-        description TEXT DEFAULT NULL,
-        unit VARCHAR(50) DEFAULT 'pcs',
-        quantity INT DEFAULT 1,
-        unit_price DECIMAL(12,2) DEFAULT 0,
-        total_price DECIMAL(12,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX(project_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-}
-
 // handle POST add
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  require_csrf();
+  $action = $_POST['action'] ?? 'add';
+  if ($action === 'delete') {
+    $deleteId = (int)($_POST['id'] ?? 0);
+    if ($deleteId > 0 && isset($pdo) && $pdo instanceof PDO) {
+      $del = $pdo->prepare('DELETE FROM project_goods WHERE id = :id AND project_id = :pid');
+      $del->execute(['id' => $deleteId, 'pid' => $project_id]);
+    }
+    header('Location: goods_manage.php?project_id=' . $project_id);
+    exit;
+  }
+
     $sku = trim($_POST['sku'] ?? '');
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
@@ -34,16 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name && isset($pdo) && $pdo instanceof PDO) {
         $ins = $pdo->prepare('INSERT INTO project_goods (project_id,sku,name,description,unit,quantity,unit_price,total_price) VALUES (:pid,:sku,:name,:description,:unit,:quantity,:unit_price,:total)');
         $ins->execute(['pid'=>$project_id,'sku'=>$sku,'name'=>$name,'description'=>$description,'unit'=>$unit,'quantity'=>$quantity,'unit_price'=>$unit_price,'total'=>$total]);
-    }
-    header('Location: goods_manage.php?project_id=' . $project_id);
-    exit;
-}
-
-// handle delete
-if (isset($_GET['action']) && $_GET['action']==='delete' && isset($_GET['id'])) {
-    if (isset($pdo) && $pdo instanceof PDO) {
-        $del = $pdo->prepare('DELETE FROM project_goods WHERE id = :id AND project_id = :pid');
-        $del->execute(['id'=>(int)$_GET['id'],'pid'=>$project_id]);
     }
     header('Location: goods_manage.php?project_id=' . $project_id);
     exit;
@@ -62,7 +48,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manage Goods — <?php echo htmlspecialchars($project['name']); ?></title>
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../assets/css/tailwind.css">
 </head>
 <body>
 <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header_alt.php'; ?>
@@ -85,6 +71,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
 
     <section class="info-card">
       <form method="post" class="row g-2">
+        <?php echo csrf_token_field(); ?>
         <div class="col-md-3"><input name="sku" class="form-control" placeholder="SKU (optional)"></div>
         <div class="col-md-4"><input name="name" class="form-control" placeholder="Item name (required)" required></div>
         <div class="col-md-5"><input name="unit" class="form-control" placeholder="Unit (e.g. pcs, kg, bag)" value="pcs"></div>
@@ -111,7 +98,14 @@ if (isset($pdo) && $pdo instanceof PDO) {
             <td><?php echo intval($g['quantity']); ?></td>
             <td>₹ <?php echo number_format($g['unit_price'],2); ?></td>
             <td>₹ <?php echo number_format($g['total_price'],2); ?></td>
-            <td><a class="btn outline btn-sm" href="goods_manage.php?project_id=<?php echo $project_id; ?>&action=delete&id=<?php echo $g['id']; ?>" onclick="return confirm('Delete item?')">Delete</a></td>
+            <td>
+              <form method="post" onsubmit="return confirm('Delete item?')" style="display:inline;">
+                <?php echo csrf_token_field(); ?>
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="<?php echo (int)$g['id']; ?>">
+                <button type="submit" class="btn outline btn-sm">Delete</button>
+              </form>
+            </td>
           </tr>
         <?php endforeach; ?>
         </tbody></table>

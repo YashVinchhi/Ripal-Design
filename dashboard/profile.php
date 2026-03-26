@@ -10,12 +10,12 @@ require_once __DIR__ . '/../includes/init.php';
 
 // Get current user info from session (support multiple session shapes)
 $session_user = $_SESSION['user'] ?? null;
-$session_user_id = $_SESSION['user_id'] ?? ($session_user['id'] ?? null);
-$session_username = $session_user['username'] ?? ($_SESSION['username'] ?? null);
+$session_user_id = current_user_id();
+$session_username = current_username();
 $session_role = $_SESSION['role'] ?? ($session_user['role'] ?? null);
 
-$current_user_id = (int)($session_user_id ?? 0);
-$current_username = $session_username ?? '';
+$current_user_id = (int)$session_user_id;
+$current_username = (string)$session_username;
 $current_role = $session_role ?? 'guest';
 
 // Determine which profile to view: allow admins to view others via ?id or ?user
@@ -39,14 +39,6 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
 // Legacy compatibility variables
 $user = $current_username ?: ($view_username ?? 'employee01');
 $user_id = $view_user_id ?? 0;
-
-// Development debug: show session contents when ?debug=1 is used (remove in production)
-if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-    echo '<pre style="background:#fff;padding:1rem;border:1px solid #ddd;">';
-    echo "SESSION:\n";
-    var_dump($_SESSION);
-    echo '</pre>';
-}
 
 // Initialize user data default
 $user_data = [
@@ -107,6 +99,7 @@ $message_type = '';
 
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    require_csrf();
     $full_name = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
@@ -135,7 +128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 $user_data['state'] = $state;
                 $user_data['zip'] = $zip;
             } catch (Exception $e) {
-                $message = 'Error updating profile: ' . $e->getMessage();
+                error_log('Profile update failed: ' . $e->getMessage());
+                $message = 'Unable to update profile right now. Please try again.';
                 $message_type = 'danger';
             }
         } else {
@@ -147,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
 // Handle password change
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
+    require_csrf();
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     
@@ -165,7 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 $message = 'Password changed successfully!';
                 $message_type = 'success';
             } catch (Exception $e) {
-                $message = 'Error changing password: ' . $e->getMessage();
+                error_log('Password update failed: ' . $e->getMessage());
+                $message = 'Unable to change password right now. Please try again.';
                 $message_type = 'danger';
             }
         } else {
@@ -258,6 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                             <h3 class="text-xl font-serif font-bold">Personal Information</h3>
                         </div>
                         <form method="POST" class="p-8 space-y-8">
+                            <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="update_profile" value="1">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-2">
@@ -312,6 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                             <h3 class="text-xl font-serif font-bold">Account Security</h3>
                         </div>
                         <form method="POST" class="p-8 space-y-8">
+                            <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="change_password" value="1">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-2">

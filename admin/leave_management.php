@@ -1,9 +1,11 @@
 <?php
 // Leave Management (Redesigned UI)
-session_start();
 require_once __DIR__ . '/../includes/init.php';
+require_login();
+require_role('admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['leave_id'], $_POST['status'])) {
+  require_csrf();
   $leaveId = (int)$_POST['leave_id'];
   $status = (string)$_POST['status'];
   if ($leaveId > 0 && in_array($status, ['approved', 'rejected', 'on_leave'], true) && db_connected()) {
@@ -186,6 +188,7 @@ if ($viewMode === 'archive') {
                 <div class="actions-wrapper flex flex-row md:justify-end gap-3 mt-4 md:mt-0">
                   <?php if ($status === 'pending'): ?>
                   <form method="post" class="inline-block">
+                    <?php echo csrf_token_field(); ?>
                     <input type="hidden" name="leave_id" value="<?php echo (int)$lr['id']; ?>">
                     <input type="hidden" name="status" value="approved">
                     <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded bg-green-600 text-white flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 hover:bg-green-700 transition active:scale-95" title="Approve">
@@ -193,6 +196,7 @@ if ($viewMode === 'archive') {
                     </button>
                   </form>
                   <form method="post" class="inline-block">
+                    <?php echo csrf_token_field(); ?>
                     <input type="hidden" name="leave_id" value="<?php echo (int)$lr['id']; ?>">
                     <input type="hidden" name="status" value="rejected">
                     <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded bg-rajkot-rust text-white flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 hover:bg-red-800 transition active:scale-95" title="Reject">

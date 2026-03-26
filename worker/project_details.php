@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/init.php';
+require_login();
 $sessionUser = $_SESSION['user'] ?? null;
 $sessionRole = is_array($sessionUser) ? (string)($sessionUser['role'] ?? '') : '';
 $isWorkerReadOnly = ($sessionRole === 'worker') || (isset($_GET['readonly']) && $_GET['readonly'] === '1');
@@ -70,6 +71,7 @@ $project['drawings'] = array_map(function($d) {
     // Handle review request submission (blocked in read-only worker mode)
     $request_sent = false;
     if (!$isWorkerReadOnly && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_details'])) {
+        require_csrf();
         if (db_connected() && !empty($project['id'])) {
             $subject = trim((string)($_POST['request_subject'] ?? 'Site Review'));
             $details = trim((string)($_POST['request_details'] ?? ''));
@@ -77,8 +79,9 @@ $project['drawings'] = array_map(function($d) {
             if (!in_array($urgency, ['critical', 'high', 'normal', 'low'], true)) {
                 $urgency = 'normal';
             }
-            db_query('INSERT INTO review_requests (project_id, submitted_by, subject, description, urgency, status) VALUES (?, NULL, ?, ?, ?, "pending")', [
-                (int)$project['id'], $subject, $details, $urgency,
+            $submittedBy = (int)($_SESSION['user_id'] ?? ($sessionUser['id'] ?? 0));
+            db_query('INSERT INTO review_requests (project_id, submitted_by, subject, description, urgency, status) VALUES (?, ?, ?, ?, ?, "pending")', [
+                (int)$project['id'], $submittedBy, $subject, $details, $urgency,
             ]);
         }
         $request_sent = true;
@@ -258,6 +261,7 @@ $project['drawings'] = array_map(function($d) {
                 <div class="bg-white p-6 shadow-premium border border-gray-100">
                     <h3 class="text-lg font-bold font-serif mb-4">New Review Request</h3>
                     <form class="space-y-4" method="POST" action="" id="requestForm">
+                        <?php echo csrf_token_field(); ?>
                         <div>
                             <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Subject</label>
                             <input type="text" name="request_subject" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust transition-colors" placeholder="e.g. Beam Reinforcement Ready">

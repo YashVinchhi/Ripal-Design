@@ -1,9 +1,20 @@
 <?php
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+$dbHost = getenv('DB_HOST') ?: 'localhost';
+$dbUser = getenv('DB_USER') ?: '';
+$dbPass = getenv('DB_PASS') ?: '';
+$dbName = getenv('DB_NAME') ?: 'Ripal-Design';
+$dbPort = (int)(getenv('DB_PORT') ?: 3306);
+
 ini_set('default_socket_timeout', 2);
 echo "=== Checking MySQL Connectivity ===\n\n";
 
-echo "1. Testing 192.168.1.64 with devadmin:Ro0t1234\n";
-$conn1 = @mysqli_connect("192.168.1.64", "devadmin", "Ro0t1234", "Ripal-Design", 3306);
+echo "1. Testing configured DB host\n";
+$conn1 = @mysqli_connect($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
 if ($conn1) {
     echo "   ✓ Connection SUCCESS\n";
 
@@ -43,8 +54,8 @@ if ($conn1) {
     echo "   ✗ Connection FAILED: " . mysqli_connect_error() . "\n";
 }
 
-echo "\n\n2. Testing localhost with root:Ro0t1234\n";
-$conn2 = @mysqli_connect("localhost", "root", "Ro0t1234", "Ripal-Design");
+echo "\n\n2. Testing localhost fallback\n";
+$conn2 = @mysqli_connect("localhost", $dbUser, $dbPass, $dbName, $dbPort);
 if ($conn2) {
     echo "   ✓ Connection SUCCESS\n";
     $result = mysqli_query($conn2, "SHOW TABLES;");

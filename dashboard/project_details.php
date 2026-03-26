@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../includes/init.php';
+require_login();
 
 // Get project ID from URL
 $projectId = $_GET['id'] ?? null;
@@ -17,6 +18,149 @@ function formatDate($dateString) {
   $date = strtotime($dateString);
   return date('M d, Y', $date);
 }
+<<<<<<< HEAD
+
+// Schema changes are managed by deploy-time migrations (see sql/migrations/).
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($pdo) && $pdo instanceof PDO) {
+    require_csrf();
+  $name = $_POST['name'] ?? '';
+  $status = $_POST['status'] ?? 'ongoing';
+  $budget = $_POST['budget'] ?? 0;
+  $progress = $_POST['progress'] ?? 0;
+  $due = $_POST['due'] ?? null;
+  $location = $_POST['location'] ?? '';
+  $ownerName = $_POST['owner_name'] ?? '';
+  $ownerContact = $_POST['owner_contact'] ?? '';
+  $ownerEmail = $_POST['owner_email'] ?? '';
+
+  if (empty($name)) {
+    $error = 'Project name is required';
+  } else {
+    try {
+      if ($projectId) {
+        // Update existing project
+        $stmt = $pdo->prepare('
+          UPDATE projects 
+          SET name = :name, status = :status, budget = :budget, 
+              progress = :progress, due = :due, location = :location, address = :location,
+              owner_name = :owner_name, owner_contact = :owner_contact, owner_email = :owner_email
+          WHERE id = :id
+        ');
+        $stmt->execute([
+          'id' => $projectId,
+          'name' => $name,
+          'status' => $status,
+          'budget' => $budget,
+          'progress' => $progress,
+          'due' => $due,
+          'location' => $location,
+          'owner_name' => $ownerName,
+          'owner_contact' => $ownerContact,
+          'owner_email' => $ownerEmail
+        ]);
+        $success = "Project updated successfully!";
+        
+        // Log activity
+        $activityStmt = $pdo->prepare('
+          INSERT INTO project_activity (project_id, user, action, item, created_at)
+          VALUES (:project_id, :user, :action, :item, NOW())
+        ');
+        $activityStmt->execute([
+          'project_id' => $projectId,
+          'user' => $_SESSION['user_name'] ?? 'Admin',
+          'action' => 'updated project',
+          'item' => 'Project details'
+        ]);
+      } else {
+        // Create new project
+        $stmt = $pdo->prepare('
+          INSERT INTO projects (name, status, budget, progress, due, location, address, owner_name, owner_contact, owner_email)
+          VALUES (:name, :status, :budget, :progress, :due, :location, :location, :owner_name, :owner_contact, :owner_email)
+        ');
+        $stmt->execute([
+          'name' => $name,
+          'status' => $status,
+          'budget' => $budget,
+          'progress' => $progress,
+          'due' => $due,
+          'location' => $location,
+          'owner_name' => $ownerName,
+          'owner_contact' => $ownerContact,
+          'owner_email' => $ownerEmail
+        ]);
+        $projectId = $pdo->lastInsertId();
+        
+        // Log activity for new project
+        $activityStmt = $pdo->prepare('
+          INSERT INTO project_activity (project_id, user, action, item, created_at)
+          VALUES (:project_id, :user, :action, :item, NOW())
+        ');
+        $activityStmt->execute([
+          'project_id' => $projectId,
+          'user' => $_SESSION['user_name'] ?? 'Admin',
+          'action' => 'created project',
+          'item' => $name
+        ]);
+        
+        header("Location: project_details.php?id=$projectId");
+        exit;
+      }
+        } catch (PDOException $e) {
+            error_log('Project details save error: ' . $e->getMessage());
+            $error = 'Unable to save project details right now.';
+    }
+  }
+}
+
+// Load project data
+$project = null;
+if ($projectId && isset($pdo) && $pdo instanceof PDO) {
+  try {
+    $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
+    $stmt->execute(['id' => $projectId]);
+    $project = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($project) {
+      // Load workers
+      $stmt = $pdo->prepare('SELECT * FROM project_workers WHERE project_id = :id');
+      $stmt->execute(['id' => $projectId]);
+      $project['workers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load milestones
+      $stmt = $pdo->prepare('SELECT * FROM project_milestones WHERE project_id = :id ORDER BY target_date ASC');
+      $stmt->execute(['id' => $projectId]);
+      $project['milestones'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load project files
+      $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
+      $stmt->execute(['id' => $projectId]);
+      $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load activity log
+      $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
+      $stmt->execute(['id' => $projectId]);
+      $project['activities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load drawings
+      $stmt = $pdo->prepare('SELECT * FROM project_drawings WHERE project_id = :id ORDER BY uploaded_at DESC');
+      $stmt->execute(['id' => $projectId]);
+      $project['drawings'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Format owner data
+      $project['owner'] = [
+        'name' => $project['owner_name'] ?? '',
+        'contact' => $project['owner_contact'] ?? '',
+        'email' => $project['owner_email'] ?? ''
+      ];
+    }
+  } catch (PDOException $e) {
+        error_log('Project details load error: ' . $e->getMessage());
+        $error = 'Unable to load project details right now.';
+  }
+}
+=======
 require_once "../sql/db_config.php";
 // Create tables if they don't exist
 session_start();
@@ -27,6 +171,7 @@ $errors = [
 $active_form = $_SESSION['active_form'] ?? 'projects';
 
 session_unset();
+>>>>>>> e40d25d4e6575badb418f0adf2a0f75f0f0a2982
 
 if (!$project) {
     $project = [
@@ -315,9 +460,14 @@ function showActive($form, $active_form)
                         <div class="p-6 border-b border-slate-200 dark:border-slate-800">
                             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
+<<<<<<< HEAD
+                        <form method="post">
+                            <?php echo csrf_token_field(); ?>
+=======
                         <form method="post" id="project-details-form" action="project_owerview_db.php">
                             <input type="hidden" name="projects" value="1" />
                              <?= showError($errors['projects']); ?>
+>>>>>>> e40d25d4e6575badb418f0adf2a0f75f0f0a2982
                             <div class="p-6 space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">

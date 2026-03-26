@@ -10,9 +10,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Server-side: only emit stylesheet links that exist on disk to avoid client 404s
 $candidates = [
-    '/styles.css',
-    '/public/styles.css',
     '/assets/css/styles.css',
+    '/assets/css/tailwind.css',
     '/assets/styles.css'
 ];
 
