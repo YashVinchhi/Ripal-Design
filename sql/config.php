@@ -2,7 +2,7 @@
 $host = "localhost";
 $username = "root";
 $password = "";
-$database = "ripal-design";
+$database = "Ripal-Design";
 
 // Do not instantiate connections at include-time if extensions are missing.
 $conn = new mysqli($host, $username, $password, $database) or die("Connection failed: " . mysqli_connect_error());

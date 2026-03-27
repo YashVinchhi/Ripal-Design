@@ -6,6 +6,8 @@
 
 require_once __DIR__ . '/../includes/init.php';
 
+$pdo = get_db();
+
 // Get project ID from URL
 $projectId = $_GET['id'] ?? null;
 $error = null;
@@ -17,41 +19,305 @@ function formatDate($dateString) {
   $date = strtotime($dateString);
   return date('M d, Y', $date);
 }
-require_once "../sql/db_config.php";
+
 // Create tables if they don't exist
-session_start();
+if ($pdo instanceof PDO) {
+  try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS projects (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      status ENUM('planning', 'ongoing', 'paused', 'completed') DEFAULT 'ongoing',
+      budget DECIMAL(15,2),
+      progress INT DEFAULT 0,
+      due DATE,
+      location TEXT,
+      address TEXT,
+      owner_name VARCHAR(255),
+      owner_contact VARCHAR(50),
+      owner_email VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
 
-$errors = [
-    'projects' => $_SESSION['project_error'] ?? null,
-];
-$active_form = $_SESSION['active_form'] ?? 'projects';
+    $pdo->exec("CREATE TABLE IF NOT EXISTS project_workers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      project_id INT NOT NULL,
+      worker_name VARCHAR(255),
+      worker_role VARCHAR(100),
+      worker_contact VARCHAR(50),
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )");
 
-session_unset();
+    $pdo->exec("CREATE TABLE IF NOT EXISTS project_milestones (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      project_id INT NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      target_date DATE,
+      status ENUM('active', 'completed', 'pending') DEFAULT 'pending',
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )");
 
-if (!$project) {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS project_files (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      project_id INT NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      type VARCHAR(50),
+      size VARCHAR(20),
+      file_path VARCHAR(500),
+      uploaded_by VARCHAR(255),
+      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS project_activity (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      project_id INT NOT NULL,
+      user VARCHAR(255) NOT NULL,
+      action VARCHAR(100) NOT NULL,
+      item VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS project_drawings (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      project_id INT NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      version VARCHAR(20),
+      status ENUM('Approved', 'Under Review', 'Revision Needed') DEFAULT 'Under Review',
+      file_path VARCHAR(500),
+      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )");
+
+  } catch (PDOException $e) {
+    $error = "Database Error: " . $e->getMessage();
+  }
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
+  $name = $_POST['name'] ?? '';
+  $status = $_POST['status'] ?? 'ongoing';
+  $budget = $_POST['budget'] ?? 0;
+  $progress = $_POST['progress'] ?? 0;
+  $due = $_POST['due'] ?? null;
+  $location = $_POST['location'] ?? '';
+    $address = $_POST['address'] ?? $location;
+  $ownerName = $_POST['owner_name'] ?? '';
+  $ownerContact = $_POST['owner_contact'] ?? '';
+  $ownerEmail = $_POST['owner_email'] ?? '';
+
+  if (empty($name)) {
+    $error = 'Project name is required';
+  } else {
+    try {
+      if ($projectId) {
+        // Update existing project
+        $stmt = $pdo->prepare('
+          UPDATE projects 
+          SET name = :name, status = :status, budget = :budget, 
+              progress = :progress, due = :due, location = :location, address = :address,
+              owner_name = :owner_name, owner_contact = :owner_contact, owner_email = :owner_email
+          WHERE id = :id
+        ');
+        $stmt->execute([
+          'id' => $projectId,
+          'name' => $name,
+          'status' => $status,
+          'budget' => $budget,
+          'progress' => $progress,
+          'due' => $due,
+          'location' => $location,
+                    'address' => $address,
+          'owner_name' => $ownerName,
+          'owner_contact' => $ownerContact,
+          'owner_email' => $ownerEmail
+        ]);
+        $success = "Project updated successfully!";
+        
+        // Log activity
+        $activityStmt = $pdo->prepare('
+          INSERT INTO project_activity (project_id, user, action, item, created_at)
+          VALUES (:project_id, :user, :action, :item, NOW())
+        ');
+                $activityStmt->execute([
+          'project_id' => $projectId,
+                    'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
+          'action' => 'updated project',
+          'item' => 'Project details'
+        ]);
+      } else {
+        // Create new project
+        $stmt = $pdo->prepare('
+          INSERT INTO projects (name, status, budget, progress, due, location, address, owner_name, owner_contact, owner_email)
+                    VALUES (:name, :status, :budget, :progress, :due, :location, :address, :owner_name, :owner_contact, :owner_email)
+        ');
+        $stmt->execute([
+          'name' => $name,
+          'status' => $status,
+          'budget' => $budget,
+          'progress' => $progress,
+          'due' => $due,
+          'location' => $location,
+                    'address' => $address,
+          'owner_name' => $ownerName,
+          'owner_contact' => $ownerContact,
+          'owner_email' => $ownerEmail
+        ]);
+        $projectId = $pdo->lastInsertId();
+        
+        // Log activity for new project
+        $activityStmt = $pdo->prepare('
+          INSERT INTO project_activity (project_id, user, action, item, created_at)
+          VALUES (:project_id, :user, :action, :item, NOW())
+        ');
+                $activityStmt->execute([
+          'project_id' => $projectId,
+                    'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
+          'action' => 'created project',
+          'item' => $name
+        ]);
+
+                $_SESSION['project_success'] = 'Project created successfully!';
+                header('Location: dashboard.php');
+        exit;
+      }
+    } catch (PDOException $e) {
+      $error = "Database Error: " . $e->getMessage();
+    }
+  }
+}
+
+// Load project data
+$project = null;
+if ($projectId && $pdo instanceof PDO) {
+  try {
+    $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
+    $stmt->execute(['id' => $projectId]);
+    $project = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($project) {
+      // Load workers
+      $stmt = $pdo->prepare('SELECT * FROM project_workers WHERE project_id = :id');
+      $stmt->execute(['id' => $projectId]);
+      $project['workers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load milestones
+      $stmt = $pdo->prepare('SELECT * FROM project_milestones WHERE project_id = :id ORDER BY target_date ASC');
+      $stmt->execute(['id' => $projectId]);
+      $project['milestones'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load project files
+      $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
+      $stmt->execute(['id' => $projectId]);
+      $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load activity log
+      $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
+      $stmt->execute(['id' => $projectId]);
+      $project['activities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Load drawings
+      $stmt = $pdo->prepare('SELECT * FROM project_drawings WHERE project_id = :id ORDER BY uploaded_at DESC');
+      $stmt->execute(['id' => $projectId]);
+      $project['drawings'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      // Format owner data
+      $project['owner'] = [
+        'name' => $project['owner_name'] ?? '',
+        'contact' => $project['owner_contact'] ?? '',
+        'email' => $project['owner_email'] ?? ''
+      ];
+    }
+  } catch (PDOException $e) {
+    $error = "Database Error: " . $e->getMessage();
+  }
+}
+
+// Sample data fallback
+if (!$project && !$projectId) {
     $project = [
-        'id' => (int)($projectId ?? 0),
-        'name' => 'Project Not Found',
-        'status' => 'planning',
+        'id' => null,
+        'name' => '',
+        'status' => 'ongoing',
         'budget' => 0,
         'progress' => 0,
-        'due' => null,
+        'due' => date('Y-m-d', strtotime('+30 days')),
         'location' => '',
         'address' => '',
-        'owner' => ['name' => '', 'contact' => '', 'email' => ''],
+        'owner' => [
+            'name' => '',
+            'contact' => '',
+            'email' => ''
+        ],
         'workers' => [],
         'milestones' => [],
         'files' => [],
         'activities' => [],
-        'drawings' => [],
+        'drawings' => []
     ];
 }
 
-function showActive($form, $active_form)
-{
-    return $active_form === $form ? 'active' : '';
+if (!$project) {
+  $project = [
+    'id' => $projectId ?? 1,
+    'name' => 'Shanti Sadan',
+    'status' => 'ongoing',
+    'budget' => 4500000,
+    'progress' => 45,
+    'due' => date('Y-m-d', strtotime('+30 days')),
+    'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
+    'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
+    'owner' => [
+      'name' => 'Amitbhai Patel',
+      'contact' => '+91 98765 43210',
+      'email' => 'amit.patel@example.com'
+    ],
+    'workers' => [
+      ['worker_name' => 'Rameshbhai Patel', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
+      ['worker_name' => 'Sureshbhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
+      ['worker_name' => 'Mohanbhai Ahir', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
+      ['worker_name' => 'Vijaybhai Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
+      ['worker_name' => 'Kiranbhai Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
+      ['worker_name' => 'Anilbhai Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
+    ],
+    'milestones' => [
+      ['title' => 'Foundation Completion', 'target_date' => '2026-02-28', 'status' => 'active'],
+      ['title' => 'Material Procurement', 'target_date' => '2026-03-15', 'status' => 'pending'],
+      ['title' => 'Electrical Rough-in', 'target_date' => '2026-04-05', 'status' => 'pending']
+    ],
+    'files' => [
+      ['id' => 1, 'name' => 'Site Plan.pdf', 'type' => 'PDF', 'size' => '2.4 MB', 'uploaded_at' => '2026-02-10 14:30:00', 'uploaded_by' => 'Admin', 'file_path' => '#'],
+      ['id' => 2, 'name' => 'Budget Estimate.xlsx', 'type' => 'Excel', 'size' => '856 KB', 'uploaded_at' => '2026-02-08 10:15:00', 'uploaded_by' => 'Amit Patel', 'file_path' => '#'],
+      ['id' => 3, 'name' => 'Design Mockup.jpg', 'type' => 'Image', 'size' => '4.2 MB', 'uploaded_at' => '2026-02-05 16:45:00', 'uploaded_by' => 'Architect', 'file_path' => '#'],
+      ['id' => 4, 'name' => 'Contract Agreement.pdf', 'type' => 'PDF', 'size' => '1.8 MB', 'uploaded_at' => '2026-01-28 09:00:00', 'uploaded_by' => 'Legal Team', 'file_path' => '#']
+    ],
+    'activities' => [
+      ['id' => 1, 'user' => 'Rameshbhai Patel', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
+      ['id' => 2, 'user' => 'Admin', 'action' => 'uploaded file', 'item' => 'Progress Photos.zip', 'created_at' => date('Y-m-d H:i:s', strtotime('-4 hours'))],
+      ['id' => 3, 'user' => 'Sureshbhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
+      ['id' => 4, 'user' => 'Vijaybhai Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
+    ],
+    'drawings' => [
+      ['id' => 1, 'name' => 'Floor Plan - Ground Floor', 'version' => 'v2.3', 'uploaded_at' => '2026-02-10 12:00:00', 'status' => 'Approved', 'file_path' => '#'],
+      ['id' => 2, 'name' => 'Elevation - Front View', 'version' => 'v1.8', 'uploaded_at' => '2026-02-08 11:30:00', 'status' => 'Under Review', 'file_path' => '#'],
+      ['id' => 3, 'name' => 'Electrical Layout', 'version' => 'v3.1', 'uploaded_at' => '2026-02-05 14:20:00', 'status' => 'Approved', 'file_path' => '#'],
+      ['id' => 4, 'name' => 'Plumbing Schematic', 'version' => 'v2.0', 'uploaded_at' => '2026-01-30 09:45:00', 'status' => 'Approved', 'file_path' => '#']
+    ]
+  ];
 }
 
+// Format budget for display
+$budgetFormatted = '₹ ' . number_format($project['budget'] ?? 0, 0, '.', ',');
+
+// Status badge colors
+$statusColors = [
+  'planning' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+  'ongoing' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+  'paused' => 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+  'completed' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+];
+$statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -248,11 +514,15 @@ function showActive($form, $active_form)
                 </div>
                 <div class="flex gap-2">
                     <button
+                        id="editProjectBtn"
+                        type="button"
                         class="px-6 py-2.5 bg-white/10 border border-white/20 text-white rounded text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
-                        onclick="window.scrollTo({top: document.querySelector('form').offsetTop - 100, behavior: 'smooth'})">
+                        >
                         <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Project
                     </button>
                     <button
+                        id="shareProjectBtn"
+                        type="button"
                         class="px-6 py-2.5 bg-rajkot-rust text-white rounded text-sm font-semibold hover:bg-red-700 transition-all shadow-lg flex items-center gap-2 active:scale-95">
                         <i data-lucide="share-2" class="w-4 h-4"></i> Share
                     </button>
@@ -315,9 +585,7 @@ function showActive($form, $active_form)
                         <div class="p-6 border-b border-slate-200 dark:border-slate-800">
                             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
-                        <form method="post" id="project-details-form" action="project_owerview_db.php">
-                            <input type="hidden" name="projects" value="1" />
-                             <?= showError($errors['projects']); ?>
+                        <form id="projectDetailsForm" method="post">
                             <div class="p-6 space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">
@@ -435,7 +703,7 @@ function showActive($form, $active_form)
                             </div>
                             <?php endif; ?>
                         </div>
-                        <button type="button" onclick="viewOwnerContactDetails()"
+                        <button
                             class="w-full mt-6 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             View Contact Details
                         </button>
@@ -517,13 +785,13 @@ function showActive($form, $active_form)
                         <span><?php echo htmlspecialchars($member['worker_contact']); ?></span>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="viewMemberProfile('<?php echo addslashes($member['worker_name']); ?>', '<?php echo addslashes($member['worker_role']); ?>')"
+                        <button onclick="viewMemberProfile(<?php echo (int)($member['id'] ?? 0); ?>, '<?php echo addslashes($member['worker_name']); ?>', '<?php echo addslashes($member['worker_role']); ?>')"
                             class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             View Profile
                         </button>
-                        <button type="button" onclick="showMemberMenu('<?php echo addslashes($member['worker_name']); ?>')"
-                            class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            <span class="material-icons text-sm">more_vert</span>
+                        <button onclick="deleteTeamMember(<?php echo (int)($member['id'] ?? 0); ?>)"
+                            class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                            <span class="material-icons text-sm">delete</span>
                         </button>
                     </div>
                 </div>
@@ -705,7 +973,7 @@ function showActive($form, $active_form)
                         </span>
                         <div class="flex gap-2">
                             <?php if (!empty($drawing['file_path'])): ?>
-                            <a href="../admin/file_viewer.php?file=<?php echo urlencode($drawing['name']); ?>&project=<?php echo urlencode($project['name']); ?>" target="_blank"
+                            <a href="<?php echo htmlspecialchars($drawing['file_path']); ?>" target="_blank"
                                 class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">
                                 View
                             </a>
@@ -826,7 +1094,7 @@ function showActive($form, $active_form)
                     </p>
                 </div>
 
-                <button type="button" onclick="contactViaInternalSignal()" class="w-full py-3 bg-foundation-grey text-white rounded font-bold uppercase tracking-widest text-xs hover:bg-rajkot-rust transition-all active:scale-[0.98]">
+                <button onclick="openContactModal()" id="contactViaSignalBtn" class="w-full py-3 bg-foundation-grey text-white rounded font-bold uppercase tracking-widest text-xs hover:bg-rajkot-rust transition-all active:scale-[0.98]">
                     Contact via Internal Signal
                 </button>
             </div>
@@ -834,11 +1102,36 @@ function showActive($form, $active_form)
     </div>
 
     <!-- Hidden file upload inputs -->
+    
+    <!-- Contact Modal (Internal Signal) -->
+    <div id="contactModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="text-lg font-serif text-slate-800 dark:text-slate-100">Send Internal Signal</h3>
+                <button onclick="closeContactModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><span class="material-icons">close</span></button>
+            </div>
+            <form id="contactForm" class="p-6 space-y-4">
+                <div>
+                    <label class="text-xs font-semibold text-slate-500 uppercase">To</label>
+                    <div id="contactTo" class="mt-2 text-sm text-slate-700 dark:text-slate-300">—</div>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Message</label>
+                    <textarea name="message" required rows="5" class="w-full mt-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary" placeholder="Type your message to the team member..."></textarea>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeContactModal()" class="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-rajkot-rust text-white rounded text-sm font-semibold hover:opacity-95">Send Signal</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <input type="file" id="fileUploadInput" style="display: none;" accept="*/*" onchange="uploadFile(this)" />
     <input type="file" id="drawingUploadInput" style="display: none;" accept=".pdf,.dwg,.dxf,image/*" onchange="uploadDrawing(this)" />
 
     <script>
         const projectId = <?php echo json_encode($projectId); ?>;
+        const projectShareUrl = <?php echo json_encode((!empty($projectId) ? rtrim(BASE_URL, '/') . '/dashboard/project_details.php?id=' . (int)$projectId : '')); ?>;
 
         // Tab switching functionality
         document.querySelectorAll('.tab-link').forEach(tab => {
@@ -862,13 +1155,73 @@ function showActive($form, $active_form)
             });
         });
 
-        // Submit project form normally so PHP handler can persist data and redirect.
-        const projectForm = document.getElementById('project-details-form');
-        if (projectForm) {
-            projectForm.addEventListener('submit', function() {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Saving...';
+        // Keep native form submit so server redirects correctly after save/create.
+
+        // Edit button should jump user to editable form in Overview tab.
+        const editProjectBtn = document.getElementById('editProjectBtn');
+        const projectDetailsForm = document.getElementById('projectDetailsForm');
+        if (editProjectBtn && projectDetailsForm) {
+            editProjectBtn.addEventListener('click', function () {
+                document.querySelectorAll('.tab-link').forEach(t => {
+                    t.classList.remove('active', 'border-primary', 'text-primary');
+                    t.classList.add('border-transparent', 'text-slate-500');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                const overviewTab = document.querySelector('.tab-link[data-tab="overview"]');
+                if (overviewTab) {
+                    overviewTab.classList.remove('border-transparent', 'text-slate-500');
+                    overviewTab.classList.add('active', 'border-primary', 'text-primary');
+                }
+                const overviewContent = document.getElementById('overview-tab');
+                if (overviewContent) {
+                    overviewContent.classList.add('active');
+                }
+
+                const top = Math.max(0, projectDetailsForm.getBoundingClientRect().top + window.pageYOffset - 100);
+                window.scrollTo({ top, behavior: 'smooth' });
+
+                const firstInput = projectDetailsForm.querySelector('input[name="name"]');
+                if (firstInput) {
+                    setTimeout(() => firstInput.focus(), 350);
+                }
+            });
+        }
+
+        // Share button: use Web Share API where available, otherwise copy link.
+        const shareProjectBtn = document.getElementById('shareProjectBtn');
+        if (shareProjectBtn) {
+            shareProjectBtn.addEventListener('click', async function () {
+                if (!projectId || !projectShareUrl) {
+                    showNotification('Save the project first, then share it.', 'error');
+                    return;
+                }
+
+                try {
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: 'Project Details',
+                            text: 'Open this project in Ripal Design',
+                            url: projectShareUrl
+                        });
+                        showNotification('Project link shared.', 'success');
+                        return;
+                    }
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(projectShareUrl);
+                        showNotification('Project link copied to clipboard.', 'success');
+                        return;
+                    }
+
+                    window.prompt('Copy this project link:', projectShareUrl);
+                } catch (error) {
+                    if (error && error.name === 'AbortError') {
+                        return;
+                    }
+                    showNotification('Unable to share project link.', 'error');
+                    console.error('Share error:', error);
+                }
             });
         }
 
@@ -1002,6 +1355,37 @@ function showActive($form, $active_form)
             }
         }
 
+        // Delete team member function
+        async function deleteTeamMember(workerId) {
+            if (!confirm('Are you sure you want to remove this team member?')) return;
+
+            try {
+                const response = await fetch('api/project_files.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'remove_team_member',
+                        worker_id: workerId,
+                        project_id: projectId
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Team member removed.', 'success');
+                    logActivity('removed team member', '');
+                    setTimeout(() => window.location.reload(), 900);
+                } else {
+                    showNotification(result.message || 'Failed to remove member', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error occurred', 'error');
+                console.error('Error:', error);
+            }
+        }
+
         // Log activity function
         async function logActivity(action, item) {
             try {
@@ -1127,13 +1511,19 @@ function showActive($form, $active_form)
         });
 
         // Member profile modal functions
-        function viewMemberProfile(name, role) {
+        function viewMemberProfile(id, name, role) {
             document.getElementById('modal-member-name').textContent = name;
             document.getElementById('modal-member-role').textContent = role;
-            
+
             const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
             document.getElementById('modal-member-initials').textContent = initials;
-            
+
+            // store selected member id for contact actions
+            const modal = document.getElementById('memberProfileModal');
+            if (modal) {
+                modal.dataset.memberId = id || '';
+            }
+
             document.getElementById('memberProfileModal').classList.remove('hidden');
         }
 
@@ -1141,19 +1531,68 @@ function showActive($form, $active_form)
             document.getElementById('memberProfileModal').classList.add('hidden');
         }
 
-        function viewOwnerContactDetails() {
-            const ownerName = <?php echo json_encode((string)($project['owner']['name'] ?? 'Client')); ?>;
-            const ownerContact = <?php echo json_encode((string)($project['owner']['contact'] ?? 'Not available')); ?>;
-            const ownerEmail = <?php echo json_encode((string)($project['owner']['email'] ?? 'Not available')); ?>;
-            showNotification('Owner: <b>' + ownerName + '</b><br>Phone: ' + ownerContact + '<br>Email: ' + ownerEmail, 'info');
+        // Contact modal controls
+        function openContactModal() {
+            const modal = document.getElementById('memberProfileModal');
+            const contactModal = document.getElementById('contactModal');
+            const contactTo = document.getElementById('contactTo');
+            if (!contactModal) return;
+
+            const memberId = modal?.dataset?.memberId || '';
+            const memberName = document.getElementById('modal-member-name').textContent || 'Member';
+            contactTo.textContent = memberName;
+            contactModal.dataset.targetMemberId = memberId;
+            contactModal.classList.remove('hidden');
         }
 
-        function showMemberMenu(memberName) {
-            showNotification('Actions available for <b>' + memberName + '</b>: view profile, call, assign task.', 'info');
+        function closeContactModal() {
+            const contactModal = document.getElementById('contactModal');
+            if (!contactModal) return;
+            contactModal.classList.add('hidden');
+            document.getElementById('contactForm').reset();
         }
 
-        function contactViaInternalSignal() {
-            showNotification('Internal signal drafted successfully. You can continue from the communication center.', 'success');
+        // Handle contact form submission
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const contactModal = document.getElementById('contactModal');
+                const memberId = contactModal?.dataset?.targetMemberId || 0;
+                const formData = new FormData(this);
+                const message = formData.get('message') || '';
+
+                if (!memberId || message.trim() === '') {
+                    showNotification('Please select a member and write a message.', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('api/project_files.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'contact_via_signal',
+                            project_id: projectId,
+                            worker_id: parseInt(memberId, 10),
+                            message: String(message)
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification(result.message || 'Message sent.', 'success');
+                        logActivity('sent internal signal', '');
+                        closeContactModal();
+                        setTimeout(() => closeMemberProfileModal(), 800);
+                    } else {
+                        showNotification(result.message || 'Failed to send message', 'error');
+                    }
+                } catch (err) {
+                    showNotification('Network error occurred', 'error');
+                    console.error('Signal send error:', err);
+                }
+            });
         }
 
         // Close modal on backdrop click

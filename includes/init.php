@@ -44,6 +44,16 @@ if (session_status() === PHP_SESSION_NONE) {
     @session_start();
 }
 
+// Attempt auto-login from remember-me cookie if session empty
+if (function_exists('auth_try_auto_login')) {
+    auth_try_auto_login();
+}
+
+// Global login guard for protected routes.
+if (function_exists('enforce_protected_route_login')) {
+    enforce_protected_route_login();
+}
+
 // Global write guard: enforces DB-backed role permissions for mutating requests.
 if (function_exists('enforce_request_write_permission')) {
     enforce_request_write_permission();

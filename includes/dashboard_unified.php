@@ -386,12 +386,13 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
           <div class="flex items-end justify-between mt-2">
             <span class="text-3xl font-bold"><?php echo (int)$pendingApprovals; ?></span>
             <i data-lucide="check-square" class="text-approval-green/20 w-8 h-8"></i>
+           
           </div>
         </div>
         <div class="bg-white p-6 shadow-premium border-l-4 border-pending-amber">
           <p class="text-gray-500 text-sm uppercase tracking-wider font-semibold">Invoices Pending</p>
           <div class="flex items-end justify-between mt-2">
-            <span class="text-3xl font-bold">₹ <?php echo number_format($invoicePending, 0, '.', ','); ?></span>
+            <span class="text-3xl font-bold">  <?php echo number_format($invoicePending, 0, '.', ','); ?></span>
             <i data-lucide="indian-rupee" class="text-pending-amber/20 w-8 h-8"></i>
           </div>
         </div>

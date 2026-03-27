@@ -1,6 +1,7 @@
 <?php
 if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/../includes/init.php';
+    require_once __DIR__ . '/../includes/auth.php';
 }
 
 $sessionUser = $_SESSION['user'] ?? null;
@@ -158,7 +159,7 @@ if ($isAdmin) {
         ['label' => 'Active Projects', 'value' => count($projects), 'icon' => 'layout'],
         ['label' => 'Assigned Workers', 'value' => count($workers), 'icon' => 'users'],
         ['label' => 'Pending Approvals', 'value' => $pendingApprovals, 'icon' => 'check-square'],
-        ['label' => 'Invoices Pending', 'value' => '? ' . number_format($invoicePending, 0, '.', ','), 'icon' => 'indian-rupee'],
+        ['label' => 'Invoices Pending', 'value' => number_format($invoicePending, 0, '.', ','), 'icon' => 'indian-rupee'],
     ];
 }
 
@@ -197,10 +198,10 @@ if ($isWorker) {
       <div>
         <h1 class="text-3xl md:text-4xl font-serif font-bold">Unified Dashboard</h1>
         <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">
-          <?php echo esc($subtitle); ?> • <?php echo esc($displayName); ?>
+          <?php echo esc($subtitle); ?> ï¿½ <?php echo esc($displayName); ?>
         </p>
         <p class="text-[11px] mt-2 uppercase tracking-widest text-gray-300">
-          Role: <?php echo esc($roleDisplayName); ?> • Group: <?php echo esc($groupDisplayName); ?> • <?php echo esc($badge); ?>
+          Role: <?php echo esc($roleDisplayName); ?> ï¿½ Group: <?php echo esc($groupDisplayName); ?> ï¿½ <?php echo esc($badge); ?>
         </p>
       </div>
       <div class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner">

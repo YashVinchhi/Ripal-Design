@@ -1,19 +1,11 @@
 <?php
 
-// Unified auth handler (login + signup)
-// Uses the modern `users` table when available (PDO via includes/init.php)
-// Falls back to legacy `signup` table (mysqli via sql/config.php) if needed.
-
 require_once __DIR__ . '/../includes/init.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     @session_start();
 }
 
-/**
- * Compute the default landing page after login.
- * Prefers `redirect_after_login` when set by `require_login()`.
- */
 function post_login_redirect_url(array $user): string
 {
     if (!empty($_SESSION['redirect_after_login'])) {
@@ -22,9 +14,53 @@ function post_login_redirect_url(array $user): string
         return $url;
     }
 
-    $role = $user['role'] ?? '';
-    // Single dashboard route for all roles; UI is role-based inside dashboard renderer.
     return rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php';
+}
+
+function login_error_and_redirect(string $message): void
+{
+    $_SESSION['login_error'] = $message;
+    $_SESSION['active_form'] = 'login';
+    header('Location: login.php');
+    exit();
+}
+
+function signup_error_and_redirect(string $message): void
+{
+    $_SESSION['register_error'] = $message;
+    $_SESSION['active_form'] = 'signup';
+    header('Location: signup.php');
+    exit();
+}
+
+function generate_unique_username(PDO $db, string $firstName, string $lastName): string
+{
+    $base = strtolower(trim($firstName . '.' . $lastName));
+    $base = preg_replace('/[^a-z0-9.]+/', '', $base ?? '') ?: 'user';
+    $candidate = $base;
+    $suffix = 1;
+
+    $chk = $db->prepare('SELECT id FROM users WHERE username = ? LIMIT 1');
+    while (true) {
+        $chk->execute([$candidate]);
+        if (!$chk->fetch(PDO::FETCH_ASSOC)) {
+            return $candidate;
+        }
+        $candidate = $base . $suffix;
+        $suffix++;
+    }
+}
+
+$db = get_db();
+if (!($db instanceof PDO)) {
+    if (isset($_POST['signup'])) {
+        signup_error_and_redirect('Database connection unavailable. Please try later.');
+    }
+    if (isset($_POST['login'])) {
+        login_error_and_redirect('Database connection unavailable. Please try later.');
+    }
+    header('Location: login.php');
+    exit();
 }
 
 if (isset($_POST['signup'])) {
@@ -33,227 +69,127 @@ if (isset($_POST['signup'])) {
     $email = trim((string) ($_POST['email'] ?? ''));
     $user_password = (string) ($_POST['password'] ?? '');
     $phone_number = trim((string) ($_POST['phoneNumber'] ?? ''));
+    $confirm_password = (string) ($_POST['confirmPassword'] ?? '');
 
-    if (empty($first_name) || empty($last_name) || empty($email) || empty($user_password)) {
-        $_SESSION['register_error'] = 'Please fill all required fields.';
-        $_SESSION['active_form'] = 'signup';
-        header('Location: signup.php');
-        exit();
+    if ($first_name === '' || $last_name === '' || $email === '' || $user_password === '') {
+        signup_error_and_redirect('Please fill all required fields.');
     }
 
-    $db = get_db();
-    if ($db instanceof PDO) {
-        try {
-            // Create a client user in the unified `users` table
-            $stmt = $db->prepare('SELECT id FROM users WHERE username = ? LIMIT 1');
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
-                $_SESSION['register_error'] = 'Email already exists. Please use a different email.';
-                $_SESSION['active_form'] = 'signup';
-                header('Location: signup.php');
-                exit();
-            }
-
-            $passwordHash = password_hash($user_password, PASSWORD_DEFAULT);
-            $role = 'client';
-            $ins = $db->prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
-            $ins->execute([$email, $passwordHash, $role]);
-            $user_id = (int) $db->lastInsertId();
-
-            $_SESSION['user'] = [
-                'id' => $user_id,
-                'first_name' => $first_name,
-                'last_name' => $last_name,
-                'email' => $email,
-                'username' => $email,
-                'role' => $role,
-                'name' => trim($first_name . ' ' . $last_name),
-            ];
-            $_SESSION['user_id'] = $user_id;
-
-            header('Location: ' . post_login_redirect_url($_SESSION['user']));
-            exit();
-        } catch (Exception $e) {
-            error_log('Signup failed (users table): ' . $e->getMessage());
-            // Fall through to legacy signup
-        }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        signup_error_and_redirect('Please enter a valid email address.');
     }
 
-    // Legacy fallback (old schema)
-    require_once __DIR__ . '/../sql/config.php';
-    if (!$conn || $conn->connect_error) {
-        $_SESSION['register_error'] = 'Database connection unavailable. Please try later.';
-        $_SESSION['active_form'] = 'signup';
-        header('Location: signup.php');
-        exit();
+    if ($confirm_password !== '' && $user_password !== $confirm_password) {
+        signup_error_and_redirect('Password and confirm password do not match.');
     }
 
     try {
+        $chk = $db->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+        $chk->execute([$email]);
+        if ($chk->fetch(PDO::FETCH_ASSOC)) {
+            signup_error_and_redirect('Email already exists. Please use a different email.');
+        }
+
         $passwordHash = password_hash($user_password, PASSWORD_DEFAULT);
-        $chk = $conn->prepare('SELECT 1 FROM signup WHERE email = ? LIMIT 1');
-        $chk->bind_param('s', $email);
-        $chk->execute();
-        $chk->store_result();
-        if ($chk->num_rows > 0) {
-            $chk->close();
-            $_SESSION['register_error'] = 'Email already exists. Please use a different email.';
-            $_SESSION['active_form'] = 'signup';
-            header('Location: signup.php');
-            exit();
-        }
-        $chk->close();
-
-        $ins = $conn->prepare('INSERT INTO signup (first_name, lats_name, email, password, phone_number, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $role = 'user';
+        $role = 'client';
         $status = 'active';
-        $ins->bind_param('sssssss', $first_name, $last_name, $email, $passwordHash, $phone_number, $role, $status);
-        if ($ins->execute()) {
-            $user_id = $conn->insert_id;
-            $ins->close();
+        $fullName = trim($first_name . ' ' . $last_name);
+        $username = generate_unique_username($db, $first_name, $last_name);
 
-            $_SESSION['user'] = [
-                'id' => $user_id,
-                'first_name' => $first_name,
-                'last_name' => $last_name,
-                'email' => $email,
-                'username' => $email,
-                'role' => 'client',
-                'name' => trim($first_name . ' ' . $last_name),
-            ];
-            $_SESSION['user_id'] = $user_id;
-            header('Location: ' . post_login_redirect_url($_SESSION['user']));
-            exit();
+        $ins = $db->prepare(
+            'INSERT INTO users (username, full_name, first_name, last_name, email, phone, password_hash, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $ins->execute([$username, $fullName, $first_name, $last_name, $email, $phone_number, $passwordHash, $role, $status]);
+        $user_id = (int) $db->lastInsertId();
+
+        $_SESSION['user'] = [
+            'id' => $user_id,
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+            'email' => $email,
+            'username' => $username,
+            'role' => $role,
+            'name' => $fullName,
+        ];
+        $_SESSION['user_id'] = $user_id;
+        $_SESSION['login_success'] = 'Account created successfully.';
+
+        // If user asked to be remembered, create persistent token
+        if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
+            auth_set_remember_token($user_id);
         }
 
-        $ins->close();
-        $_SESSION['register_error'] = 'Failed to create account. Please try again.';
-        $_SESSION['active_form'] = 'signup';
-        header('Location: signup.php');
+        header('Location: ' . post_login_redirect_url($_SESSION['user']));
         exit();
     } catch (Exception $e) {
-        error_log('Legacy signup failed: ' . $e->getMessage());
-        $_SESSION['register_error'] = 'Failed to create account. Please try again.';
-        $_SESSION['active_form'] = 'signup';
-        header('Location: signup.php');
-        exit();
+        error_log('Signup failed: ' . $e->getMessage());
+        signup_error_and_redirect('Failed to create account. Please try again.');
     }
 }
-
 
 if (isset($_POST['login'])) {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $email = trim((string) ($_POST['email'] ?? ''));
+    $user_password = (string) ($_POST['password'] ?? '');
 
-    $result = $conn->query("SELECT * FROM signup WHERE email = '$email'");
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        if (password_verify($password, $user['password'])) {
-            // Set session user array expected by `is_logged_in()` and header
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'first_name' => $user['first_name'] ?? '',
-                'last_name' => $user['last_name'] ?? '',
-                'email' => $user['email'],
-                'username' => $user['email'] ?? $user['first_name'] ?? '',
-            ];
-            $_SESSION['user_id'] = $user['id'];
-            // Flash a success message for display after redirect
-            $_SESSION['login_success'] = 'Logged in successfully.';
-            header("Location: ../dashboard/dashboard.php");
-            exit();
-        } else {
-            $_SESSION['login_error'] = "Invalid email or password.";
-            $_SESSION['active_form'] = 'login';
+    if ($email === '' || $user_password === '') {
+        login_error_and_redirect('Please enter email and password.');
+    }
+
+    try {
+        // Login only if an account exists in database.
+        $stmt = $db->prepare(
+            'SELECT id, username, email, first_name, last_name, full_name, password_hash, role, status FROM users WHERE username = ? OR email = ? LIMIT 1'
+        );
+        $stmt->execute([$email, $email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            login_error_and_redirect('Account not found. Please sign up first.');
         }
-    } else {
-        // If DB returned no rows, as a fallback allow a local dev login (optional)
-        // Do NOT enable this on production. It creates a session without verifying credentials.
+
+        if (($user['status'] ?? 'active') !== 'active') {
+            login_error_and_redirect('Your account is not active. Please contact admin.');
+        }
+
+        $hash = (string) ($user['password_hash'] ?? '');
+        if ($hash === '' || !password_verify($user_password, $hash)) {
+            login_error_and_redirect('Invalid email or password.');
+        }
+
+        $first = (string) ($user['first_name'] ?? '');
+        $last = (string) ($user['last_name'] ?? '');
+        $displayName = trim((string) ($user['full_name'] ?? ''));
+        if ($displayName === '') {
+            $displayName = trim($first . ' ' . $last);
+        }
+        if ($displayName === '') {
+            $displayName = (string) ($user['username'] ?? $email);
+        }
+
         $_SESSION['user'] = [
-            'id' => 0,
-            'first_name' => '',
-            'last_name' => '',
-            'email' => $email,
-            'username' => $email,
+            'id' => (int) ($user['id'] ?? 0),
+            'first_name' => $first,
+            'last_name' => $last,
+            'email' => (string) ($user['email'] ?? $email),
+            'username' => (string) ($user['username'] ?? $email),
+            'role' => (string) ($user['role'] ?? 'client'),
+            'name' => $displayName,
         ];
-        $_SESSION['user_id'] = 0;
-        // For local/dev fallback, still provide a success flash
-        $_SESSION['login_success'] = 'Logged in (development fallback).';
-        header("Location: ../dashboard/dashboard.php");
-        exit();
+        $_SESSION['user_id'] = (int) ($user['id'] ?? 0);
+        $_SESSION['login_success'] = 'Logged in successfully.';
 
-    if (empty($email) || empty($user_password)) {
-        $_SESSION['login_error'] = 'Please enter email and password.';
-        $_SESSION['active_form'] = 'login';
-        header('Location: login.php');
-        exit();
-    }
-
-    // Prefer unified users table
-    $db = get_db();
-    if ($db instanceof PDO) {
-        try {
-            $stmt = $db->prepare('SELECT id, username, password_hash, role FROM users WHERE username = ? LIMIT 1');
-            $stmt->execute([$email]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($user && !empty($user['password_hash']) && password_verify($user_password, $user['password_hash'])) {
-                $_SESSION['user'] = [
-                    'id' => (int) ($user['id'] ?? 0),
-                    'first_name' => '',
-                    'last_name' => '',
-                    'email' => $email,
-                    'username' => (string) ($user['username'] ?? $email),
-                    'role' => (string) ($user['role'] ?? 'client'),
-                    'name' => (string) ($user['username'] ?? $email),
-                ];
-                $_SESSION['user_id'] = (int) ($user['id'] ?? 0);
-                header('Location: ' . post_login_redirect_url($_SESSION['user']));
-                exit();
-            }
-        } catch (Exception $e) {
-            error_log('Login failed (users table): ' . $e->getMessage());
-            // fall through to legacy login
+        // Remember-me support: create persistent token if requested
+        if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
+            auth_set_remember_token((int)($_SESSION['user_id'] ?? 0));
         }
+
+        header('Location: ' . post_login_redirect_url($_SESSION['user']));
+        exit();
+    } catch (Exception $e) {
+        error_log('Login failed: ' . $e->getMessage());
+        login_error_and_redirect('Login failed. Please try again.');
     }
-
-    // Legacy fallback: signup table
-    require_once __DIR__ . '/../sql/config.php';
-    if ($conn && !$conn->connect_error) {
-        try {
-            $stmt = $conn->prepare('SELECT * FROM signup WHERE email = ? LIMIT 1');
-            $stmt->bind_param('s', $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $user = $result ? $result->fetch_assoc() : null;
-            $stmt->close();
-
-            if ($user && !empty($user['password'])) {
-                // Support both hashed and plain text passwords (for legacy data)
-                $passwordMatches = password_verify($user_password, $user['password']) || 
-                                  ($user['password'] === $user_password);
-                
-                if ($passwordMatches) {
-                    $_SESSION['user'] = [
-                        'id' => (int) ($user['s_id'] ?? $user['id'] ?? 0),
-                        'first_name' => $user['first_name'] ?? '',
-                        'last_name' => $user['lats_name'] ?? $user['last_name'] ?? '',
-                        'email' => $user['email'] ?? $email,
-                        'username' => $user['email'] ?? $email,
-                        'role' => $user['role'] ?? 'client',
-                        'name' => trim(($user['first_name'] ?? '') . ' ' . ($user['lats_name'] ?? $user['last_name'] ?? '')) ?: $email,
-                    ];
-                    $_SESSION['user_id'] = (int) ($user['s_id'] ?? $user['id'] ?? 0);
-                    header('Location: ' . post_login_redirect_url($_SESSION['user']));
-                    exit();
-                }
-            }
-        } catch (Exception $e) {
-            error_log('Legacy login failed: ' . $e->getMessage());
-        }
-    }
-
-    $_SESSION['login_error'] = 'Invalid email or password.';
-    $_SESSION['active_form'] = 'login';
-    header('Location: login.php');
-    exit();
 }
-}
+
+header('Location: login.php');
+exit();

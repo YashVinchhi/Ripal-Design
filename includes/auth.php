@@ -64,6 +64,49 @@ function is_logged_in() {
 }
 
 /**
+ * Enforce login for protected application routes.
+ *
+ * Protected areas: admin, dashboard, client, worker, and unified dashboard page.
+ * Public pages under /public remain accessible without login.
+ *
+ * @return void
+ */
+function enforce_protected_route_login() {
+    if (PHP_SAPI === 'cli') {
+        return;
+    }
+
+    $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    if ($script === '') {
+        return;
+    }
+
+    $protectedPrefixes = [
+        '/admin/',
+        '/dashboard/',
+        '/client/',
+        '/worker/',
+    ];
+
+    $isProtected = false;
+    foreach ($protectedPrefixes as $prefix) {
+        if (strpos($script, $prefix) !== false) {
+            $isProtected = true;
+            break;
+        }
+    }
+
+    // Explicit direct-entry page in Common directory.
+    if (!$isProtected && strpos($script, '/Common/dashboard_unified.php') !== false) {
+        $isProtected = true;
+    }
+
+    if ($isProtected) {
+        require_login();
+    }
+}
+
+/**
  * Check if current user has a specific role
  * 
  * @param string $role Role to check (e.g., 'admin', 'worker', 'client')
@@ -405,4 +448,172 @@ function enforce_request_write_permission() {
     echo '403 Forbidden: Write access denied for worker role.';
     exit;
 }
+
+/**
+ * Create and store a persistent "remember me" token for a user and set cookie.
+ * Stores a SHA256 hash of the token in the database for lookup.
+ *
+ * @param int $userId
+ * @param int $days
+ * @return bool True on success
+ */
+function auth_set_remember_token($userId, $days = 30)
+{
+    $db = get_db();
+    if (!($db instanceof PDO) || $userId <= 0) {
+        return false;
+    }
+
+    try {
+        $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $expiresAt = date('Y-m-d H:i:s', time() + ($days * 24 * 60 * 60));
+
+        // Remove old remember tokens for this user to limit active tokens
+        $del = $db->prepare('DELETE FROM auth_tokens WHERE user_id = ? AND token_type = ?');
+        $del->execute([(int)$userId, 'remember']);
+
+        $ins = $db->prepare('INSERT INTO auth_tokens (user_id, token, token_type, expires_at) VALUES (?, ?, ?, ?)');
+        $ins->execute([(int)$userId, $tokenHash, 'remember', $expiresAt]);
+
+        // Set cookie with raw token (hashed copy stored in DB)
+        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        // Use options array available in PHP 7.3+
+        setcookie('remember_me', $token, [
+            'expires' => time() + ($days * 24 * 60 * 60),
+            'path' => '/',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+
+        return true;
+    } catch (Exception $e) {
+        error_log('auth_set_remember_token failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+
+/**
+ * Attempt to log user in from remember-me cookie when session is empty.
+ * If successful, populates $_SESSION['user'] similar to interactive login.
+ *
+ * @return bool True if auto-login succeeded
+ */
+function auth_try_auto_login()
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        @session_start();
+    }
+
+    if (!empty($_SESSION['user'])) {
+        return false;
+    }
+
+    if (empty($_COOKIE['remember_me'])) {
+        return false;
+    }
+
+    $token = (string) $_COOKIE['remember_me'];
+    if ($token === '') {
+        return false;
+    }
+
+    $tokenHash = hash('sha256', $token);
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        return false;
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT user_id FROM auth_tokens WHERE token = ? AND token_type = ? AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1');
+        $stmt->execute([$tokenHash, 'remember']);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            // invalid token — clear cookie
+            auth_clear_remember_cookie();
+            return false;
+        }
+
+        $userId = (int) ($row['user_id'] ?? 0);
+        if ($userId <= 0) {
+            auth_clear_remember_cookie();
+            return false;
+        }
+
+        $u = $db->prepare('SELECT id, username, email, first_name, last_name, full_name, role FROM users WHERE id = ? LIMIT 1');
+        $u->execute([$userId]);
+        $user = $u->fetch(PDO::FETCH_ASSOC);
+        if (!$user) {
+            auth_clear_remember_cookie();
+            return false;
+        }
+
+        $first = (string) ($user['first_name'] ?? '');
+        $last = (string) ($user['last_name'] ?? '');
+        $displayName = trim((string) ($user['full_name'] ?? '')) ?: trim($first . ' ' . $last) ?: (string) ($user['username'] ?? $user['email']);
+
+        $_SESSION['user'] = [
+            'id' => (int) $user['id'],
+            'first_name' => $first,
+            'last_name' => $last,
+            'email' => (string) ($user['email'] ?? ''),
+            'username' => (string) ($user['username'] ?? ''),
+            'role' => (string) ($user['role'] ?? 'client'),
+            'name' => $displayName,
+        ];
+        $_SESSION['user_id'] = (int) $user['id'];
+        $_SESSION['login_success'] = 'Logged in via remembered session.';
+
+        // Optionally rotate token: create a new one and delete the old
+        auth_set_remember_token($userId);
+
+        return true;
+    } catch (Exception $e) {
+        error_log('auth_try_auto_login failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+
+/**
+ * Delete remember tokens for a user from DB.
+ *
+ * @param int $userId
+ * @return void
+ */
+function auth_clear_remember_tokens_for_user($userId)
+{
+    $db = get_db();
+    if (!($db instanceof PDO) || $userId <= 0) {
+        return;
+    }
+
+    try {
+        $del = $db->prepare('DELETE FROM auth_tokens WHERE user_id = ? AND token_type = ?');
+        $del->execute([(int)$userId, 'remember']);
+    } catch (Exception $e) {
+        error_log('auth_clear_remember_tokens_for_user failed: ' . $e->getMessage());
+    }
+}
+
+
+/**
+ * Remove remember_me cookie from client.
+ *
+ * @return void
+ */
+function auth_clear_remember_cookie()
+{
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    setcookie('remember_me', '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'secure' => $secure,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
 ?>

@@ -1,27 +1,36 @@
 <?php
 
-require_once __DIR__ . '/../sql/config.php';
+require_once __DIR__ . '/../includes/init.php';
 $message = $_GET['message'] ?? '';
 $type = $_GET['type'] ?? '';
 $token = $_GET['token'] ?? '';
-$token_hash = hash("sha256", $token);
+$token_hash = $token !== '' ? hash("sha256", $token) : '';
 
 $showForm = true;
+$db = get_db();
 
-if ($type === 'success' && $message !== '' && $token === '') {
+if (!($db instanceof PDO)) {
+    $message = 'Database connection unavailable. Please try later.';
+    $type = 'error';
+    $showForm = false;
+} elseif ($type === 'success' && $message !== '' && $token === '') {
     $showForm = false;
 } else {
-    $sql = "SELECT * FROM signup WHERE token_reset = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $token_hash);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
-    if ($user === null) {
+    if ($token === '') {
+        $message = 'Invalid reset token.';
+        $type = 'error';
+        $showForm = false;
+    } else {
+        $stmt = $db->prepare('SELECT id, reset_token_expires FROM users WHERE token_reset = ? LIMIT 1');
+        $stmt->execute([$token_hash]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if ($showForm && $user === false) {
         $message = 'Token not found.';
         $type = 'error';
         $showForm = false;
-    } elseif (strtotime($user['reset_token_expires']) <= time()) {
+    } elseif ($showForm && strtotime((string) ($user['reset_token_expires'] ?? '')) <= time()) {
         $message = 'Token has expired.';
         $type = 'error';
         $showForm = false;

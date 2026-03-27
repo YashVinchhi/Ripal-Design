@@ -60,7 +60,7 @@ function showActive($form, $active_form){
 
           <div class="field">
             <label for="email">Email Address</label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="curator@studio.com" data-validation="required email" autocomplete="email">
+            <input type="email" class="form-control" id="email" name="email" placeholder="youremail@example.com" data-validation="required email" autocomplete="email">
             <span id="email_error" class="text-danger"></span>
           </div>
 
@@ -75,9 +75,8 @@ function showActive($form, $active_form){
 
           <div class="meta-row">
             <div class="check-wrap">
-              <input type="checkbox" id="remember" name="terms" class="form-check-input" data-validation="required">
+              <input type="checkbox" id="remember" name="remember" class="form-check-input">
               <label for="remember" class="form-check-label">Remember me</label>
-              <span id="terms_error" class="text-danger d-none"></span>
             </div>
             <a href="./forgot.php" class="meta-link">Forgot password?</a>
           </div>

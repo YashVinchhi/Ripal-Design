@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../sql/config.php';
+require_once __DIR__ . '/../includes/init.php';
 
 function redirect_with_message($message, $type = 'error') {
 	$location = './forgot.php?type=' . urlencode($type) . '&message=' . urlencode($message);
@@ -25,9 +25,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	redirect_with_message('Method not allowed.');
 }
 
+$db = get_db();
+if (!($db instanceof PDO)) {
+	redirect_with_message('Database connection unavailable. Please try later.');
+}
+
 $email = trim($_POST['email'] ?? '');
 if ($email === '') {
 	redirect_with_message('Email is required.');
+}
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+	redirect_with_message('Please enter a valid email address.');
 }
 
 $token = bin2hex(random_bytes(16));
@@ -36,18 +45,17 @@ $token_hash = hash("sha256", $token);
 $expiry = date("Y-m-d H:i:s", time() + 60 * 30);
 
 
-$sql = "UPDATE signup SET token_reset = ?, reset_token_expires = ? WHERE email = ?";
+$sql = 'UPDATE users SET token_reset = ?, reset_token_expires = ? WHERE email = ? LIMIT 1';
 
-$stmt = $conn->prepare($sql);
+$stmt = $db->prepare($sql);
+$stmt->execute([$token_hash, $expiry, $email]);
 
-$stmt->bind_param("sss", $token_hash, $expiry, $email);
-$stmt->execute();
-
-if ($stmt->affected_rows) {
+if ($stmt->rowCount() > 0) {
 	$mail = require __DIR__ . '/mailer.php';
 	$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 	$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-	$resetLink = $scheme . '://' . $host . '/Ripal-Design/public/reset_password.php?token=' . urlencode($token);
+	$resetPath = rtrim(BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/reset_password.php';
+	$resetLink = $scheme . '://' . $host . $resetPath . '?token=' . urlencode($token);
 
 	$mail->setFrom('noreply@example.com', 'My App');
 	$mail->addAddress($email);

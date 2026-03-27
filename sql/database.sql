@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) DEFAULT NULL,
   phone VARCHAR(30) DEFAULT NULL,
   password_hash VARCHAR(255) DEFAULT NULL,
+  token_reset CHAR(64) DEFAULT NULL,
+  reset_token_expires DATETIME DEFAULT NULL,
   role ENUM('client','worker','employee','admin') NOT NULL DEFAULT 'client',
   status ENUM('active','pending','suspended') NOT NULL DEFAULT 'active',
   address VARCHAR(255) DEFAULT NULL,
@@ -23,7 +25,8 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_users_role (role),
-  INDEX idx_users_email (email)
+  INDEX idx_users_email (email),
+  INDEX idx_users_reset_token (token_reset)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Legacy fallback table used in login_register.php when PDO users-table flow is unavailable.
