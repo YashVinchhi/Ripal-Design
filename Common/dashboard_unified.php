@@ -3,13 +3,41 @@ if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/../includes/init.php';
     require_once __DIR__ . '/../includes/auth.php';
 }
+require_login();
 
 $sessionUser = $_SESSION['user'] ?? null;
-$sessionRole = is_array($sessionUser) ? (string)($sessionUser['role'] ?? '') : '';
+$sessionRole = is_array($sessionUser) ? strtolower((string)($sessionUser['role'] ?? '')) : '';
 $sessionUserId = is_array($sessionUser) ? (int)($sessionUser['id'] ?? 0) : 0;
 $displayName = is_array($sessionUser)
-    ? (string)($sessionUser['first_name'] ?? $sessionUser['username'] ?? $sessionUser['email'] ?? 'Demo User')
-    : (string)($sessionUser ?: 'Demo User');
+  ? (string)($sessionUser['first_name'] ?? $sessionUser['username'] ?? $sessionUser['email'] ?? 'User')
+  : (string)($sessionUser ?: 'User');
+
+// If session role is missing or appears generic, attempt to read authoritative role from DB users table
+if (($sessionRole === '' || in_array($sessionRole, ['member', 'user', 'client', ''])) && $sessionUserId > 0 && db_connected() && db_table_exists('users')) {
+  $u = db_fetch('SELECT id, username, first_name, last_name, role FROM users WHERE id = ? LIMIT 1', [$sessionUserId]);
+  if ($u) {
+    $dbRole = strtolower((string)($u['role'] ?? ''));
+    if ($dbRole !== '') {
+      $sessionRole = $dbRole;
+      // also keep session in sync if available
+      if (is_array($sessionUser)) {
+        $_SESSION['user']['role'] = $dbRole;
+      }
+    }
+    // prefer nicer display name when available
+    $nameParts = trim((string)($u['first_name'] ?? '') . ' ' . (string)($u['last_name'] ?? ''));
+    if ($nameParts !== '') {
+      $displayName = $nameParts;
+      if (is_array($sessionUser)) {
+        $_SESSION['user']['first_name'] = $u['first_name'] ?? '';
+        $_SESSION['user']['last_name'] = $u['last_name'] ?? '';
+      }
+    }
+    if (!empty($u['username']) && ($displayName === '' || $displayName === 'User')) {
+      $displayName = (string)$u['username'];
+    }
+  }
+}
 
 $roleContext = [
     'role_code' => '',
@@ -40,9 +68,10 @@ if ($sessionUserId > 0 && db_connected() && db_table_exists('user_roles') && db_
 
 $variant = isset($DASHBOARD_VARIANT) ? (string)$DASHBOARD_VARIANT : '';
 if ($variant === '') {
-    if ($sessionRole === 'admin' || strpos($roleContext['role_code'], 'admin') !== false) {
+  $roleCode = strtolower((string)$roleContext['role_code']);
+  if ($sessionRole === 'admin' || stripos($roleCode, 'admin') !== false) {
         $variant = 'admin';
-    } elseif ($sessionRole === 'worker' || $roleContext['group_code'] === 'site_ops' || strpos($roleContext['role_code'], 'site_') === 0) {
+  } elseif ($sessionRole === 'worker' || strtolower((string)$roleContext['group_code']) === 'site_ops' || stripos($roleCode, 'site_') === 0) {
         $variant = 'worker';
     } else {
         $variant = 'main';
@@ -139,6 +168,9 @@ $title = 'Dashboard | Ripal Design';
 $subtitle = $isAdmin ? 'Administrative View' : ($isWorker ? 'Operational View' : 'Role-Based View');
 $badge = $isReadOnly ? 'Read Only' : 'Standard Access';
 
+// Page heading can be overridden by setting $DASHBOARD_HEADING before including this file
+$pageHeading = isset($DASHBOARD_HEADING) && $DASHBOARD_HEADING !== '' ? (string)$DASHBOARD_HEADING : 'Unified Dashboard';
+
 $statCards = [];
 if ($isAdmin) {
     $statCards = [
@@ -196,12 +228,12 @@ if ($isWorker) {
   <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
       <div>
-        <h1 class="text-3xl md:text-4xl font-serif font-bold">Unified Dashboard</h1>
+        <h1 class="text-3xl md:text-4xl font-serif font-bold"><?php echo esc($pageHeading); ?></h1>
         <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">
-          <?php echo esc($subtitle); ?> � <?php echo esc($displayName); ?>
+          <?php echo esc($subtitle); ?> &middot; <?php echo esc($displayName); ?>
         </p>
         <p class="text-[11px] mt-2 uppercase tracking-widest text-gray-300">
-          Role: <?php echo esc($roleDisplayName); ?> � Group: <?php echo esc($groupDisplayName); ?> � <?php echo esc($badge); ?>
+          Role: <?php echo esc($roleDisplayName); ?> &middot; Group: <?php echo esc($groupDisplayName); ?> &middot; <?php echo esc($badge); ?>
         </p>
       </div>
       <div class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner">

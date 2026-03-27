@@ -22,6 +22,9 @@ if (isset($_COOKIE['flash_message'])) {
     <title>Forgot Password - Ripal Design</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./css/forgot.css">
+<<<<<<< HEAD
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+=======
     <style>
         .status-message {
             border-radius: 10px;
@@ -45,6 +48,7 @@ if (isset($_COOKIE['flash_message'])) {
         }
     </style>
     <script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
+>>>>>>> e40d25d4e6575badb418f0adf2a0f75f0f0a2982
 
     <script src="./js/validation.js"></script>
 

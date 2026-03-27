@@ -1,7 +1,8 @@
 <?php
 // User Management (Redesigned UI)
-session_start();
 require_once __DIR__ . '/../includes/init.php';
+require_login();
+require_role('admin');
 
 $roleCounts = get_user_role_counts();
 $users = db_fetch_all('SELECT id, username, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync FROM users ORDER BY id DESC LIMIT 200');

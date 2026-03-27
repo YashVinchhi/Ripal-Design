@@ -11,12 +11,12 @@
  * @subpackage Database
  */
 
-// Read credentials from sql/config.php so the app has one DB config source.
-$DB_HOST = 'localhost';
-$DB_NAME = 'Ripal-Design';
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_PORT = '3306';
+// Load database credentials from environment or sql/config.php, with sensible defaults
+$DB_HOST = getenv('DB_HOST') ?: 'localhost';
+$DB_NAME = getenv('DB_NAME') ?: 'Ripal-Design';
+$DB_USER = getenv('DB_USER') ?: 'root';
+$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_PORT = getenv('DB_PORT') ?: '3306';
 
 $sqlConfigPath = __DIR__ . '/../sql/config.php';
 if (file_exists($sqlConfigPath)) {

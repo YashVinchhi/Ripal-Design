@@ -409,6 +409,7 @@ if (!function_exists('get_projects_basic')) {
         }
 
         $limit = max(1, min(500, (int)$limit));
+        // Safe interpolation: LIMIT is strictly bounded and cast to integer above.
         return db_fetch_all("SELECT id, name, status, COALESCE(progress,0) AS progress, budget, due, COALESCE(location,'') AS location, COALESCE(address,'') AS address, COALESCE(latitude, NULL) AS latitude, COALESCE(longitude, NULL) AS longitude, COALESCE(owner_name,'') AS owner_name, COALESCE(owner_contact,'') AS owner_contact FROM projects ORDER BY id DESC LIMIT {$limit}");
     }
 }

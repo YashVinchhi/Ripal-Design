@@ -7,6 +7,7 @@
  */
 
 require_once __DIR__ . '/../includes/init.php';
+require_login();
 
 $user = $_SESSION['user'] ?? 'employee01';
 
@@ -35,6 +36,7 @@ foreach($requests as $r) {
 
 // Handle Status Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
+    require_csrf();
     $id = intval($_POST['request_id'] ?? 0);
     $status = $_POST['status'] ?? '';
     if ($id && in_array($status, ['approved', 'rejected', 'changes_requested'])) {
@@ -166,6 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                     <div class="flex items-center gap-3">
                                         <?php if ($r['status'] === 'pending'): ?>
                                             <form method="POST" class="flex gap-2">
+                                                <?php echo csrf_token_field(); ?>
                                                 <input type="hidden" name="update_status" value="1">
                                                 <input type="hidden" name="request_id" value="<?php echo $r['id']; ?>">
                                                 <button name="status" value="approved" class="p-3 bg-approval-green/10 hover:bg-approval-green text-approval-green hover:text-white transition-all shadow-sm">

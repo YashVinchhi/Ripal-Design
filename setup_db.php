@@ -1,10 +1,16 @@
 <?php
-$host = "localhost";
-$username = "root";
-$password = "Ro0t1234";
-$database = "Ripal-Design";
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
-$conn = new mysqli($host, $username, $password, $database);
+$host = getenv('DB_HOST') ?: 'localhost';
+$username = getenv('DB_USER') ?: '';
+$password = getenv('DB_PASS') ?: '';
+$database = getenv('DB_NAME') ?: 'Ripal-Design';
+$port = (int)(getenv('DB_PORT') ?: 3306);
+
+$conn = new mysqli($host, $username, $password, $database, $port);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

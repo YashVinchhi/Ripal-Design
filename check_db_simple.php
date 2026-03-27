@@ -1,6 +1,17 @@
 <?php
-echo "Testing localhost with root:Ro0t1234\n";
-$conn = @mysqli_connect("localhost", "root", "Ro0t1234", "Ripal-Design");
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+$dbHost = getenv('DB_HOST') ?: 'localhost';
+$dbUser = getenv('DB_USER') ?: '';
+$dbPass = getenv('DB_PASS') ?: '';
+$dbName = getenv('DB_NAME') ?: 'Ripal-Design';
+$dbPort = (int)(getenv('DB_PORT') ?: 3306);
+
+echo "Testing configured database connection\n";
+$conn = @mysqli_connect($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
 if ($conn) {
     echo "✓ Connection SUCCESS\n\n";
     

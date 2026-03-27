@@ -1,9 +1,12 @@
 <?php
 // Project Management (Redesigned UI)
-session_start();
 require_once __DIR__ . '/../includes/init.php';
+require_login();
+require_role('admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
+    require_csrf();
+
     $name = trim((string)($_POST['project_name'] ?? ''));
     $projectType = trim((string)($_POST['project_type'] ?? 'Residential'));
     $budget = (float)preg_replace('/[^0-9.]/', '', (string)($_POST['project_budget'] ?? '0'));
@@ -147,7 +150,8 @@ $projects = get_projects_basic(200);
                 </button>
             </div>
             
-            <form class="p-10 space-y-8" id="ventureForm" onsubmit="handleVentureSubmit(event)">
+            <form method="post" class="p-10 space-y-8" id="ventureForm" onsubmit="handleVentureSubmit(event)">
+                <?php echo csrf_token_field(); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Client Details -->
                     <div class="space-y-4">

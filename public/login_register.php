@@ -128,68 +128,78 @@ if (isset($_POST['signup'])) {
 }
 
 if (isset($_POST['login'])) {
-    $email = trim((string) ($_POST['email'] ?? ''));
-    $user_password = (string) ($_POST['password'] ?? '');
+    $email = trim((string)($_POST['email'] ?? ''));
+    $user_password = (string)($_POST['password'] ?? '');
 
     if ($email === '' || $user_password === '') {
         login_error_and_redirect('Please enter email and password.');
     }
 
+    // Try primary users table via PDO
     try {
-        // Login only if an account exists in database.
-        $stmt = $db->prepare(
-            'SELECT id, username, email, first_name, last_name, full_name, password_hash, role, status FROM users WHERE username = ? OR email = ? LIMIT 1'
-        );
-        $stmt->execute([$email, $email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($db instanceof PDO) {
+            $stmt = $db->prepare('SELECT id, username, email, first_name, last_name, full_name, password_hash, role, status FROM users WHERE username = ? OR email = ? LIMIT 1');
+            $stmt->execute([$email, $email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($user && !empty($user['password_hash']) && password_verify($user_password, $user['password_hash'])) {
+                if (($user['status'] ?? 'active') !== 'active') {
+                    login_error_and_redirect('Your account is not active. Please contact admin.');
+                }
 
-        if (!$user) {
-            login_error_and_redirect('Account not found. Please sign up first.');
+                $first = (string)($user['first_name'] ?? '');
+                $last = (string)($user['last_name'] ?? '');
+                $displayName = trim((string)($user['full_name'] ?? '')) ?: trim($first . ' ' . $last) ?: (string)($user['username'] ?? $email);
+
+                $_SESSION['user'] = [
+                    'id' => (int)($user['id'] ?? 0),
+                    'first_name' => $first,
+                    'last_name' => $last,
+                    'email' => (string)($user['email'] ?? $email),
+                    'username' => (string)($user['username'] ?? $email),
+                    'role' => (string)($user['role'] ?? 'client'),
+                    'name' => $displayName,
+                ];
+                $_SESSION['user_id'] = (int)($user['id'] ?? 0);
+                header('Location: ' . post_login_redirect_url($_SESSION['user']));
+                exit();
+            }
         }
-
-        if (($user['status'] ?? 'active') !== 'active') {
-            login_error_and_redirect('Your account is not active. Please contact admin.');
-        }
-
-        $hash = (string) ($user['password_hash'] ?? '');
-        if ($hash === '' || !password_verify($user_password, $hash)) {
-            login_error_and_redirect('Invalid email or password.');
-        }
-
-        $first = (string) ($user['first_name'] ?? '');
-        $last = (string) ($user['last_name'] ?? '');
-        $displayName = trim((string) ($user['full_name'] ?? ''));
-        if ($displayName === '') {
-            $displayName = trim($first . ' ' . $last);
-        }
-        if ($displayName === '') {
-            $displayName = (string) ($user['username'] ?? $email);
-        }
-
-        $_SESSION['user'] = [
-            'id' => (int) ($user['id'] ?? 0),
-            'first_name' => $first,
-            'last_name' => $last,
-            'email' => (string) ($user['email'] ?? $email),
-            'username' => (string) ($user['username'] ?? $email),
-            'role' => (string) ($user['role'] ?? 'client'),
-            'name' => $displayName,
-        ];
-        $_SESSION['user_id'] = (int) ($user['id'] ?? 0);
-        $_SESSION['login_success'] = 'Logged in successfully.';
-
-        // Remember-me support: create persistent token if requested
-        if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
-            auth_set_remember_token((int)($_SESSION['user_id'] ?? 0));
-        }
-
-        header('Location: ' . post_login_redirect_url($_SESSION['user']));
-        exit();
     } catch (Exception $e) {
-        error_log('Login failed: ' . $e->getMessage());
-        login_error_and_redirect('Login failed. Please try again.');
+        error_log('Login failed (PDO): ' . $e->getMessage());
     }
+
+    // Legacy fallback: check signup table via mysqli
+    try {
+        require_once __DIR__ . '/../sql/config.php';
+        if (isset($conn) && !$conn->connect_error) {
+            $stmt = $conn->prepare('SELECT * FROM signup WHERE email = ? LIMIT 1');
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $legacyUser = $result ? $result->fetch_assoc() : null;
+            $stmt->close();
+
+            if ($legacyUser && !empty($legacyUser['password']) && password_verify($user_password, $legacyUser['password'])) {
+                $_SESSION['user'] = [
+                    'id' => (int)($legacyUser['s_id'] ?? $legacyUser['id'] ?? 0),
+                    'first_name' => $legacyUser['first_name'] ?? '',
+                    'last_name' => $legacyUser['last_name'] ?? '',
+                    'email' => $legacyUser['email'] ?? $email,
+                    'username' => $legacyUser['email'] ?? $email,
+                    'role' => $legacyUser['role'] ?? 'client',
+                    'name' => trim(($legacyUser['first_name'] ?? '') . ' ' . ($legacyUser['last_name'] ?? '')) ?: $email,
+                ];
+                $_SESSION['user_id'] = (int)($legacyUser['s_id'] ?? $legacyUser['id'] ?? 0);
+                header('Location: ' . post_login_redirect_url($_SESSION['user']));
+                exit();
+            }
+        }
+    } catch (Exception $e) {
+        error_log('Legacy login failed: ' . $e->getMessage());
+    }
+
+    login_error_and_redirect('Invalid email or password.');
 }
 
-header('Location: login.php');
-exit();
+// End of login/register processor
+?>
