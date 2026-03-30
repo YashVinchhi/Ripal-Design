@@ -17,3 +17,4 @@ PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";
 PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
 PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
 PHPMailer error:  - setcookie(): Argument #1 ($name) cannot contain "=", ",", ";", " ", "\t", "\r", "\n", "\013", or "\014"
+PHPMailer error: SMTP Error: Could not connect to SMTP host. - SMTP Error: Could not connect to SMTP host.

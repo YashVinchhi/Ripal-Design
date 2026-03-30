@@ -119,6 +119,33 @@ if (isset($_POST['signup'])) {
             auth_set_remember_token($user_id);
         }
 
+        // Attempt to send welcome email using existing public/mailer.php
+        try {
+            $mail = null;
+            if (is_readable(__DIR__ . '/mailer.php')) {
+                $mail = require __DIR__ . '/mailer.php';
+            }
+            if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
+                // clear any pre-set recipients/content from mailer.php
+                $mail->clearAddresses();
+                $from = 'dudhaiyarachit45@gmail.com' ?: 'dudhaiyarachit45@gmail.com ' ?: 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+                $fromName = 'Ripal Design' ?: 'Ripal Design';
+                $mail->setFrom($from, $fromName);
+                $mail->addAddress($email, $fullName);
+                $mail->isHTML(true);
+                $mail->Subject = 'Registration Successful — Ripal Design';
+                $mail->Body = '<h3>Registration Successful</h3><p>Hi ' . htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8') . ',</p><p>Your account was created successfully. You can now log in and start using Ripal Design.</p>';
+                $mail->AltBody = 'Hi ' . $first_name . ', your account was created successfully. Login at ' . (BASE_URL . PUBLIC_PATH_PREFIX . '/login.php');
+                try {
+                    $mail->send();
+                } catch (Exception $em) {
+                    error_log('Welcome email failed: ' . $mail->ErrorInfo . ' / ' . $em->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('Welcome email skipped/failed: ' . $e->getMessage());
+        }
+
         header('Location: ' . post_login_redirect_url($_SESSION['user']));
         exit();
     } catch (Exception $e) {

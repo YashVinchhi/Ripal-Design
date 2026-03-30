@@ -1,3 +1,4 @@
+
 <?php
 
 require_once __DIR__ . '/../includes/config.php';
@@ -38,20 +39,17 @@ function showActive($form, $active_form)
     <title>Signup - Ripal Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/login.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="./js/validation.js"></script>
 </head>
 
 <body class="auth-page">
-    <header class="auth-topbar">
-        <a href="index.php" class="back-link" aria-label="Go back to home">Back</a>
-        <div class="brand">Ripal Design</div>
-    </header>
+    <div class="grain"></div>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
 
-    <main class="auth-main">
+    <main class="auth-main auth-main-public">
         <section class="auth-card-wrap" aria-labelledby="signupTitle">
             <div class="auth-card auth-card-signup">
                 <h1 class="auth-title" id="signupTitle">Create Account</h1>
@@ -75,7 +73,7 @@ function showActive($form, $active_form)
 
                     <div class="field">
                         <label for="email">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="curator@studio.com" data-validation="required email" autocomplete="email">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="youremail@example.com" data-validation="required email" autocomplete="email">
                         <span id="email_error" class="text-danger"></span>
                     </div>
 
@@ -83,7 +81,9 @@ function showActive($form, $active_form)
                         <label for="confirmPassword_confirm">Password</label>
                         <div class="input-with-icon">
                             <input id="confirmPassword_confirm" name="password" type="password" class="form-control" placeholder="Enter your password" data-validation="required strongPassword" autocomplete="new-password">
-                            <img src="./css/eye/eye_close.svg" alt="Show password" id="eyeicon" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="Toggle password visibility">
+                            <button type="button" class="toggle-password-btn" aria-label="Toggle password visibility" aria-pressed="false">
+                                <img src="./css/eye/eye_close.svg" alt="Show password" id="eyeicon" class="toggle-password" aria-hidden="true">
+                            </button>
                         </div>
                         <small class="field-help">Use at least 8 characters and 1 number.</small>
                         <span id="password_error" class="text-danger"></span>
@@ -93,7 +93,9 @@ function showActive($form, $active_form)
                         <label for="Password">Confirm Password</label>
                         <div class="input-with-icon">
                             <input id="Password" name="confirmPassword" type="password" class="form-control" placeholder="Confirm your password" data-validation="required confirmPassword" autocomplete="new-password">
-                            <img src="./css/eye/eye_close.svg" alt="Show password" id="eyeicon1" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="Toggle password visibility">
+                            <button type="button" class="toggle-password-btn" aria-label="Toggle password visibility" aria-pressed="false">
+                                <img src="./css/eye/eye_close.svg" alt="Show password" id="eyeicon1" class="toggle-password" aria-hidden="true">
+                            </button>
                         </div>
                         <span id="confirmPassword_error" class="text-danger"></span>
                     </div>
@@ -118,32 +120,31 @@ function showActive($form, $active_form)
             </div>
         </section>
     </main>
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 
 </body>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const toggles = document.querySelectorAll('.toggle-password');
-        if (!toggles || toggles.length === 0) return;
+        const toggleButtons = document.querySelectorAll('.toggle-password-btn');
+        if (!toggleButtons || toggleButtons.length === 0) return;
         const openSrc = './css/eye/eye_open.svg';
         const closeSrc = './css/eye/eye_close.svg';
 
-        toggles.forEach(function(toggle){
-            const container = toggle.closest('.input-with-icon');
+        toggleButtons.forEach(function(toggleBtn){
+            const toggle = toggleBtn.querySelector('.toggle-password');
+            const container = toggleBtn.closest('.input-with-icon');
             const input = container ? container.querySelector('input') : null;
-            if (!input) return;
-            toggle.style.cursor = 'pointer';
+            if (!input || !toggle) return;
 
             function doToggle(){
                 const showing = input.type === 'text';
                 input.type = showing ? 'password' : 'text';
                 toggle.src = showing ? closeSrc : openSrc;
                 toggle.alt = showing ? 'Show password' : 'Hide password';
+                toggleBtn.setAttribute('aria-pressed', showing ? 'false' : 'true');
             }
 
-            toggle.addEventListener('click', doToggle);
-            toggle.addEventListener('keydown', function(e){
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doToggle(); }
-            });
+            toggleBtn.addEventListener('click', doToggle);
         });
     });
 </script>

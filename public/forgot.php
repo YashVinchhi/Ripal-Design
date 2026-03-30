@@ -1,3 +1,4 @@
+
 <?php
 $message = '';
 $type = '';
@@ -20,63 +21,45 @@ if (isset($_COOKIE['flash_message'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forgot Password - Ripal Design</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="./css/forgot.css">
-    <style>
-        .status-message {
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 14px;
-            font-size: 0.92rem;
-            line-height: 1.4;
-            text-align: left;
-        }
-
-        .status-success {
-            background: #ecfdf3;
-            border: 1px solid #86efac;
-            color: #166534;
-        }
-
-        .status-error {
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/login.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
     <script src="./js/validation.js"></script>
 
 </head>
 
-<body>
-    <main>
+<body class="auth-page">
+    <div class="grain"></div>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
 
-        <a href="index.php" class="btn btn-secondary top-back-btn">Back</a>
-        <div class="login-card text-center">
-            <div class="card-login">
-                <h3 class="mb-5">Forgot Password</h3>
-                <p class="infem">Please enter your email address you'd like your password reset information sent to.</p>
-                <?php if ($message !== ''): ?>
-                    <div class="status-message <?php echo ($type === 'success') ? 'status-success' : 'status-error'; ?>">
-                        <?php echo htmlspecialchars($message); ?>
-                    </div>
-                <?php endif; ?>
-                <!-- for forgot password -->
-                <form id="forgotPasswordForm" method="post" action="./send_reset_password.php">
-                    <!-- for email  -->
-                    <div class="mb-3 text-start">
-                        <label class="email">Email</label>
-                        <input type="email" class="form-control " id="email" name="email" placeholder="example@xyz.com" data-validation="required email">
+    <main class="auth-main auth-main-public">
+        <section class="auth-card-wrap" aria-labelledby="forgotTitle">
+            <div class="auth-card auth-card-compact">
+                <h1 class="auth-title" id="forgotTitle">Forgot Password</h1>
+                <p class="auth-note">Enter your account email and we will send a secure reset link.</p>
+
+                <form id="forgotPasswordForm" method="post" action="./send_reset_password.php" class="auth-form" novalidate>
+                    <?php if ($message !== ''): ?>
+                        <div class="auth-status <?php echo ($type === 'success') ? 'auth-status-success' : 'auth-status-error'; ?>">
+                            <?php echo htmlspecialchars($message); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="field">
+                        <label for="email">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="youremail@example.com" data-validation="required email" autocomplete="email">
                         <span id="email_error" class="text-danger"></span>
                     </div>
+
                     <button type="submit" class="btn-1">Send Reset Link</button>
-                    <a href="./login.php" class="text-decoration-none text-white p-3 d-block">Back to login</a>
+                    <p class="switch-auth"><a class="auth-inline-link" href="./login.php">Back to login</a></p>
                 </form>
             </div>
-        </div>
+        </section>
     </main>
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 
 </html>
