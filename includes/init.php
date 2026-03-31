@@ -38,6 +38,11 @@ if (file_exists(__DIR__ . '/util.php')) {
     require_once __DIR__ . '/util.php';
 }
 
+// Load public content helpers (depends on util/db/auth)
+if (file_exists(__DIR__ . '/public_content.php')) {
+    require_once __DIR__ . '/public_content.php';
+}
+
 // Start session if not already started
 // Use @ to suppress warnings if session already started
 if (session_status() === PHP_SESSION_NONE) {

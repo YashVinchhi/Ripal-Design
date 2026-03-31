@@ -8,6 +8,10 @@ if (session_status() === PHP_SESSION_NONE) {
     @session_start();
 }
 
+$dashboardProfileUrl = function_exists('base_path')
+    ? base_path('dashboard/profile.php')
+    : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
+
 // Server-side: only emit stylesheet links that exist on disk to avoid client 404s
 $candidates = [
     '/assets/css/styles.css',
@@ -61,24 +65,55 @@ foreach ($candidates as $c) {
     <div class="alt-panel" role="dialog" aria-modal="true" aria-label="Site menu">
         <?php include __DIR__ . '/notifications.php'; ?>
         <nav>
-            <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Dashboard</strong>
-            <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php">Dashboard Home</a>
-            <a href="<?php echo BASE_PATH; ?>/dashboard/profile.php">Profile Settings</a>
-            <a href="<?php echo BASE_PATH; ?>/dashboard/review_requests.php">Review Requests</a>
+            <?php
+                $navRole = 'dashboard';
+                if (function_exists('auth_resolve_navigation_role') && function_exists('current_user')) {
+                    $navRole = auth_resolve_navigation_role(current_user());
+                } elseif (function_exists('current_user')) {
+                    $fallbackUser = current_user();
+                    $fallbackRole = is_array($fallbackUser) ? strtolower((string)($fallbackUser['role'] ?? '')) : '';
+                    if ($fallbackRole === 'admin' || $fallbackRole === 'worker') {
+                        $navRole = $fallbackRole;
+                    }
+                }
 
-            <hr class="border-white/10 my-4 mx-4">
-            <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Worker Portal</strong>
-            <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php">Worker Dashboard</a>
-            <a href="<?php echo BASE_PATH; ?>/worker/assigned_projects.php">Assigned Projects</a>
-            <a href="<?php echo BASE_PATH; ?>/worker/worker_rating.php">My Ratings</a>
+                $menuSections = [
+                    'dashboard' => [
+                        'title' => 'Dashboard',
+                        'links' => [
+                            ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => 'Dashboard Home'],
+                            ['href' => $dashboardProfileUrl, 'label' => 'Profile Settings'],
+                            ['href' => BASE_PATH . '/dashboard/review_requests.php', 'label' => 'Review Requests'],
+                        ],
+                    ],
+                    'worker' => [
+                        'title' => 'Worker Portal',
+                        'links' => [
+                            ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => 'Worker Dashboard'],
+                            ['href' => BASE_PATH . '/worker/assigned_projects.php', 'label' => 'Assigned Projects'],
+                            ['href' => BASE_PATH . '/worker/worker_rating.php', 'label' => 'My Ratings'],
+                        ],
+                    ],
+                    'admin' => [
+                        'title' => 'Administration',
+                        'links' => [
+                            ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => 'Admin Dashboard'],
+                            ['href' => BASE_PATH . '/admin/project_management.php', 'label' => 'Project Portfolio'],
+                            ['href' => BASE_PATH . '/admin/user_management.php', 'label' => 'User Controls'],
+                            ['href' => BASE_PATH . '/admin/leave_management.php', 'label' => 'Leave Manager'],
+                            ['href' => BASE_PATH . '/admin/payment_gateway.php', 'label' => 'Financial Gateway'],
+                        ],
+                    ],
+                ];
 
-            <hr class="border-white/10 my-4 mx-4">
-            <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Administration</strong>
-            <a href="<?php echo BASE_PATH; ?>/dashboard/dashboard.php">Admin Dashboard</a>
-            <a href="<?php echo BASE_PATH; ?>/admin/project_management.php">Project Portfolio</a>
-            <a href="<?php echo BASE_PATH; ?>/admin/user_management.php">User Controls</a>
-            <a href="<?php echo BASE_PATH; ?>/admin/leave_management.php">Leave Manager</a>
-            <a href="<?php echo BASE_PATH; ?>/admin/payment_gateway.php">Financial Gateway</a>
+                $activeSection = $menuSections[$navRole] ?? $menuSections['dashboard'];
+            ?>
+            <?php if (!empty($activeSection['title'])): ?>
+                <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo htmlspecialchars((string)$activeSection['title'], ENT_QUOTES, 'UTF-8'); ?></strong>
+            <?php endif; ?>
+            <?php foreach (($activeSection['links'] ?? []) as $link): ?>
+                <a href="<?php echo htmlspecialchars((string)($link['href'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars((string)($link['label'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></a>
+            <?php endforeach; ?>
         </nav>
 
         <div class="panel-footer">

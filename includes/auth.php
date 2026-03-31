@@ -156,6 +156,49 @@ function is_logged_in() {
     return !empty($_SESSION['user']);
 }
 
+if (!function_exists('auth_dashboard_url')) {
+    /**
+     * Resolve canonical dashboard landing URL for authenticated users.
+     *
+     * @return string
+     */
+    function auth_dashboard_url() {
+        $basePath = defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') : '';
+        $routeByRole = [
+            'admin' => '/admin/dashboard.php',
+            'worker' => '/worker/dashboard.php',
+            'dashboard' => '/dashboard/dashboard.php',
+        ];
+
+        $navRole = 'dashboard';
+        if (function_exists('auth_resolve_navigation_role')) {
+            $navRole = auth_resolve_navigation_role(current_user());
+        } else {
+            $user = current_user();
+            $sessionRole = is_array($user) ? (string)($user['role'] ?? '') : '';
+            if ($sessionRole === 'admin' || $sessionRole === 'worker') {
+                $navRole = $sessionRole;
+            }
+        }
+
+        return $basePath . ($routeByRole[$navRole] ?? '/dashboard/dashboard.php');
+    }
+}
+
+if (!function_exists('redirect_authenticated_user_to_dashboard')) {
+    /**
+     * Redirect authenticated users to dashboard landing page.
+     *
+     * @return void
+     */
+    function redirect_authenticated_user_to_dashboard() {
+        if (is_logged_in()) {
+            header('Location: ' . auth_dashboard_url());
+            exit;
+        }
+    }
+}
+
 /**
  * Enforce login for protected application routes.
  *
@@ -362,6 +405,39 @@ function auth_is_worker_like($user, $rbacCtx = []) {
     }
 
     return $roleCode !== '' && strpos($roleCode, 'site_') === 0;
+}
+
+if (!function_exists('auth_resolve_navigation_role')) {
+    /**
+     * Resolve effective navigation role for role-based sidebar rendering.
+     *
+     * Returns one of: admin, worker, dashboard.
+     *
+     * @param array|null $user
+     * @return string
+     */
+    function auth_resolve_navigation_role($user = null) {
+        if ($user === null) {
+            $user = current_user();
+        }
+
+        if (!is_array($user)) {
+            return 'dashboard';
+        }
+
+        $userId = (int)($user['id'] ?? 0);
+        $rbacCtx = $userId > 0 ? auth_get_user_rbac_context($userId) : [];
+
+        if (auth_is_admin_like($user, $rbacCtx)) {
+            return 'admin';
+        }
+
+        if (auth_is_worker_like($user, $rbacCtx)) {
+            return 'worker';
+        }
+
+        return 'dashboard';
+    }
 }
 
 /**

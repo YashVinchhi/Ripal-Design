@@ -1,6 +1,11 @@
 <?php
 
 require_once __DIR__ . '/../includes/init.php';
+$resetContent = function_exists('public_content_page_values') ? public_content_page_values('reset_password') : [];
+$ct = static function ($key, $default = '') use ($resetContent) {
+    return (string)($resetContent[$key] ?? $default);
+};
+
 $message = $_GET['message'] ?? '';
 $type = $_GET['type'] ?? '';
 $token = $_GET['token'] ?? '';
@@ -10,14 +15,14 @@ $showForm = true;
 $db = get_db();
 
 if (!($db instanceof PDO)) {
-    $message = 'Database connection unavailable. Please try later.';
+    $message = $ct('status_db_unavailable', 'Database connection unavailable. Please try later.');
     $type = 'error';
     $showForm = false;
 } elseif ($type === 'success' && $message !== '' && $token === '') {
     $showForm = false;
 } else {
     if ($token === '') {
-        $message = 'Invalid reset token.';
+        $message = $ct('status_invalid_token', 'Invalid reset token.');
         $type = 'error';
         $showForm = false;
     } else {
@@ -27,11 +32,11 @@ if (!($db instanceof PDO)) {
     }
 
     if ($showForm && $user === false) {
-        $message = 'Token not found.';
+        $message = $ct('status_token_not_found', 'Token not found.');
         $type = 'error';
         $showForm = false;
     } elseif ($showForm && strtotime((string) ($user['reset_token_expires'] ?? '')) <= time()) {
-        $message = 'Token has expired.';
+        $message = $ct('status_token_expired', 'Token has expired.');
         $type = 'error';
         $showForm = false;
     }
@@ -43,7 +48,7 @@ if (!($db instanceof PDO)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Pass word</title>
+    <title><?php echo esc($ct('page_title', 'Reset Password | Ripal Design')); ?></title>
     <style>
         :root {
             --bg-start: #f5f7ff;
@@ -206,30 +211,30 @@ if (!($db instanceof PDO)) {
 
 <body>
     <div class="reset-shell">
-        <h1>Reset Password</h1>
-        <p class="subtitle">Create a strong new password for your account.</p>
+        <h1><?php echo esc($ct('heading', 'Reset Password')); ?></h1>
+        <p class="subtitle"><?php echo esc($ct('subtitle', 'Create a strong new password for your account.')); ?></p>
         <?php if ($message !== ''): ?>
             <div class="status-message <?php echo ($type === 'success') ? 'status-success' : 'status-error'; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
             <?php if ($type === 'success'): ?>
                 <div class="login-link-wrap">
-                    <a class="login-link" href="./login.php">Go to Login Page</a>
+                    <a class="login-link" href="./login.php"><?php echo esc($ct('link_after_success', 'Go to Login Page')); ?></a>
                 </div>
             <?php endif; ?>
         <?php endif; ?>
         <?php if ($showForm): ?>
         <form method="post" action="./update_password.php" class="reset-form">
             <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
-            <label for="password">New Password:</label>
+            <label for="password"><?php echo esc($ct('label_new_password', 'New Password:')); ?></label>
             <div class="password-row">
-                <input type="password" id="password" name="password" placeholder="Enter your new password" data-validation="required strongPassword">
+                <input type="password" id="password" name="password" placeholder="<?php echo esc_attr($ct('placeholder_new_password', 'Enter your new password')); ?>" data-validation="required strongPassword">
                 
-                 <img src="./css/eye/eye_close.svg" alt="Show password" id="eyeicon1" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="Toggle password visibility">
+                  <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" id="eyeicon1" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>">
                 
             </div>
             <span id="password_error" class="text"></span>
-            <button type="submit">Reset Password</button>
+            <button type="submit"><?php echo esc($ct('button_reset', 'Reset Password')); ?></button>
         </form>
         <?php endif; ?>
     </div>
@@ -242,12 +247,14 @@ if (!($db instanceof PDO)) {
 
         const openSrc = './css/eye/eye_open.svg';
         const closeSrc = './css/eye/eye_close.svg';
+        const showLabel = <?php echo json_encode($ct('toggle_show_alt', 'Show password')); ?>;
+        const hideLabel = <?php echo json_encode($ct('toggle_hide_alt', 'Hide password')); ?>;
 
         function updateToggleState() {
             const isVisible = input.type === 'text';
             icon.src = isVisible ? openSrc : closeSrc;
-            icon.alt = isVisible ? 'Hide password' : 'Show password';
-            icon.setAttribute('aria-label', isVisible ? 'Hide password' : 'Show password');
+            icon.alt = isVisible ? hideLabel : showLabel;
+            icon.setAttribute('aria-label', isVisible ? hideLabel : showLabel);
         }
 
         function togglePassword() {

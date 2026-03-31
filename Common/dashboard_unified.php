@@ -92,6 +92,10 @@ if ($userInitials === '') {
     $userInitials = 'RD';
 }
 
+$profileUrl = function_exists('base_path')
+  ? base_path('dashboard/profile.php')
+  : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
+
 $projects = [];
 $workers = [];
 $pendingApprovals = 0;
@@ -204,6 +208,7 @@ $actionCards = [
 if ($isAdmin) {
     $actionCards[] = ['label' => 'User Controls', 'href' => base_path('admin/user_management.php'), 'icon' => 'user-cog'];
     $actionCards[] = ['label' => 'Portfolio', 'href' => base_path('admin/project_management.php'), 'icon' => 'folder-kanban'];
+  $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-pen-line'];
 }
 
 if ($isWorker) {
@@ -236,9 +241,14 @@ if ($isWorker) {
           Role: <?php echo esc($roleDisplayName); ?> &middot; Group: <?php echo esc($groupDisplayName); ?> &middot; <?php echo esc($badge); ?>
         </p>
       </div>
-      <div class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner">
+      <a
+        href="<?php echo esc_attr($profileUrl); ?>"
+        class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner no-underline text-white hover:bg-[#7f140a] transition-colors"
+        aria-label="Open profile settings"
+        title="Open Profile"
+      >
         <?php echo esc($userInitials); ?>
-      </div>
+      </a>
     </div>
   </header>
 

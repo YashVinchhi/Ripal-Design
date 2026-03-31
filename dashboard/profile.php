@@ -94,6 +94,12 @@ if (empty($user_data['joined_date'])) {
     $user_data['joined_date'] = date('Y-m-d');
 }
 
+// Normalize nullable DB fields to strings to avoid deprecation warnings in output helpers.
+$profile_string_fields = ['username', 'full_name', 'email', 'phone', 'role', 'address', 'city', 'state', 'zip'];
+foreach ($profile_string_fields as $field) {
+    $user_data[$field] = (string)($user_data[$field] ?? '');
+}
+
 $message = '';
 $message_type = '';
 

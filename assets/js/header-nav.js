@@ -71,6 +71,14 @@
     
     // Toggle menu on button click
     btn.addEventListener('click', toggleMenu);
+
+    // Close menu when any panel link is clicked while allowing normal navigation.
+    var panelLinks = overlay.querySelectorAll('.alt-panel nav a, .alt-panel .panel-footer a');
+    Array.prototype.forEach.call(panelLinks, function(link) {
+        link.addEventListener('click', function() {
+            closeMenu();
+        });
+    });
     
     // Close when clicking outside the panel
     overlay.addEventListener('click', function(e) {

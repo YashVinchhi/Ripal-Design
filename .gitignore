@@ -35,3 +35,7 @@ issues.md
 .idea/vcs.xml
 .idea/inspectionProfiles/Project_Default.xml
 logs/contact_messages.log
+UI_issues.md
+.copilot/skills/ui-psychology-redesign/SKILL.md
+.github/agents/ui-theme-sync-fixer.agent.md
+.github/agents/ui-ux-issues-auditor.agent.md

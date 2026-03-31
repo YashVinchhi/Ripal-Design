@@ -25,6 +25,14 @@ if (session_status() === PHP_SESSION_NONE) {
 // Determine header mode (can be set by including page)
 $headerMode = $HEADER_MODE ?? 'public';
 
+$headerContent = function_exists('public_content_page_values') ? public_content_page_values('common_header') : [];
+$headerText = static function ($key, $default = '') use ($headerContent) {
+    return (string)($headerContent[$key] ?? $default);
+};
+$dashboardProfileUrl = function_exists('base_path')
+    ? base_path('dashboard/profile.php')
+    : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
+
 // Find and include the main stylesheet
 $stylesheetCandidates = [
     '/public/css/index.css',
@@ -102,7 +110,7 @@ foreach ($stylesheetCandidates as $candidate) {
     <div class="alt-logo">
         <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php" class="flex items-center gap-3 no-underline">
             <img src="<?php echo esc_attr(BASE_PATH); ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10">
-            <span class="text-white font-serif font-bold text-xl tracking-tight">Ripal Design</span>
+            <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo esc($headerText('brand_name', 'Ripal Design')); ?></span>
         </a>
     </div>
     
@@ -124,32 +132,64 @@ foreach ($stylesheetCandidates as $candidate) {
 
         <nav>
             <?php if ($headerMode === 'dashboard'): ?>
-                <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Dashboard</strong>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php">Dashboard Home</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/project_details.php">Project Details</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/profile.php">Profile Settings</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/review_requests.php">Review Requests</a>
+                <?php
+                    $navRole = 'dashboard';
+                    if (function_exists('auth_resolve_navigation_role') && function_exists('current_user')) {
+                        $navRole = auth_resolve_navigation_role(current_user());
+                    } elseif (function_exists('current_user')) {
+                        $fallbackUser = current_user();
+                        $fallbackRole = is_array($fallbackUser) ? strtolower((string)($fallbackUser['role'] ?? '')) : '';
+                        if ($fallbackRole === 'admin' || $fallbackRole === 'worker') {
+                            $navRole = $fallbackRole;
+                        }
+                    }
 
-                <hr class="border-white/10 my-4 mx-4">
-                <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Worker Portal</strong>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php">Worker Dashboard</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/assigned_projects.php">Assigned Projects</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/project_details.php">Project Details</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/worker/worker_rating.php">My Ratings</a>
+                    $menuSections = [
+                        'dashboard' => [
+                            'title' => $headerText('dashboard_section_title', 'Dashboard'),
+                            'links' => [
+                                ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('dashboard_link_home', 'Dashboard Home')],
+                                ['href' => BASE_PATH . '/dashboard/project_details.php', 'label' => $headerText('dashboard_link_project_details', 'Project Details')],
+                                ['href' => $dashboardProfileUrl, 'label' => $headerText('dashboard_link_profile', 'Profile Settings')],
+                                ['href' => BASE_PATH . '/dashboard/review_requests.php', 'label' => $headerText('dashboard_link_reviews', 'Review Requests')],
+                            ],
+                        ],
+                        'worker' => [
+                            'title' => $headerText('worker_section_title', 'Worker Portal'),
+                            'links' => [
+                                ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('worker_link_dashboard', 'Worker Dashboard')],
+                                ['href' => BASE_PATH . '/worker/assigned_projects.php', 'label' => $headerText('worker_link_assigned_projects', 'Assigned Projects')],
+                                ['href' => BASE_PATH . '/worker/project_details.php', 'label' => $headerText('worker_link_project_details', 'Project Details')],
+                                ['href' => BASE_PATH . '/worker/worker_rating.php', 'label' => $headerText('worker_link_ratings', 'My Ratings')],
+                            ],
+                        ],
+                        'admin' => [
+                            'title' => $headerText('admin_section_title', 'Administration'),
+                            'links' => [
+                                ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('admin_link_dashboard', 'Admin Dashboard')],
+                                ['href' => BASE_PATH . '/admin/project_management.php', 'label' => $headerText('admin_link_project_portfolio', 'Project Portfolio')],
+                                ['href' => BASE_PATH . '/admin/user_management.php', 'label' => $headerText('admin_link_user_controls', 'User Controls')],
+                                ['href' => BASE_PATH . '/admin/leave_management.php', 'label' => $headerText('admin_link_leave_manager', 'Leave Manager')],
+                                ['href' => BASE_PATH . '/admin/payment_gateway.php', 'label' => $headerText('admin_link_financial_gateway', 'Financial Gateway')],
+                                ['href' => BASE_PATH . '/admin/content_management.php', 'label' => $headerText('admin_link_content_manager', 'Content Manager')],
+                            ],
+                        ],
+                    ];
 
-                <hr class="border-white/10 my-4 mx-4">
-                <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4">Administration</strong>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php">Admin Dashboard</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/project_management.php">Project Portfolio</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/user_management.php">User Controls</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/leave_management.php">Leave Manager</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/admin/payment_gateway.php">Financial Gateway</a>
+                    $activeSection = $menuSections[$navRole] ?? $menuSections['dashboard'];
+                ?>
+                <?php if (!empty($activeSection['title'])): ?>
+                    <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo esc((string)$activeSection['title']); ?></strong>
+                <?php endif; ?>
+                <?php foreach (($activeSection['links'] ?? []) as $link): ?>
+                    <a href="<?php echo esc_attr((string)($link['href'] ?? '')); ?>"><?php echo esc((string)($link['label'] ?? '')); ?></a>
+                <?php endforeach; ?>
             <?php else: ?>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php">Home</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/services.php">Services</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/project_view.php">Projects</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/about_us.php">About</a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php">Contact</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php"><?php echo esc($headerText('menu_home', 'Home')); ?></a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/services.php"><?php echo esc($headerText('menu_services', 'Services')); ?></a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/project_view.php"><?php echo esc($headerText('menu_projects', 'Projects')); ?></a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/about_us.php"><?php echo esc($headerText('menu_about', 'About')); ?></a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php"><?php echo esc($headerText('menu_contact', 'Contact')); ?></a>
             <?php endif; ?>
         </nav>
   
@@ -158,12 +198,12 @@ foreach ($stylesheetCandidates as $candidate) {
         <div class="panel-footer">
             <?php if (is_logged_in()): ?>
                 <?php if ($headerMode !== 'dashboard'): ?>
-                    <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php" class="btn-alt btn-login">Dashboard</a>
+                    <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php" class="btn-alt btn-login"><?php echo esc($headerText('btn_dashboard', 'Dashboard')); ?></a>
                 <?php endif; ?>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>">Logout</a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo esc($headerText('btn_logout', 'Logout')); ?></a>
             <?php else: ?>
-                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login">Login</a>
-                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/signup.php" class="btn-alt btn-signup">Sign Up</a>
+                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login"><?php echo esc($headerText('btn_login', 'Login')); ?></a>
+                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/signup.php" class="btn-alt btn-signup"><?php echo esc($headerText('btn_signup', 'Sign Up')); ?></a>
             <?php endif; ?>
         </div>
     </div>

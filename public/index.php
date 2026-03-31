@@ -1,9 +1,18 @@
 <!doctype html>
 <?php require_once __DIR__ . '/../includes/init.php'; ?>
 <?php
+if (function_exists('redirect_authenticated_user_to_dashboard')) {
+    redirect_authenticated_user_to_dashboard();
+}
+
+$indexContent = function_exists('public_content_page_values') ? public_content_page_values('index') : [];
+$ct = static function ($key, $default = '') use ($indexContent) {
+    return (string)($indexContent[$key] ?? $default);
+};
+
 $featuredProjects = db_connected() ? db_fetch_all('SELECT name, COALESCE(location, "") AS location FROM projects ORDER BY created_at DESC LIMIT 4') : [];
 for ($i = count($featuredProjects); $i < 4; $i++) {
-    $featuredProjects[] = ['name' => 'Project', 'location' => ''];
+    $featuredProjects[] = ['name' => $ct('fallback_project_name', 'Project'), 'location' => ''];
 }
 ?>
 <html lang="en">
@@ -11,7 +20,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Home | Ripal Design</title>
+    <title><?php echo esc($ct('page_title', 'Home | Ripal Design')); ?></title>
     <link rel="stylesheet" href="./css/index.css">
 </head>
 
@@ -26,14 +35,14 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
         <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
             <div class="hero-overlay"></div>
             <div class="position-relative z-2 text-center container px-4">
-                <span class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;">Est. 2017</span>
-                <h1 class="display-1 mb-4">The Architect's Vision</h1>
+                <span class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
+                <h1 class="display-1 mb-4"><?php echo esc($ct('hero_heading', "The Architect's Vision")); ?></h1>
                 <p class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
-                    Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.
+                    <?php echo esc($ct('hero_subheading', 'Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.')); ?>
                 </p>
                 <div class="mt-5 pt-4">
                     <div class="vstack gap-2 align-items-center">
-                        <span class="tracking-architect opacity-50">Discovery</span>
+                        <span class="tracking-architect opacity-50"><?php echo esc($ct('hero_hint', 'Discovery')); ?></span>
                     </div>
                 </div>
             </div>
@@ -44,10 +53,10 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             <div class="container" style="max-width: 100vw;">
                 <div class="carousel" id="projectsCarousel">
                     <div class="carousel-track" id="projectsTrack">
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" alt="P1"></div>
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg" alt="P2"></div>
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" alt="P3"></div>
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" alt="P4"></div>
+                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" alt="<?php echo esc_attr($ct('carousel_alt_1', 'Project image 1')); ?>"></div>
+                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg" alt="<?php echo esc_attr($ct('carousel_alt_2', 'Project image 2')); ?>"></div>
+                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" alt="<?php echo esc_attr($ct('carousel_alt_3', 'Project image 3')); ?>"></div>
+                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" alt="<?php echo esc_attr($ct('carousel_alt_4', 'Project image 4')); ?>"></div>
                     </div>
                     <button class="carousel-button" id="projectsPrev" style="left:12px"><span class="material-symbols-outlined">&lt; </span></button>
                     <button class="carousel-button" id="projectsNext" style="right:12px"><span class="material-symbols-outlined">&gt; </span></button>
@@ -60,16 +69,16 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             <div class="container py-5">
                 <div class="row gx-lg-5 align-items-center">
                     <div class="col-lg-5 mb-5 mb-lg-0">
-                        <h2 class="display-3 mb-4">Duality in<br><span class="text-primary-brand">Execution</span></h2>
+                        <h2 class="display-3 mb-4"><?php echo esc($ct('story_heading_line', 'Duality in')); ?><br><span class="text-primary-brand"><?php echo esc($ct('story_heading_highlight', 'Execution')); ?></span></h2>
                         <div style="width: 40px; height: 1px; background: var(--primary);" class="mb-3"></div>
-                        <p class="tracking-architect opacity-75">The Ripal Approach</p>
+                        <p class="tracking-architect opacity-75"><?php echo esc($ct('story_kicker', 'The Ripal Approach')); ?></p>
                     </div>
                     <div class="col-lg-7">
                         <p class="lead text-white-50 mb-4" style="font-size: 1.4rem; font-weight: 300;">
-                            Founded by two brothers - A Designer and A Builder, we bridge creative ambition with practical delivery.
+                            <?php echo esc($ct('story_intro', 'Founded by two brothers - A Designer and A Builder, we bridge creative ambition with practical delivery.')); ?>
                         </p>
                         <p class="text-white-50">
-                            Our combined experience across municipal, institutional, and private works ensures designs that stand up to real-world constraints while remaining beautiful and timeless. We eliminate the gap between concept and creation by controlling the measure of every detail.
+                            <?php echo esc($ct('story_body', 'Our combined experience across municipal, institutional, and private works ensures designs that stand up to real-world constraints while remaining beautiful and timeless. We eliminate the gap between concept and creation by controlling the measure of every detail.')); ?>
                         </p>
                     </div>
                 </div>
@@ -81,7 +90,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             <!-- Project 1 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" alt="Obsidian Mono" >
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_1', 'Featured project image 1')); ?>" >
                 </div>
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
@@ -89,10 +98,10 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[0]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            A masterpiece of modern residential architecture in the heart of Rajkot, <br>redefining spatial excellence through minimalist precision.
+                            <?php echo nl2br(esc($ct('project_1_description', 'A masterpiece of modern residential architecture in the heart of Rajkot, redefining spatial excellence through minimalist precision.'))); ?>
                         </p>
                         <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
-                            <span class="me-2">View Project</span>
+                            <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
                     </div>
@@ -107,23 +116,23 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[1]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            A landmark in Jam Khambhalia, bridging the gap between <br> Tradition and contemporary living with breathable structure.
+                            <?php echo nl2br(esc($ct('project_2_description', 'A landmark in Jam Khambhalia, bridging the gap between Tradition and contemporary living with breathable structure.'))); ?>
                         </p>
                         <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
-                            <span class="me-2">View Project</span>
+                            <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
                     </div>
                 </div>
                 <div class="project-showcase-image project-image-right">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" alt="Oasis Pavilion">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_2', 'Featured project image 2')); ?>">
                 </div>
             </div>
 
             <!-- Project 3 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" alt="Vertical Zen">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_3', 'Featured project image 3')); ?>">
                 </div>
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
@@ -131,10 +140,10 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[2]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            State-of-the-art Multi-Institutional System integrated <br>into Rajkot's burgeoning urban landscape.
+                            <?php echo nl2br(esc($ct('project_3_description', "State-of-the-art Multi-Institutional System integrated into Rajkot's burgeoning urban landscape."))); ?>
                         </p>
                         <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
-                            <span class="me-2">View Project</span>
+                            <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
                     </div>
@@ -149,16 +158,16 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[3]['name']); ?></h2>
                         <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
-                            Industrial refinement meeting contemporary <br> aesthetics in the heart of India's ceramic capital.
+                            <?php echo nl2br(esc($ct('project_4_description', "Industrial refinement meeting contemporary aesthetics in the heart of India's ceramic capital."))); ?>
                         </p>
                         <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
-                            <span class="me-2">View Project</span>
+                            <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
                     </div>
                 </div>
                 <div class="project-showcase-image project-image-right">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" alt="Loft VII">
+                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_4', 'Featured project image 4')); ?>">
                 </div>
             </div>
         </section>
@@ -169,9 +178,9 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                 <!-- Section Header -->
                 <div class="row mb-5">
                     <div class="col-lg-8 mx-auto text-center">
-                        <h2 class="display-3 mb-4">Client Perspectives</h2>
+                        <h2 class="display-3 mb-4"><?php echo esc($ct('testimonials_heading', 'Client Perspectives')); ?></h2>
                         <div style="width: 60px; height: 1px; background: var(--primary); margin: 0 auto;" class="mb-3"></div>
-                        <p class="tracking-architect text-white-50">Voices from our collaborative journey</p>
+                        <p class="tracking-architect text-white-50"><?php echo esc($ct('testimonials_subheading', 'Voices from our collaborative journey')); ?></p>
                     </div>
                 </div>
 
@@ -182,19 +191,19 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
                                 <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg"
-                                    alt="Project"
+                                    alt="<?php echo esc_attr($ct('testimonial_image_alt_1', 'Client project 1')); ?>"
                                     class="w-100 h-100 object-fit-cover"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
                                 <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
-                                    "The surgical precision of their design language transformed our site into a masterpiece of modern architecture."
+                                    "<?php echo esc($ct('testimonial_1_quote', 'The surgical precision of their design language transformed our site into a masterpiece of modern architecture.')); ?>"
                                 </p>
                             </blockquote>
                             <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
-                                <h6 class="text-white fw-bold mb-1">Amitbhai Patel</h6>
+                                <h6 class="text-white fw-bold mb-1"><?php echo esc($ct('testimonial_1_name', 'Amitbhai Patel')); ?></h6>
                                 <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
-                                    Chairman, Rajkot Realty Group
+                                    <?php echo esc($ct('testimonial_1_role', 'Chairman, Rajkot Realty Group')); ?>
                                 </p>
                             </div>
                         </div>
@@ -205,19 +214,19 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
                                 <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg"
-                                    alt="Project"
+                                    alt="<?php echo esc_attr($ct('testimonial_image_alt_2', 'Client project 2')); ?>"
                                     class="w-100 h-100 object-fit-cover"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
                                 <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
-                                    "They pushed the boundaries of what we thought was possible, creating a space that feels both Intimate and Grand."
+                                    "<?php echo esc($ct('testimonial_2_quote', 'They pushed the boundaries of what we thought was possible, creating a space that feels both Intimate and Grand.')); ?>"
                                 </p>
                             </blockquote>
                             <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
-                                <h6 class="text-white fw-bold mb-1">Anilbhai Sharma</h6>
+                                <h6 class="text-white fw-bold mb-1"><?php echo esc($ct('testimonial_2_name', 'Anilbhai Sharma')); ?></h6>
                                 <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
-                                    Founder, Khambhalia Arts
+                                    <?php echo esc($ct('testimonial_2_role', 'Founder, Khambhalia Arts')); ?>
                                 </p>
                             </div>
                         </div>
@@ -228,19 +237,19 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
                                 <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg"
-                                    alt="Project"
+                                    alt="<?php echo esc_attr($ct('testimonial_image_alt_3', 'Client project 3')); ?>"
                                     class="w-100 h-100 object-fit-cover"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
                                 <p class="fst-italic text-white-50 fs-5 lh-base" style="font-family: 'Cormorant Garamond', serif;">
-                                    "Deeply committed to sustainability without compromising on aesthetic excellence. Truly leaders in the new era."
+                                    "<?php echo esc($ct('testimonial_3_quote', 'Deeply committed to sustainability without compromising on aesthetic excellence. Truly leaders in the new era.')); ?>"
                                 </p>
                             </blockquote>
                             <div class="pt-4 border-top" style="border-color: var(--primary) !important;">
-                                <h6 class="text-white fw-bold mb-1">Sureshbhai</h6>
+                                <h6 class="text-white fw-bold mb-1"><?php echo esc($ct('testimonial_3_name', 'Sureshbhai')); ?></h6>
                                 <p class="text-uppercase tracking-architect mb-0" style="font-size: 0.7rem; color: var(--primary); letter-spacing: 0.15em;">
-                                    Director, Regional Urban Planning
+                                    <?php echo esc($ct('testimonial_3_role', 'Director, Regional Urban Planning')); ?>
                                 </p>
                             </div>
                         </div>

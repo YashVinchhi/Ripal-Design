@@ -6,6 +6,17 @@ if (session_status() === PHP_SESSION_NONE) {
     @session_start();
 }
 
+$ct = static function ($key, $default = '') {
+    if (function_exists('public_content_get')) {
+        return public_content_get('login_register', $key, $default);
+    }
+    return (string)$default;
+};
+
+$renderTemplate = static function ($template, array $vars = []) {
+    return strtr((string)$template, $vars);
+};
+
 function post_login_redirect_url(array $user): string
 {
     if (!empty($_SESSION['redirect_after_login'])) {
@@ -54,10 +65,10 @@ function generate_unique_username(PDO $db, string $firstName, string $lastName):
 $db = get_db();
 if (!($db instanceof PDO)) {
     if (isset($_POST['signup'])) {
-        signup_error_and_redirect('Database connection unavailable. Please try later.');
+        signup_error_and_redirect($ct('db_unavailable', 'Database connection unavailable. Please try later.'));
     }
     if (isset($_POST['login'])) {
-        login_error_and_redirect('Database connection unavailable. Please try later.');
+        login_error_and_redirect($ct('db_unavailable', 'Database connection unavailable. Please try later.'));
     }
     header('Location: login.php');
     exit();
@@ -72,22 +83,22 @@ if (isset($_POST['signup'])) {
     $confirm_password = (string) ($_POST['confirmPassword'] ?? '');
 
     if ($first_name === '' || $last_name === '' || $email === '' || $user_password === '') {
-        signup_error_and_redirect('Please fill all required fields.');
+        signup_error_and_redirect($ct('signup_required_fields', 'Please fill all required fields.'));
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        signup_error_and_redirect('Please enter a valid email address.');
+        signup_error_and_redirect($ct('signup_invalid_email', 'Please enter a valid email address.'));
     }
 
     if ($confirm_password !== '' && $user_password !== $confirm_password) {
-        signup_error_and_redirect('Password and confirm password do not match.');
+        signup_error_and_redirect($ct('signup_password_mismatch', 'Password and confirm password do not match.'));
     }
 
     try {
         $chk = $db->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
         $chk->execute([$email]);
         if ($chk->fetch(PDO::FETCH_ASSOC)) {
-            signup_error_and_redirect('Email already exists. Please use a different email.');
+            signup_error_and_redirect($ct('signup_email_exists', 'Email already exists. Please use a different email.'));
         }
 
         $passwordHash = password_hash($user_password, PASSWORD_DEFAULT);
@@ -112,7 +123,7 @@ if (isset($_POST['signup'])) {
             'name' => $fullName,
         ];
         $_SESSION['user_id'] = $user_id;
-        $_SESSION['login_success'] = 'Account created successfully.';
+        $_SESSION['login_success'] = $ct('signup_success', 'Account created successfully.');
 
         // If user asked to be remembered, create persistent token
         if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
@@ -128,14 +139,23 @@ if (isset($_POST['signup'])) {
             if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
                 // clear any pre-set recipients/content from mailer.php
                 $mail->clearAddresses();
-                $from = 'dudhaiyarachit45@gmail.com' ?: 'dudhaiyarachit45@gmail.com ' ?: 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-                $fromName = 'Ripal Design' ?: 'Ripal Design';
+                $from = 'dudhaiyarachit45@gmail.com' ?: 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+                $fromName = $ct('signup_welcome_from_name', 'Ripal Design');
                 $mail->setFrom($from, $fromName);
                 $mail->addAddress($email, $fullName);
                 $mail->isHTML(true);
-                $mail->Subject = 'Registration Successful — Ripal Design';
-                $mail->Body = '<h3>Registration Successful</h3><p>Hi ' . htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8') . ',</p><p>Your account was created successfully. You can now log in and start using Ripal Design.</p>';
-                $mail->AltBody = 'Hi ' . $first_name . ', your account was created successfully. Login at ' . (BASE_URL . PUBLIC_PATH_PREFIX . '/login.php');
+                $mail->Subject = $ct('signup_welcome_subject', 'Registration Successful - Ripal Design');
+                $mail->Body = $renderTemplate(
+                    $ct('signup_welcome_html', '<h3>Registration Successful</h3><p>Hi {{first_name}},</p><p>Your account was created successfully. You can now log in and start using Ripal Design.</p>'),
+                    ['{{first_name}}' => htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8')]
+                );
+                $mail->AltBody = $renderTemplate(
+                    $ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created successfully. Login at {{login_url}}'),
+                    [
+                        '{{first_name}}' => $first_name,
+                        '{{login_url}}' => (BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'),
+                    ]
+                );
                 try {
                     $mail->send();
                 } catch (Exception $em) {
@@ -150,7 +170,7 @@ if (isset($_POST['signup'])) {
         exit();
     } catch (Exception $e) {
         error_log('Signup failed: ' . $e->getMessage());
-        signup_error_and_redirect('Failed to create account. Please try again.');
+        signup_error_and_redirect($ct('signup_failed', 'Failed to create account. Please try again.'));
     }
 }
 
@@ -159,7 +179,7 @@ if (isset($_POST['login'])) {
     $user_password = (string)($_POST['password'] ?? '');
 
     if ($email === '' || $user_password === '') {
-        login_error_and_redirect('Please enter email and password.');
+        login_error_and_redirect($ct('login_missing_credentials', 'Please enter email and password.'));
     }
 
     // Try primary users table via PDO
@@ -170,7 +190,7 @@ if (isset($_POST['login'])) {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($user && !empty($user['password_hash']) && password_verify($user_password, $user['password_hash'])) {
                 if (($user['status'] ?? 'active') !== 'active') {
-                    login_error_and_redirect('Your account is not active. Please contact admin.');
+                    login_error_and_redirect($ct('login_inactive_account', 'Your account is not active. Please contact admin.'));
                 }
 
                 $first = (string)($user['first_name'] ?? '');
@@ -225,7 +245,7 @@ if (isset($_POST['login'])) {
         error_log('Legacy login failed: ' . $e->getMessage());
     }
 
-    login_error_and_redirect('Invalid email or password.');
+    login_error_and_redirect($ct('login_invalid_credentials', 'Invalid email or password.'));
 }
 
 // End of login/register processor

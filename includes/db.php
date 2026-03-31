@@ -12,7 +12,8 @@
  */
 
 // Load database credentials from environment or sql/config.php, with sensible defaults
-$DB_HOST = getenv('DB_HOST') ?: 'localhost';
+$envHost = getenv('DB_HOST');
+$DB_HOST = $envHost ?: 'localhost';
 $DB_NAME = getenv('DB_NAME') ?: 'Ripal-Design';
 $DB_USER = getenv('DB_USER') ?: 'root';
 $DB_PASS = getenv('DB_PASS') ?: '';

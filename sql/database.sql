@@ -225,6 +225,21 @@ CREATE TABLE IF NOT EXISTS services (
   updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS public_page_content (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  page_slug VARCHAR(100) NOT NULL,
+  section_key VARCHAR(150) NOT NULL,
+  content_value MEDIUMTEXT DEFAULT NULL,
+  content_format ENUM('plain','html') NOT NULL DEFAULT 'plain',
+  updated_by INT DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_public_page_content (page_slug, section_key),
+  INDEX idx_public_page_slug (page_slug),
+  INDEX idx_public_page_updated_by (updated_by),
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -476,6 +491,7 @@ INSERT IGNORE INTO dashboard_modules (code, name, route) VALUES
 ('admin_dashboard', 'Admin Dashboard', '/admin/dashboard.php'),
 ('project_management', 'Project Management', '/admin/project_management.php'),
 ('user_management', 'User Management', '/admin/user_management.php'),
+('content_management', 'Content Manager', '/admin/content_management.php'),
 ('leave_management', 'Leave Management', '/admin/leave_management.php'),
 ('review_requests', 'Review Requests', '/dashboard/review_requests.php'),
 ('project_details', 'Project Details', '/dashboard/project_details.php'),

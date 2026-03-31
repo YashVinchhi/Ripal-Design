@@ -1,10 +1,17 @@
+<?php
+require_once __DIR__ . '/../includes/init.php';
+$servicesContent = function_exists('public_content_page_values') ? public_content_page_values('services') : [];
+$ct = static function ($key, $default = '') use ($servicesContent) {
+  return (string)($servicesContent[$key] ?? $default);
+};
+?>
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Services | Ripal Design</title>
+  <title><?php echo esc($ct('page_title', 'Services | Ripal Design')); ?></title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,21 +26,21 @@
 <body class="bg-[#050505] text-white overflow-x-hidden">
   <div class="grain"></div>
 
-  <?php require_once __DIR__ . '/../includes/header.php'; ?>
+  <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
 
   <main class="relative min-h-screen pb-20">
     <!-- Hero Section -->
     <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
       <div class="hero-overlay"></div>
       <div class="position-relative z-2 text-center container px-4">
-        <span class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;">Est. 2017</span>
-        <h1 class="display-1 mb-4">The Architect's Vision</h1>
+        <span class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
+        <h1 class="display-1 mb-4"><?php echo esc($ct('hero_heading', "The Architect's Vision")); ?></h1>
         <p class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
-          Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.
+          <?php echo esc($ct('hero_subheading', 'Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.')); ?>
         </p>
         <div class="mt-5 pt-4">
           <div class="vstack gap-2 align-items-center">
-            <span class="tracking-architect opacity-50">Discovery</span>
+            <span class="tracking-architect opacity-50"><?php echo esc($ct('hero_hint', 'Discovery')); ?></span>
           </div>
         </div>
       </div>
@@ -45,36 +52,36 @@
         <!-- Left: Service List -->
         <div class="w-full lg:w-5/12 flex flex-col justify-center space-y-8 z-10 py-10">
           <div class="mb-12">
-            <span class="text-[#731209] tracking-[0.2em] text-sm uppercase font-semibold">Our Expertise</span>
-            <h1 class="text-5xl md:text-6xl serif mt-4 leading-tight">Crafting Spaces<br>With Purpose.</h1>
+            <span class="text-[#731209] tracking-[0.2em] text-sm uppercase font-semibold"><?php echo esc($ct('section_kicker', 'Our Expertise')); ?></span>
+            <h1 class="text-5xl md:text-6xl serif mt-4 leading-tight"><?php echo esc($ct('section_heading_line_1', 'Crafting Spaces')); ?><br><?php echo esc($ct('section_heading_line_2', 'With Purpose.')); ?></h1>
           </div>
 
           <div class="space-y-6" id="serviceList">
             <div class="service-item active group pl-6" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg">
-              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors">Architectural Planning</h3>
+              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_1_title', 'Architectural Planning')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
-                Comprehensive master planning and structural design that balances aesthetics with functionality.
+                <?php echo esc($ct('service_1_description', 'Comprehensive master planning and structural design that balances aesthetics with functionality.')); ?>
               </p>
             </div>
 
             <div class="service-item pl-6 group" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg">
-              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors">Interior Design</h3>
+              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_2_title', 'Interior Design')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
-                Curating internal environments that evoke emotion through texture, light, and material.
+                <?php echo esc($ct('service_2_description', 'Curating internal environments that evoke emotion through texture, light, and material.')); ?>
               </p>
             </div>
 
             <div class="service-item pl-6 group" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg">
-              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors">Landscape Architecture</h3>
+              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_3_title', 'Landscape Architecture')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
-                Harmonizing built structures with the natural environment for sustainable outdoor living.
+                <?php echo esc($ct('service_3_description', 'Harmonizing built structures with the natural environment for sustainable outdoor living.')); ?>
               </p>
             </div>
 
             <div class="service-item pl-6 group" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg">
-              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors">Project Management</h3>
+              <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_4_title', 'Project Management')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
-                End-to-end oversight ensuring precision in execution and adherence to timelines.
+                <?php echo esc($ct('service_4_description', 'End-to-end oversight ensuring precision in execution and adherence to timelines.')); ?>
               </p>
             </div>
           </div>
@@ -86,14 +93,14 @@
             <div id="imageDisplay" class="w-full h-full relative">
               <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg"
                 class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out scale-105"
-                alt="Architectural Service">
+                alt="<?php echo esc_attr($ct('hero_image_alt', 'Architectural service image')); ?>">
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             </div>
 
             <!-- Decoration Badge -->
             <div class="absolute bottom-10 right-10 border border-white/20 p-4 backdrop-blur-sm hidden md:block">
-              <span class="block text-xs uppercase tracking-widest mb-1 text-[#731209]">Ripal Design</span>
-              <span class="block text-2xl serif">2026 Collection</span>
+              <span class="block text-xs uppercase tracking-widest mb-1 text-[#731209]"><?php echo esc($ct('badge_brand', 'Ripal Design')); ?></span>
+              <span class="block text-2xl serif"><?php echo esc($ct('badge_label', '2026 Collection')); ?></span>
             </div>
           </div>
         </div>
@@ -105,6 +112,7 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const dynamicAlt = <?php echo json_encode($ct('dynamic_image_alt', 'Service image')); ?>;
       const listItems = document.querySelectorAll('.service-item');
       const displayContainer = document.getElementById('imageDisplay');
       let currentImg = displayContainer.querySelector('img');
@@ -120,7 +128,7 @@
           const newImg = document.createElement('img');
           newImg.src = newSrc;
           newImg.className = "absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0 scale-105";
-          newImg.alt = "Service Image";
+          newImg.alt = dynamicAlt;
 
           displayContainer.appendChild(newImg);
 
