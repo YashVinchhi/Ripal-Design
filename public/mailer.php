@@ -2,6 +2,22 @@
 $mailToken = isset($token) ? (string)$token : '';
 $link = 'https://localhost/ripal-design/public/reset_password.php?token=' . urlencode($mailToken);
 require_once __DIR__ . '/../vendor/autoload.php';
+
+// If Composer autoloader doesn't provide PHPMailer, fall back to the bundled src/ files.
+// This keeps compatibility when vendor/ doesn't include phpmailer/phpmailer.
+if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+	$src = realpath(__DIR__ . '/../src');
+	if ($src && is_dir($src)) {
+		@require_once $src . '/Exception.php';
+		@require_once $src . '/PHPMailer.php';
+		@require_once $src . '/SMTP.php';
+		@require_once $src . '/POP3.php';
+		@require_once $src . '/OAuthTokenProvider.php';
+		@require_once $src . '/OAuth.php';
+		@require_once $src . '/DSNConfigurator.php';
+	}
+}
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
@@ -33,11 +49,11 @@ $mail->AltBody = $renderTemplate(
 );
 $mail->Host = 'smtp.gmail.com';
 $mail->SMTPAuth = true;
-$mail->Username ='dudhaiyarachit45@gmail.com';
-$mail->Password = 'mvwy brdi luvt wecd';
+$mail->Username ='yashhvinchhi@gmail.com';
+$mail->Password = 'odoc sctf jtuf ejvv';
 $mail->SMTPSecure = 'tls';
 $mail->Port = 587;
-$mail->setFrom('dudhaiyarachit45@gmail.com', $ct('reset_from_name', 'Reset Password'));
+$mail->setFrom('yashhvinchhi@gmail.com', $ct('reset_from_name', 'Reset Password'));
 if (!empty($email)) {
 	$mail->addAddress($email);
 }

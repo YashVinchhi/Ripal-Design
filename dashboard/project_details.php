@@ -21,98 +21,6 @@ function formatDate($dateString) {
     return date('M d, Y', $date);
 }
 
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($pdo) && $pdo instanceof PDO) {
-    require_csrf();
-  $name = $_POST['name'] ?? '';
-  $status = $_POST['status'] ?? 'ongoing';
-  $budget = $_POST['budget'] ?? 0;
-  $progress = $_POST['progress'] ?? 0;
-  $due = $_POST['due'] ?? null;
-  $location = $_POST['location'] ?? '';
-  $ownerName = $_POST['owner_name'] ?? '';
-  $ownerContact = $_POST['owner_contact'] ?? '';
-  $ownerEmail = $_POST['owner_email'] ?? '';
-
-  if (empty($name)) {
-    $error = 'Project name is required';
-  } else {
-    try {
-      if ($projectId) {
-        // Update existing project
-        $stmt = $pdo->prepare('
-          UPDATE projects 
-          SET name = :name, status = :status, budget = :budget, 
-              progress = :progress, due = :due, location = :location, address = :location,
-              owner_name = :owner_name, owner_contact = :owner_contact, owner_email = :owner_email
-          WHERE id = :id
-        ');
-        $stmt->execute([
-          'id' => $projectId,
-          'name' => $name,
-          'status' => $status,
-          'budget' => $budget,
-          'progress' => $progress,
-          'due' => $due,
-          'location' => $location,
-          'owner_name' => $ownerName,
-          'owner_contact' => $ownerContact,
-          'owner_email' => $ownerEmail
-        ]);
-        $success = "Project updated successfully!";
-        
-        // Log activity
-        $activityStmt = $pdo->prepare('
-          INSERT INTO project_activity (project_id, user, action, item, created_at)
-          VALUES (:project_id, :user, :action, :item, NOW())
-        ');
-        $activityStmt->execute([
-          'project_id' => $projectId,
-          'user' => $_SESSION['user_name'] ?? 'Admin',
-          'action' => 'updated project',
-          'item' => 'Project details'
-        ]);
-      } else {
-        // Create new project
-        $stmt = $pdo->prepare('
-          INSERT INTO projects (name, status, budget, progress, due, location, address, owner_name, owner_contact, owner_email)
-          VALUES (:name, :status, :budget, :progress, :due, :location, :location, :owner_name, :owner_contact, :owner_email)
-        ');
-        $stmt->execute([
-          'name' => $name,
-          'status' => $status,
-          'budget' => $budget,
-          'progress' => $progress,
-          'due' => $due,
-          'location' => $location,
-          'owner_name' => $ownerName,
-          'owner_contact' => $ownerContact,
-          'owner_email' => $ownerEmail
-        ]);
-        $projectId = $pdo->lastInsertId();
-        
-        // Log activity for new project
-        $activityStmt = $pdo->prepare('
-          INSERT INTO project_activity (project_id, user, action, item, created_at)
-          VALUES (:project_id, :user, :action, :item, NOW())
-        ');
-        $activityStmt->execute([
-          'project_id' => $projectId,
-          'user' => $_SESSION['user_name'] ?? 'Admin',
-          'action' => 'created project',
-          'item' => $name
-        ]);
-        
-        header("Location: project_details.php?id=$projectId");
-        exit;
-      }
-        } catch (PDOException $e) {
-            error_log('Project details save error: ' . $e->getMessage());
-            $error = 'Unable to save project details right now.';
-    }
-  }
-}
-
 // Load project data
 $project = null;
 if ($projectId && isset($pdo) && $pdo instanceof PDO) {
@@ -724,6 +632,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
                         <form id="projectDetailsForm" method="post">
+                            <?php echo csrf_token_field(); ?>
                             <div class="p-6 space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div class="space-y-1">

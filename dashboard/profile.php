@@ -121,6 +121,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         if (db_connected() && $user_id > 0) {
             try {
                 $db = get_db();
+
+                // Handle optional avatar upload
+                if (isset($_FILES['avatar']) && is_array($_FILES['avatar']) && (int)($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                    $uploaded = $_FILES['avatar'];
+                    $originalName = (string)($uploaded['name'] ?? 'avatar');
+                    $tmpPath = (string)($uploaded['tmp_name'] ?? '');
+                    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                    $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+                    if ($ext !== '' && in_array($ext, $allowed, true)) {
+                        $safeBaseName = preg_replace('/[^A-Za-z0-9._-]+/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                        $safeBaseName = $safeBaseName !== '' ? $safeBaseName : 'avatar';
+
+                        $relativeDir = 'uploads/avatars/' . $user_id;
+                        $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+
+                        if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+                            // Directory creation failed; skip saving avatar
+                        } else {
+                            $storedName = $safeBaseName . '_' . time() . '_' . bin2hex(random_bytes(4));
+                            if ($ext !== '') $storedName .= '.' . $ext;
+
+                            $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
+                            if (move_uploaded_file($tmpPath, $absolutePath)) {
+                                $publicPath = rtrim((string)BASE_PATH, '/') . '/' . $relativeDir . '/' . $storedName;
+
+                                try {
+                                    // Ensure avatar column exists (safe for existing DBs)
+                                    $colStmt = $db->prepare("SHOW COLUMNS FROM users LIKE 'avatar'");
+                                    $colStmt->execute();
+                                    $has = (bool)$colStmt->fetch(PDO::FETCH_ASSOC);
+                                    if (!$has) {
+                                        $db->exec("ALTER TABLE users ADD COLUMN avatar VARCHAR(500) DEFAULT NULL");
+                                    }
+                                } catch (Exception $e) {
+                                    // Non-fatal: continue without altering schema
+                                }
+
+                                try {
+                                    $upd = $db->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+                                    $upd->execute([$publicPath, $user_id]);
+                                    $user_data['avatar'] = $publicPath;
+                                } catch (Exception $e) {
+                                    error_log('Failed to save avatar path: ' . $e->getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+
                 $stmt = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zip = ? WHERE id = ?");
                 $stmt->execute([$full_name, $email, $phone, $address, $city, $state, $zip, $user_id]);
                 $message = 'Profile updated successfully!';
@@ -215,9 +265,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 <!-- Left Sidebar: Profile Summary -->
                 <aside class="lg:col-span-4 space-y-8">
                     <div class="bg-white shadow-premium border border-gray-100 p-8 text-center">
-                        <div class="w-24 h-24 bg-rajkot-rust text-white font-serif text-4xl font-bold flex items-center justify-center mx-auto mb-6 shadow-lg">
-                            <?php echo strtoupper(substr($user_data['username'], 0, 1)); ?>
-                        </div>
+                        <?php if (!empty($user_data['avatar'])): ?>
+                            <img id="profileAvatarDisplay" src="<?php echo htmlspecialchars($user_data['avatar']); ?>" alt="Avatar" class="w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg">
+                        <?php else: ?>
+                            <div id="profileAvatarDisplay" class="w-24 h-24 bg-rajkot-rust text-white font-serif text-4xl font-bold flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                <?php echo strtoupper(substr($user_data['username'], 0, 1)); ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <form id="avatarFormSidebar" method="POST" enctype="multipart/form-data" class="mt-2">
+                            <?php echo csrf_token_field(); ?>
+                            <input type="hidden" name="update_profile" value="1">
+                            <input type="file" name="avatar" id="sidebarAvatarInput" accept="image/*" style="display:none">
+                            <button type="button" id="avatarEditBtn" title="Edit profile photo" class="mx-auto inline-flex items-center gap-2 px-3 py-1 border rounded text-sm text-gray-600 hover:bg-gray-50">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+
                         <h2 class="text-2xl font-serif font-bold mb-1"><?php echo htmlspecialchars($user_data['full_name']); ?></h2>
                         <p class="text-sm text-gray-400 mb-6 font-mono">@<?php echo htmlspecialchars($user_data['username']); ?></p>
                         
@@ -259,7 +323,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <div class="px-8 py-6 border-b border-gray-50">
                             <h3 class="text-xl font-serif font-bold">Personal Information</h3>
                         </div>
-                        <form method="POST" class="p-8 space-y-8">
+                        <form method="POST" enctype="multipart/form-data" class="p-8 space-y-8">
                             <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="update_profile" value="1">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -279,6 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">System Role</label>
                                     <input type="text" value="<?php echo strtoupper($user_data['role']); ?>" disabled class="w-full p-4 bg-gray-100 border border-gray-100 text-gray-400 text-sm font-bold opacity-50 cursor-not-allowed">
                                 </div>
+                                
                             </div>
                             
                             <div class="space-y-2">
@@ -337,6 +402,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 </div>
             </div>
         </main>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            var editBtn = document.getElementById('avatarEditBtn');
+            var fileInput = document.getElementById('sidebarAvatarInput');
+            var avatarElem = document.getElementById('profileAvatarDisplay');
+
+            if (editBtn && fileInput) {
+                editBtn.addEventListener('click', function(){
+                    fileInput.click();
+                });
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function(){
+                    var f = fileInput.files && fileInput.files[0];
+                    if (!f) return;
+                    var reader = new FileReader();
+                    reader.onload = function(ev){
+                        try {
+                            if (avatarElem && avatarElem.tagName === 'IMG') {
+                                avatarElem.src = ev.target.result;
+                            } else if (avatarElem) {
+                                var img = document.createElement('img');
+                                img.id = 'profileAvatarDisplay';
+                                img.className = 'w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg';
+                                img.src = ev.target.result;
+                                avatarElem.replaceWith(img);
+                            }
+                        } catch (e) {
+                            // ignore preview errors
+                        }
+                    };
+                    reader.readAsDataURL(f);
+
+                    // Auto-submit the small avatar form to persist on server
+                    var form = document.getElementById('avatarFormSidebar');
+                    if (form) form.submit();
+                });
+            }
+        });
+        </script>
 
         <?php require_once __DIR__ . '/../Common/footer.php'; ?>
     </div>

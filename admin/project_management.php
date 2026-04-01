@@ -16,10 +16,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
     $ownerEmail = trim((string)($_POST['client_email'] ?? ''));
 
     if ($name !== '' && db_connected()) {
-        db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?)', [
-            $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType,
+        // Insert project and capture new ID so we can attach an uploaded photo
+        $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
+            $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
         ]);
+
+        $projectId = 0;
+        $pdo = get_db();
+        if ($pdo instanceof PDO) {
+            $projectId = (int)$pdo->lastInsertId();
+        }
+
+        // Handle optional cover photo upload
+        if ($projectId > 0 && isset($_FILES['project_photo']) && is_array($_FILES['project_photo']) && (int)($_FILES['project_photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+            $uploaded = $_FILES['project_photo'];
+            $originalName = (string)($uploaded['name'] ?? 'photo');
+            $tmpPath = (string)($uploaded['tmp_name'] ?? '');
+            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if ($ext !== '' && in_array($ext, $allowed, true)) {
+                $safeBaseName = preg_replace('/[^A-Za-z0-9._-]+/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                $safeBaseName = $safeBaseName !== '' ? $safeBaseName : 'photo';
+
+                $relativeDir = 'uploads/projects/' . $projectId . '/files';
+                $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+
+                if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+                    // Directory creation failed; skip saving photo
+                } else {
+                    $storedName = $safeBaseName . '_' . time() . '_' . bin2hex(random_bytes(4));
+                    if ($ext !== '') $storedName .= '.' . $ext;
+
+                    $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
+                    if (move_uploaded_file($tmpPath, $absolutePath)) {
+                        $publicPath = rtrim((string)BASE_PATH, '/') . '/' . $relativeDir . '/' . $storedName;
+                        $sizeBytes = (int)($uploaded['size'] ?? 0);
+                        if ($sizeBytes < 1024) {
+                            $sizeLabel = $sizeBytes . ' B';
+                        } elseif ($sizeBytes < 1024 * 1024) {
+                            $sizeLabel = round($sizeBytes / 1024, 1) . ' KB';
+                        } else {
+                            $sizeLabel = round($sizeBytes / (1024 * 1024), 1) . ' MB';
+                        }
+
+                        db_query('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', [$projectId, $originalName, strtoupper($ext), $sizeLabel, $publicPath, $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System')]);
+                    }
+                }
+            }
+        }
     }
+
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
 }
@@ -98,6 +145,9 @@ $projects = get_projects_basic(200);
             <?php $pStatus = strtolower((string)($p['status'] ?? 'planning')); ?>
             <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Global" data-status="<?php echo htmlspecialchars($pStatus); ?>">
                 <div class="h-56 bg-foundation-grey relative overflow-hidden">
+                    <?php if (!empty($p['cover_image'])): ?>
+                        <img src="<?php echo htmlspecialchars((string)$p['cover_image']); ?>" alt="<?php echo htmlspecialchars((string)$p['name']); ?>" class="absolute inset-0 w-full h-full object-cover">
+                    <?php endif; ?>
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                        <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg"><?php echo htmlspecialchars(strtoupper($pStatus)); ?></span>
                        <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars((string)$p['name']); ?></h3>
@@ -150,7 +200,7 @@ $projects = get_projects_basic(200);
                 </button>
             </div>
             
-            <form method="post" class="p-10 space-y-8" id="ventureForm" onsubmit="handleVentureSubmit(event)">
+            <form method="post" enctype="multipart/form-data" class="p-10 space-y-8" id="ventureForm" onsubmit="handleVentureSubmit(event)">
                 <?php echo csrf_token_field(); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Client Details -->
@@ -195,6 +245,10 @@ $projects = get_projects_basic(200);
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Site Location (Rajkot/Gujarat)</label>
                             <textarea name="project_location" rows="2" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Project Cover Photo (optional)</label>
+                            <input type="file" name="project_photo" accept="image/*" class="w-full bg-gray-50 border border-gray-200 p-2 outline-none focus:border-rajkot-rust text-sm">
                         </div>
                     </div>
                 </div>

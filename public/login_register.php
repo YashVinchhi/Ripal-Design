@@ -103,7 +103,7 @@ if (isset($_POST['signup'])) {
 
         $passwordHash = password_hash($user_password, PASSWORD_DEFAULT);
         $role = 'client';
-        $status = 'active';
+        $status = 'pending';
         $fullName = trim($first_name . ' ' . $last_name);
         $username = generate_unique_username($db, $first_name, $last_name);
 
@@ -113,49 +113,54 @@ if (isset($_POST['signup'])) {
         $ins->execute([$username, $fullName, $first_name, $last_name, $email, $phone_number, $passwordHash, $role, $status]);
         $user_id = (int) $db->lastInsertId();
 
-        $_SESSION['user'] = [
-            'id' => $user_id,
-            'first_name' => $first_name,
-            'last_name' => $last_name,
-            'email' => $email,
-            'username' => $username,
-            'role' => $role,
-            'name' => $fullName,
-        ];
-        $_SESSION['user_id'] = $user_id;
-        $_SESSION['login_success'] = $ct('signup_success', 'Account created successfully.');
+        // Notify user that account is created and pending approval (do not auto-login)
+        $_SESSION['register_success'] = $ct('signup_pending', 'Account created successfully and pending approval. We will notify you when it is activated.');
 
-        // If user asked to be remembered, create persistent token
-        if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
-            auth_set_remember_token($user_id);
-        }
-
-        // Attempt to send welcome email using existing public/mailer.php
+        // Attempt to send a notification email to the user about pending status
         try {
             $mail = null;
             if (is_readable(__DIR__ . '/mailer.php')) {
                 $mail = require __DIR__ . '/mailer.php';
             }
             if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
-                // clear any pre-set recipients/content from mailer.php
                 $mail->clearAddresses();
-                $from = 'dudhaiyarachit45@gmail.com' ?: 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+                $from = getenv('MAIL_FROM') ?: 'yashhvinchhi@gmail.com';
                 $fromName = $ct('signup_welcome_from_name', 'Ripal Design');
                 $mail->setFrom($from, $fromName);
                 $mail->addAddress($email, $fullName);
                 $mail->isHTML(true);
-                $mail->Subject = $ct('signup_welcome_subject', 'Registration Successful - Ripal Design');
-                $mail->Body = $renderTemplate(
-                    $ct('signup_welcome_html', '<h3>Registration Successful</h3><p>Hi {{first_name}},</p><p>Your account was created successfully. You can now log in and start using Ripal Design.</p>'),
-                    ['{{first_name}}' => htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8')]
-                );
-                $mail->AltBody = $renderTemplate(
-                    $ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created successfully. Login at {{login_url}}'),
-                    [
-                        '{{first_name}}' => $first_name,
-                        '{{login_url}}' => (BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'),
-                    ]
-                );
+                $mail->Subject = $ct('signup_welcome_subject', 'Your Ripal Design account is pending approval');
+
+                $defaultWelcomeHtml = <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Pending Approval</title>
+    <style>body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } img { -ms-interpolation-mode: bicubic; border: 0; height: auto; outline: none; text-decoration: none; }</style>
+</head>
+<body style="font-family: Inter, Arial, sans-serif; background:#f4f4f5; padding:20px;">
+    <div style="max-width:600px;margin:auto;background:#fff;padding:24px;border-radius:8px;">
+        <h2 style="color:#731209;">Thanks for registering</h2>
+        <p>Hi [User Name],</p>
+        <p>Your account has been created and is currently pending approval. We will notify you via email when your account is activated.</p>
+        <p>Until then, you may <a href="{{login_link}}">log in</a> to check status (login will be allowed only after activation).</p>
+        <p style="margin-top:24px;">— The Ripal Design Team</p>
+    </div>
+</body>
+</html>
+HTML;
+
+                $mail->Body = $renderTemplate($defaultWelcomeHtml, [
+                    '{{login_link}}' => htmlspecialchars((BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'), ENT_QUOTES, 'UTF-8'),
+                    '[User Name]' => htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'),
+                ]);
+
+                $mail->AltBody = $renderTemplate($ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created and is pending approval. We will notify you.'), [
+                    '{{first_name}}' => $first_name,
+                ]);
+
                 try {
                     $mail->send();
                 } catch (Exception $em) {
@@ -166,7 +171,7 @@ if (isset($_POST['signup'])) {
             error_log('Welcome email skipped/failed: ' . $e->getMessage());
         }
 
-        header('Location: ' . post_login_redirect_url($_SESSION['user']));
+        header('Location: ' . rtrim(BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/login.php');
         exit();
     } catch (Exception $e) {
         error_log('Signup failed: ' . $e->getMessage());
@@ -246,7 +251,4 @@ if (isset($_POST['login'])) {
     }
 
     login_error_and_redirect($ct('login_invalid_credentials', 'Invalid email or password.'));
-}
-
-// End of login/register processor
-?>
+}// End of login/register processor

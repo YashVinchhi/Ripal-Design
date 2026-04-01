@@ -25,6 +25,19 @@ if (!function_exists('esc')) {
     }
 }
 
+// Backwards-compatible alias used in some templates: `h()` -> `esc()`
+if (!function_exists('h')) {
+    /**
+     * Short HTML escape alias for templates
+     *
+     * @param mixed $s
+     * @return string
+     */
+    function h($s) {
+        return esc($s);
+    }
+}
+
 if (!function_exists('esc_attr')) {
     /**
      * Escape HTML attribute value
@@ -410,7 +423,16 @@ if (!function_exists('get_projects_basic')) {
 
         $limit = max(1, min(500, (int)$limit));
         // Safe interpolation: LIMIT is strictly bounded and cast to integer above.
-        return db_fetch_all("SELECT id, name, status, COALESCE(progress,0) AS progress, budget, due, COALESCE(location,'') AS location, COALESCE(address,'') AS address, COALESCE(latitude, NULL) AS latitude, COALESCE(longitude, NULL) AS longitude, COALESCE(owner_name,'') AS owner_name, COALESCE(owner_contact,'') AS owner_contact FROM projects ORDER BY id DESC LIMIT {$limit}");
+        // Build SQL conditionally so we don't fail if project_files table is missing.
+        $sql = "SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.budget, p.due, COALESCE(p.location,'') AS location, COALESCE(p.address,'') AS address, COALESCE(p.latitude, NULL) AS latitude, COALESCE(p.longitude, NULL) AS longitude, COALESCE(p.owner_name,'') AS owner_name, COALESCE(p.owner_contact,'') AS owner_contact";
+        if (db_table_exists('project_files')) {
+            $sql .= ", (SELECT pf.file_path FROM project_files pf WHERE pf.project_id = p.id AND pf.type IN ('JPG','JPEG','PNG','WEBP') ORDER BY pf.uploaded_at DESC LIMIT 1) AS cover_image";
+        } else {
+            $sql .= ", NULL AS cover_image";
+        }
+
+        $sql .= " FROM projects p ORDER BY p.id DESC LIMIT {$limit}";
+        return db_fetch_all($sql);
     }
 }
 

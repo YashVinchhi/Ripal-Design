@@ -9,6 +9,211 @@ if (!$project_id) { header('Location: dashboard.php'); exit; }
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   require_csrf();
   $action = $_POST['action'] ?? '';
+    // Email invoice action
+    if ($action === 'email_invoice') {
+        $to = trim($_POST['to_email'] ?? '');
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            set_flash('Please provide a valid recipient email address.', 'error');
+            header('Location: goods_invoice.php?project_id=' . $project_id);
+            exit;
+        }
+
+        // Load project and goods to compute invoice totals (needed for PDF/email)
+        $project = ['id'=>$project_id,'name'=>'Project '.$project_id,'owner_name'=>'Client','owner_contact'=>''];
+        if (isset($pdo) && $pdo instanceof PDO) {
+            $stmt = $pdo->prepare('SELECT id,name,owner_name,owner_contact,location FROM projects WHERE id = :id LIMIT 1');
+            $stmt->execute(['id'=>$project_id]);
+            $r = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($r) $project = $r;
+        }
+
+        $goods = [];
+        $subtotal = 0.0;
+        if (isset($pdo) && $pdo instanceof PDO) {
+            $stmt = $pdo->prepare('SELECT id,sku,name,description,unit,quantity,unit_price,total_price FROM project_goods WHERE project_id = :pid ORDER BY created_at ASC');
+            $stmt->execute(['pid'=>$project_id]);
+            $goods = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($goods as $g) { $subtotal += (float)$g['total_price']; }
+        }
+
+        $tax_rate = 0.18; // example 18%
+        $tax = round($subtotal * $tax_rate, 2);
+        $total = round($subtotal + $tax, 2);
+        $invoice_id = 'INV-' . str_pad($project_id, 6, '0', STR_PAD_LEFT) . '-' . date('Ymd');
+        $share_url = rtrim(BASE_URL, '/') . '/dashboard/goods_invoice.php?project_id=' . $project_id;
+
+        $userMessage = trim($_POST['message'] ?? '');
+
+        // Prepare message
+        // Use a simple ASCII subject to avoid character-encoding issues in mail headers
+        $projectName = trim((string)($project['name'] ?? ''));
+        $ownerName = trim((string)($project['owner_name'] ?? ''));
+        $subject = 'Invoice for ' . ($projectName !== '' ? $projectName : 'Property') . ' of ' . ($ownerName !== '' ? $ownerName : 'Owner');
+        $body = "Invoice for project: " . ($project['name'] ?? '') . "\n";
+        $body .= "Invoice ID: " . $invoice_id . "\n";
+        $body .= "Date: " . date('F j, Y') . "\n\n";
+        $body .= "Subtotal: ₹ " . number_format($subtotal, 2) . "\n";
+        $body .= "Tax (" . ($tax_rate * 100) . "%): ₹ " . number_format($tax, 2) . "\n";
+        $body .= "Total: ₹ " . number_format($total, 2) . "\n\n";
+        $body .= "View the invoice online: " . $share_url . "\n\n";
+        if ($userMessage) $body .= "Message from sender:\n" . $userMessage . "\n\n";
+        $body .= "Regards,\nRipal Design";
+
+        // Default from values (can be overridden by env). Fallback to the configured sender.
+        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'yashhvinchhi@gmail.com');
+        $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
+
+        $sent = false;
+        $errorMsg = '';
+
+                // Try PHPMailer if available via Composer
+                $composerAutoload = __DIR__ . '/../vendor/autoload.php';
+                if (file_exists($composerAutoload)) {
+                        require_once $composerAutoload;
+                        // If Composer autoload is present but PHPMailer class is still unavailable,
+                        // try including the bundled `src/` PHPMailer files as a fallback.
+                        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+                            $localSrc = __DIR__ . '/../src';
+                            // load in order that satisfies dependencies
+                            $parts = [
+                                'Exception.php',
+                                'OAuthTokenProvider.php',
+                                'OAuth.php',
+                                'POP3.php',
+                                'SMTP.php',
+                                'PHPMailer.php',
+                                'DSNConfigurator.php'
+                            ];
+                            foreach ($parts as $p) {
+                                $f = $localSrc . '/' . $p;
+                                if (file_exists($f)) require_once $f;
+                            }
+                        }
+                        try {
+                            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                            // Ensure UTF-8 is used for headers and body
+                            $mail->CharSet = 'UTF-8';
+                            $mail->Encoding = 'base64';
+
+                                // Prefer environment SMTP config when present; otherwise fallback to known credentials from public/mailer.php
+                                $envHost = getenv('MAIL_HOST') ?: getenv('SMTP_HOST');
+                                if ($envHost) {
+                                        $mail->isSMTP();
+                                        $mail->Host = $envHost;
+                                        $mail->SMTPAuth = true;
+                                        $mail->Username = getenv('MAIL_USERNAME') ?: getenv('SMTP_USER');
+                                        $mail->Password = getenv('MAIL_PASSWORD') ?: getenv('SMTP_PASS');
+                                        $mail->SMTPSecure = getenv('MAIL_ENCRYPTION') ?: PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                                        $mail->Port = getenv('MAIL_PORT') ?: 587;
+                                } else {
+                                        // Use credentials present in public/mailer.php as fallback
+                                        $mail->isSMTP();
+                                        $mail->Host = 'smtp.gmail.com';
+                                        $mail->SMTPAuth = true;
+                                        $mail->Username = 'yashhvinchhi@gmail.com';
+                                        $mail->Password = 'odoc sctf jtuf ejvv';
+                                        $mail->SMTPSecure = 'tls';
+                                        $mail->Port = 587;
+                                }
+
+                                $mail->setFrom($fromEmail, $fromName);
+                                $mail->addAddress($to);
+                                $mail->Subject = $subject;
+                                $mail->Body = $body;
+                                $mail->AltBody = $body;
+
+                                // Use an HTML invoice template for the email body (no PDF attachment)
+                                $htmlBody = null;
+                                $templateFile = __DIR__ . '/invoice_email_template.php';
+                                if (file_exists($templateFile)) {
+                                    require_once $templateFile;
+                                    try {
+                                        // Create a UPI deep link prefilled with payee VPA and amount
+                                        $upiVpa = 'yashhvinchhi@oksbi';
+                                        $upiName = 'Ripal Design';
+                                        $upiAmount = number_format((float)$total, 2, '.', '');
+                                        $upiNote = 'Invoice ' . $invoice_id;
+                                        $upiParams = [
+                                            'pa' => $upiVpa,
+                                            'pn' => $upiName,
+                                            'am' => $upiAmount,
+                                            'cu' => 'INR',
+                                            'tn' => $upiNote,
+                                            'tr' => $invoice_id,
+                                        ];
+                                        $upiQuery = http_build_query($upiParams, '', '&', PHP_QUERY_RFC3986);
+                                        $payment_link = 'upi://pay?' . $upiQuery;
+
+                                        // Try to generate an inline QR code (PNG) for the UPI deep link using Google Chart API
+                                        $qr_data_uri = null;
+                                        $qrServiceUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=' . rawurlencode($payment_link) . '&chld=L|1';
+                                        $qrBin = false;
+                                        if (ini_get('allow_url_fopen')) {
+                                            $qrBin = @file_get_contents($qrServiceUrl);
+                                        }
+                                        if ($qrBin === false && function_exists('curl_init')) {
+                                            $ch = curl_init($qrServiceUrl);
+                                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                                            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                                            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+                                            $qrBin = curl_exec($ch);
+                                            curl_close($ch);
+                                        }
+                                        if (is_string($qrBin) && strlen($qrBin) > 0) {
+                                            $qr_data_uri = 'data:image/png;base64,' . base64_encode($qrBin);
+                                        }
+
+                                        // Render the HTML email (button uses $payment_link). $share_url remains available as web fallback.
+                                        $htmlBody = invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_id, $share_url, $payment_link, $qr_data_uri);
+                                        $mail->isHTML(true);
+                                        $mail->Body = $htmlBody;
+                                        $mail->AltBody = $body;
+                                    } catch (Exception $e) {
+                                        // don't break sending if template rendering fails
+                                        $errorMsg = $e->getMessage();
+                                    }
+                                } else {
+                                    // fallback: send basic HTML version of the plaintext body
+                                    $mail->isHTML(true);
+                                    $mail->Body = nl2br(htmlspecialchars($body));
+                                    $mail->AltBody = $body;
+                                }
+
+                                $mail->send();
+                                $sent = true;
+                        } catch (Exception $ex) {
+                                $errorMsg = $ex->getMessage();
+                                $sent = false;
+                        }
+                }
+
+        // Fallback to PHP mail() — send HTML when available
+        if (!$sent) {
+            $headers = "MIME-Version: 1.0\r\n";
+            $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+            $headers .= 'From: ' . $fromName . ' <' . $fromEmail . "\r\n";
+            $headers .= 'Reply-To: ' . $fromEmail . "\r\n";
+            $headers .= 'X-Mailer: PHP/' . phpversion();
+            $messageForMail = $htmlBody ?? nl2br(htmlspecialchars($body));
+            if (mail($to, $subject, $messageForMail, $headers)) {
+                $sent = true;
+            } else {
+                if ($errorMsg === '') $errorMsg = 'Server unable to send mail (mail() returned false).';
+            }
+        }
+
+        if ($sent) {
+            $msg = 'Invoice emailed to ' . htmlspecialchars($to);
+            if (empty($htmlBody)) $msg .= ' (sent as plain text)';
+            set_flash($msg, 'success');
+        } else {
+            set_flash('Failed to send invoice: ' . htmlspecialchars($errorMsg), 'error');
+        }
+
+        header('Location: goods_invoice.php?project_id=' . $project_id);
+        exit;
+    }
   if ($action === 'add_item') {
     $sku = trim($_POST['sku'] ?? '');
     $name = trim($_POST['name'] ?? '');
@@ -61,220 +266,392 @@ $total = round($subtotal + $tax, 2);
 $invoice_id = 'INV-' . str_pad($project_id, 6, '0', STR_PAD_LEFT) . '-' . date('Ymd');
 $share_url = rtrim(BASE_URL, '/') . '/dashboard/goods_invoice.php?project_id=' . $project_id;
 
-function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+$displayName = $_SESSION['user']['first_name'] ?? 'User';
+$title = "Invoice " . $invoice_id . " | Ripal Design";
+
+$HEADER_MODE = 'dashboard';
+require_once __DIR__ . '/../Common/header.php';
+// Show any flash messages from actions like emailing
+if (function_exists('render_flash')) { render_flash(); }
 ?>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Invoice <?php echo h($invoice_id); ?></title>
-  <link rel="stylesheet" href="../assets/css/tailwind.css">
-  <style>
-    :root{--brand:#731209;--muted:#666;--card-bg:#fff;--surface:#f8f9fa}
-    body{background:var(--surface);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:#222;margin:0;padding:18px}
-    .invoice-wrap{max-width:980px;margin:18px auto;padding:20px;background:var(--card-bg);box-shadow:0 6px 18px rgba(0,0,0,0.06);border-radius:8px}
-    .invoice-top{display:flex;gap:16px;align-items:center;justify-content:space-between}
-    .brand{display:flex;gap:12px;align-items:center}
-    .brand .logo{width:64px;height:64px;background:linear-gradient(135deg,var(--brand),#a52a2a);border-radius:8px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
-    .brand h1{margin:0;font-size:18px}
-    .meta{text-align:right}
-    .meta .id{font-weight:700;color:var(--brand)}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
-    .panel{background:#fbfbfb;padding:12px;border-radius:6px}
-    table{width:100%;border-collapse:collapse;margin-top:14px}
-    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-    th{background:#fafafa;font-weight:600}
-    tfoot td{border-top:2px solid #e9e9e9}
-    .right{text-align:right}
-    .totals{max-width:360px;margin-left:auto;margin-top:12px}
-    .actions{margin-top:18px;display:flex;gap:10px;align-items:center}
-    .btn{display:inline-block;padding:8px 12px;border-radius:6px;text-decoration:none;border:1px solid #ddd;background:#fff;color:#222}
-    .btn.primary{background:var(--brand);color:#fff;border-color:transparent}
-    .small{font-size:13px;color:var(--muted)}
-    @media (max-width:720px){.invoice-top{flex-direction:column;align-items:flex-start}.grid{grid-template-columns:1fr}}
-    @media print{
-      body{background:#fff;padding:0}
-      .invoice-wrap{box-shadow:none;border-radius:0;padding:8px}
-      .no-print{display:none}
+<!-- Premium Invoice Styles -->
+<style>
+    @media print {
+        header, nav, .alt-header, .no-print, footer, .site-footer { display: none !important; }
+        body { background: #fff !important; padding: 0 !important; color: #000 !important; }
+        .invoice-container { box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        .print-break-inside-avoid { page-break-inside: avoid; }
+        .bg-gray-50\/50 { background-color: #fafafa !important; }
+        .bg-rajkot-rust\/5 { background-color: #fef4f4 !important; }
+        .text-rajkot-rust { color: #94180C !important; }
     }
-  </style>
-</head>
-<body>
-<div class="invoice-wrap" role="main">
-  <div class="invoice-top">
-    <div class="brand">
-      <div class="logo">RD</div>
-      <div>
-        <h1>Ripal Design</h1>
-        <div class="small">Architects &amp; Interior Design</div>
-        <div class="small">contact@ripaldesign.example | +91 12345 67890</div>
-      </div>
-    </div>
+</style>
 
-    <div class="meta">
-      <div>Invoice</div>
-      <div class="id"><?php echo h($invoice_id); ?></div>
-      <div class="small"><?php echo date('F j, Y'); ?></div>
-      <div class="small">Project ID: <?php echo (int)$project['id']; ?></div>
-    </div>
-  </div>
-
-  <div class="grid" style="margin-top:18px">
-    <div class="panel">
-      <div style="font-weight:700">Bill To</div>
-      <div style="margin-top:6px;font-size:15px"><?php echo h($project['owner_name'] ?? 'Client'); ?></div>
-      <?php if (!empty($project['owner_contact'])): ?><div class="small"><?php echo h($project['owner_contact']); ?></div><?php endif; ?>
-      <?php if (!empty($project['location'])): ?><div class="small" style="margin-top:6px"><?php echo h($project['location']); ?></div><?php endif; ?>
-      <form method="post" style="margin-top:10px">
-        <?php echo csrf_token_field(); ?>
-        <input type="hidden" name="action" value="save_meta">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input name="client_name" placeholder="Client name" class="form-control" value="<?php echo h($project['owner_name'] ?? ''); ?>">
-          <input name="worker_name" placeholder="Worker name" class="form-control" value="<?php echo h($project['worker_name'] ?? ''); ?>">
-          <button class="btn" type="submit">Save</button>
+<div class="min-h-screen bg-canvas-white font-sans text-foundation-grey pb-12">
+    <!-- Header Hero (no-print) -->
+    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 mb-8 border-b-2 border-rajkot-rust no-print">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-serif font-bold">Goods Invoice</h1>
+                <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">
+                    Project: <?php echo esc($project['name']); ?> &middot; <?php echo h($invoice_id); ?>
+                </p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="window.print()" class="bg-rajkot-rust hover:bg-[#7f140a] text-white px-6 py-2.5 font-bold transition-all shadow-lg flex items-center gap-2">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Print Invoice
+                </button>
+            </div>
         </div>
-      </form>
-    </div>
+    </header>
 
-    <div class="panel">
-      <div style="font-weight:700">Project</div>
-      <div style="margin-top:6px;font-size:15px"><?php echo h($project['name']); ?></div>
-      <div class="small">Project ID: <?php echo (int)$project['id']; ?></div>
-      <div style="margin-top:8px">
-        <div class="small">Invoice total</div>
-        <div style="font-size:18px;font-weight:700">₹ <?php echo number_format($total,2); ?></div>
-      </div>
-    </div>
-  </div>
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Dashboard Navigation Breadcrumb (no-print) -->
+        <div class="flex items-center gap-2 mb-6 text-sm no-print">
+            <a href="dashboard.php" class="text-gray-400 hover:text-rajkot-rust no-underline transition-colors uppercase tracking-widest font-bold">Dashboard</a>
+            <span class="text-gray-300">/</span>
+            <span class="text-rajkot-rust uppercase tracking-widest font-bold">Invoice</span>
+        </div>
 
-  <table aria-labelledby="items">
-    <thead>
-      <tr>
-        <th style="width:6%">#</th>
-        <th>Item description</th>
-        <th style="width:12%">Qty</th>
-        <th style="width:16%">Unit price</th>
-        <th style="width:16%" class="right">Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (empty($goods)): ?>
-        <tr><td colspan="5" class="small">No items added for this project.</td></tr>
-      <?php else: $i=1; foreach($goods as $g): ?>
-        <tr>
-          <td><?php echo $i++; ?></td>
-          <td>
-            <div style="font-weight:600"><?php echo h($g['name']); ?><?php if(!empty($g['sku'])): ?> <small class="small muted">(<?php echo h($g['sku']); ?>)</small><?php endif; ?></div>
-            <?php if (!empty($g['description'])): ?><div class="small muted" style="margin-top:6px"><?php echo h($g['description']); ?></div><?php endif; ?>
-          </td>
-          <td><?php echo intval($g['quantity']); ?> <?php echo h($g['unit'] ?? 'pcs'); ?></td>
-          <td>₹ <?php echo number_format($g['unit_price'],2); ?></td>
-          <td class="right">₹ <?php echo number_format($g['total_price'],2); ?></td>
-        </tr>
-      <?php endforeach; endif; ?>
-    </tbody>
-  </table>
+        <div class="invoice-container bg-white shadow-premium border border-gray-100 p-8 md:p-12 mb-8 relative overflow-hidden">
+            <!-- Signature Accent -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-rajkot-rust/5 rounded-bl-full pointer-events-none"></div>
+            
+            <!-- Invoice Header -->
+            <div class="flex flex-col md:flex-row justify-between gap-8 mb-12 border-b border-gray-50 pb-8">
+                <div class="flex items-center gap-4">
+                    <?php if (file_exists(PROJECT_ROOT . '/assets/Content/Logo.png')): ?>
+                        <img src="<?php echo esc_attr(BASE_PATH); ?>/assets/Content/Logo.png" alt="Ripal Design" class="w-16 h-16 object-cover rounded-lg shadow-lg" />
+                    <?php else: ?>
+                        <div class="w-16 h-16 bg-rajkot-rust flex items-center justify-center text-white font-bold text-2xl shadow-lg">RD</div>
+                    <?php endif; ?>
+                    <div>
+                        <h2 class="text-xl font-serif font-bold text-foundation-grey">Ripal Design</h2>
+                        <p class="text-xs uppercase tracking-widest text-gray-400 font-bold">Architects & Interior Design</p>
+                        <p class="text-[11px] text-gray-500 mt-1">contact@ripaldesign.example | +91 12345 67890</p>
+                    </div>
+                </div>
+                <div class="text-left">
+                    <h3 class="text-gray-300 uppercase tracking-[0.2em] font-bold text-[10px] mb-2 font-sans">Invoice Meta</h3>
+                    <div class="text-rajkot-rust font-bold text-lg font-sans"><?php echo h($invoice_id); ?></div>
+                    <div class="text-foundation-grey font-medium font-sans"><?php echo date('F j, Y'); ?></div>
+                    <div class="text-xs text-gray-400 mt-1 font-sans">Project ID: #<?php echo (int)$project['id']; ?></div>
+                </div>
+            </div>
 
-  <div class="totals">
-    <table>
-      <tbody>
-        <tr><td class="small">Subtotal</td><td class="right">₹ <?php echo number_format($subtotal,2); ?></td></tr>
-        <tr><td class="small">Tax (<?php echo ($tax_rate*100); ?>%)</td><td class="right">₹ <?php echo number_format($tax,2); ?></td></tr>
-        <tr><td style="font-weight:700">Total</td><td class="right" style="font-weight:700">₹ <?php echo number_format($total,2); ?></td></tr>
-      </tbody>
-    </table>
-  </div>
+            <!-- Billing Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+                <div class="p-6 bg-gray-50/50 border border-gray-100 relative group min-h-[160px]">
+                    <h4 class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-4 flex items-center gap-2">
+                        <i data-lucide="user" class="w-3 h-3 text-rajkot-rust"></i> Bill To
+                    </h4>
+                    <div class="text-lg font-serif font-bold text-foundation-grey mb-1"><?php echo h($project['owner_name'] ?? 'Client'); ?></div>
+                    <?php if (!empty($project['owner_contact'])): ?><div class="text-sm text-gray-500 mb-1"><?php echo h($project['owner_contact']); ?></div><?php endif; ?>
+                    <?php if (!empty($project['location'])): ?><div class="text-sm text-gray-500 italic"><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> <?php echo h($project['location']); ?></div><?php endif; ?>
+                    
+                    <!-- Meta Edit (no-print) - visible on hover -->
+                    <div class="absolute inset-0 bg-white/95 p-6 opacity-0 group-hover:opacity-100 transition-opacity no-print flex flex-col justify-center border border-rajkot-rust/20 font-sans">
+                        <h5 class="text-[10px] uppercase tracking-widest font-bold text-rajkot-rust mb-3">Edit Billing Info</h5>
+                        <form method="post">
+                            <?php echo csrf_token_field(); ?>
+                            <input type="hidden" name="action" value="save_meta">
+                            <div class="flex flex-col gap-3">
+                                <input name="client_name" placeholder="Client Name" class="w-full bg-white border border-gray-200 px-3 py-2 text-sm focus:border-rajkot-rust outline-none transition-colors" value="<?php echo h($project['owner_name'] ?? ''); ?>">
+                                <div class="flex gap-2">
+                                    <input name="worker_name" placeholder="Worker Name" class="flex-1 bg-white border border-gray-200 px-3 py-2 text-sm focus:border-rajkot-rust outline-none transition-colors" value="<?php echo h($project['worker_name'] ?? ''); ?>">
+                                    <button type="submit" class="bg-foundation-grey text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
-  <div style="clear:both"></div>
+                <div class="p-6 bg-rajkot-rust/5 border border-rajkot-rust/10 relative flex flex-col min-h-[160px]">
+                    <h4 class="text-[10px] uppercase tracking-widest font-bold text-rajkot-rust/60 mb-4 flex items-center gap-2">
+                        <i data-lucide="layout" class="w-3 h-3"></i> Project Summary
+                    </h4>
+                    <div class="text-lg font-serif font-bold text-foundation-grey mb-1"><?php echo h($project['name']); ?></div>
+                    <div class="text-sm text-gray-500 mb-6 font-mono">ID: #<?php echo (int)$project['id']; ?></div>
+                    
+                    <div class="mt-auto border-t border-rajkot-rust/10 pt-4">
+                        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1 font-sans">Estimated Invoice Total</div>
+                        <div class="text-2xl font-serif font-bold text-rajkot-rust">₹ <?php echo number_format($total, 2); ?></div>
+                    </div>
+                </div>
+            </div>
 
-  <div style="margin-top:18px; display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap">
-    <div class="small">Notes: Goods are for procurement by worker. Prices are estimates and may change at purchase.</div>
-    <div class="no-print actions">
-      <button class="btn primary" onclick="window.print()">Print / Save PDF</button>
-      <a class="btn" href="dashboard.php">Back to Dashboard</a>
-      <button class="btn" id="copyLink">Copy Invoice Link</button>
-      <button class="btn" id="emailLink">Share by Email</button>
-    </div>
-  </div>
-  
-  <div style="margin-top:18px" class="panel">
-    <h3 style="margin:0 0 8px">Add item</h3>
-    <form id="addItemForm" method="post" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <?php echo csrf_token_field(); ?>
-      <input type="hidden" name="action" value="add_item">
-      <input id="sku" name="sku" class="form-control" placeholder="SKU (optional)" style="width:120px">
-      <input id="name" name="name" class="form-control" placeholder="Item name" required style="min-width:220px;flex:1">
-      <input id="unit" name="unit" class="form-control" placeholder="Unit (pcs/kg)" style="width:90px">
-      <input id="quantity" name="quantity" type="number" class="form-control" min="1" value="1" style="width:90px">
-      <input id="unit_price" name="unit_price" type="number" step="0.01" class="form-control" min="0" value="0" style="width:140px">
-      <div id="lineTotal" class="small" style="min-width:140px; text-align:right">Line total: ₹ 0.00</div>
-      <button id="addBtn" class="btn primary" type="submit">Add</button>
-      <div id="addError" class="small" style="color:#b00020; width:100%; display:none; margin-top:8px"></div>
-    </form>
-  </div>
+            <!-- Items Table -->
+            <div class="overflow-x-auto mb-12">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="border-b-2 border-foundation-grey">
+                            <th class="px-4 py-4 text-left text-[10px] uppercase tracking-widest font-bold text-gray-400 w-12 font-sans">#</th>
+                            <th class="px-4 py-4 text-left text-[10px] uppercase tracking-widest font-bold text-gray-400 font-sans">Item Details</th>
+                            <th class="px-4 py-4 text-center text-[10px] uppercase tracking-widest font-bold text-gray-400 w-24 font-sans">Qty</th>
+                            <th class="px-4 py-4 text-right text-[10px] uppercase tracking-widest font-bold text-gray-400 w-32 font-sans">Unit Price</th>
+                            <th class="px-4 py-4 text-right text-[10px] uppercase tracking-widest font-bold text-gray-400 w-32 font-sans">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 font-sans">
+                        <?php if (empty($goods)): ?>
+                            <tr><td colspan="5" class="px-4 py-12 text-center text-sm text-gray-400 italic border-b border-gray-100">No procurement items added yet.</td></tr>
+                        <?php else: $i=1; foreach($goods as $g): ?>
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-4 py-6 text-sm font-mono text-gray-300"><?php echo str_pad($i++, 2, '0', STR_PAD_LEFT); ?></td>
+                                <td class="px-4 py-6">
+                                    <div class="font-bold text-foundation-grey"><?php echo h($g['name']); ?></div>
+                                    <?php if(!empty($g['sku'])): ?><div class="text-[9px] font-mono text-rajkot-rust bg-rajkot-rust/5 px-1.5 py-0.5 inline-block mt-1 uppercase tracking-wider"><?php echo h($g['sku']); ?></div><?php endif; ?>
+                                    <?php if (!empty($g['description'])): ?><div class="text-xs text-gray-400 mt-1.5 leading-relaxed"><?php echo h($g['description']); ?></div><?php endif; ?>
+                                </td>
+                                <td class="px-4 py-6 text-center text-sm font-medium">
+                                    <span class="text-foundation-grey font-bold"><?php echo intval($g['quantity']); ?></span>
+                                    <span class="text-[10px] uppercase text-gray-400 ml-1 font-bold tracking-tighter"><?php echo h($g['unit'] ?? 'pcs'); ?></span>
+                                </td>
+                                <td class="px-4 py-6 text-right text-sm font-medium text-gray-500 font-mono">₹ <?php echo number_format($g['unit_price'], 2); ?></td>
+                                <td class="px-4 py-6 text-right text-sm font-bold text-foundation-grey font-mono">₹ <?php echo number_format($g['total_price'], 2); ?></td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
 
+            <!-- Totals Section -->
+            <div class="flex flex-col md:flex-row justify-between gap-12 mb-12">
+                <div class="max-w-sm">
+                    <p class="text-[11px] text-gray-400 leading-relaxed italic font-sans">
+                        <strong class="text-foundation-grey not-italic uppercase tracking-widest text-[9px]">Procurement Note:</strong> <br>
+                        These goods are listed for procurement by the site supervisor/worker. 
+                        Prices indicated are estimates based on latest market rates and are subject to change at the time of final vendor billing.
+                    </p>
+                </div>
+                <div class="md:w-80">
+                    <div class="space-y-4 font-sans">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-400 uppercase tracking-widest font-bold text-[10px]">Subtotal</span>
+                            <span class="font-bold text-foundation-grey font-mono">₹ <?php echo number_format($subtotal, 2); ?></span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-400 uppercase tracking-widest font-bold text-[10px]">Tax (<?php echo ($tax_rate*100); ?>% GST)</span>
+                            <span class="font-bold text-foundation-grey font-mono">₹ <?php echo number_format($tax, 2); ?></span>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t-2 border-rajkot-rust bg-rajkot-rust/5 px-4 py-3 -mx-4">
+                            <span class="text-foundation-grey uppercase tracking-widest font-black text-[11px]">Grand Total</span>
+                            <span class="text-2xl font-serif font-bold text-rajkot-rust">₹ <?php echo number_format($total, 2); ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Area (no-print) -->
+            <div class="no-print flex flex-wrap gap-4 pt-12 border-t border-gray-50 font-sans">
+                <button id="copyLink" class="group border border-gray-100 hover:border-rajkot-rust hover:bg-white text-foundation-grey px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-premium flex items-center gap-2">
+                    <i data-lucide="link-2" class="w-3.5 h-3.5 text-rajkot-rust group-hover:scale-110 transition-transform"></i> Copy Invoice Link
+                </button>
+                <button id="emailLink" class="group border border-gray-100 hover:border-rajkot-rust hover:bg-white text-foundation-grey px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-premium flex items-center gap-2">
+                    <i data-lucide="mail" class="w-3.5 h-3.5 text-rajkot-rust group-hover:scale-110 transition-transform"></i> Send by Email
+                </button>
+                <a href="dashboard.php" class="ml-auto text-gray-400 hover:text-rajkot-rust text-[10px] font-bold uppercase tracking-widest no-underline transition-colors flex items-center gap-3 group">
+                    Go Back to Dashboard 
+                    <div class="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center group-hover:border-rajkot-rust group-hover:bg-rajkot-rust/5 transition-all">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-rajkot-rust"></i>
+                    </div>
+                </a>
+            </div>
+            <!-- Email Modal (no-print) -->
+            <div id="emailModal" class="fixed inset-0 z-50 hidden items-center justify-center no-print" aria-hidden="true" role="dialog" aria-modal="true">
+                <div class="absolute inset-0 bg-black/50"></div>
+                <div class="bg-white rounded-lg shadow-lg z-10 max-w-lg w-full p-6 mx-4">
+                    <h3 class="text-lg font-bold mb-2">Send Invoice by Email</h3>
+                    <form id="emailModalForm" method="post" class="space-y-4">
+                        <?php echo csrf_token_field(); ?>
+                        <input type="hidden" name="action" value="email_invoice">
+                        <div>
+                            <label for="modal_to_email" class="block text-sm font-medium text-gray-700">Recipient Email</label>
+                            <input id="modal_to_email" name="to_email" type="email" required class="mt-1 block w-full border border-gray-200 px-3 py-2 rounded" placeholder="recipient@example.com" />
+                        </div>
+                        <div>
+                            <label for="modal_message" class="block text-sm font-medium text-gray-700">Message (optional)</label>
+                            <textarea id="modal_message" name="message" rows="3" class="mt-1 block w-full border border-gray-200 px-3 py-2 rounded" placeholder="Optional note to include in the email"></textarea>
+                        </div>
+                        <div class="flex justify-end gap-3">
+                            <button type="button" id="emailModalCancel" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+                            <button type="submit" id="emailModalSend" class="px-4 py-2 bg-rajkot-rust text-white rounded">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Item Form (no-print) -->
+        <section class="no-print bg-white shadow-premium border border-gray-100 p-8 md:p-10 mb-12 relative overflow-hidden group font-sans">
+            <div class="absolute top-0 right-0 w-24 h-1 bg-rajkot-rust opacity-20 group-hover:w-full transition-all duration-700"></div>
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-10 h-10 bg-rajkot-rust/10 flex items-center justify-center rounded-lg">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-rajkot-rust"></i>
+                </div>
+                <h3 class="text-2xl font-serif font-bold text-foundation-grey">Add Procurement Item</h3>
+            </div>
+            
+            <form id="addItemForm" method="post" class="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-8 items-end">
+                <?php echo csrf_token_field(); ?>
+                <input type="hidden" name="action" value="add_item">
+                
+                <div class="md:col-span-3">
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">SKU / Code</label>
+                    <input id="sku" name="sku" placeholder="PRD-001" class="w-full bg-white border-b-2 border-gray-100 px-0 py-2.5 text-sm focus:border-rajkot-rust outline-none transition-colors font-mono uppercase">
+                </div>
+                <div class="md:col-span-5">
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">Item Name / Material</label>
+                    <input id="name" name="name" placeholder="Italian Marble (Botticino)" required class="w-full bg-white border-b-2 border-gray-100 px-0 py-2.5 text-sm font-bold focus:border-rajkot-rust outline-none transition-colors">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2 font-sans">Unit</label>
+                    <select id="unit" name="unit" class="w-full bg-white border-b-2 border-gray-100 px-0 py-2.5 text-sm focus:border-rajkot-rust outline-none transition-colors cursor-pointer">
+                        <option value="pcs">Pieces (pcs)</option>
+                        <option value="sqft">Sq. Ft.</option>
+                        <option value="rm">Running Ft (rm)</option>
+                        <option value="kg">Kilograms (kg)</option>
+                        <option value="cum">Cu. M.</option>
+                        <option value="bags">Bags</option>
+                        <option value="set">Set</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2 text-right font-sans">Quantity</label>
+                    <input id="quantity" name="quantity" type="number" min="1" value="1" class="w-full bg-white border-b-2 border-gray-100 px-0 py-2.5 text-sm focus:border-rajkot-rust outline-none transition-colors text-right font-bold font-mono">
+                </div>
+                
+                <div class="md:col-span-4">
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2 font-sans">Description (Optional)</label>
+                    <input name="description" placeholder="Standard size, polished finish" class="w-full bg-white border-b-2 border-gray-100 px-0 py-2.5 text-sm focus:border-rajkot-rust outline-none transition-colors font-sans">
+                </div>
+
+                <div class="md:col-span-4">
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2 text-right font-sans">Estimated Unit Price (₹)</label>
+                    <div class="relative">
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300 text-xs font-mono">₹</span>
+                        <input id="unit_price" name="unit_price" type="number" step="0.01" min="0" value="0" class="w-full bg-white border-b-2 border-gray-100 pl-4 py-2.5 text-sm focus:border-rajkot-rust outline-none transition-colors text-right font-bold font-mono">
+                    </div>
+                </div>
+
+                <div class="md:col-span-4">
+                    <div id="lineTotal" class="text-[10px] text-gray-400 text-right mb-4 font-mono font-bold">Line Total: ₹ 0.00</div>
+                    <button type="submit" class="w-full bg-foundation-grey hover:bg-rajkot-rust text-white py-3 shadow-lg font-bold transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Add to Invoice
+                    </button>
+                </div>
+                
+                <div id="addError" class="md:col-span-12 text-[10px] font-bold uppercase tracking-widest text-red-600 mt-6 hidden p-4 bg-red-50 border-l-4 border-red-600 font-sans italic"></div>
+            </form>
+        </section>
+    </main>
 </div>
+
 <script>
 (function(){
+  // Ensure lucide icons are created
+  if (window.lucide) window.lucide.createIcons();
+
   function showToast(message){
     const toast = document.createElement('div');
     toast.textContent = message;
-    toast.style.cssText = 'position:fixed;right:16px;bottom:16px;background:#2d2d2d;color:#fff;padding:10px 14px;border-radius:6px;z-index:9999;font-size:12px;box-shadow:0 8px 20px rgba(0,0,0,0.2)';
+    toast.style.cssText = 'position:fixed;right:24px;bottom:24px;background:#1a1c1c;color:#fff;padding:14px 20px;z-index:9999;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.2em;box-shadow:0 15px 40px rgba(0,0,0,0.4);border-left:4px solid #94180C';
     document.body.appendChild(toast);
-    setTimeout(() => { toast.remove(); }, 2200);
+    setTimeout(() => { 
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        setTimeout(() => toast.remove(), 600);
+    }, 2800);
   }
 
   const shareUrl = '<?php echo addslashes($share_url); ?>';
-  document.getElementById('copyLink').addEventListener('click', function(){
-    navigator.clipboard?.writeText(shareUrl).then(()=>{ showToast('Invoice link copied to clipboard'); }).catch(()=>{ prompt('Copy this link', shareUrl); });
-  });
-  document.getElementById('emailLink').addEventListener('click', function(){
-    const subject = encodeURIComponent('Goods Invoice: <?php echo addslashes($project['name']); ?>');
-    const body = encodeURIComponent('Please view the invoice at: ' + shareUrl + '\n\nYou can print or save as PDF from the page.');
-    window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+  document.getElementById('copyLink')?.addEventListener('click', function(){
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareUrl).then(() => showToast('Link Copied to Clipboard')).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = shareUrl;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast('Link Copied');
+        });
+    } else {
+        const el = document.createElement('textarea');
+        el.value = shareUrl;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast('Link Copied');
+    }
   });
 
-  // Auto-calc line total and client-side validation for Add Item form
+    document.getElementById('emailLink')?.addEventListener('click', function(){
+        // Open modal for recipient email
+        const modal = document.getElementById('emailModal');
+        const input = document.getElementById('modal_to_email');
+        const defaultRecipient = '<?php echo addslashes($project['owner_email'] ?? $project['owner_contact'] ?? ''); ?>';
+        if (input) input.value = defaultRecipient || '';
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { try { input && input.focus(); } catch(e){} }, 50);
+        }
+    });
+
+    document.getElementById('emailModalCancel')?.addEventListener('click', function(){
+        const modal = document.getElementById('emailModal');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    });
+
+    document.getElementById('emailModalForm')?.addEventListener('submit', function(ev){
+        const emailVal = document.getElementById('modal_to_email')?.value || '';
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(emailVal)) {
+            ev.preventDefault();
+            showToast('Please enter a valid email address');
+            return false;
+        }
+        showToast('Sending invoice...');
+    });
+
+  // Dynamic Price Calculation
   const qtyEl = document.getElementById('quantity');
   const priceEl = document.getElementById('unit_price');
   const lineTotalEl = document.getElementById('lineTotal');
   const addForm = document.getElementById('addItemForm');
   const addError = document.getElementById('addError');
 
-  function formatCurrency(v){ return '₹ ' + Number(v || 0).toFixed(2); }
   function computeLineTotal(){
-    const q = Math.max(0, parseFloat(qtyEl.value) || 0);
-    const p = Math.max(0, parseFloat(priceEl.value) || 0);
+    const q = Math.max(0, parseFloat(qtyEl?.value) || 0);
+    const p = Math.max(0, parseFloat(priceEl?.value) || 0);
     const t = q * p;
-    lineTotalEl.textContent = 'Line total: ' + formatCurrency(t);
+    if (lineTotalEl) lineTotalEl.textContent = 'Line Total: ₹ ' + t.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     return t;
   }
 
-  // initialize
-  try { computeLineTotal(); } catch(e) {}
+  [qtyEl, priceEl].forEach(el => el?.addEventListener('input', computeLineTotal));
+  computeLineTotal();
 
-  qtyEl?.addEventListener('input', ()=>{ computeLineTotal(); addError.style.display = 'none'; });
-  priceEl?.addEventListener('input', ()=>{ computeLineTotal(); addError.style.display = 'none'; });
-
+  // Validation
   addForm?.addEventListener('submit', function(ev){
     const nameEl = document.getElementById('name');
     const errors = [];
-    if (!nameEl || !nameEl.value.trim()) errors.push('Enter item name');
-    const q = parseFloat(qtyEl.value) || 0;
-    if (q < 1) errors.push('Quantity must be at least 1');
-    const p = parseFloat(priceEl.value);
-    if (isNaN(p) || p < 0) errors.push('Unit price must be 0 or greater');
+    if (!nameEl?.value.trim()) errors.push('Please enter a valid item name');
+    if ((parseFloat(qtyEl?.value) || 0) < 1) errors.push('Quantity must be at least 1');
+    
     if (errors.length){
       ev.preventDefault();
-      addError.textContent = errors.join(' — ');
-      addError.style.display = 'block';
-      if (!nameEl || !nameEl.value.trim()) nameEl?.focus();
+      if (addError) {
+          addError.innerHTML = '<div class="flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ' + errors.join(' | ') + '</div>';
+          addError.classList.remove('hidden');
+          if (window.lucide) window.lucide.createIcons();
+      }
       return false;
     }
-    // allow submit
   });
 })();
 </script>
-</body>
-</html>
+
+<?php require_once __DIR__ . '/../Common/footer.php'; ?>
