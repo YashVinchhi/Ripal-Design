@@ -15,51 +15,141 @@ require_role('admin');
 
 $error = '';
 $success = '';
+$editId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$isEdit = $editId > 0;
+
+$form = [
+    'firstName' => '',
+    'lastName' => '',
+    'email' => '',
+    'role' => 'client',
+    'password' => '',
+];
+
+if ($isEdit && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    try {
+        $db = get_db();
+        if ($db) {
+            $stmt = $db->prepare('SELECT id, first_name, last_name, full_name, email, username, role FROM users WHERE id = ? LIMIT 1');
+            $stmt->execute([$editId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                set_flash('User not found.', 'error');
+                header('Location: user_management.php');
+                exit;
+            }
+
+            $firstName = trim((string)($user['first_name'] ?? ''));
+            $lastName = trim((string)($user['last_name'] ?? ''));
+
+            if ($firstName === '' && $lastName === '') {
+                $fullName = trim((string)($user['full_name'] ?? ''));
+                if ($fullName !== '') {
+                    $parts = preg_split('/\s+/', $fullName);
+                    $firstName = (string)($parts[0] ?? '');
+                    $lastName = (string)implode(' ', array_slice($parts, 1));
+                }
+            }
+
+            $form['firstName'] = $firstName;
+            $form['lastName'] = $lastName;
+            $form['email'] = (string)($user['email'] ?? $user['username'] ?? '');
+            $form['role'] = (string)($user['role'] ?? 'client');
+        }
+    } catch (PDOException $e) {
+        error_log('Load user for edit failed: ' . $e->getMessage());
+        set_flash('Unable to load user for editing right now.', 'error');
+        header('Location: user_management.php');
+        exit;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
-    $firstName = trim($_POST['firstName'] ?? '');
-    $lastName = trim($_POST['lastName'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $role = $_POST['role'] ?? 'client';
+    $editId = isset($_POST['id']) ? (int)$_POST['id'] : $editId;
+    $isEdit = $editId > 0;
+
+    $form['firstName'] = trim($_POST['firstName'] ?? '');
+    $form['lastName'] = trim($_POST['lastName'] ?? '');
+    $form['email'] = trim($_POST['email'] ?? '');
+    $form['password'] = $_POST['password'] ?? '';
+    $form['role'] = $_POST['role'] ?? 'client';
+
+    $firstName = $form['firstName'];
+    $lastName = $form['lastName'];
+    $email = $form['email'];
+    $password = $form['password'];
+    $role = $form['role'];
     
     // Simple validation
-    if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
+    if (empty($firstName) || empty($lastName) || empty($email)) {
         $error = 'All fields are required.';
+    } elseif (!$isEdit && empty($password)) {
+        $error = 'Password is required for new users.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid email address.';
     } else {
         try {
             $db = get_db();
             if ($db) {
-                // Check if user already exists
-                $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
-                $stmt->execute([$email]);
-                if ($stmt->fetch()) {
-                    $error = 'A user with this email already exists.';
+                if ($isEdit) {
+                    $checkStmt = $db->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
+                    $checkStmt->execute([$editId]);
+                    if (!$checkStmt->fetch()) {
+                        $error = 'User not found.';
+                    } else {
+                        $dupeStmt = $db->prepare('SELECT id FROM users WHERE (username = ? OR email = ?) AND id <> ? LIMIT 1');
+                        $dupeStmt->execute([$email, $email, $editId]);
+
+                        if ($dupeStmt->fetch()) {
+                            $error = 'A user with this email already exists.';
+                        } else {
+                            $fullName = trim($firstName . ' ' . $lastName);
+
+                            if ($password !== '') {
+                                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                                $updateStmt = $db->prepare('UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ?, full_name = ?, role = ?, password_hash = ?, updated_at = NOW() WHERE id = ?');
+                                $updateStmt->execute([$email, $email, $firstName, $lastName, $fullName, $role, $passwordHash, $editId]);
+                            } else {
+                                $updateStmt = $db->prepare('UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ?, full_name = ?, role = ?, updated_at = NOW() WHERE id = ?');
+                                $updateStmt->execute([$email, $email, $firstName, $lastName, $fullName, $role, $editId]);
+                            }
+
+                            set_flash('User updated successfully!', 'success');
+                            header('Location: user_management.php');
+                            exit;
+                        }
+                    }
                 } else {
-                    // In a real app, combine firstName and lastName if needed, or update schema
-                    // For now, we'll use email as username as seen in signup/login context
-                    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                    
-                    $stmt = $db->prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)");
-                    $stmt->execute([$email, $passwordHash, $role]);
-                    
-                    set_flash('User created successfully!', 'success');
-                    header('Location: user_management.php');
-                    exit;
+                    $stmt = $db->prepare('SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1');
+                    $stmt->execute([$email, $email]);
+                    if ($stmt->fetch()) {
+                        $error = 'A user with this email already exists.';
+                    } else {
+                        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                        $fullName = trim($firstName . ' ' . $lastName);
+
+                        $stmt = $db->prepare('INSERT INTO users (username, full_name, first_name, last_name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, "active")');
+                        $stmt->execute([$email, $fullName, $firstName, $lastName, $email, $passwordHash, $role]);
+
+                        set_flash('User created successfully!', 'success');
+                        header('Location: user_management.php');
+                        exit;
+                    }
                 }
             } else {
                 // Demo mode fallback if DB not connected
-                set_flash('User created successfully! (Demo Mode)', 'success');
+                set_flash($isEdit ? 'User updated successfully! (Demo Mode)' : 'User created successfully! (Demo Mode)', 'success');
                 header('Location: user_management.php');
                 exit;
             }
         } catch (PDOException $e) {
             error_log('Add user failed: ' . $e->getMessage());
-            $error = 'Unable to create user right now. Please try again.';
+            $error = $isEdit
+                ? 'Unable to update user right now. Please try again.'
+                : 'Unable to create user right now. Please try again.';
         }
     }
 }
@@ -69,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Add New User | Ripal Design</title>
+    <title><?php echo $isEdit ? 'Edit User | Ripal Design' : 'Add New User | Ripal Design'; ?></title>
     <?php require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
@@ -79,8 +169,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
             <div class="max-w-3xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-serif font-bold">Add New User</h1>
-                    <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Identity Creation Portal</p>
+                    <h1 class="text-3xl md:text-4xl font-serif font-bold"><?php echo $isEdit ? 'Edit User Permissions' : 'Add New User'; ?></h1>
+                    <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70"><?php echo $isEdit ? 'Identity Update Portal' : 'Identity Creation Portal'; ?></p>
                 </div>
                 <div>
                     <a href="user_management.php" class="bg-white/10 hover:bg-white/20 border border-white/10 md:border-0 md:bg-transparent text-white md:text-gray-400 hover:text-rajkot-rust px-4 py-2 md:p-0 rounded transition-colors flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] no-underline">
@@ -111,6 +201,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <form method="POST" class="space-y-6 md:space-y-10" id="addUserForm">
                     <?php echo csrf_token_field(); ?>
+                    <?php if ($isEdit): ?>
+                        <input type="hidden" name="id" value="<?php echo (int)$editId; ?>">
+                    <?php endif; ?>
                     <!-- Name Group -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                         <div class="space-y-3">
@@ -119,7 +212,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </label>
                             <input type="text" id="firstName" name="firstName" required
                                 class="w-full px-5 py-3 md:py-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium"
-                                placeholder="e.g. Ramesh">
+                                placeholder="e.g. Ramesh"
+                                value="<?php echo htmlspecialchars($form['firstName']); ?>">
                         </div>
                         <div class="space-y-3">
                             <label for="lastName" class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -127,7 +221,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </label>
                             <input type="text" id="lastName" name="lastName" required
                                 class="w-full px-5 py-3 md:py-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium"
-                                placeholder="e.g. Kumar">
+                                placeholder="e.g. Kumar"
+                                value="<?php echo htmlspecialchars($form['lastName']); ?>">
                         </div>
                     </div>
 
@@ -138,18 +233,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </label>
                         <input type="email" id="email" name="email" required
                             class="w-full px-5 py-3 md:py-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium"
-                            placeholder="user@ripaldesign.in">
+                            placeholder="user@ripaldesign.in"
+                            value="<?php echo htmlspecialchars($form['email']); ?>">
                     </div>
 
                     <!-- Security & Access -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                         <div class="space-y-3">
                             <label for="password" class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <i data-lucide="lock" class="w-3.5 h-3.5"></i> Security Password
+                                <i data-lucide="lock" class="w-3.5 h-3.5"></i> <?php echo $isEdit ? 'Security Password (Optional)' : 'Security Password'; ?>
                             </label>
-                            <input type="password" id="password" name="password" required minlength="8"
+                            <input type="password" id="password" name="password" <?php echo $isEdit ? '' : 'required'; ?> minlength="8"
                                 class="w-full px-5 py-3 md:py-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium"
-                                placeholder="Min. 8 characters">
+                                placeholder="<?php echo $isEdit ? 'Leave blank to keep current password' : 'Min. 8 characters'; ?>">
                         </div>
                         <div class="space-y-3">
                             <label for="role" class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -157,10 +253,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </label>
                             <select id="role" name="role" required
                                 class="w-full px-5 py-3 md:py-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-bold uppercase tracking-widest cursor-pointer">
-                                <option value="client">Client (Guest/Govt)</option>
-                                <option value="worker">Worker (Mobile/Field)</option>
-                                <option value="employee">Employee (Architect/PM)</option>
-                                <option value="admin">Administrator (Firm Owner)</option>
+                                <option value="client" <?php echo $form['role'] === 'client' ? 'selected' : ''; ?>>Client (Guest/Govt)</option>
+                                <option value="worker" <?php echo $form['role'] === 'worker' ? 'selected' : ''; ?>>Worker (Mobile/Field)</option>
+                                <option value="employee" <?php echo $form['role'] === 'employee' ? 'selected' : ''; ?>>Employee (Architect/PM)</option>
+                                <option value="admin" <?php echo $form['role'] === 'admin' ? 'selected' : ''; ?>>Administrator (Firm Owner)</option>
                             </select>
                         </div>
                     </div>
@@ -168,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="pt-6 md:pt-10">
                         <button type="submit" 
                             class="w-full bg-foundation-grey hover:bg-rajkot-rust text-white py-5 md:py-6 text-[10px] font-bold uppercase tracking-[0.3em] shadow-premium transition-all flex items-center justify-center gap-4 active:scale-[0.98] group">
-                            Create System Identity <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                            <?php echo $isEdit ? 'Update Identity Permissions' : 'Create System Identity'; ?> <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                         </button>
                     </div>
                 </form>
@@ -182,7 +278,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Simple client-side validation feedback
         document.getElementById('addUserForm').addEventListener('submit', function(e) {
             const btn = this.querySelector('button[type="submit"]');
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Initializing Account...';
+            const isEditMode = <?php echo $isEdit ? 'true' : 'false'; ?>;
+            btn.innerHTML = isEditMode
+                ? '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Updating Identity...'
+                : '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Initializing Account...';
             if (typeof lucide !== 'undefined') lucide.createIcons();
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');

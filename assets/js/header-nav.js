@@ -75,8 +75,46 @@
     // Close menu when any panel link is clicked while allowing normal navigation.
     var panelLinks = overlay.querySelectorAll('.alt-panel nav a, .alt-panel .panel-footer a');
     Array.prototype.forEach.call(panelLinks, function(link) {
-        link.addEventListener('click', function() {
+        link.addEventListener('click', function(e) {
+            // Allow anchor-less or same-page fragment links to behave normally
+            var href = link.getAttribute('href');
+            var target = link.getAttribute('target');
+
+            if (!href || href.indexOf('#') === 0) {
+                closeMenu();
+                return;
+            }
+
+            // If link opens in a new tab/window, just close and let default happen
+            if (target && target !== '_self') {
+                closeMenu();
+                return;
+            }
+
+            // Prevent immediate navigation so the close animation can run
+            e.preventDefault();
             closeMenu();
+
+            // Wait for overlay opacity transition to finish before navigating
+            var navigated = false;
+            function doNavigate() {
+                if (navigated) return; navigated = true;
+                window.location.href = href;
+            }
+
+            // Listen for transitionend on the overlay (opacity transition)
+            function onTransition(e) {
+                // ensure we react to the overlay opacity/transform completing
+                if (e.target === overlay) {
+                    overlay.removeEventListener('transitionend', onTransition);
+                    doNavigate();
+                }
+            }
+
+            overlay.addEventListener('transitionend', onTransition);
+
+            // Fallback: navigate after 400ms if transitionend doesn't fire
+            setTimeout(doNavigate, 400);
         });
     });
     

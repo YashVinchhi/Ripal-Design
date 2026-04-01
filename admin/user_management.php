@@ -1,11 +1,48 @@
 <?php
 // User Management (Redesigned UI)
 require_once __DIR__ . '/../includes/init.php';
+
 require_login();
 require_role('admin');
 
 $roleCounts = get_user_role_counts();
-$users = db_fetch_all('SELECT id, username, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync FROM users ORDER BY id DESC LIMIT 200');
+$search = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+$role = isset($_GET['role']) ? strtolower(trim((string)$_GET['role'])) : 'all';
+$allowedRoles = ['all', 'admin', 'employee', 'worker', 'client'];
+if (!in_array($role, $allowedRoles, true)) {
+    $role = 'all';
+}
+$users = [];
+
+$db = get_db();
+if ($db instanceof PDO) {
+    $sql = 'SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync FROM users';
+    $where = [];
+    $params = [];
+
+    if ($search !== '') {
+        $searchLike = '%' . $search . '%';
+        $where[] = '(full_name LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR username LIKE ? OR email LIKE ?)';
+        array_push($params, $searchLike, $searchLike, $searchLike, $searchLike, $searchLike);
+    }
+
+    if ($role !== 'all') {
+        $where[] = 'LOWER(role) = ?';
+        $params[] = $role;
+    }
+
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+
+    $sql .= ' ORDER BY id DESC LIMIT 200';
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+} else {
+    // Fallback to existing helper if PDO is unavailable.
+    $users = db_fetch_all('SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync FROM users ORDER BY id DESC LIMIT 200');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
@@ -13,6 +50,21 @@ $users = db_fetch_all('SELECT id, username, full_name, email, role, status, COAL
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>User Management | Ripal Design</title>
+    <style>
+        /* Keep table area and column widths stable even when search returns few rows. */
+        .registry-table-shell {
+            min-height: 520px;
+        }
+
+        .registry-table-scroll {
+            min-height: 420px;
+        }
+
+        .registry-table-fixed {
+            table-layout: fixed;
+            width: 100%;
+        }
+    </style>
   <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
@@ -60,15 +112,17 @@ $users = db_fetch_all('SELECT id, username, full_name, email, role, status, COAL
         <div class="bg-white shadow-premium border border-gray-100 p-4 md:p-6 mb-8 flex flex-col lg:flex-row justify-between items-center gap-4 md:gap-6">
             <div class="relative w-full lg:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                <input id="identityFilterInput" type="search" placeholder="Filter identities..." class="w-full pl-12 pr-6 py-3 md:py-4 bg-gray-50 border border-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium">
+                <form action="" method="get" onsubmit="return false;">
+                    <input id="identityFilterInput" type="search" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Filter identities..." class="w-full pl-12 pr-6 py-3 md:py-4 bg-gray-50 border border-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium">
+                </form>
             </div>
             <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                 <select id="permissionFilterSelect" class="w-full sm:w-auto py-3 md:py-4 px-6 bg-gray-50 border border-gray-50 text-[10px] font-bold uppercase tracking-widest outline-none focus:bg-white focus:border-rajkot-rust transition-all cursor-pointer">
-                    <option value="all">All Permissions</option>
-                    <option value="admin">Administrators</option>
-                    <option value="employee">Employees</option>
-                    <option value="worker">Field Tech</option>
-                    <option value="client">Govt Client</option>
+                    <option value="all" <?php echo $role === 'all' ? 'selected' : ''; ?>>All Permissions</option>
+                    <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>Administrators</option>
+                    <option value="employee" <?php echo $role === 'employee' ? 'selected' : ''; ?>>Employees</option>
+                    <option value="worker" <?php echo $role === 'worker' ? 'selected' : ''; ?>>Field Tech</option>
+                    <option value="client" <?php echo $role === 'client' ? 'selected' : ''; ?>>Govt Client</option>
                 </select>
                 <button id="applyIdentityFiltersBtn" type="button" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-3 md:py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center shadow-lg active:scale-95">
                     <i data-lucide="filter" class="w-3.5 h-3.5 mr-2"></i> Apply
@@ -77,12 +131,19 @@ $users = db_fetch_all('SELECT id, username, full_name, email, role, status, COAL
         </div>
 
         <!-- User Table -->
-        <div class="bg-white shadow-premium border border-gray-100 overflow-hidden relative">
+        <div class="bg-white shadow-premium border border-gray-100 overflow-hidden relative registry-table-shell">
             <!-- CAD-style grid line -->
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rajkot-rust/20 to-transparent"></div>
             
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm border-collapse admin-table">
+            <div class="overflow-x-auto registry-table-scroll">
+                <table class="w-full text-left text-sm border-collapse admin-table registry-table-fixed">
+                    <colgroup>
+                        <col style="width: 34%;">
+                        <col style="width: 16%;">
+                        <col style="width: 14%;">
+                        <col style="width: 18%;">
+                        <col style="width: 18%;">
+                    </colgroup>
                     <thead class="hidden md:table-header-group">
                         <tr class="bg-gray-50/80 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
                             <th class="px-8 py-6 font-bold">Identity Profile</th>
@@ -148,20 +209,43 @@ $users = db_fetch_all('SELECT id, username, full_name, email, role, status, COAL
   </div>
 
   <script>
-    const applyIdentityFilters = () => {
-        const query = (document.getElementById('identityFilterInput').value || '').trim().toLowerCase();
-        const role = document.getElementById('permissionFilterSelect').value;
-        document.querySelectorAll('.user-row').forEach((row) => {
-            const haystack = ((row.dataset.name || '') + ' ' + (row.dataset.email || '')).toLowerCase();
-            const rowRole = (row.dataset.role || '').toLowerCase();
-            const matchesQuery = query === '' || haystack.includes(query);
-            const matchesRole = role === 'all' || rowRole === role;
-            row.classList.toggle('hidden', !(matchesQuery && matchesRole));
-        });
-    };
+    document.getElementById('applyIdentityFiltersBtn').addEventListener('click', function () {
+        const roleValue = (document.getElementById('permissionFilterSelect').value || 'all').trim().toLowerCase();
+        const url = new URL(window.location.href);
+        if (roleValue && roleValue !== 'all') {
+            url.searchParams.set('role', roleValue);
+        } else {
+            url.searchParams.delete('role');
+        }
+        window.location.href = url.toString();
+    });
 
-    document.getElementById('applyIdentityFiltersBtn').addEventListener('click', applyIdentityFilters);
-    document.getElementById('identityFilterInput').addEventListener('input', applyIdentityFilters);
+    // Reference-style search: debounce and redirect with query params.
+    (function initSearchRedirect() {
+        const searchInput = document.getElementById('identityFilterInput');
+        if (!searchInput) return;
+
+        let refreshTimer;
+        searchInput.focus();
+        const val = searchInput.value || '';
+        if (searchInput.setSelectionRange) {
+            searchInput.setSelectionRange(val.length, val.length);
+        }
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(refreshTimer);
+            const searchValue = (this.value || '').trim();
+            refreshTimer = setTimeout(function () {
+                const url = new URL(window.location.href);
+                if (searchValue) {
+                    url.searchParams.set('search', searchValue);
+                } else {
+                    url.searchParams.delete('search');
+                }
+                window.location.href = url.toString();
+            }, 500);
+        });
+    })();
 
     document.getElementById('loadMoreUsersBtn').addEventListener('click', function () {
         document.querySelectorAll('.extra-user-row.hidden').forEach((row) => row.classList.remove('hidden'));
@@ -185,6 +269,8 @@ $users = db_fetch_all('SELECT id, username, full_name, email, role, status, COAL
             }, 3000);
         }
     }
+
+        // Server-side role filtering is applied on page load via URL params.
   </script>
 
 </body>

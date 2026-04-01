@@ -46,204 +46,67 @@ if (!($db instanceof PDO)) {
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title><?php echo esc($ct('page_title', 'Reset Password | Ripal Design')); ?></title>
-    <style>
-        :root {
-            --bg-start: #f5f7ff;
-            --bg-end: #eef2ff;
-            --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --accent: #2563eb;
-            --accent-hover: #1d4ed8;
-            --border: #d1d5db;
-            --danger: #dc2626;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(160deg, var(--bg-start), var(--bg-end));
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 24px;
-        }
-
-        h1 {
-            margin: 0 0 8px;
-            color: var(--text-main);
-            font-size: 1.8rem;
-            letter-spacing: 0.3px;
-        }
-
-        .subtitle {
-            margin: 0 0 20px;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .reset-shell {
-            width: 100%;
-            max-width: 460px;
-        }
-
-        .reset-form {
-            background-color: var(--card-bg);
-            width: 100%;
-            padding: 28px;
-            border-radius: 16px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
-        }
-
-        .reset-form label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        .password-row {
-            position: relative;
-            margin-bottom: 10px;
-        }
-
-        .password-row input {
-            width: 100%;
-            padding: 12px 44px 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 0.98rem;
-        }
-
-        .password-row input:focus {
-            outline: none;
-            /* border-color: var(--accent); */
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
-        }
-        .password-row img {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-        
-
-        .reset-form button {
-            margin-top: 4px;
-            background-color: var(--accent);
-            color: white;
-            padding: 11px 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-
-        .reset-form button:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .text {
-            display: block;
-            color: var(--danger);
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            line-height: 1.4;
-            overflow-wrap: break-word;
-        }
-
-        .status-message {
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 14px;
-            font-size: 0.92rem;
-            line-height: 1.4;
-        }
-
-        .status-success {
-            background: #ecfdf3;
-            border: 1px solid #86efac;
-            color: #166534;
-        }
-
-        .status-error {
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
-        }
-
-        .login-link-wrap {
-            margin-top: 12px;
-        }
-
-        .login-link {
-            display: inline-block;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .login-link:hover {
-            text-decoration: underline;
-        }
-    </style>
-    <script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/login.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="./js/validation.js"></script>
-
 </head>
 
-<body>
-    <div class="reset-shell">
-        <h1><?php echo esc($ct('heading', 'Reset Password')); ?></h1>
-        <p class="subtitle"><?php echo esc($ct('subtitle', 'Create a strong new password for your account.')); ?></p>
-        <?php if ($message !== ''): ?>
-            <div class="status-message <?php echo ($type === 'success') ? 'status-success' : 'status-error'; ?>">
-                <?php echo htmlspecialchars($message); ?>
+<body class="auth-page">
+    <div class="grain"></div>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+
+    <main class="auth-main auth-main-public">
+        <section class="auth-card-wrap" aria-labelledby="resetTitle">
+            <div class="auth-card auth-card-compact">
+                <h1 class="auth-title" id="resetTitle"><?php echo esc($ct('heading', 'Reset Password')); ?></h1>
+                <p class="auth-subtitle"><?php echo esc($ct('subtitle', 'Create a strong new password for your account.')); ?></p>
+
+                <?php if ($message !== ''): ?>
+                    <p class="alert <?php echo ($type === 'success') ? 'alert-success' : 'alert-danger'; ?>">
+                        <?php echo htmlspecialchars($message); ?>
+                    </p>
+                    <?php if ($type === 'success'): ?>
+                        <p class="switch-auth"><a href="./login.php"><?php echo esc($ct('link_after_success', 'Go to Login Page')); ?></a></p>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <?php if ($showForm): ?>
+                    <form method="post" action="./update_password.php" class="auth-form" novalidate>
+                        <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
+
+                        <div class="field">
+                            <label for="password"><?php echo esc($ct('label_new_password', 'New Password')); ?></label>
+                            <div class="input-with-icon max">
+                                <input type="password" id="password" name="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_new_password', 'Enter your new password')); ?>" data-validation="required strongPassword" autocomplete="new-password">
+                                <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>" aria-pressed="false">
+                                    <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
+                                </button>
+                            </div>
+                            <span id="password_error" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn-1"><?php echo esc($ct('button_reset', 'Reset Password')); ?></button>
+                        <p class="switch-auth"><a href="./login.php"><?php echo esc($ct('link_back_login', 'Back to Login')); ?></a></p>
+                    </form>
+                <?php endif; ?>
             </div>
-            <?php if ($type === 'success'): ?>
-                <div class="login-link-wrap">
-                    <a class="login-link" href="./login.php"><?php echo esc($ct('link_after_success', 'Go to Login Page')); ?></a>
-                </div>
-            <?php endif; ?>
-        <?php endif; ?>
-        <?php if ($showForm): ?>
-        <form method="post" action="./update_password.php" class="reset-form">
-            <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
-            <label for="password"><?php echo esc($ct('label_new_password', 'New Password:')); ?></label>
-            <div class="password-row">
-                <input type="password" id="password" name="password" placeholder="<?php echo esc_attr($ct('placeholder_new_password', 'Enter your new password')); ?>" data-validation="required strongPassword">
-                
-                  <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" id="eyeicon1" class="toggle-password" aria-hidden="false" role="button" tabindex="0" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>">
-                
-            </div>
-            <span id="password_error" class="text"></span>
-            <button type="submit"><?php echo esc($ct('button_reset', 'Reset Password')); ?></button>
-        </form>
-        <?php endif; ?>
-    </div>
+        </section>
+    </main>
+
+    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const input = document.getElementById('password');
-        const icon = document.getElementById('eyeicon1');
-        if (!input || !icon) return;
+        const toggleBtn = document.querySelector('.toggle-password-btn');
+        const icon = document.querySelector('.toggle-password');
+        if (!input || !icon || !toggleBtn) return;
 
         const openSrc = './css/eye/eye_open.svg';
         const closeSrc = './css/eye/eye_close.svg';
@@ -254,7 +117,8 @@ if (!($db instanceof PDO)) {
             const isVisible = input.type === 'text';
             icon.src = isVisible ? openSrc : closeSrc;
             icon.alt = isVisible ? hideLabel : showLabel;
-            icon.setAttribute('aria-label', isVisible ? hideLabel : showLabel);
+            toggleBtn.setAttribute('aria-label', isVisible ? hideLabel : showLabel);
+            toggleBtn.setAttribute('aria-pressed', isVisible ? 'true' : 'false');
         }
 
         function togglePassword() {
@@ -262,13 +126,7 @@ if (!($db instanceof PDO)) {
             updateToggleState();
         }
 
-        icon.addEventListener('click', togglePassword);
-        icon.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                togglePassword();
-            }
-        });
+        toggleBtn.addEventListener('click', togglePassword);
 
         updateToggleState();
     });

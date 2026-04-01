@@ -92,3 +92,34 @@ header,
     font-weight: 600;
     text-transform: uppercase;
 }
+
+.service-highlight-badge {
+    z-index: 3;
+    min-width: 190px;
+    padding: 0.8rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(14, 14, 14, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.service-highlight-brand {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: #c44737;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+}
+
+.service-highlight-title {
+    display: block;
+    color: #ffffff;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    line-height: 1.05;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}

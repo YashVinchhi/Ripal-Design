@@ -98,9 +98,9 @@ $ct = static function ($key, $default = '') use ($servicesContent) {
             </div>
 
             <!-- Decoration Badge -->
-            <div class="absolute bottom-10 right-10 border border-white/20 p-4 backdrop-blur-sm hidden md:block">
-              <span class="block text-xs uppercase tracking-widest mb-1 text-[#731209]"><?php echo esc($ct('badge_brand', 'Ripal Design')); ?></span>
-              <span class="block text-2xl serif"><?php echo esc($ct('badge_label', '2026 Collection')); ?></span>
+            <div class="service-highlight-badge absolute bottom-10 right-10 hidden md:block">
+              <span class="service-highlight-brand"><?php echo esc($ct('badge_brand', 'Ripal Design')); ?></span>
+              <span class="service-highlight-title"><?php echo esc($ct('badge_label', '2026 Collection')); ?></span>
             </div>
           </div>
         </div>

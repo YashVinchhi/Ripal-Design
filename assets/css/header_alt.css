@@ -109,8 +109,9 @@ nav.fixed-top .nav-inner nav a:hover {
 /* Backdrop & sidebar */
 #sidebarBackdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:9998; }
 #sidebarBackdrop.open { opacity:1; pointer-events:auto; }
-#siteSidebar { position:fixed; top:0; right:-360px; width:360px; height:100%; background:var(--header-contrast); color:var(--header-text-color); box-shadow:-20px 0 60px rgba(17,18,24,0.15); transition:right .32s cubic-bezier(.2,.9,.2,1); z-index:9999; padding:28px 22px; overflow:auto; border-left:1px solid rgba(0,0,0,0.04); }
-#siteSidebar.open { right:0; }
+/* Use transform for the sidebar to avoid layout thrashing and enable GPU compositing */
+#siteSidebar { position:fixed; top:0; right:0; width:360px; height:100%; background:var(--header-contrast); color:var(--header-text-color); box-shadow:-20px 0 60px rgba(17,18,24,0.15); transform: translateX(100%); transition: transform .32s cubic-bezier(.2,.9,.2,1); will-change: transform; z-index:9999; padding:28px 22px; overflow:auto; border-left:1px solid rgba(0,0,0,0.04); }
+#siteSidebar.open { transform: translateX(0); }
 #siteSidebar h3 { margin-top:0; color:var(--header-accent); font-weight:700; }
 #siteSidebar nav a { display:block; padding:10px 6px; color:var(--header-text-color); border-radius:6px; margin-bottom:6px; }
 #siteSidebar nav a:hover { background: rgba(115,18,9,0.04); color:var(--header-accent); }
