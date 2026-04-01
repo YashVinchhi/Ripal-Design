@@ -71,7 +71,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
     exit;
 }
 
-$projects = get_projects_basic(200);
+$search = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+$statusFilter = isset($_GET['status']) ? strtolower(trim((string)$_GET['status'])) : 'all';
+$allowedStatuses = ['all', 'planning', 'ongoing', 'paused', 'completed'];
+if (!in_array($statusFilter, $allowedStatuses, true)) {
+    $statusFilter = 'all';
+}
+
+$projects = [];
+$db = get_db();
+if ($db instanceof PDO) {
+    $sql = 'SELECT id, name, status, budget, progress, location, owner_name FROM projects';
+    $where = [];
+    $params = [];
+
+    if ($search !== '') {
+        $searchLike = '%' . $search . '%';
+        $where[] = '(name LIKE ? OR location LIKE ? OR owner_name LIKE ?)';
+        array_push($params, $searchLike, $searchLike, $searchLike);
+    }
+
+    if ($statusFilter !== 'all') {
+        $where[] = 'LOWER(status) = ?';
+        $params[] = $statusFilter;
+    }
+
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+
+    $sql .= ' ORDER BY id DESC LIMIT 200';
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+} else {
+    // Fallback: load base list then filter in PHP.
+    $projects = get_projects_basic(200);
+    if ($statusFilter !== 'all') {
+        $projects = array_values(array_filter($projects, static function ($p) use ($statusFilter) {
+            return strtolower((string)($p['status'] ?? '')) === $statusFilter;
+        }));
+    }
+    if ($search !== '') {
+        $needle = strtolower($search);
+        $projects = array_values(array_filter($projects, static function ($p) use ($needle) {
+            $hay = strtolower((string)($p['name'] ?? '') . ' ' . (string)($p['location'] ?? '') . ' ' . (string)($p['owner_name'] ?? ''));
+            return strpos($hay, $needle) !== false;
+        }));
+    }
+}
+
+// Normalize project location into a filterable region bucket.
+$resolveRegion = static function (string $location): string {
+    $loc = strtolower(trim($location));
+    if ($loc === '') {
+        return 'Global';
+    }
+    if (strpos($loc, 'jam khambhalia') !== false || strpos($loc, 'khambhalia') !== false) {
+        return 'Jam Khambhalia';
+    }
+    if (strpos($loc, 'rajkot') !== false) {
+        return 'Rajkot';
+    }
+    return 'Global';
+};
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
@@ -86,6 +149,61 @@ $projects = get_projects_basic(200);
   <style>
       .error { color: #94180C; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
       input.error, select.error, textarea.error { border-color: #94180C !important; background-color: #FFF5F5 !important; }
+
+      @media (max-width: 767px) {
+          .project-mobile-heading {
+              font-size: 2.25rem;
+              line-height: 1.1;
+          }
+
+          #region-filters {
+              width: 100%;
+              padding-bottom: 0.25rem;
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 0.5rem;
+              overflow: visible;
+          }
+
+          #region-filters .filter-btn {
+              width: 100%;
+              text-align: center;
+              padding: 0.6rem 0.5rem;
+          }
+
+          #region-filters .filter-btn:last-child {
+              grid-column: 1 / -1;
+          }
+
+          .project-filter-wrap {
+              gap: 0.75rem;
+              margin-bottom: 1.5rem;
+          }
+
+          .project-filter-controls {
+              gap: 0.75rem;
+          }
+
+          .project-filter-controls > div {
+              width: 100%;
+          }
+
+          .project-grid-mobile {
+              gap: 1rem;
+          }
+
+          .project-card-media {
+              height: 11.5rem;
+          }
+
+          .venture-modal-header {
+              padding: 1.25rem;
+          }
+
+          .venture-modal-form {
+              padding: 1.25rem;
+          }
+      }
   </style>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
@@ -95,7 +213,7 @@ $projects = get_projects_basic(200);
     <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-                <h1 class="text-3xl md:text-4xl font-serif font-bold">Project Portfolio</h1>
+                <h1 class="text-3xl md:text-4xl font-serif font-bold project-mobile-heading">Project Portfolio</h1>
                 <p class="text-gray-400 mt-2 text-sm md:text-base">Executive oversight for architectural and infrastructure ventures.</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
@@ -112,35 +230,35 @@ $projects = get_projects_basic(200);
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Filter Bar -->
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 mb-10">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 mb-10 project-filter-wrap">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Region Select:</span>
                 <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto no-scrollbar" id="region-filters">
-                    <button onclick="filterRegion('Global')" class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm filter-btn active-filter whitespace-nowrap">Global</button>
-                    <button onclick="filterRegion('Rajkot')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Rajkot</button>
-                    <button onclick="filterRegion('Jam Khambhalia')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Jam Khambhalia</button>
+                    <button type="button" data-region="Global" class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm filter-btn active-filter whitespace-nowrap">Global</button>
+                    <button type="button" data-region="Rajkot" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Rajkot</button>
+                    <button type="button" data-region="Jam Khambhalia" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Jam Khambhalia</button>
                 </div>
             </div>
-            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto project-filter-controls">
                 <div class="relative flex-grow lg:w-64">
                     <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <select class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer">
-                        <option>All Statuses</option>
-                        <option>Conceptual Design</option>
-                        <option>Approval Pending</option>
-                        <option>Construction Ongoing</option>
-                        <option>Project Handover</option>
+                    <select id="projectStatusFilter" class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer">
+                        <option value="all" <?php echo $statusFilter === 'all' ? 'selected' : ''; ?>>All Statuses</option>
+                        <option value="planning" <?php echo $statusFilter === 'planning' ? 'selected' : ''; ?>>Conceptual Design</option>
+                        <option value="paused" <?php echo $statusFilter === 'paused' ? 'selected' : ''; ?>>Approval Pending</option>
+                        <option value="ongoing" <?php echo $statusFilter === 'ongoing' ? 'selected' : ''; ?>>Construction Ongoing</option>
+                        <option value="completed" <?php echo $statusFilter === 'completed' ? 'selected' : ''; ?>>Project Handover</option>
                     </select>
                 </div>
                 <div class="relative flex-grow lg:w-80">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <input type="search" placeholder="Search Master Registry..." class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
+                    <input id="projectSearchInput" type="search" placeholder="Search Master Registry..." value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
                 </div>
             </div>
         </div>
 
         <!-- Project Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 project-grid-mobile">
             <?php foreach ($projects as $p): ?>
             <?php $pStatus = strtolower((string)($p['status'] ?? 'planning')); ?>
             <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Global" data-status="<?php echo htmlspecialchars($pStatus); ?>">
@@ -153,7 +271,7 @@ $projects = get_projects_basic(200);
                        <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars((string)$p['name']); ?></h3>
                     </div>
                 </div>
-                <div class="p-6 flex-grow">
+                <div class="p-4 md:p-6 flex-grow">
                     <div class="flex items-center text-sm text-gray-500 mb-6">
                         <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-rajkot-rust"></i> <?php echo htmlspecialchars((string)($p['location'] ?: 'Location not set')); ?>
                     </div>
@@ -166,16 +284,16 @@ $projects = get_projects_basic(200);
                             <div class="bg-rajkot-rust h-full" style="width: <?php echo (int)($p['progress'] ?? 0); ?>%"></div>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between py-5 md:py-4 border-t border-gray-50">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-5 md:py-4 border-t border-gray-50">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Budget: ₹ <?php echo number_format((float)($p['budget'] ?? 0), 0, '.', ','); ?></span>
-                        <a href="../dashboard/project_details.php?id=<?php echo (int)$p['id']; ?>" class="h-10 px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
+                        <a href="../dashboard/project_details.php?id=<?php echo (int)$p['id']; ?>" class="h-10 w-full sm:w-auto px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
                     </div>
                 </div>
             </div>
             <?php endforeach; ?>
 
             <!-- Add Project Card -->
-            <div class="border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center group hover:border-rajkot-rust transition-colors cursor-pointer min-h-[400px]" onclick="openVentureModal()">
+            <div class="border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center group hover:border-rajkot-rust transition-colors cursor-pointer min-h-[300px] md:min-h-[400px]" onclick="openVentureModal()">
                 <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-rajkot-rust transition-colors">
                     <i data-lucide="plus" class="w-10 h-10 text-gray-300 group-hover:text-white transition-colors"></i>
                 </div>
@@ -190,7 +308,7 @@ $projects = get_projects_basic(200);
     <!-- Initialize Venture Modal -->
     <div id="ventureModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden items-center justify-center p-4">
         <div class="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-b-4 border-rajkot-rust">
-            <div class="px-10 py-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+            <div class="venture-modal-header px-10 py-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
                 <div>
                     <h2 class="text-2xl font-serif font-bold text-foundation-grey">Initialize New Venture</h2>
                     <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Registry Entry • Part II-B (Standard)</p>
@@ -200,7 +318,7 @@ $projects = get_projects_basic(200);
                 </button>
             </div>
             
-            <form method="post" enctype="multipart/form-data" class="p-10 space-y-8" id="ventureForm" onsubmit="handleVentureSubmit(event)">
+            <form method="post" class="p-10 space-y-8" id="ventureForm" onsubmit="handleVentureSubmit(event)">
                 <?php echo csrf_token_field(); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Client Details -->
@@ -298,7 +416,7 @@ $projects = get_projects_basic(200);
             status: 'All Statuses'
         };
 
-        function filterRegion(region) {
+        function filterRegion(region, clickedButton) {
             dashboardState.region = region;
             
             // UI updates for buttons
@@ -307,9 +425,10 @@ $projects = get_projects_basic(200);
                 btn.classList.add('bg-white', 'text-gray-500', 'border-gray-100');
             });
             
-            const activeBtn = event.currentTarget;
-            activeBtn.classList.add('bg-rajkot-rust', 'text-white', 'active-filter');
-            activeBtn.classList.remove('bg-white', 'text-gray-500', 'border-gray-100');
+            if (clickedButton) {
+                clickedButton.classList.add('bg-rajkot-rust', 'text-white', 'active-filter');
+                clickedButton.classList.remove('bg-white', 'text-gray-500', 'border-gray-100');
+            }
             
             applyAllFilters();
         }
@@ -336,10 +455,58 @@ $projects = get_projects_basic(200);
             });
         }
 
-        // Attach event listener to status dropdown
-        document.querySelector('select').addEventListener('change', function(e) {
-            filterStatus(e.target.value);
+        // Region filter click handling.
+        document.querySelectorAll('#region-filters .filter-btn').forEach((btn) => {
+            btn.addEventListener('click', function () {
+                const region = this.getAttribute('data-region') || 'Global';
+                filterRegion(region, this);
+            });
         });
+
+        // Status filter: same URL/server-side behavior as user management.
+        document.getElementById('projectStatusFilter').addEventListener('change', function(e) {
+            const url = new URL(window.location.href);
+            const value = (e.target.value || 'all').trim().toLowerCase();
+            if (value !== 'all') {
+                url.searchParams.set('status', value);
+            } else {
+                url.searchParams.delete('status');
+            }
+            window.location.href = url.toString();
+        });
+
+        // Search: debounce redirect and preserve status filter in URL.
+        (function initProjectSearchRedirect() {
+            const searchInput = document.getElementById('projectSearchInput');
+            if (!searchInput) return;
+
+            let refreshTimer;
+            function focusAtEnd() {
+                searchInput.focus();
+                const val = searchInput.value || '';
+                if (searchInput.setSelectionRange) {
+                    searchInput.setSelectionRange(val.length, val.length);
+                }
+            }
+
+            focusAtEnd();
+            // Retry once for browsers that delay paint/focus when the page just reloaded.
+            setTimeout(focusAtEnd, 60);
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(refreshTimer);
+                const searchValue = (this.value || '').trim();
+                refreshTimer = setTimeout(function () {
+                    const url = new URL(window.location.href);
+                    if (searchValue) {
+                        url.searchParams.set('search', searchValue);
+                    } else {
+                        url.searchParams.delete('search');
+                    }
+                    window.location.href = url.toString();
+                }, 500);
+            });
+        })();
 
         function openVentureModal() {
             const modal = document.getElementById('ventureModal');

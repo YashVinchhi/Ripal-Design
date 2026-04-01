@@ -83,6 +83,12 @@ function showActive($form, $active_form)
                     </div>
 
                     <div class="field">
+                        <label for="username"><?php echo esc($ct('label_username', 'Username')); ?></label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="<?php echo esc_attr($ct('placeholder_username', 'Choose a username')); ?>" data-validation="required min max" data-min="3" data-max="30" autocomplete="username">
+                        <span id="username_error" class="text-danger"></span>
+                    </div>
+
+                    <div class="field">
                         <label for="email"><?php echo esc($ct('label_email', 'Email Address')); ?></label>
                         <input type="email" class="form-control" id="email" name="email" placeholder="<?php echo esc_attr($ct('placeholder_email', 'youremail@example.com')); ?>" data-validation="required email" autocomplete="email">
                         <span id="email_error" class="text-danger"></span>

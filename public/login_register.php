@@ -77,13 +77,18 @@ if (!($db instanceof PDO)) {
 if (isset($_POST['signup'])) {
     $first_name = trim((string) ($_POST['firstName'] ?? ''));
     $last_name = trim((string) ($_POST['lastName'] ?? ''));
+    $username = trim((string) ($_POST['username'] ?? ''));
     $email = trim((string) ($_POST['email'] ?? ''));
     $user_password = (string) ($_POST['password'] ?? '');
     $phone_number = trim((string) ($_POST['phoneNumber'] ?? ''));
     $confirm_password = (string) ($_POST['confirmPassword'] ?? '');
 
-    if ($first_name === '' || $last_name === '' || $email === '' || $user_password === '') {
+    if ($first_name === '' || $last_name === '' || $username === '' || $email === '' || $user_password === '') {
         signup_error_and_redirect($ct('signup_required_fields', 'Please fill all required fields.'));
+    }
+
+    if (!preg_match('/^[A-Za-z0-9._-]{3,30}$/', $username)) {
+        signup_error_and_redirect($ct('signup_invalid_username', 'Username must be 3-30 chars and can contain letters, numbers, dot, underscore or hyphen.'));
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -95,17 +100,22 @@ if (isset($_POST['signup'])) {
     }
 
     try {
-        $chk = $db->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
-        $chk->execute([$email]);
-        if ($chk->fetch(PDO::FETCH_ASSOC)) {
+        $chkEmail = $db->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+        $chkEmail->execute([$email]);
+        if ($chkEmail->fetch(PDO::FETCH_ASSOC)) {
             signup_error_and_redirect($ct('signup_email_exists', 'Email already exists. Please use a different email.'));
+        }
+
+        $chkUsername = $db->prepare('SELECT id FROM users WHERE username = ? LIMIT 1');
+        $chkUsername->execute([$username]);
+        if ($chkUsername->fetch(PDO::FETCH_ASSOC)) {
+            signup_error_and_redirect($ct('signup_username_exists', 'Username already exists. Please choose another username.'));
         }
 
         $passwordHash = password_hash($user_password, PASSWORD_DEFAULT);
         $role = 'client';
         $status = 'pending';
         $fullName = trim($first_name . ' ' . $last_name);
-        $username = generate_unique_username($db, $first_name, $last_name);
 
         $ins = $db->prepare(
             'INSERT INTO users (username, full_name, first_name, last_name, email, phone, password_hash, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'

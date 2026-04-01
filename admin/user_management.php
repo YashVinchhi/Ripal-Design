@@ -5,9 +5,43 @@ require_once __DIR__ . '/../includes/init.php';
 require_login();
 require_role('admin');
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'update_status') {
+    require_csrf();
+
+    $userId = (int)($_POST['user_id'] ?? 0);
+    $newStatus = strtolower(trim((string)($_POST['new_status'] ?? '')));
+    $allowedStatuses = ['active', 'pending', 'suspended'];
+    $statusMsg = 'error';
+
+    if ($userId > 0 && in_array($newStatus, $allowedStatuses, true)) {
+        $statusDb = get_db();
+        if ($statusDb instanceof PDO) {
+            $update = $statusDb->prepare('UPDATE users SET status = ?, updated_at = NOW() WHERE id = ? LIMIT 1');
+            $update->execute([$newStatus, $userId]);
+            $statusMsg = 'updated';
+        }
+    }
+
+    $redirect = [];
+    $qSearch = trim((string)($_GET['search'] ?? ''));
+    $qRole = trim((string)($_GET['role'] ?? ''));
+    if ($qSearch !== '') {
+        $redirect['search'] = $qSearch;
+    }
+    if ($qRole !== '') {
+        $redirect['role'] = $qRole;
+    }
+    $redirect['status_msg'] = $statusMsg;
+
+    $location = $_SERVER['PHP_SELF'] . (empty($redirect) ? '' : ('?' . http_build_query($redirect)));
+    header('Location: ' . $location);
+    exit;
+}
+
 $roleCounts = get_user_role_counts();
 $search = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
 $role = isset($_GET['role']) ? strtolower(trim((string)$_GET['role'])) : 'all';
+$statusMsg = isset($_GET['status_msg']) ? strtolower(trim((string)$_GET['status_msg'])) : '';
 $allowedRoles = ['all', 'admin', 'employee', 'worker', 'client'];
 if (!in_array($role, $allowedRoles, true)) {
     $role = 'all';
@@ -63,6 +97,64 @@ if ($db instanceof PDO) {
         .registry-table-fixed {
             table-layout: fixed;
             width: 100%;
+        }
+
+        @media (max-width: 767px) {
+            .registry-table-shell,
+            .registry-table-scroll {
+                min-height: auto;
+            }
+
+            .registry-table-fixed {
+                table-layout: auto;
+            }
+
+            .registry-table-fixed colgroup {
+                display: none;
+            }
+
+            .registry-table-scroll {
+                overflow-x: visible;
+            }
+
+            .admin-table,
+            .admin-table tbody,
+            .admin-table tr,
+            .admin-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .admin-table tr.user-row {
+                margin-bottom: 1rem;
+                border-radius: 0.75rem;
+                border: 1px solid #e5e7eb;
+                background: #fff;
+            }
+
+            .admin-table td[data-label] {
+                position: relative;
+                padding-top: 1.6rem;
+            }
+
+            .admin-table td[data-label]::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: 0.4rem;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: #9ca3af;
+            }
+
+            .admin-table td[data-label="Registry Actions"] {
+                padding-top: 1rem;
+            }
+
+            .admin-table td[data-label="Registry Actions"]::before {
+                margin-bottom: 0.75rem;
+            }
         }
     </style>
   <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
@@ -130,6 +222,16 @@ if ($db instanceof PDO) {
             </div>
         </div>
 
+        <?php if ($statusMsg === 'updated'): ?>
+            <div class="mb-6 bg-approval-green/10 border border-approval-green/30 text-approval-green px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                User status updated successfully.
+            </div>
+        <?php elseif ($statusMsg === 'error'): ?>
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                Unable to update user status.
+            </div>
+        <?php endif; ?>
+
         <!-- User Table -->
         <div class="bg-white shadow-premium border border-gray-100 overflow-hidden relative registry-table-shell">
             <!-- CAD-style grid line -->
@@ -184,13 +286,22 @@ if ($db instanceof PDO) {
                             </td>
                             <td class="px-6 md:px-8 py-4 md:py-6 text-gray-400 text-[11px] font-medium italic block md:table-cell" data-label="Last Sync"><?php echo htmlspecialchars((string)($u['last_sync'] ?? '')); ?></td>
                             <td class="px-6 md:px-8 py-6 md:py-6 block md:table-cell" data-label="Registry Actions">
-                                <div class="flex flex-row md:justify-end gap-3 mt-4 md:mt-0">
-                                    <a href="../dashboard/profile.php?user=<?php echo urlencode((string)$u['username']); ?>" class="flex-grow md:flex-grow-0 h-11 w-11 bg-gray-50 md:bg-transparent text-gray-400 hover:text-rajkot-rust transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded" title="View Profile">
+                                <div class="flex flex-row md:justify-end items-center gap-3 mt-4 md:mt-0 flex-wrap">
+                                    <a href="../dashboard/profile.php?user=<?php echo urlencode((string)$u['username']); ?>" class="h-11 w-11 shrink-0 bg-gray-50 md:bg-transparent text-gray-400 hover:text-rajkot-rust transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded" title="View Profile">
                                         <i data-lucide="eye" class="w-5 h-5 md:w-4 md:h-4"></i>
                                     </a>
-                                    <a href="add_user.php?id=<?php echo (int)$u['id']; ?>" class="flex-grow md:flex-grow-0 h-11 w-11 bg-gray-50 md:bg-transparent text-gray-400 hover:text-foundation-grey transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded" title="Edit Permissions">
+                                    <a href="add_user.php?id=<?php echo (int)$u['id']; ?>" class="h-11 w-11 shrink-0 bg-gray-50 md:bg-transparent text-gray-400 hover:text-foundation-grey transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded" title="Edit Permissions">
                                         <i data-lucide="settings-2" class="w-5 h-5 md:w-4 md:h-4"></i>
                                     </a>
+                                    <form method="post" class="shrink-0">
+                                        <?php echo csrf_token_field(); ?>
+                                        <input type="hidden" name="action" value="update_status">
+                                        <input type="hidden" name="user_id" value="<?php echo (int)$u['id']; ?>">
+                                        <input type="hidden" name="new_status" value="<?php echo $status === 'active' ? 'suspended' : 'active'; ?>">
+                                        <button type="submit" class="h-11 px-3 bg-gray-50 md:bg-transparent text-[9px] font-bold uppercase tracking-widest <?php echo $status === 'active' ? 'text-red-600 hover:text-red-700' : 'text-approval-green hover:text-approval-green/80'; ?> transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded" title="<?php echo $status === 'active' ? 'Deactivate User' : 'Activate User'; ?>">
+                                            <?php echo $status === 'active' ? 'Deactivate' : 'Activate'; ?>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -226,11 +337,17 @@ if ($db instanceof PDO) {
         if (!searchInput) return;
 
         let refreshTimer;
-        searchInput.focus();
-        const val = searchInput.value || '';
-        if (searchInput.setSelectionRange) {
-            searchInput.setSelectionRange(val.length, val.length);
+        function focusAtEnd() {
+            searchInput.focus();
+            const val = searchInput.value || '';
+            if (searchInput.setSelectionRange) {
+                searchInput.setSelectionRange(val.length, val.length);
+            }
         }
+
+        focusAtEnd();
+        // Retry once for browsers that delay paint/focus when the page just reloaded.
+        setTimeout(focusAtEnd, 60);
 
         searchInput.addEventListener('input', function () {
             clearTimeout(refreshTimer);
