@@ -226,11 +226,17 @@ if ($db instanceof PDO) {
         if (!searchInput) return;
 
         let refreshTimer;
-        searchInput.focus();
-        const val = searchInput.value || '';
-        if (searchInput.setSelectionRange) {
-            searchInput.setSelectionRange(val.length, val.length);
+        function focusAtEnd() {
+            searchInput.focus();
+            const val = searchInput.value || '';
+            if (searchInput.setSelectionRange) {
+                searchInput.setSelectionRange(val.length, val.length);
+            }
         }
+
+        focusAtEnd();
+        // Retry once for browsers that delay paint/focus when the page just reloaded.
+        setTimeout(focusAtEnd, 60);
 
         searchInput.addEventListener('input', function () {
             clearTimeout(refreshTimer);

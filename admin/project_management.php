@@ -24,7 +24,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
     exit;
 }
 
-$projects = get_projects_basic(200);
+$search = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+$statusFilter = isset($_GET['status']) ? strtolower(trim((string)$_GET['status'])) : 'all';
+$allowedStatuses = ['all', 'planning', 'ongoing', 'paused', 'completed'];
+if (!in_array($statusFilter, $allowedStatuses, true)) {
+    $statusFilter = 'all';
+}
+
+$projects = [];
+$db = get_db();
+if ($db instanceof PDO) {
+    $sql = 'SELECT id, name, status, budget, progress, location, owner_name FROM projects';
+    $where = [];
+    $params = [];
+
+    if ($search !== '') {
+        $searchLike = '%' . $search . '%';
+        $where[] = '(name LIKE ? OR location LIKE ? OR owner_name LIKE ?)';
+        array_push($params, $searchLike, $searchLike, $searchLike);
+    }
+
+    if ($statusFilter !== 'all') {
+        $where[] = 'LOWER(status) = ?';
+        $params[] = $statusFilter;
+    }
+
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+
+    $sql .= ' ORDER BY id DESC LIMIT 200';
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+} else {
+    // Fallback: load base list then filter in PHP.
+    $projects = get_projects_basic(200);
+    if ($statusFilter !== 'all') {
+        $projects = array_values(array_filter($projects, static function ($p) use ($statusFilter) {
+            return strtolower((string)($p['status'] ?? '')) === $statusFilter;
+        }));
+    }
+    if ($search !== '') {
+        $needle = strtolower($search);
+        $projects = array_values(array_filter($projects, static function ($p) use ($needle) {
+            $hay = strtolower((string)($p['name'] ?? '') . ' ' . (string)($p['location'] ?? '') . ' ' . (string)($p['owner_name'] ?? ''));
+            return strpos($hay, $needle) !== false;
+        }));
+    }
+}
+
+// Normalize project location into a filterable region bucket.
+$resolveRegion = static function (string $location): string {
+    $loc = strtolower(trim($location));
+    if ($loc === '') {
+        return 'Global';
+    }
+    if (strpos($loc, 'jam khambhalia') !== false || strpos($loc, 'khambhalia') !== false) {
+        return 'Jam Khambhalia';
+    }
+    if (strpos($loc, 'rajkot') !== false) {
+        return 'Rajkot';
+    }
+    return 'Global';
+};
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
@@ -69,25 +132,25 @@ $projects = get_projects_basic(200);
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Region Select:</span>
                 <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto no-scrollbar" id="region-filters">
-                    <button onclick="filterRegion('Global')" class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm filter-btn active-filter whitespace-nowrap">Global</button>
-                    <button onclick="filterRegion('Rajkot')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Rajkot</button>
-                    <button onclick="filterRegion('Jam Khambhalia')" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Jam Khambhalia</button>
+                    <button type="button" data-region="Global" class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm filter-btn active-filter whitespace-nowrap">Global</button>
+                    <button type="button" data-region="Rajkot" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Rajkot</button>
+                    <button type="button" data-region="Jam Khambhalia" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Jam Khambhalia</button>
                 </div>
             </div>
             <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                 <div class="relative flex-grow lg:w-64">
                     <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <select class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer">
-                        <option>All Statuses</option>
-                        <option>Conceptual Design</option>
-                        <option>Approval Pending</option>
-                        <option>Construction Ongoing</option>
-                        <option>Project Handover</option>
+                    <select id="projectStatusFilter" class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer">
+                        <option value="all" <?php echo $statusFilter === 'all' ? 'selected' : ''; ?>>All Statuses</option>
+                        <option value="planning" <?php echo $statusFilter === 'planning' ? 'selected' : ''; ?>>Conceptual Design</option>
+                        <option value="paused" <?php echo $statusFilter === 'paused' ? 'selected' : ''; ?>>Approval Pending</option>
+                        <option value="ongoing" <?php echo $statusFilter === 'ongoing' ? 'selected' : ''; ?>>Construction Ongoing</option>
+                        <option value="completed" <?php echo $statusFilter === 'completed' ? 'selected' : ''; ?>>Project Handover</option>
                     </select>
                 </div>
                 <div class="relative flex-grow lg:w-80">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <input type="search" placeholder="Search Master Registry..." class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
+                    <input id="projectSearchInput" type="search" placeholder="Search Master Registry..." value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
                 </div>
             </div>
         </div>
@@ -96,7 +159,8 @@ $projects = get_projects_basic(200);
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <?php foreach ($projects as $p): ?>
             <?php $pStatus = strtolower((string)($p['status'] ?? 'planning')); ?>
-            <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Global" data-status="<?php echo htmlspecialchars($pStatus); ?>">
+            <?php $pRegion = $resolveRegion((string)($p['location'] ?? '')); ?>
+            <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="<?php echo htmlspecialchars($pRegion); ?>" data-status="<?php echo htmlspecialchars($pStatus); ?>">
                 <div class="h-56 bg-foundation-grey relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                        <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg"><?php echo htmlspecialchars(strtoupper($pStatus)); ?></span>
@@ -244,7 +308,7 @@ $projects = get_projects_basic(200);
             status: 'All Statuses'
         };
 
-        function filterRegion(region) {
+        function filterRegion(region, clickedButton) {
             dashboardState.region = region;
             
             // UI updates for buttons
@@ -253,9 +317,10 @@ $projects = get_projects_basic(200);
                 btn.classList.add('bg-white', 'text-gray-500', 'border-gray-100');
             });
             
-            const activeBtn = event.currentTarget;
-            activeBtn.classList.add('bg-rajkot-rust', 'text-white', 'active-filter');
-            activeBtn.classList.remove('bg-white', 'text-gray-500', 'border-gray-100');
+            if (clickedButton) {
+                clickedButton.classList.add('bg-rajkot-rust', 'text-white', 'active-filter');
+                clickedButton.classList.remove('bg-white', 'text-gray-500', 'border-gray-100');
+            }
             
             applyAllFilters();
         }
@@ -282,10 +347,58 @@ $projects = get_projects_basic(200);
             });
         }
 
-        // Attach event listener to status dropdown
-        document.querySelector('select').addEventListener('change', function(e) {
-            filterStatus(e.target.value);
+        // Region filter click handling.
+        document.querySelectorAll('#region-filters .filter-btn').forEach((btn) => {
+            btn.addEventListener('click', function () {
+                const region = this.getAttribute('data-region') || 'Global';
+                filterRegion(region, this);
+            });
         });
+
+        // Status filter: same URL/server-side behavior as user management.
+        document.getElementById('projectStatusFilter').addEventListener('change', function(e) {
+            const url = new URL(window.location.href);
+            const value = (e.target.value || 'all').trim().toLowerCase();
+            if (value !== 'all') {
+                url.searchParams.set('status', value);
+            } else {
+                url.searchParams.delete('status');
+            }
+            window.location.href = url.toString();
+        });
+
+        // Search: debounce redirect and preserve status filter in URL.
+        (function initProjectSearchRedirect() {
+            const searchInput = document.getElementById('projectSearchInput');
+            if (!searchInput) return;
+
+            let refreshTimer;
+            function focusAtEnd() {
+                searchInput.focus();
+                const val = searchInput.value || '';
+                if (searchInput.setSelectionRange) {
+                    searchInput.setSelectionRange(val.length, val.length);
+                }
+            }
+
+            focusAtEnd();
+            // Retry once for browsers that delay paint/focus when the page just reloaded.
+            setTimeout(focusAtEnd, 60);
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(refreshTimer);
+                const searchValue = (this.value || '').trim();
+                refreshTimer = setTimeout(function () {
+                    const url = new URL(window.location.href);
+                    if (searchValue) {
+                        url.searchParams.set('search', searchValue);
+                    } else {
+                        url.searchParams.delete('search');
+                    }
+                    window.location.href = url.toString();
+                }, 500);
+            });
+        })();
 
         function openVentureModal() {
             const modal = document.getElementById('ventureModal');
