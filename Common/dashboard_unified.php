@@ -201,7 +201,7 @@ if ($isAdmin) {
 
 $actionCards = [
     ['label' => 'Profile', 'href' => base_path('dashboard/profile.php'), 'icon' => 'user'],
-    ['label' => 'Project Details', 'href' => base_path('dashboard/project_details.php'), 'icon' => 'layout-grid'],
+    ['label' => 'Create Project', 'href' => base_path('dashboard/project_details.php'), 'icon' => 'layout-grid'],
     ['label' => 'Review Requests', 'href' => base_path('dashboard/review_requests.php'), 'icon' => 'clipboard-list'],
 ];
 
