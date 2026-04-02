@@ -88,15 +88,8 @@ $isAdmin = $variant === 'admin';
 $isWorker = $variant === 'worker';
 $isClient = ($sessionRole === 'client');
 
-// Project-view swap requested by user:
-// client users see worker-style project view, and workers see client/main-style project view.
-$projectViewRole = $sessionRole;
-if ($projectViewRole === 'client') {
-  $projectViewRole = 'worker';
-} elseif ($projectViewRole === 'worker') {
-  $projectViewRole = 'client';
-}
-$useWorkerProjectView = ($projectViewRole === 'worker');
+// Keep worker-specific project view restricted to worker roles only.
+$useWorkerProjectView = ($sessionRole === 'worker');
 $isReadOnly = $useWorkerProjectView;
 
 $roleDisplayName = $roleContext['role_name'] !== ''
