@@ -149,7 +149,7 @@ foreach ($stylesheetCandidates as $candidate) {
                             'title' => $headerText('dashboard_section_title', 'Dashboard'),
                             'links' => [
                                 ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('dashboard_link_home', 'Dashboard Home')],
-                                ['href' => BASE_PATH . '/dashboard/project_details.php', 'label' => $headerText('dashboard_link_project_details', 'Project Details')],
+                                ['href' => BASE_PATH . '/worker/project_details.php', 'label' => $headerText('dashboard_link_project_details', 'Project Details')],
                                 ['href' => $dashboardProfileUrl, 'label' => $headerText('dashboard_link_profile', 'Profile Settings')],
                                 ['href' => BASE_PATH . '/dashboard/review_requests.php', 'label' => $headerText('dashboard_link_reviews', 'Review Requests')],
                             ],
@@ -159,7 +159,7 @@ foreach ($stylesheetCandidates as $candidate) {
                             'links' => [
                                 ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('worker_link_dashboard', 'Worker Dashboard')],
                                 ['href' => BASE_PATH . '/worker/assigned_projects.php', 'label' => $headerText('worker_link_assigned_projects', 'Assigned Projects')],
-                                ['href' => BASE_PATH . '/worker/project_details.php', 'label' => $headerText('worker_link_project_details', 'Project Details')],
+                                ['href' => BASE_PATH . '/dashboard/project_details.php', 'label' => $headerText('worker_link_project_details', 'Project Details')],
                                 ['href' => BASE_PATH . '/worker/worker_rating.php', 'label' => $headerText('worker_link_ratings', 'My Ratings')],
                             ],
                         ],

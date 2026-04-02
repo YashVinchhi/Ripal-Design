@@ -325,6 +325,107 @@ function auth_table_exists($table) {
 }
 
 /**
+ * Map broad user role to preferred RBAC role code.
+ *
+ * @param string $role
+ * @return string
+ */
+function auth_preferred_rbac_role_code_for_user_role($role) {
+    $role = strtolower(trim((string)$role));
+
+    if ($role === 'admin') {
+        return 'emp_admin_manager';
+    }
+
+    if ($role === 'employee') {
+        return 'emp_team_coordinator';
+    }
+
+    if ($role === 'worker') {
+        return 'wrk_contractor';
+    }
+
+    return '';
+}
+
+/**
+ * Sync broad user role into RBAC user_roles and active session.
+ *
+ * @param int $userId
+ * @param string $role
+ * @param int|null $assignedBy
+ * @return bool
+ */
+function auth_sync_user_role_links($userId, $role, $assignedBy = null) {
+    $userId = (int)$userId;
+    $role = strtolower(trim((string)$role));
+    $assignedBy = $assignedBy === null ? null : (int)$assignedBy;
+
+    if ($userId <= 0) {
+        return false;
+    }
+
+    $allowedRoles = ['admin', 'employee', 'worker', 'client'];
+    if (!in_array($role, $allowedRoles, true)) {
+        $role = 'client';
+    }
+
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        return false;
+    }
+
+    try {
+        // Keep the canonical users table aligned even if caller only updated related tables.
+        $u = $db->prepare('UPDATE users SET role = ?, updated_at = NOW() WHERE id = ?');
+        $u->execute([$role, $userId]);
+
+        if (auth_table_exists('user_roles')) {
+            $del = $db->prepare('DELETE FROM user_roles WHERE user_id = ?');
+            $del->execute([$userId]);
+
+            $preferredCode = auth_preferred_rbac_role_code_for_user_role($role);
+            if ($preferredCode !== '' && auth_table_exists('roles') && auth_table_exists('role_groups')) {
+                $find = $db->prepare('SELECT r.id
+                    FROM roles r
+                    INNER JOIN role_groups rg ON rg.id = r.role_group_id
+                    WHERE r.is_active = 1
+                      AND (r.code = ? OR rg.code = ?)
+                    ORDER BY CASE WHEN r.code = ? THEN 0 ELSE 1 END, r.id ASC
+                    LIMIT 1');
+
+                $groupCode = $role === 'worker' ? 'worker' : 'employee';
+                $find->execute([$preferredCode, $groupCode, $preferredCode]);
+                $r = $find->fetch(PDO::FETCH_ASSOC);
+
+                if ($r && !empty($r['id'])) {
+                    $roleId = (int)$r['id'];
+                    $ins = $db->prepare('INSERT INTO user_roles (user_id, role_id, is_primary, assigned_by, assigned_at) VALUES (?, ?, 1, ?, NOW())');
+                    $ins->execute([$userId, $roleId, $assignedBy]);
+                }
+            }
+        }
+
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+
+        if (!empty($_SESSION['user']) && (int)($_SESSION['user']['id'] ?? 0) === $userId) {
+            $_SESSION['user']['role'] = $role;
+        }
+
+        if ((int)($_SESSION['user_id'] ?? 0) === $userId) {
+            $_SESSION['role'] = $role;
+        }
+
+        return true;
+    } catch (Exception $e) {
+        error_log('auth_sync_user_role_links failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
  * Fetch RBAC role context for logged-in user.
  *
  * @param int $userId
@@ -375,13 +476,17 @@ function auth_get_user_rbac_context($userId) {
  * @return bool
  */
 function auth_is_admin_like($user, $rbacCtx = []) {
-    $sessionRole = is_array($user) ? (string)($user['role'] ?? '') : '';
+    $sessionRole = strtolower(trim(is_array($user) ? (string)($user['role'] ?? '') : ''));
     if ($sessionRole === 'admin') {
         return true;
     }
 
+    if (in_array($sessionRole, ['employee', 'worker', 'client'], true)) {
+        return false;
+    }
+
     $roleCode = (string)($rbacCtx['role_code'] ?? '');
-    return $roleCode !== '' && strpos($roleCode, 'admin') !== false;
+    return $roleCode === 'emp_admin_manager';
 }
 
 /**
@@ -392,19 +497,23 @@ function auth_is_admin_like($user, $rbacCtx = []) {
  * @return bool
  */
 function auth_is_worker_like($user, $rbacCtx = []) {
-    $sessionRole = is_array($user) ? (string)($user['role'] ?? '') : '';
+    $sessionRole = strtolower(trim(is_array($user) ? (string)($user['role'] ?? '') : ''));
     if ($sessionRole === 'worker') {
         return true;
+    }
+
+    if (in_array($sessionRole, ['admin', 'employee', 'client'], true)) {
+        return false;
     }
 
     $roleCode = (string)($rbacCtx['role_code'] ?? '');
     $groupCode = (string)($rbacCtx['group_code'] ?? '');
 
-    if ($groupCode === 'site_ops') {
+    if ($groupCode === 'worker') {
         return true;
     }
 
-    return $roleCode !== '' && strpos($roleCode, 'site_') === 0;
+    return $roleCode !== '' && strpos($roleCode, 'wrk_') === 0;
 }
 
 if (!function_exists('auth_resolve_navigation_role')) {
@@ -576,6 +685,14 @@ function enforce_request_write_permission() {
     // Do not interfere with auth entry point where session may be created.
     if (strpos($script, '/public/login_register.php') !== false) {
         return;
+    }
+
+    // Allow project file API upload/log actions to proceed to endpoint-level authorization.
+    if (strpos($script, '/dashboard/api/project_files.php') !== false) {
+        $apiAction = strtolower(trim((string)($_POST['action'] ?? '')));
+        if (in_array($apiAction, ['upload_file', 'upload_drawing', 'log_activity'], true)) {
+            return;
+        }
     }
 
     $user = current_user();

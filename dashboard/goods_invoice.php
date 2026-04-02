@@ -5,10 +5,61 @@ require_login();
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 if (!$project_id) { header('Location: dashboard.php'); exit; }
 
+$sessionUser = $_SESSION['user'] ?? [];
+$sessionRole = strtolower(trim((string)($sessionUser['role'] ?? '')));
+$isClientReadOnly = ($sessionRole === 'client');
+
 // Handle form submissions: add item or save meta
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   require_csrf();
   $action = $_POST['action'] ?? '';
+
+    // Client role can only view invoice; no write or request submission actions.
+    if ($isClientReadOnly && in_array($action, ['email_invoice', 'add_item', 'save_meta', 'request_invoice_edit'], true)) {
+        set_flash('Clients can view invoices only.', 'error');
+        header('Location: goods_invoice.php?project_id=' . $project_id);
+        exit;
+    }
+
+    if ($action === 'request_invoice_edit') {
+        $requestDetails = trim((string)($_POST['request_details'] ?? ''));
+        if ($requestDetails === '') {
+            set_flash('Please describe the invoice changes you want.', 'error');
+            header('Location: goods_invoice.php?project_id=' . $project_id);
+            exit;
+        }
+
+        $submittedBy = (int)($_SESSION['user_id'] ?? ($sessionUser['id'] ?? 0));
+        $submitted = false;
+
+        if (db_connected()) {
+            try {
+                db_query(
+                    'INSERT INTO review_requests (project_id, submitted_by, subject, description, urgency, status) VALUES (?, ?, ?, ?, ?, "pending")',
+                    [
+                        $project_id,
+                        $submittedBy > 0 ? $submittedBy : null,
+                        'Invoice edit request for project #' . $project_id,
+                        $requestDetails,
+                        'normal',
+                    ]
+                );
+                $submitted = true;
+            } catch (Exception $e) {
+                error_log('Invoice edit request failed: ' . $e->getMessage());
+            }
+        }
+
+        if ($submitted) {
+            set_flash('Your invoice edit request has been submitted.', 'success');
+        } else {
+            set_flash('Could not submit your request right now. Please try again.', 'error');
+        }
+
+        header('Location: goods_invoice.php?project_id=' . $project_id);
+        exit;
+    }
+
     // Email invoice action
     if ($action === 'email_invoice') {
         $to = trim($_POST['to_email'] ?? '');
@@ -129,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     require_once $templateFile;
                                     try {
                                         // Create a UPI deep link prefilled with payee VPA and amount
-                                        $upiVpa = 'yashhvinchhi@oksbi';
+                                        $upiVpa = 'yashhvinchhi@okaxis';
                                         $upiName = 'Ripal Design';
                                         $upiAmount = number_format((float)$total, 2, '.', '');
                                         $upiNote = 'Invoice ' . $invoice_id;
@@ -265,6 +316,20 @@ $tax = round($subtotal * $tax_rate, 2);
 $total = round($subtotal + $tax, 2);
 $invoice_id = 'INV-' . str_pad($project_id, 6, '0', STR_PAD_LEFT) . '-' . date('Ymd');
 $share_url = rtrim(BASE_URL, '/') . '/dashboard/goods_invoice.php?project_id=' . $project_id;
+$upi_vpa = 'yashhvinchhi@okaxis';
+$upi_name = 'Ripal Design';
+$upi_amount = number_format((float)$total, 2, '.', '');
+$upi_note = 'Invoice ' . $invoice_id;
+$upiParams = [
+    'pa' => $upi_vpa,
+    'pn' => $upi_name,
+    'am' => $upi_amount,
+    'cu' => 'INR',
+    'tn' => $upi_note,
+    'tr' => $invoice_id,
+];
+$upi_link = 'upi://pay?' . http_build_query($upiParams, '', '&', PHP_QUERY_RFC3986);
+$upi_qr_url = 'https://chart.googleapis.com/chart?cht=qr&chs=320x320&chl=' . rawurlencode($upi_link) . '&chld=L|1';
 
 $displayName = $_SESSION['user']['first_name'] ?? 'User';
 $title = "Invoice " . $invoice_id . " | Ripal Design";
@@ -350,20 +415,22 @@ if (function_exists('render_flash')) { render_flash(); }
                     <?php if (!empty($project['location'])): ?><div class="text-sm text-gray-500 italic"><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> <?php echo h($project['location']); ?></div><?php endif; ?>
                     
                     <!-- Meta Edit (no-print) - visible on hover -->
-                    <div class="absolute inset-0 bg-white/95 p-6 opacity-0 group-hover:opacity-100 transition-opacity no-print flex flex-col justify-center border border-rajkot-rust/20 font-sans">
-                        <h5 class="text-[10px] uppercase tracking-widest font-bold text-rajkot-rust mb-3">Edit Billing Info</h5>
-                        <form method="post">
-                            <?php echo csrf_token_field(); ?>
-                            <input type="hidden" name="action" value="save_meta">
-                            <div class="flex flex-col gap-3">
-                                <input name="client_name" placeholder="Client Name" class="w-full bg-white border border-gray-200 px-3 py-2 text-sm focus:border-rajkot-rust outline-none transition-colors" value="<?php echo h($project['owner_name'] ?? ''); ?>">
-                                <div class="flex gap-2">
-                                    <input name="worker_name" placeholder="Worker Name" class="flex-1 bg-white border border-gray-200 px-3 py-2 text-sm focus:border-rajkot-rust outline-none transition-colors" value="<?php echo h($project['worker_name'] ?? ''); ?>">
-                                    <button type="submit" class="bg-foundation-grey text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors">Save</button>
+                    <?php if (!$isClientReadOnly): ?>
+                        <div class="absolute inset-0 bg-white/95 p-6 opacity-0 group-hover:opacity-100 transition-opacity no-print flex flex-col justify-center border border-rajkot-rust/20 font-sans">
+                            <h5 class="text-[10px] uppercase tracking-widest font-bold text-rajkot-rust mb-3">Edit Billing Info</h5>
+                            <form method="post">
+                                <?php echo csrf_token_field(); ?>
+                                <input type="hidden" name="action" value="save_meta">
+                                <div class="flex flex-col gap-3">
+                                    <input name="client_name" placeholder="Client Name" class="w-full bg-white border border-gray-200 px-3 py-2 text-sm focus:border-rajkot-rust outline-none transition-colors" value="<?php echo h($project['owner_name'] ?? ''); ?>">
+                                    <div class="flex gap-2">
+                                        <input name="worker_name" placeholder="Worker Name" class="flex-1 bg-white border border-gray-200 px-3 py-2 text-sm focus:border-rajkot-rust outline-none transition-colors" value="<?php echo h($project['worker_name'] ?? ''); ?>">
+                                        <button type="submit" class="bg-foundation-grey text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors">Save</button>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
-                    </div>
+                            </form>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="p-6 bg-rajkot-rust/5 border border-rajkot-rust/10 relative flex flex-col min-h-[160px]">
@@ -442,14 +509,55 @@ if (function_exists('render_flash')) { render_flash(); }
                 </div>
             </div>
 
+            <?php if ($isClientReadOnly): ?>
+            <div class="no-print mt-2 mb-10 border border-rajkot-rust/15 bg-rajkot-rust/5 p-6 md:p-8">
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                    <div>
+                        <h3 class="text-lg font-serif font-bold text-foundation-grey">Client Actions</h3>
+                        <p class="text-sm text-gray-500 mt-1">You can request invoice changes and pay this invoice online.</p>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <div class="uppercase tracking-widest text-[10px] text-gray-400 font-bold">UPI ID</div>
+                        <div class="font-mono font-bold text-foundation-grey"><?php echo h($upi_vpa); ?></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3 mt-6">
+                    <button id="requestEditBtn" type="button" class="bg-foundation-grey hover:bg-black text-white px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+                        <i data-lucide="file-pen-line" class="w-4 h-4"></i> Request Edit
+                    </button>
+                    <button id="payNowBtn" type="button" class="bg-rajkot-rust hover:bg-[#7f140a] text-white px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+                        <i data-lucide="qr-code" class="w-4 h-4"></i> Pay Now
+                    </button>
+                </div>
+
+                <div id="upiPanel" class="hidden mt-6 p-4 bg-white border border-gray-100">
+                    <div class="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6 items-start">
+                        <div>
+                            <img src="<?php echo esc_attr($upi_qr_url); ?>" alt="UPI payment QR" class="w-full max-w-[320px] border border-gray-100" />
+                            <a href="<?php echo esc_attr($upi_link); ?>" class="mt-3 inline-flex w-full max-w-[320px] justify-center bg-foundation-grey hover:bg-black text-white px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest no-underline transition-all">Open UPI App to Pay</a>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <p class="font-bold text-foundation-grey">Scan QR to pay</p>
+                            <p>Amount: <span class="font-bold">₹ <?php echo number_format($total, 2); ?></span></p>
+                            <p>UPI ID: <span class="font-mono font-bold"><?php echo h($upi_vpa); ?></span></p>
+                            <p class="text-xs text-gray-400">If QR scan is not available on your device, use the button to open your installed UPI app with amount pre-filled.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Action Area (no-print) -->
             <div class="no-print flex flex-wrap gap-4 pt-12 border-t border-gray-50 font-sans">
                 <button id="copyLink" class="group border border-gray-100 hover:border-rajkot-rust hover:bg-white text-foundation-grey px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-premium flex items-center gap-2">
                     <i data-lucide="link-2" class="w-3.5 h-3.5 text-rajkot-rust group-hover:scale-110 transition-transform"></i> Copy Invoice Link
                 </button>
-                <button id="emailLink" class="group border border-gray-100 hover:border-rajkot-rust hover:bg-white text-foundation-grey px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-premium flex items-center gap-2">
-                    <i data-lucide="mail" class="w-3.5 h-3.5 text-rajkot-rust group-hover:scale-110 transition-transform"></i> Send by Email
-                </button>
+                <?php if (!$isClientReadOnly): ?>
+                    <button id="emailLink" class="group border border-gray-100 hover:border-rajkot-rust hover:bg-white text-foundation-grey px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-premium flex items-center gap-2">
+                        <i data-lucide="mail" class="w-3.5 h-3.5 text-rajkot-rust group-hover:scale-110 transition-transform"></i> Send by Email
+                    </button>
+                <?php endif; ?>
                 <a href="dashboard.php" class="ml-auto text-gray-400 hover:text-rajkot-rust text-[10px] font-bold uppercase tracking-widest no-underline transition-colors flex items-center gap-3 group">
                     Go Back to Dashboard 
                     <div class="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center group-hover:border-rajkot-rust group-hover:bg-rajkot-rust/5 transition-all">
@@ -458,6 +566,7 @@ if (function_exists('render_flash')) { render_flash(); }
                 </a>
             </div>
             <!-- Email Modal (no-print) -->
+            <?php if (!$isClientReadOnly): ?>
             <div id="emailModal" class="fixed inset-0 z-50 hidden items-center justify-center no-print" aria-hidden="true" role="dialog" aria-modal="true">
                 <div class="absolute inset-0 bg-black/50"></div>
                 <div class="bg-white rounded-lg shadow-lg z-10 max-w-lg w-full p-6 mx-4">
@@ -480,9 +589,33 @@ if (function_exists('render_flash')) { render_flash(); }
                     </form>
                 </div>
             </div>
+            <?php endif; ?>
+
+            <?php if ($isClientReadOnly): ?>
+            <div id="requestEditModal" class="fixed inset-0 z-50 hidden items-center justify-center no-print" aria-hidden="true" role="dialog" aria-modal="true">
+                <div class="absolute inset-0 bg-black/50"></div>
+                <div class="bg-white rounded-lg shadow-lg z-10 max-w-xl w-full p-6 mx-4">
+                    <h3 class="text-lg font-bold mb-2">Request Invoice Edit</h3>
+                    <p class="text-sm text-gray-500 mb-4">Describe the changes you want. Our team will review your request.</p>
+                    <form id="requestEditForm" method="post" class="space-y-4">
+                        <?php echo csrf_token_field(); ?>
+                        <input type="hidden" name="action" value="request_invoice_edit">
+                        <div>
+                            <label for="request_details" class="block text-sm font-medium text-gray-700">Requested changes</label>
+                            <textarea id="request_details" name="request_details" rows="5" required class="mt-1 block w-full border border-gray-200 px-3 py-2 rounded" placeholder="Example: Please change quantity of item #2 to 3 and update total accordingly."></textarea>
+                        </div>
+                        <div class="flex justify-end gap-3">
+                            <button type="button" id="requestEditCancel" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-rajkot-rust text-white rounded">Submit Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Add Item Form (no-print) -->
+        <?php if (!$isClientReadOnly): ?>
         <section class="no-print bg-white shadow-premium border border-gray-100 p-8 md:p-10 mb-12 relative overflow-hidden group font-sans">
             <div class="absolute top-0 right-0 w-24 h-1 bg-rajkot-rust opacity-20 group-hover:w-full transition-all duration-700"></div>
             <div class="flex items-center gap-4 mb-8">
@@ -544,6 +677,7 @@ if (function_exists('render_flash')) { render_flash(); }
                 <div id="addError" class="md:col-span-12 text-[10px] font-bold uppercase tracking-widest text-red-600 mt-6 hidden p-4 bg-red-50 border-l-4 border-red-600 font-sans italic"></div>
             </form>
         </section>
+        <?php endif; ?>
     </main>
 </div>
 
@@ -614,6 +748,44 @@ if (function_exists('render_flash')) { render_flash(); }
             return false;
         }
         showToast('Sending invoice...');
+    });
+
+    document.getElementById('requestEditBtn')?.addEventListener('click', function(){
+        const modal = document.getElementById('requestEditModal');
+        const input = document.getElementById('request_details');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { try { input && input.focus(); } catch(e){} }, 50);
+        }
+    });
+
+    document.getElementById('requestEditCancel')?.addEventListener('click', function(){
+        const modal = document.getElementById('requestEditModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    });
+
+    document.getElementById('requestEditForm')?.addEventListener('submit', function(ev){
+        const details = (document.getElementById('request_details')?.value || '').trim();
+        if (!details) {
+            ev.preventDefault();
+            showToast('Please add requested changes');
+            return false;
+        }
+        showToast('Submitting edit request...');
+    });
+
+    document.getElementById('payNowBtn')?.addEventListener('click', function(){
+        const panel = document.getElementById('upiPanel');
+        if (!panel) return;
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            showToast('UPI QR ready to scan');
+        }
     });
 
   // Dynamic Price Calculation

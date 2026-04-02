@@ -50,7 +50,22 @@ $users = [];
 
 $db = get_db();
 if ($db instanceof PDO) {
-    $sql = 'SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync FROM users';
+    $hasRatingsTable = false;
+    try {
+        $tableCheck = $db->query("SHOW TABLES LIKE 'worker_ratings'");
+        $hasRatingsTable = (bool)$tableCheck->fetch(PDO::FETCH_NUM);
+    } catch (Exception $e) {
+        $hasRatingsTable = false;
+    }
+
+    $ratingSelect = $hasRatingsTable
+        ? ', COALESCE(r.avg_rating, 0) AS avg_rating, COALESCE(r.total_ratings, 0) AS total_ratings'
+        : ', 0 AS avg_rating, 0 AS total_ratings';
+    $ratingJoin = $hasRatingsTable
+        ? ' LEFT JOIN (SELECT worker_id, AVG(rating) AS avg_rating, COUNT(*) AS total_ratings FROM worker_ratings GROUP BY worker_id) r ON r.worker_id = users.id'
+        : '';
+
+    $sql = 'SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync' . $ratingSelect . ' FROM users' . $ratingJoin;
     $where = [];
     $params = [];
 
@@ -75,7 +90,7 @@ if ($db instanceof PDO) {
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } else {
     // Fallback to existing helper if PDO is unavailable.
-    $users = db_fetch_all('SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync FROM users ORDER BY id DESC LIMIT 200');
+    $users = db_fetch_all('SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync, 0 AS avg_rating, 0 AS total_ratings FROM users ORDER BY id DESC LIMIT 200');
 }
 ?>
 <!DOCTYPE html>
@@ -240,16 +255,18 @@ if ($db instanceof PDO) {
             <div class="overflow-x-auto registry-table-scroll">
                 <table class="w-full text-left text-sm border-collapse admin-table registry-table-fixed">
                     <colgroup>
-                        <col style="width: 34%;">
-                        <col style="width: 16%;">
+                        <col style="width: 30%;">
                         <col style="width: 14%;">
-                        <col style="width: 18%;">
-                        <col style="width: 18%;">
+                        <col style="width: 14%;">
+                        <col style="width: 14%;">
+                        <col style="width: 14%;">
+                        <col style="width: 14%;">
                     </colgroup>
                     <thead class="hidden md:table-header-group">
                         <tr class="bg-gray-50/80 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
                             <th class="px-8 py-6 font-bold">Identity Profile</th>
                             <th class="px-8 py-6 font-bold">Authorization Level</th>
+                            <th class="px-8 py-6 font-bold">Rating</th>
                             <th class="px-8 py-6 font-bold">Signal</th>
                             <th class="px-8 py-6 font-bold">Last Sync</th>
                             <th class="px-8 py-6 font-bold text-right">Registry Actions</th>
@@ -278,6 +295,16 @@ if ($db instanceof PDO) {
                             </td>
                             <td class="px-6 md:px-8 py-4 md:py-6 block md:table-cell" data-label="Authorization Level">
                                 <span class="px-3 py-1 bg-foundation-grey/5 text-foundation-grey text-[9px] font-bold uppercase tracking-[0.15em] border border-foundation-grey/10"><?php echo htmlspecialchars(strtoupper((string)$u['role'])); ?></span>
+                            </td>
+                            <td class="px-6 md:px-8 py-4 md:py-6 block md:table-cell" data-label="Rating">
+                                <?php $avgRating = (float)($u['avg_rating'] ?? 0); ?>
+                                <?php $totalRatings = (int)($u['total_ratings'] ?? 0); ?>
+                                <?php if ($totalRatings > 0): ?>
+                                    <span class="text-[11px] font-bold text-approval-green"><?php echo number_format($avgRating, 1); ?>/5</span>
+                                    <p class="text-[10px] text-gray-400 mt-1"><?php echo $totalRatings; ?> entries</p>
+                                <?php else: ?>
+                                    <span class="text-[11px] font-bold text-gray-400">No ratings</span>
+                                <?php endif; ?>
                             </td>
                             <td class="px-6 md:px-8 py-4 md:py-6 block md:table-cell" data-label="Signal">
                                 <span class="flex items-center gap-2 <?php echo $statusClass; ?> text-[9px] font-bold uppercase tracking-widest">

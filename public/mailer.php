@@ -49,11 +49,11 @@ $mail->AltBody = $renderTemplate(
 );
 $mail->Host = 'smtp.gmail.com';
 $mail->SMTPAuth = true;
-$mail->Username ='yashhvinchhi@gmail.com';
-$mail->Password = 'odoc sctf jtuf ejvv';
+$mail->Username ='dudhaiyarachit45@gmail.com';
+$mail->Password = 'mvwy brdi luvt wecd';
 $mail->SMTPSecure = 'tls';
 $mail->Port = 587;
-$mail->setFrom('yashhvinchhi@gmail.com', $ct('reset_from_name', 'Reset Password'));
+$mail->setFrom('dudhaiyarachit45@gmail.com', $ct('reset_from_name', 'Reset Password'));
 if (!empty($email)) {
 	$mail->addAddress($email);
 }

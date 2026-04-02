@@ -7,6 +7,10 @@
 require_once __DIR__ . '/../includes/init.php';
 require_login();
 
+$sessionUser = $_SESSION['user'] ?? [];
+$sessionRole = strtolower(trim((string)($sessionUser['role'] ?? '')));
+$isClientReadOnly = ($sessionRole === 'client');
+
 $pdo = get_db();
 
 // Get project ID from URL
@@ -19,6 +23,42 @@ function formatDate($dateString) {
     if (empty($dateString)) return 'N/A';
     $date = strtotime($dateString);
     return date('M d, Y', $date);
+}
+
+// Normalize stored file paths into browser-openable URLs.
+function project_file_url($path) {
+    $path = trim((string)$path);
+    if ($path === '') {
+        return '';
+    }
+
+    if (preg_match('#^https?://#i', $path)) {
+        return $path;
+    }
+
+    $normalized = str_replace('\\', '/', $path);
+    $basePath = rtrim((string)BASE_PATH, '/');
+
+    // Keep already-correct app-relative paths unchanged.
+    if (strpos($normalized, $basePath . '/') === 0) {
+        return $normalized;
+    }
+
+    // Convert absolute filesystem paths to web paths when possible.
+    if (preg_match('#^[A-Za-z]:/#', $normalized) || strpos($normalized, '/uploads/') !== false) {
+        $uploadsPos = strpos($normalized, '/uploads/');
+        if ($uploadsPos !== false) {
+            $normalized = ltrim(substr($normalized, $uploadsPos), '/');
+            return $basePath . '/' . $normalized;
+        }
+    }
+
+    if (strpos($normalized, '/uploads/') === 0) {
+        return $basePath . $normalized;
+    }
+
+    $normalized = ltrim($normalized, '/');
+    return $basePath . '/' . $normalized;
 }
 
 // Load project data
@@ -142,6 +182,9 @@ if ($pdo instanceof PDO) {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
+    if ($isClientReadOnly) {
+        $error = 'Client accounts have view-only access for project details.';
+    } else {
   $name = $_POST['name'] ?? '';
   $status = $_POST['status'] ?? 'ongoing';
   $budget = $_POST['budget'] ?? 0;
@@ -232,6 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
       $error = "Database Error: " . $e->getMessage();
     }
   }
+    }
 }
 
 // Load project data
@@ -559,6 +603,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                     </p>
                 </div>
                 <div class="flex gap-2">
+                    <?php if (!$isClientReadOnly): ?>
                     <button
                         id="editProjectBtn"
                         type="button"
@@ -566,6 +611,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         >
                         <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Project
                     </button>
+                    <?php endif; ?>
                     <button
                         id="shareProjectBtn"
                         type="button"
@@ -698,6 +744,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                                     </div>
                                 </div>
                             </div>
+                            <?php if (!$isClientReadOnly): ?>
                             <div class="p-6 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
                                 <button type="button"
                                     class="px-6 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary"
@@ -706,6 +753,11 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                                     class="px-8 py-2 bg-primary text-white rounded text-sm font-semibold hover:opacity-95 shadow-md">Save
                                     Project</button>
                             </div>
+                            <?php else: ?>
+                            <div class="p-6 bg-slate-50 dark:bg-slate-800/50 text-sm text-slate-500">
+                                Client mode: view only.
+                            </div>
+                            <?php endif; ?>
                         </form>
                     </div>
                 </div>
@@ -885,6 +937,8 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             <div class="space-y-2">
                 <?php foreach ($project['files'] as $file): 
                   $fileDisplay = getFileIcon($file['type']);
+                                    $fileUrl = project_file_url($file['file_path'] ?? '');
+                                                                        $fileViewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=file&id=' . (int)($file['id'] ?? 0);
                 ?>
                 <div
                     class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
@@ -896,8 +950,12 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         <p class="text-sm text-slate-500 dark:text-slate-400"><?php echo htmlspecialchars($file['type']); ?> • <?php echo htmlspecialchars($file['size']); ?> • Uploaded <?php echo formatDate($file['uploaded_at']); ?><?php if (!empty($file['uploaded_by'])): ?> by <?php echo htmlspecialchars($file['uploaded_by']); ?><?php endif; ?></p>
                     </div>
                     <div class="flex gap-2">
-                        <?php if (!empty($file['file_path'])): ?>
-                        <a href="<?php echo htmlspecialchars($file['file_path']); ?>" download
+                        <?php if ($fileUrl !== ''): ?>
+                        <a href="<?php echo htmlspecialchars($fileViewUrl); ?>" target="_blank" rel="noopener noreferrer"
+                            class="px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline">
+                            View
+                        </a>
+                        <a href="<?php echo htmlspecialchars($fileUrl); ?>" download
                             class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             Download
                         </a>
@@ -1006,6 +1064,8 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <?php foreach ($project['drawings'] as $drawing): 
                   $statusClass = $statusColors[$drawing['status']] ?? '';
+                                    $drawingUrl = project_file_url($drawing['file_path'] ?? '');
+                                    $drawingViewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . (int)($drawing['id'] ?? 0);
                 ?>
                 <div
                     class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
@@ -1014,13 +1074,13 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                     </div>
                     <div class="p-4">
                         <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-1"><?php echo htmlspecialchars($drawing['name']); ?></h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-2"><?php echo htmlspecialchars($drawing['version']); ?> • <?php echo formatDate($drawing['uploaded_at']); ?></p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-2"><?php echo htmlspecialchars($drawing['version']); ?> • <?php echo formatDate($drawing['uploaded_at']); ?><?php if (!empty($drawing['uploaded_by'])): ?> • Uploaded by <?php echo htmlspecialchars($drawing['uploaded_by']); ?><?php endif; ?></p>
                         <span class="inline-block px-2 py-0.5 <?php echo $statusClass; ?> rounded text-xs font-medium mb-3">
                             <?php echo htmlspecialchars($drawing['status']); ?>
                         </span>
                         <div class="flex gap-2">
-                            <?php if (!empty($drawing['file_path'])): ?>
-                            <a href="<?php echo htmlspecialchars($drawing['file_path']); ?>" target="_blank"
+                            <?php if ($drawingUrl !== ''): ?>
+                            <a href="<?php echo htmlspecialchars($drawingViewUrl); ?>" target="_blank" rel="noopener noreferrer"
                                 class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">
                                 View
                             </a>
@@ -1275,6 +1335,11 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
         // File upload function
         async function uploadFile(input) {
             if (!input.files || input.files.length === 0) return;
+            if (!projectId || Number(projectId) <= 0) {
+                showNotification('Save the project first, then upload files.', 'error');
+                input.value = '';
+                return;
+            }
             
             const file = input.files[0];
             const formData = new FormData();
@@ -1294,6 +1359,9 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                 if (result.success) {
                     showNotification('File uploaded successfully!', 'success');
                     logActivity('uploaded file', file.name);
+                    if (result.view_url) {
+                        window.open(result.view_url, '_blank', 'noopener,noreferrer');
+                    }
                     setTimeout(() => window.location.reload(), 1000);
                 } else {
                     showNotification(result.message || 'Upload failed', 'error');
@@ -1309,6 +1377,11 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
         // Drawing upload function
         async function uploadDrawing(input) {
             if (!input.files || input.files.length === 0) return;
+            if (!projectId || Number(projectId) <= 0) {
+                showNotification('Save the project first, then upload drawings.', 'error');
+                input.value = '';
+                return;
+            }
             
             const file = input.files[0];
             const formData = new FormData();

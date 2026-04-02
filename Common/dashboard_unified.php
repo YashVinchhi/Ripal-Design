@@ -69,9 +69,15 @@ if ($sessionUserId > 0 && db_connected() && db_table_exists('user_roles') && db_
 $variant = isset($DASHBOARD_VARIANT) ? (string)$DASHBOARD_VARIANT : '';
 if ($variant === '') {
   $roleCode = strtolower((string)$roleContext['role_code']);
-  if ($sessionRole === 'admin' || stripos($roleCode, 'admin') !== false) {
+  if ($sessionRole === 'admin') {
     $variant = 'admin';
-  } elseif ($sessionRole === 'worker' || strtolower((string)$roleContext['group_code']) === 'site_ops' || stripos($roleCode, 'site_') === 0) {
+  } elseif ($sessionRole === 'worker') {
+    $variant = 'worker';
+  } elseif (in_array($sessionRole, ['employee', 'client'], true)) {
+    $variant = 'main';
+  } elseif ($roleCode === 'emp_admin_manager') {
+    $variant = 'admin';
+  } elseif (strtolower((string)$roleContext['group_code']) === 'worker' || stripos($roleCode, 'wrk_') === 0) {
     $variant = 'worker';
   } else {
     $variant = 'main';
@@ -80,7 +86,18 @@ if ($variant === '') {
 
 $isAdmin = $variant === 'admin';
 $isWorker = $variant === 'worker';
-$isReadOnly = $isWorker;
+$isClient = ($sessionRole === 'client');
+
+// Project-view swap requested by user:
+// client users see worker-style project view, and workers see client/main-style project view.
+$projectViewRole = $sessionRole;
+if ($projectViewRole === 'client') {
+  $projectViewRole = 'worker';
+} elseif ($projectViewRole === 'worker') {
+  $projectViewRole = 'client';
+}
+$useWorkerProjectView = ($projectViewRole === 'worker');
+$isReadOnly = $useWorkerProjectView;
 
 $roleDisplayName = $roleContext['role_name'] !== ''
   ? $roleContext['role_name']
@@ -108,7 +125,7 @@ $kpis = [
 ];
 
 if (db_connected() && db_table_exists('projects')) {
-  if ($isWorker && $sessionUserId > 0 && db_table_exists('project_assignments')) {
+  if ($useWorkerProjectView && $sessionUserId > 0 && db_table_exists('project_assignments')) {
     $projects = db_fetch_all(
       'SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, COALESCE(p.due,\'1970-01-01\') AS due, COALESCE(p.location,\'\') AS location, p.latitude, p.longitude
              FROM project_assignments pa
@@ -121,7 +138,7 @@ if (db_connected() && db_table_exists('projects')) {
   }
 
   if (empty($projects)) {
-    $limit = $isWorker ? 12 : 200;
+    $limit = $useWorkerProjectView ? 12 : 200;
     $projects = db_fetch_all("SELECT id, name, status, COALESCE(progress,0) AS progress, COALESCE(due,'1970-01-01') AS due, COALESCE(location,'') AS location, latitude, longitude, budget FROM projects ORDER BY id DESC LIMIT {$limit}");
   }
 }
@@ -183,7 +200,7 @@ if ($isAdmin) {
     ['label' => 'Leave Pending', 'value' => (int)$kpis['leaves_pending'], 'icon' => 'calendar-check'],
     ['label' => 'Reviews Pending', 'value' => (int)$kpis['reviews_pending'], 'icon' => 'clipboard-list'],
   ];
-} elseif ($isWorker) {
+} elseif ($useWorkerProjectView) {
   $statCards = [
     ['label' => 'Assigned Projects', 'value' => count($projects), 'icon' => 'briefcase'],
     ['label' => 'Overdue', 'value' => $overdueCount, 'icon' => 'alert-triangle'],
@@ -201,8 +218,8 @@ if ($isAdmin) {
 
 $actionCards = [
   ['label' => 'Profile', 'href' => base_path('dashboard/profile.php'), 'icon' => 'user'],
-  ['label' => 'Create Project', 'href' => base_path('dashboard/project_details.php'), 'icon' => 'layout-grid'],
-  ['label' => 'Review Requests', 'href' => base_path('dashboard/review_requests.php'), 'icon' => 'clipboard-list'],
+  ['label' => ($sessionRole === 'client' ? 'Project Details (View)' : 'Create Project'), 'href' => ($sessionRole === 'client' ? base_path('dashboard/dashboard.php') : base_path('dashboard/project_details.php')), 'icon' => 'layout-grid'],
+  ['label' => ($sessionRole === 'client' ? 'Review Requests (View)' : 'Review Requests'), 'href' => base_path('dashboard/review_requests.php'), 'icon' => 'clipboard-list'],
 ];
 
 if ($isAdmin) {
@@ -212,7 +229,7 @@ if ($isAdmin) {
   $actionCards[] = ['label' => 'Contact Manager', 'href' => base_path('admin/contact_messages.php'), 'icon' => 'mail'];
 }
 
-if ($isWorker) {
+if ($useWorkerProjectView) {
   $actionCards = [
     ['label' => 'Assigned Projects', 'href' => base_path('worker/assigned_projects.php'), 'icon' => 'briefcase'],
     ['label' => 'My Ratings', 'href' => base_path('worker/worker_rating.php'), 'icon' => 'star'],
@@ -309,7 +326,7 @@ if ($isWorker) {
                 </div>
               </div>
               <div class="mt-auto p-6 pt-0 flex gap-2 border-t border-gray-50 pt-6">
-                <?php if ($isWorker): ?>
+                <?php if ($isClient): ?>
                   <a href="<?php echo esc_attr(base_path('worker/project_details.php?id=' . (int)$p['id'] . '&readonly=1')); ?>" class="flex-1 bg-foundation-grey hover:bg-black text-white text-center py-2 text-sm font-medium transition-colors no-underline">View</a>
                 <?php else: ?>
                   <a href="<?php echo esc_attr(base_path('dashboard/project_details.php?id=' . (int)$p['id'])); ?>" class="flex-1 bg-foundation-grey hover:bg-black text-white text-center py-2 text-sm font-medium transition-colors no-underline">View</a>

@@ -21,10 +21,53 @@ $isEdit = $editId > 0;
 $form = [
     'firstName' => '',
     'lastName' => '',
+    'username' => '',
     'email' => '',
     'role' => 'client',
     'password' => '',
 ];
+
+/**
+ * Build a normalized username base from names.
+ */
+function build_username_base(string $firstName, string $lastName): string
+{
+    $base = strtolower(trim($firstName . '.' . $lastName));
+    $base = preg_replace('/[^a-z0-9._-]+/', '', $base ?? '') ?: '';
+    if (strlen($base) < 3) {
+        $base = 'user';
+    }
+    return substr($base, 0, 30);
+}
+
+/**
+ * Ensure username uniqueness in users table.
+ */
+function next_available_username(PDO $db, string $base, int $excludeId = 0): string
+{
+    $base = $base !== '' ? $base : 'user';
+    $candidate = substr($base, 0, 30);
+    $suffix = 1;
+
+    while (true) {
+        if ($excludeId > 0) {
+            $stmt = $db->prepare('SELECT id FROM users WHERE username = ? AND id <> ? LIMIT 1');
+            $stmt->execute([$candidate, $excludeId]);
+        } else {
+            $stmt = $db->prepare('SELECT id FROM users WHERE username = ? LIMIT 1');
+            $stmt->execute([$candidate]);
+        }
+
+        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            return $candidate;
+        }
+
+        $suffixText = (string)$suffix;
+        $maxBaseLen = max(1, 30 - strlen($suffixText));
+        $candidate = substr($base, 0, $maxBaseLen) . $suffixText;
+        $suffix++;
+    }
+}
 
 if ($isEdit && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     try {
@@ -54,6 +97,7 @@ if ($isEdit && $_SERVER['REQUEST_METHOD'] !== 'POST') {
 
             $form['firstName'] = $firstName;
             $form['lastName'] = $lastName;
+            $form['username'] = (string)($user['username'] ?? '');
             $form['email'] = (string)($user['email'] ?? $user['username'] ?? '');
             $form['role'] = (string)($user['role'] ?? 'client');
         }
@@ -95,26 +139,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db = get_db();
             if ($db) {
                 if ($isEdit) {
-                    $checkStmt = $db->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
+                    $checkStmt = $db->prepare('SELECT id, username FROM users WHERE id = ? LIMIT 1');
                     $checkStmt->execute([$editId]);
-                    if (!$checkStmt->fetch()) {
+                    $existingUser = $checkStmt->fetch(PDO::FETCH_ASSOC);
+                    if (!$existingUser) {
                         $error = 'User not found.';
                     } else {
+                        $currentUsername = trim((string)($existingUser['username'] ?? ''));
+                        if ($currentUsername === '') {
+                            $currentUsername = next_available_username($db, build_username_base($firstName, $lastName), $editId);
+                        }
+
                         $dupeStmt = $db->prepare('SELECT id FROM users WHERE (username = ? OR email = ?) AND id <> ? LIMIT 1');
-                        $dupeStmt->execute([$email, $email, $editId]);
+                        $dupeStmt->execute([$currentUsername, $email, $editId]);
 
                         if ($dupeStmt->fetch()) {
                             $error = 'A user with this email already exists.';
                         } else {
                             $fullName = trim($firstName . ' ' . $lastName);
+                            $actorId = (int)(current_user()['id'] ?? 0);
 
-                            if ($password !== '') {
-                                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                                $updateStmt = $db->prepare('UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ?, full_name = ?, role = ?, password_hash = ?, updated_at = NOW() WHERE id = ?');
-                                $updateStmt->execute([$email, $email, $firstName, $lastName, $fullName, $role, $passwordHash, $editId]);
-                            } else {
-                                $updateStmt = $db->prepare('UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ?, full_name = ?, role = ?, updated_at = NOW() WHERE id = ?');
-                                $updateStmt->execute([$email, $email, $firstName, $lastName, $fullName, $role, $editId]);
+                            $db->beginTransaction();
+
+                            try {
+                                if ($password !== '') {
+                                    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                                    $updateStmt = $db->prepare('UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ?, full_name = ?, role = ?, password_hash = ?, updated_at = NOW() WHERE id = ?');
+                                    $updateStmt->execute([$currentUsername, $email, $firstName, $lastName, $fullName, $role, $passwordHash, $editId]);
+                                } else {
+                                    $updateStmt = $db->prepare('UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ?, full_name = ?, role = ?, updated_at = NOW() WHERE id = ?');
+                                    $updateStmt->execute([$currentUsername, $email, $firstName, $lastName, $fullName, $role, $editId]);
+                                }
+
+                                if (!auth_sync_user_role_links($editId, $role, $actorId > 0 ? $actorId : null)) {
+                                    // Keep core user update successful; RBAC sync issues are logged for follow-up.
+                                    error_log('Role sync warning for updated user id ' . (string)$editId);
+                                }
+
+                                $db->commit();
+                            } catch (Throwable $inner) {
+                                if ($db->inTransaction()) {
+                                    $db->rollBack();
+                                }
+                                throw $inner;
                             }
 
                             set_flash('User updated successfully!', 'success');
@@ -123,16 +190,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                 } else {
-                    $stmt = $db->prepare('SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1');
-                    $stmt->execute([$email, $email]);
-                    if ($stmt->fetch()) {
+                    $emailCheckStmt = $db->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+                    $emailCheckStmt->execute([$email]);
+                    if ($emailCheckStmt->fetch()) {
                         $error = 'A user with this email already exists.';
                     } else {
+                        $newUsername = next_available_username($db, build_username_base($firstName, $lastName));
                         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
                         $fullName = trim($firstName . ' ' . $lastName);
+                        $actorId = (int)(current_user()['id'] ?? 0);
 
-                        $stmt = $db->prepare('INSERT INTO users (username, full_name, first_name, last_name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, "active")');
-                        $stmt->execute([$email, $fullName, $firstName, $lastName, $email, $passwordHash, $role]);
+                        $db->beginTransaction();
+
+                        try {
+                            $stmt = $db->prepare('INSERT INTO users (username, full_name, first_name, last_name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, "active")');
+                            $stmt->execute([$newUsername, $fullName, $firstName, $lastName, $email, $passwordHash, $role]);
+
+                            $newUserId = (int)$db->lastInsertId();
+                            if ($newUserId > 0) {
+                                if (!auth_sync_user_role_links($newUserId, $role, $actorId > 0 ? $actorId : null)) {
+                                    // Keep user creation successful; RBAC sync issues are logged for follow-up.
+                                    error_log('Role sync warning for new user id ' . (string)$newUserId);
+                                }
+                            }
+
+                            $db->commit();
+                        } catch (Throwable $inner) {
+                            if ($db->inTransaction()) {
+                                $db->rollBack();
+                            }
+                            throw $inner;
+                        }
 
                         set_flash('User created successfully!', 'success');
                         header('Location: user_management.php');
@@ -145,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: user_management.php');
                 exit;
             }
-        } catch (PDOException $e) {
+        } catch (Throwable $e) {
             error_log('Add user failed: ' . $e->getMessage());
             $error = $isEdit
                 ? 'Unable to update user right now. Please try again.'

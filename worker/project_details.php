@@ -53,12 +53,28 @@ $project['drawings'] = array_map(function($d) {
     $path = strtolower((string)($d['file_path'] ?? ''));
     $type = (substr($path, -4) === '.pdf') ? 'pdf' : 'img';
     return [
+        'id' => (int)($d['id'] ?? 0),
         'title' => $d['name'] ?? '',
         'type' => $type,
         'date' => $d['uploaded_at'] ?? date('Y-m-d H:i:s'),
         'status' => strtolower((string)($d['status'] ?? 'under_review')),
+        'file_path' => (string)($d['file_path'] ?? ''),
+        'uploaded_by' => (string)($d['uploaded_by'] ?? ''),
     ];
 }, $project['drawings'] ?? []);
+
+function worker_file_url($path) {
+    $path = trim((string)$path);
+    if ($path === '') {
+        return '';
+    }
+    if (preg_match('#^https?://#i', $path)) {
+        return $path;
+    }
+    $normalized = str_replace('\\', '/', $path);
+    $normalized = ltrim($normalized, '/');
+    return rtrim((string)BASE_PATH, '/') . '/' . $normalized;
+}
 ?>
 <!doctype html>
 <html lang="en" class="bg-canvas-white">
@@ -232,7 +248,9 @@ $project['drawings'] = array_map(function($d) {
             </h2>
             <div class="grid grid-cols-1 gap-3">
                 <?php foreach($project['drawings'] as $d): ?>
-                <div class="bg-white p-4 shadow-premium border border-gray-100 flex items-center gap-4 group hover:border-rajkot-rust transition-colors cursor-pointer" onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['title']); ?>&project=<?php echo urlencode($project['name']); ?>', '_blank')">
+                <?php $drawingUrl = worker_file_url($d['file_path'] ?? ''); ?>
+                <?php $drawingViewUrl = !empty($d['id']) ? (rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . (int)$d['id']) : ($drawingUrl !== '' ? $drawingUrl : ('../admin/file_viewer.php?file=' . urlencode($d['title']) . '&project=' . urlencode($project['name']))); ?>
+                <div class="bg-white p-4 shadow-premium border border-gray-100 flex items-center gap-4 group hover:border-rajkot-rust transition-colors cursor-pointer" onclick="window.open('<?php echo htmlspecialchars($drawingViewUrl, ENT_QUOTES, 'UTF-8'); ?>', '_blank')">
                     <div class="w-12 h-12 bg-foundation-grey group-hover:bg-rajkot-rust transition-colors flex items-center justify-center text-white shrink-0">
                         <i data-lucide="<?php echo $d['type'] == 'pdf' ? 'file-text' : 'image'; ?>" class="w-6 h-6"></i>
                     </div>
@@ -240,6 +258,9 @@ $project['drawings'] = array_map(function($d) {
                         <h4 class="font-bold text-foundation-grey truncate group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars($d['title']); ?></h4>
                         <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">
                             Issued: <?php echo date('M d, Y', strtotime($d['date'])); ?> &bull; <span class="text-approval-green">Issued for Construction</span>
+                            <?php if (!empty($d['uploaded_by'])): ?>
+                                &bull; Uploaded by: <?php echo htmlspecialchars($d['uploaded_by']); ?>
+                            <?php endif; ?>
                         </p>
                     </div>
                     <div class="text-gray-300">
@@ -248,10 +269,12 @@ $project['drawings'] = array_map(function($d) {
                 </div>
                 <?php endforeach; ?>
 
+                <?php if (!$isWorkerReadOnly): ?>
                 <div class="mt-4 p-8 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400">
                     <i data-lucide="upload-cloud" class="w-10 h-10 mb-2 opacity-50"></i>
                     <span class="text-xs font-bold uppercase tracking-widest">Share On-site Photo</span>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
 

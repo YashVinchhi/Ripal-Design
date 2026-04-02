@@ -8,10 +8,15 @@
 
 require_once __DIR__ . '/../includes/init.php';
 
-$current_user = $_SESSION['user'] ?? 'Admin';
+require_login();
+
+$currentUser = current_user();
+$current_user = $currentUser['username'] ?? ($currentUser['email'] ?? 'Admin');
+$isAdmin = strtolower((string)($currentUser['role'] ?? '')) === 'admin';
 
 // Load workers from DB
 $workers = [];
+$allRatings = [];
 if (db_connected()) {
     try {
         $db = get_db();
@@ -23,11 +28,23 @@ if (db_connected()) {
             FROM users u
             LEFT JOIN project_assignments pa ON pa.worker_id = u.id
             LEFT JOIN worker_ratings wr ON wr.worker_id = u.id
-            WHERE u.role = 'worker'
+            WHERE u.role <> 'admin'
             GROUP BY u.id
             ORDER BY u.username ASC
         ");
         $workers = $stmt->fetchAll();
+
+        if ($isAdmin) {
+            $ratingsStmt = $db->query("
+                SELECT wr.id, wr.rating, wr.comment, wr.created_at, wr.rated_by,
+                       u.username AS member_name, u.role AS member_role
+                FROM worker_ratings wr
+                INNER JOIN users u ON u.id = wr.worker_id
+                ORDER BY wr.created_at DESC
+                LIMIT 200
+            ");
+            $allRatings = $ratingsStmt->fetchAll();
+        }
     } catch (Exception $e) {
         error_log('Worker Rating Load Error: ' . $e->getMessage());
     }
@@ -162,19 +179,19 @@ function render_stars($rating) {
                                     <i data-lucide="x" class="w-6 h-6"></i>
                                 </button>
                             </div>
-                            <form method="POST" class="p-10 space-y-10">
+                            <form method="POST" class="p-10 space-y-10" data-rating-form>
                                 <input type="hidden" name="submit_rating" value="1">
                                 <input type="hidden" name="worker_id" value="<?php echo $w['id']; ?>">
+                                <input type="hidden" name="rating" value="" data-rating-input>
                                 
                                 <div class="space-y-6 text-center">
                                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] block">Evaluation Score (1-5 Star Audit)</label>
-                                    <div class="flex justify-center gap-6">
+                                    <div class="flex justify-center gap-6" data-rating-stars>
                                         <?php for($i=1; $i<=5; $i++): ?>
-                                            <label class="cursor-pointer group relative">
-                                                <input type="radio" name="rating" value="<?php echo $i; ?>" required class="hidden peer">
-                                                <i data-lucide="star" class="w-10 h-10 text-gray-100 peer-checked:text-rajkot-rust peer-checked:fill-rajkot-rust group-hover:text-rajkot-rust/30 transition-all"></i>
-                                                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-200 peer-checked:text-rajkot-rust opacity-0 peer-checked:opacity-100 transition-opacity"><?php echo $i; ?></span>
-                                            </label>
+                                            <button type="button" class="group relative" data-rating-value="<?php echo $i; ?>" aria-label="Rate <?php echo $i; ?> stars">
+                                                <i data-lucide="star" class="w-10 h-10 text-gray-100 transition-all" data-rating-star></i>
+                                                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-300 transition-colors"><?php echo $i; ?></span>
+                                            </button>
                                         <?php endfor; ?>
                                     </div>
                                 </div>
@@ -196,10 +213,118 @@ function render_stars($rating) {
                     </div>
                 <?php endforeach; ?>
             </div>
+
+            <?php if ($isAdmin): ?>
+                <section class="mt-14 bg-white shadow-premium border border-gray-100 overflow-hidden">
+                    <div class="p-8 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
+                        <div>
+                            <h2 class="text-2xl font-serif font-bold text-foundation-grey">All Member Ratings</h2>
+                            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mt-1">Latest <?php echo count($allRatings); ?> rating entries</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left min-w-[860px]">
+                            <thead class="bg-gray-50 text-[10px] uppercase tracking-[0.15em] text-gray-500">
+                                <tr>
+                                    <th class="px-6 py-4">Member</th>
+                                    <th class="px-6 py-4">Role</th>
+                                    <th class="px-6 py-4">Rating</th>
+                                    <th class="px-6 py-4">Comment</th>
+                                    <th class="px-6 py-4">Rated By</th>
+                                    <th class="px-6 py-4">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($allRatings)): ?>
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-8 text-sm text-gray-500">No rating entries found.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($allRatings as $entry): ?>
+                                        <tr class="border-t border-gray-100 align-top">
+                                            <td class="px-6 py-4 text-sm font-semibold text-foundation-grey"><?php echo htmlspecialchars($entry['member_name']); ?></td>
+                                            <td class="px-6 py-4 text-xs uppercase tracking-wider text-gray-500"><?php echo htmlspecialchars($entry['member_role']); ?></td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex"><?php echo render_stars((float)$entry['rating']); ?></div>
+                                                    <span class="text-sm font-semibold text-foundation-grey"><?php echo (int)$entry['rating']; ?>/5</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-600 max-w-[320px]"><?php echo nl2br(htmlspecialchars($entry['comment'] ?? '')); ?></td>
+                                            <td class="px-6 py-4 text-sm text-gray-700"><?php echo htmlspecialchars((string)$entry['rated_by']); ?></td>
+                                            <td class="px-6 py-4 text-sm text-gray-500"><?php echo date('d M Y, h:i A', strtotime((string)$entry['created_at'])); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            <?php endif; ?>
         </main>
 
         <?php require_once __DIR__ . '/../Common/footer.php'; ?>
     </div>
+
+    <script>
+        document.querySelectorAll('[data-rating-form]').forEach(function (form) {
+            var ratingInput = form.querySelector('[data-rating-input]');
+            var starButtons = form.querySelectorAll('[data-rating-value]');
+
+            if (!ratingInput || !starButtons.length) {
+                return;
+            }
+
+            function paintStars(activeValue) {
+                starButtons.forEach(function (button) {
+                    var value = parseInt(button.getAttribute('data-rating-value'), 10);
+                    var icon = button.querySelector('[data-rating-star]');
+                    var label = button.querySelector('span');
+                    var isActive = value <= activeValue;
+
+                    if (icon) {
+                        if (isActive) {
+                            icon.classList.remove('text-gray-100');
+                            icon.classList.add('text-rajkot-rust', 'fill-rajkot-rust');
+                        } else {
+                            icon.classList.remove('text-rajkot-rust', 'fill-rajkot-rust');
+                            icon.classList.add('text-gray-100');
+                        }
+                    }
+
+                    if (label) {
+                        label.classList.toggle('text-rajkot-rust', isActive);
+                        label.classList.toggle('text-gray-300', !isActive);
+                    }
+                });
+            }
+
+            starButtons.forEach(function (button) {
+                var value = parseInt(button.getAttribute('data-rating-value'), 10);
+
+                button.addEventListener('mouseenter', function () {
+                    paintStars(value);
+                });
+
+                button.addEventListener('click', function () {
+                    ratingInput.value = String(value);
+                    paintStars(value);
+                });
+            });
+
+            form.querySelector('[data-rating-stars]').addEventListener('mouseleave', function () {
+                paintStars(parseInt(ratingInput.value || '0', 10));
+            });
+
+            form.addEventListener('submit', function (event) {
+                if (!ratingInput.value) {
+                    event.preventDefault();
+                    alert('Please select a rating between 1 and 5 stars.');
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>

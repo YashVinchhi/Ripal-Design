@@ -25,6 +25,10 @@ function post_login_redirect_url(array $user): string
         return $url;
     }
 
+    if (function_exists('auth_dashboard_url')) {
+        return auth_dashboard_url();
+    }
+
     return rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php';
 }
 
@@ -77,14 +81,24 @@ if (!($db instanceof PDO)) {
 if (isset($_POST['signup'])) {
     $first_name = trim((string) ($_POST['firstName'] ?? ''));
     $last_name = trim((string) ($_POST['lastName'] ?? ''));
-    $username = trim((string) ($_POST['username'] ?? ''));
+    $username = strtolower(trim((string) ($_POST['username'] ?? '')));
     $email = trim((string) ($_POST['email'] ?? ''));
     $user_password = (string) ($_POST['password'] ?? '');
     $phone_number = trim((string) ($_POST['phoneNumber'] ?? ''));
     $confirm_password = (string) ($_POST['confirmPassword'] ?? '');
 
-    if ($first_name === '' || $last_name === '' || $username === '' || $email === '' || $user_password === '') {
+    if ($first_name === '' || $last_name === '' || $email === '' || $user_password === '') {
         signup_error_and_redirect($ct('signup_required_fields', 'Please fill all required fields.'));
+    }
+
+    // If username is not provided, derive one from email local-part, then ensure uniqueness.
+    if ($username === '') {
+        $emailLocalPart = strtolower((string) strstr($email, '@', true));
+        $derived = preg_replace('/[^a-z0-9._-]+/', '', $emailLocalPart);
+        if ($derived === null || $derived === '' || strlen($derived) < 3) {
+            $derived = generate_unique_username($db, $first_name, $last_name);
+        }
+        $username = $derived;
     }
 
     if (!preg_match('/^[A-Za-z0-9._-]{3,30}$/', $username)) {
@@ -106,15 +120,31 @@ if (isset($_POST['signup'])) {
             signup_error_and_redirect($ct('signup_email_exists', 'Email already exists. Please use a different email.'));
         }
 
+        if (strlen($username) > 30) {
+            $username = substr($username, 0, 30);
+        }
+
         $chkUsername = $db->prepare('SELECT id FROM users WHERE username = ? LIMIT 1');
-        $chkUsername->execute([$username]);
-        if ($chkUsername->fetch(PDO::FETCH_ASSOC)) {
-            signup_error_and_redirect($ct('signup_username_exists', 'Username already exists. Please choose another username.'));
+        $baseUsername = $username;
+        $suffix = 1;
+        while (true) {
+            $chkUsername->execute([$username]);
+            if (!$chkUsername->fetch(PDO::FETCH_ASSOC)) {
+                break;
+            }
+
+            $maxBaseLen = max(1, 30 - strlen((string)$suffix));
+            $username = substr($baseUsername, 0, $maxBaseLen) . $suffix;
+            $suffix++;
+
+            if ($suffix > 9999) {
+                signup_error_and_redirect($ct('signup_username_exists', 'Username already exists. Please choose another username.'));
+            }
         }
 
         $passwordHash = password_hash($user_password, PASSWORD_DEFAULT);
         $role = 'client';
-        $status = 'pending';
+        $status = 'active';
         $fullName = trim($first_name . ' ' . $last_name);
 
         $ins = $db->prepare(
@@ -123,8 +153,18 @@ if (isset($_POST['signup'])) {
         $ins->execute([$username, $fullName, $first_name, $last_name, $email, $phone_number, $passwordHash, $role, $status]);
         $user_id = (int) $db->lastInsertId();
 
-        // Notify user that account is created and pending approval (do not auto-login)
-        $_SESSION['register_success'] = $ct('signup_pending', 'Account created successfully and pending approval. We will notify you when it is activated.');
+        // Auto-login newly created account and route by effective dashboard role.
+        $_SESSION['register_success'] = $ct('signup_success', 'Account created successfully.');
+        $_SESSION['user'] = [
+            'id' => $user_id,
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+            'email' => $email,
+            'username' => $username,
+            'role' => $role,
+            'name' => $fullName !== '' ? $fullName : $username,
+        ];
+        $_SESSION['user_id'] = $user_id;
 
         // Attempt to send a notification email to the user about pending status
         try {
@@ -139,7 +179,7 @@ if (isset($_POST['signup'])) {
                 $mail->setFrom($from, $fromName);
                 $mail->addAddress($email, $fullName);
                 $mail->isHTML(true);
-                $mail->Subject = $ct('signup_welcome_subject', 'Your Ripal Design account is pending approval');
+                $mail->Subject = $ct('signup_welcome_subject', 'Welcome to Ripal Design');
 
                 $defaultWelcomeHtml = <<<'HTML'
 <!DOCTYPE html>
@@ -147,15 +187,15 @@ if (isset($_POST['signup'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Pending Approval</title>
+    <title>Welcome to Ripal Design</title>
     <style>body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } img { -ms-interpolation-mode: bicubic; border: 0; height: auto; outline: none; text-decoration: none; }</style>
 </head>
 <body style="font-family: Inter, Arial, sans-serif; background:#f4f4f5; padding:20px;">
     <div style="max-width:600px;margin:auto;background:#fff;padding:24px;border-radius:8px;">
         <h2 style="color:#731209;">Thanks for registering</h2>
         <p>Hi [User Name],</p>
-        <p>Your account has been created and is currently pending approval. We will notify you via email when your account is activated.</p>
-        <p>Until then, you may <a href="{{login_link}}">log in</a> to check status (login will be allowed only after activation).</p>
+        <p>Your account has been created successfully and is now active.</p>
+        <p>You can <a href="{{login_link}}">log in</a> any time to access your dashboard.</p>
         <p style="margin-top:24px;">— The Ripal Design Team</p>
     </div>
 </body>
@@ -167,7 +207,7 @@ HTML;
                     '[User Name]' => htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'),
                 ]);
 
-                $mail->AltBody = $renderTemplate($ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created and is pending approval. We will notify you.'), [
+                $mail->AltBody = $renderTemplate($ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created successfully and is now active.'), [
                     '{{first_name}}' => $first_name,
                 ]);
 
@@ -181,7 +221,7 @@ HTML;
             error_log('Welcome email skipped/failed: ' . $e->getMessage());
         }
 
-        header('Location: ' . rtrim(BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/login.php');
+        header('Location: ' . post_login_redirect_url($_SESSION['user']));
         exit();
     } catch (Exception $e) {
         error_log('Signup failed: ' . $e->getMessage());
@@ -217,7 +257,7 @@ if (isset($_POST['login'])) {
                     'first_name' => $first,
                     'last_name' => $last,
                     'email' => (string)($user['email'] ?? $email),
-                    'username' => (string)($user['username'] ?? $email),
+                    'username' => (string)($user['username'] ?? ''),
                     'role' => (string)($user['role'] ?? 'client'),
                     'name' => $displayName,
                 ];
@@ -242,12 +282,17 @@ if (isset($_POST['login'])) {
             $stmt->close();
 
             if ($legacyUser && !empty($legacyUser['password']) && password_verify($user_password, $legacyUser['password'])) {
+                $legacyUsername = trim((string)($legacyUser['username'] ?? ''));
+                if ($legacyUsername === '') {
+                    $legacyUsername = preg_replace('/[^a-z0-9._-]+/', '', strtolower(trim((string)($legacyUser['first_name'] ?? '') . '.' . (string)($legacyUser['last_name'] ?? '')))) ?: 'user';
+                }
+
                 $_SESSION['user'] = [
                     'id' => (int)($legacyUser['s_id'] ?? $legacyUser['id'] ?? 0),
                     'first_name' => $legacyUser['first_name'] ?? '',
                     'last_name' => $legacyUser['last_name'] ?? '',
                     'email' => $legacyUser['email'] ?? $email,
-                    'username' => $legacyUser['email'] ?? $email,
+                    'username' => $legacyUsername,
                     'role' => $legacyUser['role'] ?? 'client',
                     'name' => trim(($legacyUser['first_name'] ?? '') . ' ' . ($legacyUser['last_name'] ?? '')) ?: $email,
                 ];

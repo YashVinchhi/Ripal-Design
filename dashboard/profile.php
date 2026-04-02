@@ -94,14 +94,131 @@ if (empty($user_data['joined_date'])) {
     $user_data['joined_date'] = date('Y-m-d');
 }
 
+// Ensure downstream stats and updates use the actually loaded profile id.
+$user_id = (int)($user_data['id'] ?? $user_id ?? 0);
+
 // Normalize nullable DB fields to strings to avoid deprecation warnings in output helpers.
 $profile_string_fields = ['username', 'full_name', 'email', 'phone', 'role', 'address', 'city', 'state', 'zip'];
 foreach ($profile_string_fields as $field) {
     $user_data[$field] = (string)($user_data[$field] ?? '');
 }
 
+$projectStats = [
+    'total_projects' => 0,
+    'total_members' => 0,
+];
+$ratingStats = [
+    'avg_rating' => 0,
+    'total_ratings' => 0,
+];
+$userProjects = [];
+$clientRateTargets = [];
+$recentRatings = [];
+$isOwnClientProfile = ($current_role === 'client' && (int)$current_user_id > 0 && (int)$user_id === (int)$current_user_id);
+
+if (db_connected() && $user_id > 0) {
+    try {
+        $db = get_db();
+
+        // Build dynamic project list based on profile role.
+        if (($user_data['role'] ?? '') === 'client') {
+            $projectStmt = $db->prepare("\n                SELECT p.id, p.name, p.status, p.progress, p.due,\n                       COUNT(DISTINCT pa.worker_id) AS member_count\n                FROM projects p\n                LEFT JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE p.owner_email = :email\n                   OR p.owner_name = :full_name\n                   OR p.owner_name = :username\n                GROUP BY p.id, p.name, p.status, p.progress, p.due\n                ORDER BY p.created_at DESC, p.id DESC\n            ");
+            $projectStmt->execute([
+                ':email' => (string)($user_data['email'] ?? ''),
+                ':full_name' => (string)($user_data['full_name'] ?? ''),
+                ':username' => (string)($user_data['username'] ?? ''),
+            ]);
+            $userProjects = $projectStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            if ($isOwnClientProfile) {
+                $targetsStmt = $db->prepare("\n                    SELECT DISTINCT u.id, u.username, u.full_name, u.role, p.name AS project_name\n                    FROM projects p\n                    INNER JOIN project_assignments pa ON pa.project_id = p.id\n                    INNER JOIN users u ON u.id = pa.worker_id\n                    WHERE (p.owner_email = :email OR p.owner_name = :full_name OR p.owner_name = :username)\n                      AND u.id <> :self_id\n                    ORDER BY p.name ASC, u.username ASC\n                ");
+                $targetsStmt->execute([
+                    ':email' => (string)($user_data['email'] ?? ''),
+                    ':full_name' => (string)($user_data['full_name'] ?? ''),
+                    ':username' => (string)($user_data['username'] ?? ''),
+                    ':self_id' => (int)$user_id,
+                ]);
+                $clientRateTargets = $targetsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            }
+        } else {
+            $projectStmt = $db->prepare("\n                SELECT p.id, p.name, p.status, p.progress, p.due,\n                       COUNT(DISTINCT pa2.worker_id) AS member_count\n                FROM projects p\n                LEFT JOIN project_assignments pa2 ON pa2.project_id = p.id\n                LEFT JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE pa.worker_id = :user_id\n                   OR p.owner_email = :email\n                   OR p.owner_name = :full_name\n                   OR p.owner_name = :username\n                GROUP BY p.id, p.name, p.status, p.progress, p.due\n                ORDER BY p.created_at DESC, p.id DESC\n            ");
+            $projectStmt->execute([
+                ':user_id' => (int)$user_id,
+                ':email' => (string)($user_data['email'] ?? ''),
+                ':full_name' => (string)($user_data['full_name'] ?? ''),
+                ':username' => (string)($user_data['username'] ?? ''),
+            ]);
+            $userProjects = $projectStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        }
+
+        $projectStats['total_projects'] = count($userProjects);
+        foreach ($userProjects as $projectRow) {
+            $projectStats['total_members'] += (int)($projectRow['member_count'] ?? 0);
+        }
+
+        $ratingStmt = $db->prepare("\n            SELECT COUNT(*) AS total_ratings, AVG(rating) AS avg_rating\n            FROM worker_ratings\n            WHERE worker_id = :user_id\n        ");
+        $ratingStmt->execute([':user_id' => (int)$user_id]);
+        $ratingRow = $ratingStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+        $ratingStats['total_ratings'] = (int)($ratingRow['total_ratings'] ?? 0);
+        $ratingStats['avg_rating'] = (float)($ratingRow['avg_rating'] ?? 0);
+
+        $recentStmt = $db->prepare("\n            SELECT rating, comment, rated_by, created_at\n            FROM worker_ratings\n            WHERE worker_id = :user_id\n            ORDER BY created_at DESC\n            LIMIT 5\n        ");
+        $recentStmt->execute([':user_id' => (int)$user_id]);
+        $recentRatings = $recentStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (Exception $e) {
+        error_log('Profile dynamic stats error: ' . $e->getMessage());
+    }
+}
+
 $message = '';
 $message_type = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_client_rating'])) {
+    require_csrf();
+    $member_id = (int)($_POST['member_id'] ?? 0);
+    $rating = (int)($_POST['rating'] ?? 0);
+    $comment = trim((string)($_POST['comment'] ?? ''));
+
+    if (!$isOwnClientProfile) {
+        $message = 'Only clients can submit member ratings from their own profile.';
+        $message_type = 'danger';
+    } elseif ($member_id <= 0 || $rating < 1 || $rating > 5 || $comment === '') {
+        $message = 'Please select member, rating (1-5), and comment.';
+        $message_type = 'danger';
+    } elseif (db_connected()) {
+        try {
+            $db = get_db();
+            $allowedStmt = $db->prepare("\n                SELECT 1\n                FROM projects p\n                INNER JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE pa.worker_id = :member_id\n                  AND (p.owner_email = :email OR p.owner_name = :full_name OR p.owner_name = :username)\n                LIMIT 1\n            ");
+            $allowedStmt->execute([
+                ':member_id' => $member_id,
+                ':email' => (string)($user_data['email'] ?? ''),
+                ':full_name' => (string)($user_data['full_name'] ?? ''),
+                ':username' => (string)($user_data['username'] ?? ''),
+            ]);
+
+            if (!$allowedStmt->fetch(PDO::FETCH_ASSOC)) {
+                $message = 'Selected member is not linked to your projects.';
+                $message_type = 'danger';
+            } else {
+                $ratedBy = (string)($current_username ?: ($user_data['username'] ?? 'client'));
+                $insertStmt = $db->prepare("\n                    INSERT INTO worker_ratings (worker_id, rated_by, rating, comment, created_at)\n                    VALUES (:worker_id, :rated_by, :rating, :comment, NOW())\n                ");
+                $insertStmt->execute([
+                    ':worker_id' => $member_id,
+                    ':rated_by' => $ratedBy,
+                    ':rating' => $rating,
+                    ':comment' => $comment,
+                ]);
+
+                header('Location: ' . $_SERVER['PHP_SELF']);
+                exit;
+            }
+        } catch (Exception $e) {
+            error_log('Client rating submit failed: ' . $e->getMessage());
+            $message = 'Unable to save rating now. Please try again.';
+            $message_type = 'danger';
+        }
+    }
+}
 
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -118,6 +235,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         $message = 'Full Name and Email are required.';
         $message_type = 'danger';
     } else {
+        $nameParts = preg_split('/\s+/', $full_name);
+        $derivedFirstName = trim((string)($nameParts[0] ?? ''));
+        $derivedLastName = trim((string)implode(' ', array_slice($nameParts ?: [], 1)));
+
         if (db_connected() && $user_id > 0) {
             try {
                 $db = get_db();
@@ -171,18 +292,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                     }
                 }
 
-                $stmt = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zip = ? WHERE id = ?");
-                $stmt->execute([$full_name, $email, $phone, $address, $city, $state, $zip, $user_id]);
+                $stmt = $db->prepare("UPDATE users SET full_name = ?, first_name = ?, last_name = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zip = ? WHERE id = ?");
+                $stmt->execute([$full_name, $derivedFirstName, $derivedLastName, $email, $phone, $address, $city, $state, $zip, $user_id]);
                 $message = 'Profile updated successfully!';
                 $message_type = 'success';
                 // Refresh data
                 $user_data['full_name'] = $full_name;
+                $user_data['first_name'] = $derivedFirstName;
+                $user_data['last_name'] = $derivedLastName;
                 $user_data['email'] = $email;
                 $user_data['phone'] = $phone;
                 $user_data['address'] = $address;
                 $user_data['city'] = $city;
                 $user_data['state'] = $state;
                 $user_data['zip'] = $zip;
+
+                // Keep active session user names in sync when editing own profile.
+                if (!empty($_SESSION['user']) && (int)($_SESSION['user']['id'] ?? 0) === $user_id) {
+                    $_SESSION['user']['full_name'] = $full_name;
+                    $_SESSION['user']['first_name'] = $derivedFirstName;
+                    $_SESSION['user']['last_name'] = $derivedLastName;
+                    $sessionDisplayName = trim($derivedFirstName . ' ' . $derivedLastName);
+                    if ($sessionDisplayName !== '') {
+                        $_SESSION['user']['name'] = $sessionDisplayName;
+                    }
+                }
             } catch (Exception $e) {
                 error_log('Profile update failed: ' . $e->getMessage());
                 $message = 'Unable to update profile right now. Please try again.';
@@ -288,11 +422,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <div class="grid grid-cols-2 gap-4 border-t border-b border-gray-50 py-6 my-6">
                             <div>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Projects</span>
-                                <span class="text-xl font-bold">12</span>
+                                <span class="text-xl font-bold"><?php echo (int)$projectStats['total_projects']; ?></span>
                             </div>
                             <div>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Ratings</span>
-                                <span class="text-xl font-bold text-approval-green">4.9</span>
+                                <span class="text-xl font-bold text-approval-green"><?php echo $ratingStats['total_ratings'] > 0 ? number_format((float)$ratingStats['avg_rating'], 1) : '--'; ?></span>
                             </div>
                         </div>
 
@@ -375,6 +509,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     </section>
 
                     <!-- Security Section -->
+                    <section class="bg-white shadow-premium border border-gray-100 overflow-hidden">
+                        <div class="px-8 py-6 border-b border-gray-50">
+                            <h3 class="text-xl font-serif font-bold">Projects and Members</h3>
+                        </div>
+                        <div class="p-8">
+                            <?php if (empty($userProjects)): ?>
+                                <p class="text-sm text-gray-500">No projects linked to this profile yet.</p>
+                            <?php else: ?>
+                                <div class="space-y-4">
+                                    <?php foreach ($userProjects as $proj): ?>
+                                        <div class="border border-gray-100 p-4 bg-gray-50/50">
+                                            <div class="flex items-center justify-between gap-3 flex-wrap">
+                                                <div>
+                                                    <p class="text-sm font-bold text-foundation-grey"><?php echo htmlspecialchars((string)$proj['name']); ?></p>
+                                                    <p class="text-[11px] text-gray-500 uppercase tracking-wide"><?php echo htmlspecialchars((string)$proj['status']); ?> | Progress <?php echo (int)($proj['progress'] ?? 0); ?>%</p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Members</p>
+                                                    <p class="text-lg font-bold text-foundation-grey"><?php echo (int)($proj['member_count'] ?? 0); ?></p>
+                                                </div>
+                                            </div>
+                                            <?php if ((int)($proj['member_count'] ?? 0) > 1): ?>
+                                                <p class="mt-2 text-[11px] font-semibold text-approval-green uppercase tracking-wide">Multi-member project</p>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </section>
+
+                    <?php if ($isOwnClientProfile): ?>
+                        <section class="bg-white shadow-premium border border-gray-100 overflow-hidden">
+                            <div class="px-8 py-6 border-b border-gray-50">
+                                <h3 class="text-xl font-serif font-bold">Client Member Rating</h3>
+                            </div>
+                            <form method="POST" class="p-8 space-y-6">
+                                <?php echo csrf_token_field(); ?>
+                                <input type="hidden" name="submit_client_rating" value="1">
+
+                                <?php if (empty($clientRateTargets)): ?>
+                                    <p class="text-sm text-gray-500">No project members available for rating yet.</p>
+                                <?php else: ?>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-2">
+                                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Project Member</label>
+                                            <select name="member_id" class="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm" required>
+                                                <option value="">Select member</option>
+                                                <?php foreach ($clientRateTargets as $target): ?>
+                                                    <?php $displayName = trim((string)($target['full_name'] ?? '')) !== '' ? (string)$target['full_name'] : (string)$target['username']; ?>
+                                                    <option value="<?php echo (int)$target['id']; ?>"><?php echo htmlspecialchars($displayName . ' (' . $target['project_name'] . ')'); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rating</label>
+                                            <select name="rating" class="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm" required>
+                                                <option value="">Select rating</option>
+                                                <option value="5">5 - Excellent</option>
+                                                <option value="4">4 - Very Good</option>
+                                                <option value="3">3 - Good</option>
+                                                <option value="2">2 - Needs Improvement</option>
+                                                <option value="1">1 - Poor</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Comment</label>
+                                        <textarea name="comment" rows="3" class="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm" placeholder="Write your rating feedback" required></textarea>
+                                    </div>
+
+                                    <div class="pt-4 border-t border-gray-50 flex justify-end">
+                                        <button type="submit" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-10 py-4 text-xs font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                                            Submit Rating
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                            </form>
+                        </section>
+                    <?php endif; ?>
+
+                    <section class="bg-white shadow-premium border border-gray-100 overflow-hidden">
+                        <div class="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
+                            <h3 class="text-xl font-serif font-bold">Recent Ratings</h3>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total <?php echo (int)$ratingStats['total_ratings']; ?></span>
+                        </div>
+                        <div class="p-8">
+                            <?php if (empty($recentRatings)): ?>
+                                <p class="text-sm text-gray-500">No ratings found for this profile.</p>
+                            <?php else: ?>
+                                <div class="space-y-4">
+                                    <?php foreach ($recentRatings as $entry): ?>
+                                        <div class="border border-gray-100 p-4 bg-gray-50/50">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <p class="text-sm font-bold text-foundation-grey"><?php echo (int)($entry['rating'] ?? 0); ?>/5</p>
+                                                <p class="text-[11px] text-gray-500"><?php echo date('d M Y', strtotime((string)($entry['created_at'] ?? 'now'))); ?></p>
+                                            </div>
+                                            <p class="text-sm text-gray-700 mt-2"><?php echo nl2br(htmlspecialchars((string)($entry['comment'] ?? ''))); ?></p>
+                                            <p class="text-[11px] text-gray-500 mt-2">Rated by <?php echo htmlspecialchars((string)($entry['rated_by'] ?? 'Unknown')); ?></p>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </section>
+
                     <section class="bg-white shadow-premium border border-gray-100 overflow-hidden">
                         <div class="px-8 py-6 border-b border-gray-50">
                             <h3 class="text-xl font-serif font-bold">Account Security</h3>

@@ -10,6 +10,8 @@ require_once __DIR__ . '/../includes/init.php';
 require_login();
 
 $user = $_SESSION['user'] ?? 'employee01';
+$sessionRole = strtolower(trim((string)((is_array($user) ? ($user['role'] ?? '') : ''))));
+$isClientReadOnly = ($sessionRole === 'client');
 
 // Load requests from DB
 $requests = [];
@@ -37,6 +39,11 @@ foreach($requests as $r) {
 // Handle Status Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     require_csrf();
+    if ($isClientReadOnly) {
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
     $id = intval($_POST['request_id'] ?? 0);
     $status = $_POST['status'] ?? '';
     if ($id && in_array($status, ['approved', 'rejected', 'changes_requested'])) {
@@ -166,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                     </div>
                                     
                                     <div class="flex items-center gap-3">
-                                        <?php if ($r['status'] === 'pending'): ?>
+                                        <?php if ($r['status'] === 'pending' && !$isClientReadOnly): ?>
                                             <form method="POST" class="flex gap-2">
                                                 <?php echo csrf_token_field(); ?>
                                                 <input type="hidden" name="update_status" value="1">

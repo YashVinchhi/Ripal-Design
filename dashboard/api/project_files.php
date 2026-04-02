@@ -45,6 +45,21 @@ if ($isJson) {
 $action = (string)($body['action'] ?? $_POST['action'] ?? '');
 $projectId = (int)($body['project_id'] ?? $_POST['project_id'] ?? 0);
 
+$sessionRole = strtolower(trim((string)($_SESSION['user']['role'] ?? '')));
+$clientBlockedActions = [
+    'upload_file',
+    'upload_drawing',
+    'add_team_member',
+    'remove_team_member',
+    'delete_file',
+    'delete_drawing',
+    'log_activity',
+    'contact_via_signal',
+];
+if ($sessionRole === 'client' && in_array($action, $clientBlockedActions, true)) {
+    api_json(['success' => false, 'message' => 'Client accounts have view-only access.'], 403);
+}
+
 if ($projectId <= 0) {
     api_json(['success' => false, 'message' => 'Invalid project ID.'], 400);
 }
@@ -65,6 +80,15 @@ $currentUser = (string)(
     ?? $_SESSION['user']['email']
     ?? 'System'
 );
+$currentRole = strtolower(trim((string)(
+    $_SESSION['user']['role']
+    ?? $_SESSION['role']
+    ?? 'unknown'
+)));
+$uploaderLabel = $currentUser;
+if ($currentRole !== '') {
+    $uploaderLabel .= ' (' . $currentRole . ')';
+}
 
 if ($action === 'add_team_member') {
     $name = trim((string)($_POST['worker_name'] ?? ''));
@@ -161,21 +185,46 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
 
     try {
         if ($action === 'upload_drawing') {
-            $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())');
-            $stmt->execute([$projectId, $originalName, 'v1.0', 'Under Review', $publicPath]);
+            // Backfill-safe: add uploaded_by column once for environments with older schema.
+            $hasUploadedBy = false;
+            try {
+                $colStmt = $db->prepare("SHOW COLUMNS FROM project_drawings LIKE 'uploaded_by'");
+                $colStmt->execute();
+                $hasUploadedBy = (bool)$colStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$hasUploadedBy) {
+                    $db->exec("ALTER TABLE project_drawings ADD COLUMN uploaded_by VARCHAR(255) DEFAULT NULL");
+                    $hasUploadedBy = true;
+                }
+            } catch (Exception $e) {
+                $hasUploadedBy = false;
+            }
+
+            if ($hasUploadedBy) {
+                $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
+                $stmt->execute([$projectId, $originalName, 'v1.0', 'Under Review', $publicPath, $uploaderLabel]);
+            } else {
+                $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())');
+                $stmt->execute([$projectId, $originalName, 'v1.0', 'Under Review', $publicPath]);
+            }
+            $newId = (int)$db->lastInsertId();
 
             $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
             $act->execute([$projectId, $currentUser, 'uploaded drawing', $originalName]);
+
+            $viewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . $newId;
         } else {
             $typeLabel = $ext !== '' ? strtoupper($ext) : 'FILE';
             $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
             $stmt->execute([$projectId, $originalName, $typeLabel, $sizeLabel, $publicPath, $currentUser]);
+            $newId = (int)$db->lastInsertId();
 
             $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
             $act->execute([$projectId, $currentUser, 'uploaded file', $originalName]);
+
+            $viewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=file&id=' . $newId;
         }
 
-        api_json(['success' => true, 'message' => 'Upload successful.', 'file_path' => $publicPath]);
+        api_json(['success' => true, 'message' => 'Upload successful.', 'file_path' => $publicPath, 'view_url' => $viewUrl]);
     } catch (Exception $e) {
         @unlink($absolutePath);
         api_json(['success' => false, 'message' => 'Failed to store file metadata.'], 500);
