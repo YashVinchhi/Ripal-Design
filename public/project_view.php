@@ -4,6 +4,16 @@ $projectViewContent = function_exists('public_content_page_values') ? public_con
 $ct = static function ($key, $default = '') use ($projectViewContent) {
     return (string)($projectViewContent[$key] ?? $default);
 };
+$ctImage = static function ($key, $default = '') use ($projectViewContent) {
+    $value = (string)($projectViewContent[$key] ?? $default);
+    if (function_exists('public_content_image_url')) {
+        return (string)public_content_image_url($value, $default);
+    }
+    if (function_exists('base_path')) {
+        return (string)base_path(ltrim((string)$value, '/'));
+    }
+    return (string)$value;
+};
 ?>
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
@@ -33,7 +43,7 @@ $ct = static function ($key, $default = '') use ($projectViewContent) {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <a href="contact_us.php?subject=residential" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
-                        <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="<?php echo esc_attr($ct('card_1_image_alt', 'Product image 1')); ?>">
+                        <img src="<?php echo esc_attr($ctImage('card_1_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="<?php echo esc_attr($ct('card_1_image_alt', 'Product image 1')); ?>">
                         <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                     </div>
                     <div>
@@ -44,7 +54,7 @@ $ct = static function ($key, $default = '') use ($projectViewContent) {
 
                 <a href="contact_us.php?subject=commercial" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
-                        <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="<?php echo esc_attr($ct('card_2_image_alt', 'Product image 2')); ?>">
+                        <img src="<?php echo esc_attr($ctImage('card_2_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="<?php echo esc_attr($ct('card_2_image_alt', 'Product image 2')); ?>">
                         <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                     </div>
                     <div>
@@ -55,7 +65,7 @@ $ct = static function ($key, $default = '') use ($projectViewContent) {
 
                 <a href="contact_us.php?subject=consultation" class="product-card group cursor-pointer no-underline block">
                     <div class="relative overflow-hidden aspect-[4/5] bg-gray-900 mb-6">
-                        <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="<?php echo esc_attr($ct('card_3_image_alt', 'Product image 3')); ?>">
+                        <img src="<?php echo esc_attr($ctImage('card_3_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="<?php echo esc_attr($ct('card_3_image_alt', 'Product image 3')); ?>">
                         <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                     </div>
                     <div>

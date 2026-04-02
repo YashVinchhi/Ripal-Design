@@ -4,6 +4,16 @@ $servicesContent = function_exists('public_content_page_values') ? public_conten
 $ct = static function ($key, $default = '') use ($servicesContent) {
   return (string)($servicesContent[$key] ?? $default);
 };
+$ctImage = static function ($key, $default = '') use ($servicesContent) {
+  $value = (string)($servicesContent[$key] ?? $default);
+  if (function_exists('public_content_image_url')) {
+    return (string)public_content_image_url($value, $default);
+  }
+  if (function_exists('base_path')) {
+    return (string)base_path(ltrim((string)$value, '/'));
+  }
+  return (string)$value;
+};
 ?>
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
@@ -57,28 +67,28 @@ $ct = static function ($key, $default = '') use ($servicesContent) {
           </div>
 
           <div class="space-y-6" id="serviceList">
-            <div class="service-item active group pl-6" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg">
+            <div class="service-item active group pl-6" data-img="<?php echo esc_attr($ctImage('service_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>">
               <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_1_title', 'Architectural Planning')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
                 <?php echo esc($ct('service_1_description', 'Comprehensive master planning and structural design that balances aesthetics with functionality.')); ?>
               </p>
             </div>
 
-            <div class="service-item pl-6 group" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg">
+            <div class="service-item pl-6 group" data-img="<?php echo esc_attr($ctImage('service_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>">
               <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_2_title', 'Interior Design')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
                 <?php echo esc($ct('service_2_description', 'Curating internal environments that evoke emotion through texture, light, and material.')); ?>
               </p>
             </div>
 
-            <div class="service-item pl-6 group" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg">
+            <div class="service-item pl-6 group" data-img="<?php echo esc_attr($ctImage('service_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>">
               <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_3_title', 'Landscape Architecture')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
                 <?php echo esc($ct('service_3_description', 'Harmonizing built structures with the natural environment for sustainable outdoor living.')); ?>
               </p>
             </div>
 
-            <div class="service-item pl-6 group" data-img="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg">
+            <div class="service-item pl-6 group" data-img="<?php echo esc_attr($ctImage('service_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>">
               <h3 class="text-3xl lg:text-4xl serif group-hover:text-[#731209] transition-colors"><?php echo esc($ct('service_4_title', 'Project Management')); ?></h3>
               <p class="text-gray-400 mt-2 text-sm max-w-md hidden group-[.active]:block transition-opacity duration-500">
                 <?php echo esc($ct('service_4_description', 'End-to-end oversight ensuring precision in execution and adherence to timelines.')); ?>
@@ -91,7 +101,7 @@ $ct = static function ($key, $default = '') use ($servicesContent) {
         <div class="w-full lg:w-7/12 relative h-[50vh] lg:h-auto mt-8 lg:mt-0">
           <div class="lg:absolute lg:inset-y-0 lg:right-0 w-full lg:w-[90%] h-full overflow-hidden rounded-sm">
             <div id="imageDisplay" class="w-full h-full relative">
-              <img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg"
+              <img src="<?php echo esc_attr($ctImage('hero_image_src', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>"
                 class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out scale-105"
                 alt="<?php echo esc_attr($ct('hero_image_alt', 'Architectural service image')); ?>">
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>

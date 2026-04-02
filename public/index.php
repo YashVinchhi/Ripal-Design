@@ -9,6 +9,16 @@ $indexContent = function_exists('public_content_page_values') ? public_content_p
 $ct = static function ($key, $default = '') use ($indexContent) {
     return (string)($indexContent[$key] ?? $default);
 };
+$ctImage = static function ($key, $default = '') use ($indexContent) {
+    $value = (string)($indexContent[$key] ?? $default);
+    if (function_exists('public_content_image_url')) {
+        return (string)public_content_image_url($value, $default);
+    }
+    if (function_exists('base_path')) {
+        return (string)base_path(ltrim((string)$value, '/'));
+    }
+    return (string)$value;
+};
 
 $featuredProjects = db_connected() ? db_fetch_all('SELECT name, COALESCE(location, "") AS location FROM projects ORDER BY created_at DESC LIMIT 4') : [];
 for ($i = count($featuredProjects); $i < 4; $i++) {
@@ -53,10 +63,10 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             <div class="container" style="max-width: 100vw;">
                 <div class="carousel" id="projectsCarousel">
                     <div class="carousel-track" id="projectsTrack">
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg" alt="<?php echo esc_attr($ct('carousel_alt_1', 'Project image 1')); ?>"></div>
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg" alt="<?php echo esc_attr($ct('carousel_alt_2', 'Project image 2')); ?>"></div>
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg" alt="<?php echo esc_attr($ct('carousel_alt_3', 'Project image 3')); ?>"></div>
-                        <div class="carousel-slide"><img src="../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg" alt="<?php echo esc_attr($ct('carousel_alt_4', 'Project image 4')); ?>"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_1', 'Project image 1')); ?>"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_2', 'Project image 2')); ?>"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_3', 'Project image 3')); ?>"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_4', 'Project image 4')); ?>"></div>
                     </div>
                     <button class="carousel-button" id="projectsPrev" style="left:12px"><span class="material-symbols-outlined">&lt; </span></button>
                     <button class="carousel-button" id="projectsNext" style="right:12px"><span class="material-symbols-outlined">&gt; </span></button>
@@ -90,7 +100,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             <!-- Project 1 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_1', 'Featured project image 1')); ?>" >
+                    <img src="<?php echo esc_attr($ctImage('featured_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_1', 'Featured project image 1')); ?>" >
                 </div>
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
@@ -125,14 +135,14 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     </div>
                 </div>
                 <div class="project-showcase-image project-image-right">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_2', 'Featured project image 2')); ?>">
+                    <img src="<?php echo esc_attr($ctImage('featured_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_2', 'Featured project image 2')); ?>">
                 </div>
             </div>
 
             <!-- Project 3 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.43.21%20PM%20%281%29.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_3', 'Featured project image 3')); ?>">
+                    <img src="<?php echo esc_attr($ctImage('featured_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_3', 'Featured project image 3')); ?>">
                 </div>
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
@@ -167,7 +177,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     </div>
                 </div>
                 <div class="project-showcase-image project-image-right">
-                    <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM.jpeg" alt="<?php echo esc_attr($ct('featured_image_alt_4', 'Featured project image 4')); ?>">
+                    <img src="<?php echo esc_attr($ctImage('featured_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_4', 'Featured project image 4')); ?>">
                 </div>
             </div>
         </section>
@@ -190,7 +200,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.51.43%20PM%20%281%29.jpeg"
+                                <img src="<?php echo esc_attr($ctImage('testimonial_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM (1).jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_1', 'Client project 1')); ?>"
                                     class="w-100 h-100 object-fit-cover"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
@@ -213,7 +223,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg"
+                                <img src="<?php echo esc_attr($ctImage('testimonial_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_2', 'Client project 2')); ?>"
                                     class="w-100 h-100 object-fit-cover"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
@@ -236,7 +246,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
                             <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
-                                <img src="../assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.51%20PM.jpeg"
+                                <img src="<?php echo esc_attr($ctImage('testimonial_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_3', 'Client project 3')); ?>"
                                     class="w-100 h-100 object-fit-cover"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />

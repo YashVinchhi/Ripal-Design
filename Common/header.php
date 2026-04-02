@@ -29,6 +29,18 @@ $headerContent = function_exists('public_content_page_values') ? public_content_
 $headerText = static function ($key, $default = '') use ($headerContent) {
     return (string)($headerContent[$key] ?? $default);
 };
+$headerImage = static function ($key, $default = '') use ($headerContent) {
+    $value = (string)($headerContent[$key] ?? $default);
+    if (function_exists('public_content_image_url')) {
+        return (string)public_content_image_url($value, $default);
+    }
+    if (function_exists('base_path')) {
+        return (string)base_path(ltrim((string)$value, '/'));
+    }
+    return (string)$value;
+};
+$brandLogoImage = $headerImage('brand_logo_image', '/assets/Content/Logo.png');
+$faviconImage = $headerImage('favicon_image', '/assets/Content/Vector.ico');
 $dashboardProfileUrl = function_exists('base_path')
     ? base_path('dashboard/profile.php')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
@@ -99,7 +111,7 @@ foreach ($stylesheetCandidates as $candidate) {
 <?php endif; ?>
 
 <!-- Favicons -->
-<link rel="shortcut icon" href="<?php echo esc_attr(BASE_PATH); ?>/assets/Content/Vector.ico" type="image/x-icon">
+<link rel="shortcut icon" href="<?php echo esc_attr($faviconImage); ?>" type="image/x-icon">
 
 <!-- Header Navigation (Always loaded) -->
 <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header.css">
@@ -109,7 +121,7 @@ foreach ($stylesheetCandidates as $candidate) {
 <nav class="alt-header">
     <div class="alt-logo">
         <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php" class="flex items-center gap-3 no-underline">
-            <img src="<?php echo esc_attr(BASE_PATH); ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10">
+            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10">
             <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo esc($headerText('brand_name', 'Ripal Design')); ?></span>
         </a>
     </div>

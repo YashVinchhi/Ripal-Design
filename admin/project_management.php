@@ -81,18 +81,25 @@ if (!in_array($statusFilter, $allowedStatuses, true)) {
 $projects = [];
 $db = get_db();
 if ($db instanceof PDO) {
-    $sql = 'SELECT id, name, status, budget, progress, location, owner_name FROM projects';
+    $sql = "SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.budget, COALESCE(p.location,'') AS location, COALESCE(p.owner_name,'') AS owner_name";
+    if (function_exists('db_table_exists') && db_table_exists('project_files')) {
+        $sql .= ", (SELECT pf.file_path FROM project_files pf WHERE pf.project_id = p.id AND pf.type IN ('JPG','JPEG','PNG','WEBP') ORDER BY pf.uploaded_at DESC LIMIT 1) AS cover_image";
+    } else {
+        $sql .= ", NULL AS cover_image";
+    }
+
+    $sql .= " FROM projects p";
     $where = [];
     $params = [];
 
     if ($search !== '') {
         $searchLike = '%' . $search . '%';
-        $where[] = '(name LIKE ? OR location LIKE ? OR owner_name LIKE ?)';
+        $where[] = '(p.name LIKE ? OR p.location LIKE ? OR p.owner_name LIKE ?)';
         array_push($params, $searchLike, $searchLike, $searchLike);
     }
 
     if ($statusFilter !== 'all') {
-        $where[] = 'LOWER(status) = ?';
+        $where[] = 'LOWER(p.status) = ?';
         $params[] = $statusFilter;
     }
 
@@ -100,10 +107,50 @@ if ($db instanceof PDO) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }
 
-    $sql .= ' ORDER BY id DESC LIMIT 200';
+    $sql .= ' ORDER BY p.id DESC LIMIT 200';
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    // If some projects do not have an uploaded cover image, provide a fallback
+    // using sample images from the assets folder (assets/Content/).
+    $assetCandidates = [];
+    $assetDir = __DIR__ . '/../assets/Content';
+    if (is_dir($assetDir)) {
+        $files = scandir($assetDir);
+        foreach ($files as $f) {
+            if ($f === '.' || $f === '..') continue;
+            $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg','jpeg','png','webp','gif'], true)) {
+                $assetCandidates[] = '../assets/Content/' . rawurlencode($f);
+            }
+        }
+    }
+
+    // If none found in Content, try top-level assets directory
+    if (empty($assetCandidates)) {
+        $assetRoot = __DIR__ . '/../assets';
+        if (is_dir($assetRoot)) {
+            $files = scandir($assetRoot);
+            foreach ($files as $f) {
+                if ($f === '.' || $f === '..') continue;
+                $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg','jpeg','png','webp','gif'], true)) {
+                    $assetCandidates[] = '../assets/' . rawurlencode($f);
+                }
+            }
+        }
+    }
+
+    if (!empty($assetCandidates)) {
+        foreach ($projects as &$pp) {
+            if (empty($pp['cover_image'])) {
+                $id = (int)($pp['id'] ?? 0);
+                $pp['cover_image'] = $assetCandidates[$id % count($assetCandidates)];
+            }
+        }
+        unset($pp);
+    }
 } else {
     // Fallback: load base list then filter in PHP.
     $projects = get_projects_basic(200);

@@ -5,6 +5,16 @@ $aboutContent = function_exists('public_content_page_values') ? public_content_p
 $ct = static function ($key, $default = '') use ($aboutContent) {
     return (string)($aboutContent[$key] ?? $default);
 };
+$ctImage = static function ($key, $default = '') use ($aboutContent) {
+    $value = (string)($aboutContent[$key] ?? $default);
+    if (function_exists('public_content_image_url')) {
+        return (string)public_content_image_url($value, $default);
+    }
+    if (function_exists('base_path')) {
+        return (string)base_path(ltrim((string)$value, '/'));
+    }
+    return (string)$value;
+};
 ?>
 <html lang="en">
 
@@ -72,7 +82,7 @@ $ct = static function ($key, $default = '') use ($aboutContent) {
                     <!-- Tape Case -->
                     <div class="tape-body position-absolute start-0 top-50 translate-middle-y z-3">
                         <div class="tape-case d-flex align-items-center justify-content-center">
-                            <img src="../assets/Content/Logo.png" alt="<?php echo esc_attr($ct('timeline_logo_alt', 'Ripal Design Logo')); ?>" style="height:2.5rem;">
+                            <img src="<?php echo esc_attr($ctImage('timeline_logo_image', '/assets/Content/Logo.png')); ?>" alt="<?php echo esc_attr($ct('timeline_logo_alt', 'Ripal Design Logo')); ?>" style="height:2.5rem;">
                         </div>
                     </div>
 

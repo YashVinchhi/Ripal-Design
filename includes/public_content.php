@@ -31,6 +31,8 @@ if (!function_exists('public_content_registry')) {
                 'preview_path' => 'public/index.php',
                 'fields' => [
                     'brand_name' => ['label' => 'Brand Name', 'format' => 'plain', 'default' => 'Ripal Design'],
+                    'brand_logo_image' => ['label' => 'Brand Logo Image', 'format' => 'image', 'default' => '/assets/Content/Logo.png'],
+                    'favicon_image' => ['label' => 'Favicon Image', 'format' => 'image', 'default' => '/assets/Content/Vector.ico'],
                     'menu_home' => ['label' => 'Menu: Home', 'format' => 'plain', 'default' => 'Home'],
                     'menu_services' => ['label' => 'Menu: Services', 'format' => 'plain', 'default' => 'Services'],
                     'menu_projects' => ['label' => 'Menu: Projects', 'format' => 'plain', 'default' => 'Projects'],
@@ -90,6 +92,10 @@ if (!function_exists('public_content_registry')) {
                     'story_intro' => ['label' => 'Story Intro', 'format' => 'plain', 'default' => 'Founded by two brothers - A Designer and A Builder, we bridge creative ambition with practical delivery.'],
                     'story_body' => ['label' => 'Story Body', 'format' => 'plain', 'default' => 'Our combined experience across municipal, institutional, and private works ensures designs that stand up to real-world constraints while remaining beautiful and timeless. We eliminate the gap between concept and creation by controlling the measure of every detail.'],
                     'fallback_project_name' => ['label' => 'Fallback Project Name', 'format' => 'plain', 'default' => 'Project'],
+                    'carousel_image_1' => ['label' => 'Carousel Image 1', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
+                    'carousel_image_2' => ['label' => 'Carousel Image 2', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'],
+                    'carousel_image_3' => ['label' => 'Carousel Image 3', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
+                    'carousel_image_4' => ['label' => 'Carousel Image 4', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'],
                     'carousel_alt_1' => ['label' => 'Carousel Image 1 Alt', 'format' => 'plain', 'default' => 'Project image 1'],
                     'carousel_alt_2' => ['label' => 'Carousel Image 2 Alt', 'format' => 'plain', 'default' => 'Project image 2'],
                     'carousel_alt_3' => ['label' => 'Carousel Image 3 Alt', 'format' => 'plain', 'default' => 'Project image 3'],
@@ -98,6 +104,10 @@ if (!function_exists('public_content_registry')) {
                     'project_2_description' => ['label' => 'Project 2 Description', 'format' => 'plain', 'default' => 'A landmark in Jam Khambhalia, bridging the gap between Tradition and contemporary living with breathable structure.'],
                     'project_3_description' => ['label' => 'Project 3 Description', 'format' => 'plain', 'default' => "State-of-the-art Multi-Institutional System integrated into Rajkot's burgeoning urban landscape."],
                     'project_4_description' => ['label' => 'Project 4 Description', 'format' => 'plain', 'default' => "Industrial refinement meeting contemporary aesthetics in the heart of India's ceramic capital."],
+                    'featured_image_1' => ['label' => 'Featured Image 1', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
+                    'featured_image_2' => ['label' => 'Featured Image 2', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'],
+                    'featured_image_3' => ['label' => 'Featured Image 3', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
+                    'featured_image_4' => ['label' => 'Featured Image 4', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'],
                     'featured_image_alt_1' => ['label' => 'Featured Image 1 Alt', 'format' => 'plain', 'default' => 'Featured project image 1'],
                     'featured_image_alt_2' => ['label' => 'Featured Image 2 Alt', 'format' => 'plain', 'default' => 'Featured project image 2'],
                     'featured_image_alt_3' => ['label' => 'Featured Image 3 Alt', 'format' => 'plain', 'default' => 'Featured project image 3'],
@@ -108,14 +118,17 @@ if (!function_exists('public_content_registry')) {
                     'testimonial_1_quote' => ['label' => 'Testimonial 1 Quote', 'format' => 'plain', 'default' => 'The surgical precision of their design language transformed our site into a masterpiece of modern architecture.'],
                     'testimonial_1_name' => ['label' => 'Testimonial 1 Name', 'format' => 'plain', 'default' => 'Amitbhai Patel'],
                     'testimonial_1_role' => ['label' => 'Testimonial 1 Role', 'format' => 'plain', 'default' => 'Chairman, Rajkot Realty Group'],
+                    'testimonial_image_1' => ['label' => 'Testimonial Image 1', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM (1).jpeg'],
                     'testimonial_image_alt_1' => ['label' => 'Testimonial Image 1 Alt', 'format' => 'plain', 'default' => 'Client project 1'],
                     'testimonial_2_quote' => ['label' => 'Testimonial 2 Quote', 'format' => 'plain', 'default' => 'They pushed the boundaries of what we thought was possible, creating a space that feels both Intimate and Grand.'],
                     'testimonial_2_name' => ['label' => 'Testimonial 2 Name', 'format' => 'plain', 'default' => 'Anilbhai Sharma'],
                     'testimonial_2_role' => ['label' => 'Testimonial 2 Role', 'format' => 'plain', 'default' => 'Founder, Khambhalia Arts'],
+                    'testimonial_image_2' => ['label' => 'Testimonial Image 2', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
                     'testimonial_image_alt_2' => ['label' => 'Testimonial Image 2 Alt', 'format' => 'plain', 'default' => 'Client project 2'],
                     'testimonial_3_quote' => ['label' => 'Testimonial 3 Quote', 'format' => 'plain', 'default' => 'Deeply committed to sustainability without compromising on aesthetic excellence. Truly leaders in the new era.'],
                     'testimonial_3_name' => ['label' => 'Testimonial 3 Name', 'format' => 'plain', 'default' => 'Sureshbhai'],
                     'testimonial_3_role' => ['label' => 'Testimonial 3 Role', 'format' => 'plain', 'default' => 'Director, Regional Urban Planning'],
+                    'testimonial_image_3' => ['label' => 'Testimonial Image 3', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'],
                     'testimonial_image_alt_3' => ['label' => 'Testimonial Image 3 Alt', 'format' => 'plain', 'default' => 'Client project 3'],
                 ],
             ],
@@ -135,6 +148,7 @@ if (!function_exists('public_content_registry')) {
                     'story_body' => ['label' => 'Story Body', 'format' => 'plain', 'default' => 'Our combined experience across municipal, institutional, and private works ensures designs that stand up to real-world constraints while remaining beautiful and timeless. We eliminate the gap between concept and creation by controlling the measure of every detail.'],
                     'timeline_kicker' => ['label' => 'Timeline Kicker', 'format' => 'plain', 'default' => 'Milestones'],
                     'timeline_heading' => ['label' => 'Timeline Heading', 'format' => 'plain', 'default' => 'The Measure of Success'],
+                    'timeline_logo_image' => ['label' => 'Timeline Logo Image', 'format' => 'image', 'default' => '/assets/Content/Logo.png'],
                     'timeline_logo_alt' => ['label' => 'Timeline Logo Alt', 'format' => 'plain', 'default' => 'Ripal Design Logo'],
                     'milestone_1_year' => ['label' => 'Milestone 1 Year', 'format' => 'plain', 'default' => '2017'],
                     'milestone_1_label' => ['label' => 'Milestone 1 Label', 'format' => 'plain', 'default' => 'Inception'],
@@ -168,6 +182,10 @@ if (!function_exists('public_content_registry')) {
                     'section_kicker' => ['label' => 'Section Kicker', 'format' => 'plain', 'default' => 'Our Expertise'],
                     'section_heading_line_1' => ['label' => 'Section Heading Line 1', 'format' => 'plain', 'default' => 'Crafting Spaces'],
                     'section_heading_line_2' => ['label' => 'Section Heading Line 2', 'format' => 'plain', 'default' => 'With Purpose.'],
+                    'service_image_1' => ['label' => 'Service Image 1', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
+                    'service_image_2' => ['label' => 'Service Image 2', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
+                    'service_image_3' => ['label' => 'Service Image 3', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
+                    'service_image_4' => ['label' => 'Service Image 4', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'],
                     'service_1_title' => ['label' => 'Service 1 Title', 'format' => 'plain', 'default' => 'Architectural Planning'],
                     'service_1_description' => ['label' => 'Service 1 Description', 'format' => 'plain', 'default' => 'Comprehensive master planning and structural design that balances aesthetics with functionality.'],
                     'service_2_title' => ['label' => 'Service 2 Title', 'format' => 'plain', 'default' => 'Interior Design'],
@@ -178,6 +196,7 @@ if (!function_exists('public_content_registry')) {
                     'service_4_description' => ['label' => 'Service 4 Description', 'format' => 'plain', 'default' => 'End-to-end oversight ensuring precision in execution and adherence to timelines.'],
                     'badge_brand' => ['label' => 'Badge Brand', 'format' => 'plain', 'default' => 'Ripal Design'],
                     'badge_label' => ['label' => 'Badge Label', 'format' => 'plain', 'default' => '2026 Collection'],
+                    'hero_image_src' => ['label' => 'Hero Display Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
                     'hero_image_alt' => ['label' => 'Hero Image Alt', 'format' => 'plain', 'default' => 'Architectural service image'],
                     'dynamic_image_alt' => ['label' => 'Dynamic Service Image Alt', 'format' => 'plain', 'default' => 'Service image'],
                 ],
@@ -189,12 +208,15 @@ if (!function_exists('public_content_registry')) {
                     'page_title' => ['label' => 'Browser Title', 'format' => 'plain', 'default' => 'Products | Ripal Design'],
                     'section_kicker' => ['label' => 'Section Kicker', 'format' => 'plain', 'default' => 'Exquisite Materials'],
                     'section_heading' => ['label' => 'Section Heading', 'format' => 'plain', 'default' => 'Curated Collection'],
+                    'card_1_image' => ['label' => 'Card 1 Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
                     'card_1_title' => ['label' => 'Card 1 Title', 'format' => 'plain', 'default' => 'Italian Marble Series'],
                     'card_1_subtitle' => ['label' => 'Card 1 Subtitle', 'format' => 'plain', 'default' => 'Flooring & Cladding'],
                     'card_1_image_alt' => ['label' => 'Card 1 Image Alt', 'format' => 'plain', 'default' => 'Product image 1'],
+                    'card_2_image' => ['label' => 'Card 2 Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
                     'card_2_title' => ['label' => 'Card 2 Title', 'format' => 'plain', 'default' => 'Lumina Pendant'],
                     'card_2_subtitle' => ['label' => 'Card 2 Subtitle', 'format' => 'plain', 'default' => 'Lighting'],
                     'card_2_image_alt' => ['label' => 'Card 2 Image Alt', 'format' => 'plain', 'default' => 'Product image 2'],
+                    'card_3_image' => ['label' => 'Card 3 Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'],
                     'card_3_title' => ['label' => 'Card 3 Title', 'format' => 'plain', 'default' => 'Oak Wood Panels'],
                     'card_3_subtitle' => ['label' => 'Card 3 Subtitle', 'format' => 'plain', 'default' => 'Interiors'],
                     'card_3_image_alt' => ['label' => 'Card 3 Image Alt', 'format' => 'plain', 'default' => 'Product image 3'],
@@ -444,7 +466,8 @@ if (!function_exists('public_content_defaults_for_page')) {
         $fields = public_content_field_meta($pageSlug);
         $defaults = [];
         foreach ($fields as $key => $meta) {
-            $defaults[(string)$key] = (string)($meta['default'] ?? '');
+            $format = (string)($meta['format'] ?? 'plain');
+            $defaults[(string)$key] = public_content_resolve_value($format, (string)($meta['default'] ?? ''));
         }
 
         return $defaults;
@@ -519,6 +542,278 @@ if (!function_exists('public_content_sanitize_html')) {
     }
 }
 
+if (!function_exists('public_content_normalize_format')) {
+    /**
+     * Normalize supported content formats.
+     *
+     * @param string $format
+     * @return string
+     */
+    function public_content_normalize_format($format) {
+        $normalized = strtolower(trim((string)$format));
+        if ($normalized === 'html') {
+            return 'html';
+        }
+        if ($normalized === 'image') {
+            return 'image';
+        }
+
+        return 'plain';
+    }
+}
+
+if (!function_exists('public_content_sanitize_image')) {
+    /**
+     * Sanitize stored image path/URL values.
+     *
+     * @param string $value
+     * @return string
+     */
+    function public_content_sanitize_image($value) {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return '';
+        }
+
+        $value = str_replace(["\0", "\r", "\n"], '', $value);
+
+        if (preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+
+        $value = str_replace('\\', '/', $value);
+        while (strpos($value, '../') === 0) {
+            $value = substr($value, 3);
+        }
+        $value = preg_replace('#^\./#', '', $value);
+        $value = str_replace('..', '', $value);
+        $value = preg_replace('#/+#', '/', $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        return '/' . ltrim($value, '/');
+    }
+}
+
+if (!function_exists('public_content_image_url')) {
+    /**
+     * Resolve a stored image value to a browser-ready URL.
+     *
+     * @param string $value
+     * @param string $fallback
+     * @return string
+     */
+    function public_content_image_url($value, $fallback = '') {
+        $candidate = trim((string)$value);
+        if ($candidate === '') {
+            $candidate = trim((string)$fallback);
+        }
+
+        $candidate = public_content_sanitize_image($candidate);
+        if ($candidate === '') {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $candidate)) {
+            return $candidate;
+        }
+
+        $relative = ltrim($candidate, '/');
+        if ($relative === '') {
+            return '';
+        }
+
+        $parts = array_values(array_filter(explode('/', $relative), static function ($part) {
+            return $part !== '';
+        }));
+        $encodedParts = array_map(static function ($part) {
+            return rawurlencode(rawurldecode((string)$part));
+        }, $parts);
+        $encoded = implode('/', $encodedParts);
+
+        if (function_exists('base_path')) {
+            $resolved = (string)base_path($encoded);
+            return str_replace('/./', '/', $resolved);
+        }
+        if (defined('BASE_PATH')) {
+            $resolved = rtrim((string)BASE_PATH, '/') . '/' . $encoded;
+            return str_replace('/./', '/', $resolved);
+        }
+
+        return '/' . $encoded;
+    }
+}
+
+if (!function_exists('public_content_uploaded_image_for_field')) {
+    /**
+     * Extract a single uploaded file entry from nested content_image payload.
+     *
+     * @param array $files
+     * @param string $pageSlug
+     * @param string $fieldKey
+     * @return array|null
+     */
+    function public_content_uploaded_image_for_field($files, $pageSlug, $fieldKey) {
+        if (!is_array($files) || !isset($files['error']) || !is_array($files['error'])) {
+            return null;
+        }
+
+        $error = $files['error'][$pageSlug][$fieldKey] ?? ($files['error'][$fieldKey] ?? UPLOAD_ERR_NO_FILE);
+        if ((int)$error === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        return [
+            'name' => (string)($files['name'][$pageSlug][$fieldKey] ?? ($files['name'][$fieldKey] ?? '')),
+            'type' => (string)($files['type'][$pageSlug][$fieldKey] ?? ($files['type'][$fieldKey] ?? '')),
+            'tmp_name' => (string)($files['tmp_name'][$pageSlug][$fieldKey] ?? ($files['tmp_name'][$fieldKey] ?? '')),
+            'error' => (int)$error,
+            'size' => (int)($files['size'][$pageSlug][$fieldKey] ?? ($files['size'][$fieldKey] ?? 0)),
+        ];
+    }
+}
+
+if (!function_exists('public_content_store_uploaded_image')) {
+    /**
+     * Validate and store uploaded image in uploads/content/{pageSlug}.
+     *
+     * @param string $pageSlug
+     * @param string $fieldKey
+     * @param array $uploaded
+     * @return array
+     */
+    function public_content_store_uploaded_image($pageSlug, $fieldKey, $uploaded) {
+        $result = ['ok' => false, 'path' => '', 'error' => ''];
+
+        if (!is_array($uploaded)) {
+            $result['error'] = 'Invalid upload payload.';
+            return $result;
+        }
+
+        $uploadError = (int)($uploaded['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            $messages = [
+                UPLOAD_ERR_INI_SIZE => 'File exceeds server upload size limit.',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds form upload size limit.',
+                UPLOAD_ERR_PARTIAL => 'File upload was incomplete.',
+                UPLOAD_ERR_NO_FILE => 'No file selected.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary upload directory.',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write uploaded file.',
+                UPLOAD_ERR_EXTENSION => 'Upload stopped by server extension.',
+            ];
+            $result['error'] = (string)($messages[$uploadError] ?? 'Image upload failed.');
+            return $result;
+        }
+
+        $tmpPath = (string)($uploaded['tmp_name'] ?? '');
+        if ($tmpPath === '' || !is_uploaded_file($tmpPath)) {
+            $result['error'] = 'Invalid uploaded file.';
+            return $result;
+        }
+
+        $originalName = (string)($uploaded['name'] ?? 'image');
+        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        $allowedMimes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'gif' => 'image/gif',
+        ];
+        if (!isset($allowedMimes[$ext])) {
+            $result['error'] = 'Only JPG, JPEG, PNG, WEBP, and GIF files are allowed.';
+            return $result;
+        }
+
+        $size = (int)($uploaded['size'] ?? 0);
+        if ($size <= 0 || $size > 10 * 1024 * 1024) {
+            $result['error'] = 'Image must be less than or equal to 10 MB.';
+            return $result;
+        }
+
+        $detectedMime = function_exists('mime_content_type') ? (string)@mime_content_type($tmpPath) : '';
+        if ($detectedMime !== '' && !in_array($detectedMime, array_values($allowedMimes), true)) {
+            $result['error'] = 'Uploaded file is not a valid image type.';
+            return $result;
+        }
+
+        $imgInfo = @getimagesize($tmpPath);
+        if ($imgInfo === false) {
+            $result['error'] = 'Uploaded file is not a valid image.';
+            return $result;
+        }
+
+        $safeSlug = preg_replace('/[^A-Za-z0-9_-]+/', '_', strtolower((string)$pageSlug));
+        $safeSlug = $safeSlug !== '' ? $safeSlug : 'page';
+        $safeField = preg_replace('/[^A-Za-z0-9_-]+/', '_', strtolower((string)$fieldKey));
+        $safeField = $safeField !== '' ? $safeField : 'image';
+
+        $relativeDir = 'uploads/content/' . $safeSlug;
+        $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+        if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+            $result['error'] = 'Unable to create content image directory.';
+            return $result;
+        }
+
+        try {
+            $random = bin2hex(random_bytes(4));
+        } catch (Throwable $e) {
+            $random = (string)mt_rand(100000, 999999);
+        }
+
+        $storedName = $safeField . '_' . time() . '_' . $random . '.' . $ext;
+        $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
+
+        if (!move_uploaded_file($tmpPath, $absolutePath)) {
+            $result['error'] = 'Failed to store uploaded image.';
+            return $result;
+        }
+
+        $result['ok'] = true;
+        $result['path'] = '/' . $relativeDir . '/' . $storedName;
+        return $result;
+    }
+}
+
+if (!function_exists('public_content_delete_managed_image')) {
+    /**
+     * Delete an old managed image file (uploads/content/*) if it exists.
+     *
+     * @param string $value
+     * @return bool
+     */
+    function public_content_delete_managed_image($value) {
+        $path = public_content_sanitize_image($value);
+        if ($path === '' || preg_match('#^https?://#i', $path)) {
+            return false;
+        }
+
+        $relative = ltrim($path, '/');
+        if (strpos($relative, 'uploads/content/') !== 0) {
+            return false;
+        }
+
+        $absolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        if (!is_file($absolute)) {
+            return false;
+        }
+
+        $realFile = realpath($absolute);
+        $managedRoot = realpath(rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'content');
+        if ($realFile === false || $managedRoot === false) {
+            return false;
+        }
+
+        if (strpos($realFile, $managedRoot . DIRECTORY_SEPARATOR) !== 0) {
+            return false;
+        }
+
+        return @unlink($realFile);
+    }
+}
+
 if (!function_exists('public_content_resolve_value')) {
     /**
      * Sanitize value by format.
@@ -528,8 +823,12 @@ if (!function_exists('public_content_resolve_value')) {
      * @return string
      */
     function public_content_resolve_value($format, $value) {
-        if (strtolower((string)$format) === 'html') {
+        $normalized = public_content_normalize_format($format);
+        if ($normalized === 'html') {
             return public_content_sanitize_html($value);
+        }
+        if ($normalized === 'image') {
+            return public_content_sanitize_image($value);
         }
 
         return public_content_sanitize_plain($value);
@@ -591,8 +890,9 @@ if (!function_exists('public_content_page_values')) {
                 continue;
             }
 
-            $format = (string)($fields[$key]['format'] ?? 'plain');
-            if (!empty($row['content_format'])) {
+            $fieldFormat = public_content_normalize_format((string)($fields[$key]['format'] ?? 'plain'));
+            $format = $fieldFormat;
+            if ($fieldFormat !== 'image' && !empty($row['content_format'])) {
                 $format = (string)$row['content_format'];
             }
 
@@ -646,9 +946,11 @@ if (!function_exists('public_content_upsert_page')) {
      * @param string $pageSlug
      * @param array $incoming
      * @param int $updatedBy
+     * @param array $uploadedImages
+     * @param array $removeImages
      * @return array
      */
-    function public_content_upsert_page($pageSlug, $incoming, $updatedBy = 0) {
+    function public_content_upsert_page($pageSlug, $incoming, $updatedBy = 0, $uploadedImages = [], $removeImages = []) {
         $slug = strtolower(trim((string)$pageSlug));
         $result = [
             'ok' => false,
@@ -664,6 +966,12 @@ if (!function_exists('public_content_upsert_page')) {
         if (!is_array($incoming)) {
             $result['errors'][] = 'Invalid submitted content payload.';
             return $result;
+        }
+        if (!is_array($uploadedImages)) {
+            $uploadedImages = [];
+        }
+        if (!is_array($removeImages)) {
+            $removeImages = [];
         }
 
         $fields = public_content_field_meta($slug);
@@ -685,22 +993,81 @@ if (!function_exists('public_content_upsert_page')) {
             $authorId = null;
         }
 
+        $existingRows = db_fetch_all('SELECT section_key, content_value FROM public_page_content WHERE page_slug = ?', [$slug]);
+        $existingValues = [];
+        foreach ($existingRows as $existingRow) {
+            $existingKey = (string)($existingRow['section_key'] ?? '');
+            if ($existingKey === '') {
+                continue;
+            }
+            $existingValues[$existingKey] = (string)($existingRow['content_value'] ?? '');
+        }
+
         foreach ($fields as $key => $meta) {
-            if (!array_key_exists($key, $incoming)) {
+            $fieldKey = (string)$key;
+            $fieldFormat = public_content_normalize_format((string)($meta['format'] ?? 'plain'));
+            $uploaded = public_content_uploaded_image_for_field($uploadedImages, $slug, $fieldKey);
+            $hasUpload = $fieldFormat === 'image' && is_array($uploaded);
+
+            $removeRequested = !empty($removeImages[$fieldKey]);
+            if (!$removeRequested && isset($removeImages[$slug]) && is_array($removeImages[$slug])) {
+                $removeRequested = !empty($removeImages[$slug][$fieldKey]);
+            }
+
+            $hasIncoming = array_key_exists($fieldKey, $incoming);
+            if (!$hasIncoming && !$hasUpload && !$removeRequested) {
                 continue;
             }
 
-            $format = strtolower((string)($meta['format'] ?? 'plain')) === 'html' ? 'html' : 'plain';
-            $raw = (string)$incoming[$key];
-            $cleanValue = public_content_resolve_value($format, $raw);
+            $raw = $hasIncoming ? (string)$incoming[$fieldKey] : '';
+            $cleanValue = public_content_resolve_value($fieldFormat, $raw);
+            $dbFormat = $fieldFormat === 'html' ? 'html' : 'plain';
+
+            if ($fieldFormat === 'image') {
+                $existingValue = public_content_sanitize_image((string)($existingValues[$fieldKey] ?? ''));
+
+                if ($removeRequested) {
+                    $cleanValue = '';
+                }
+
+                if ($hasUpload) {
+                    $stored = public_content_store_uploaded_image($slug, $fieldKey, $uploaded);
+                    if (empty($stored['ok'])) {
+                        $result['errors'][] = 'Image upload failed for field: ' . $fieldKey . '. ' . (string)($stored['error'] ?? 'Unknown error.');
+                        continue;
+                    }
+                    $cleanValue = public_content_sanitize_image((string)($stored['path'] ?? ''));
+                }
+
+                $ok = db_query(
+                    'INSERT INTO public_page_content (page_slug, section_key, content_value, content_format, updated_by) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE content_value = VALUES(content_value), content_format = VALUES(content_format), updated_by = VALUES(updated_by), updated_at = CURRENT_TIMESTAMP',
+                    [$slug, $fieldKey, $cleanValue, $dbFormat, $authorId]
+                );
+
+                if ($ok === false) {
+                    if ($hasUpload && $cleanValue !== '') {
+                        public_content_delete_managed_image($cleanValue);
+                    }
+                    $result['errors'][] = 'Failed to save field: ' . $fieldKey;
+                    continue;
+                }
+
+                if ($existingValue !== '' && $existingValue !== $cleanValue) {
+                    public_content_delete_managed_image($existingValue);
+                }
+
+                $existingValues[$fieldKey] = $cleanValue;
+                $result['saved']++;
+                continue;
+            }
 
             $ok = db_query(
                 'INSERT INTO public_page_content (page_slug, section_key, content_value, content_format, updated_by) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE content_value = VALUES(content_value), content_format = VALUES(content_format), updated_by = VALUES(updated_by), updated_at = CURRENT_TIMESTAMP',
-                [$slug, (string)$key, $cleanValue, $format, $authorId]
+                [$slug, $fieldKey, $cleanValue, $dbFormat, $authorId]
             );
 
             if ($ok === false) {
-                $result['errors'][] = 'Failed to save field: ' . (string)$key;
+                $result['errors'][] = 'Failed to save field: ' . $fieldKey;
                 continue;
             }
 
@@ -750,12 +1117,13 @@ if (!function_exists('public_content_seed_defaults')) {
             }
 
             foreach ($fields as $sectionKey => $fieldMeta) {
-                $format = strtolower((string)($fieldMeta['format'] ?? 'plain')) === 'html' ? 'html' : 'plain';
-                $defaultValue = public_content_resolve_value($format, (string)($fieldMeta['default'] ?? ''));
+                $fieldFormat = public_content_normalize_format((string)($fieldMeta['format'] ?? 'plain'));
+                $dbFormat = $fieldFormat === 'html' ? 'html' : 'plain';
+                $defaultValue = public_content_resolve_value($fieldFormat, (string)($fieldMeta['default'] ?? ''));
 
                 $stmt = db_query(
                     'INSERT IGNORE INTO public_page_content (page_slug, section_key, content_value, content_format, updated_by) VALUES (?, ?, ?, ?, ?)',
-                    [(string)$pageSlug, (string)$sectionKey, $defaultValue, $format, $authorId]
+                    [(string)$pageSlug, (string)$sectionKey, $defaultValue, $dbFormat, $authorId]
                 );
 
                 if ($stmt === false) {
