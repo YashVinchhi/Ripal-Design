@@ -4,6 +4,96 @@ require_once __DIR__ . '/../includes/init.php';
 require_login();
 require_role('admin');
 
+$storeProjectImage = static function (int $projectId, array $uploadedFile): bool {
+    if ($projectId <= 0) {
+        return false;
+    }
+
+    $originalName = (string)($uploadedFile['name'] ?? 'photo');
+    $tmpPath = (string)($uploadedFile['tmp_name'] ?? '');
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+    if ($ext === '' || !in_array($ext, $allowed, true) || $tmpPath === '') {
+        return false;
+    }
+
+    $safeBaseName = preg_replace('/[^A-Za-z0-9._-]+/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+    $safeBaseName = $safeBaseName !== '' ? $safeBaseName : 'photo';
+
+    $relativeDir = 'uploads/projects/' . $projectId . '/files';
+    $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+
+    if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+        return false;
+    }
+
+    $storedName = $safeBaseName . '_' . time() . '_' . bin2hex(random_bytes(4));
+    $storedName .= '.' . $ext;
+
+    $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
+    if (!move_uploaded_file($tmpPath, $absolutePath)) {
+        return false;
+    }
+
+    $publicPath = rtrim((string)BASE_PATH, '/') . '/' . $relativeDir . '/' . $storedName;
+    $sizeBytes = (int)($uploadedFile['size'] ?? 0);
+    if ($sizeBytes < 1024) {
+        $sizeLabel = $sizeBytes . ' B';
+    } elseif ($sizeBytes < 1024 * 1024) {
+        $sizeLabel = round($sizeBytes / 1024, 1) . ' KB';
+    } else {
+        $sizeLabel = round($sizeBytes / (1024 * 1024), 1) . ' MB';
+    }
+
+    db_query('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', [
+        $projectId,
+        $originalName,
+        strtoupper($ext),
+        $sizeLabel,
+        $publicPath,
+        $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System'),
+    ]);
+
+    return true;
+};
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_project_cover'])) {
+    require_csrf();
+    $projectId = (int)($_POST['project_id'] ?? 0);
+
+    if ($projectId > 0 && isset($_FILES['project_photo']) && is_array($_FILES['project_photo'])) {
+        $photoFiles = $_FILES['project_photo'];
+
+        // Support both single-file and multi-file upload payloads.
+        if (is_array($photoFiles['name'] ?? null)) {
+            $total = count($photoFiles['name']);
+            for ($i = 0; $i < $total; $i++) {
+                $errorCode = (int)($photoFiles['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+                if ($errorCode !== UPLOAD_ERR_OK) {
+                    continue;
+                }
+
+                $storeProjectImage($projectId, [
+                    'name' => (string)($photoFiles['name'][$i] ?? ''),
+                    'type' => (string)($photoFiles['type'][$i] ?? ''),
+                    'tmp_name' => (string)($photoFiles['tmp_name'][$i] ?? ''),
+                    'error' => $errorCode,
+                    'size' => (int)($photoFiles['size'][$i] ?? 0),
+                ]);
+            }
+        } else {
+            $errorCode = (int)($photoFiles['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($errorCode === UPLOAD_ERR_OK) {
+                $storeProjectImage($projectId, $photoFiles);
+            }
+        }
+    }
+
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
     require_csrf();
 
@@ -29,41 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
 
         // Handle optional cover photo upload
         if ($projectId > 0 && isset($_FILES['project_photo']) && is_array($_FILES['project_photo']) && (int)($_FILES['project_photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-            $uploaded = $_FILES['project_photo'];
-            $originalName = (string)($uploaded['name'] ?? 'photo');
-            $tmpPath = (string)($uploaded['tmp_name'] ?? '');
-            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if ($ext !== '' && in_array($ext, $allowed, true)) {
-                $safeBaseName = preg_replace('/[^A-Za-z0-9._-]+/', '_', pathinfo($originalName, PATHINFO_FILENAME));
-                $safeBaseName = $safeBaseName !== '' ? $safeBaseName : 'photo';
-
-                $relativeDir = 'uploads/projects/' . $projectId . '/files';
-                $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
-
-                if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
-                    // Directory creation failed; skip saving photo
-                } else {
-                    $storedName = $safeBaseName . '_' . time() . '_' . bin2hex(random_bytes(4));
-                    if ($ext !== '') $storedName .= '.' . $ext;
-
-                    $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
-                    if (move_uploaded_file($tmpPath, $absolutePath)) {
-                        $publicPath = rtrim((string)BASE_PATH, '/') . '/' . $relativeDir . '/' . $storedName;
-                        $sizeBytes = (int)($uploaded['size'] ?? 0);
-                        if ($sizeBytes < 1024) {
-                            $sizeLabel = $sizeBytes . ' B';
-                        } elseif ($sizeBytes < 1024 * 1024) {
-                            $sizeLabel = round($sizeBytes / 1024, 1) . ' KB';
-                        } else {
-                            $sizeLabel = round($sizeBytes / (1024 * 1024), 1) . ' MB';
-                        }
-
-                        db_query('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', [$projectId, $originalName, strtoupper($ext), $sizeLabel, $publicPath, $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System')]);
-                    }
-                }
-            }
+            $storeProjectImage($projectId, $_FILES['project_photo']);
         }
     }
 
@@ -84,8 +140,10 @@ if ($db instanceof PDO) {
     $sql = "SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.budget, COALESCE(p.location,'') AS location, COALESCE(p.owner_name,'') AS owner_name";
     if (function_exists('db_table_exists') && db_table_exists('project_files')) {
         $sql .= ", (SELECT pf.file_path FROM project_files pf WHERE pf.project_id = p.id AND pf.type IN ('JPG','JPEG','PNG','WEBP') ORDER BY pf.uploaded_at DESC LIMIT 1) AS cover_image";
+        $sql .= ", (SELECT GROUP_CONCAT(pf.file_path ORDER BY pf.uploaded_at DESC SEPARATOR '||') FROM project_files pf WHERE pf.project_id = p.id AND pf.type IN ('JPG','JPEG','PNG','WEBP')) AS cover_images";
     } else {
         $sql .= ", NULL AS cover_image";
+        $sql .= ", NULL AS cover_images";
     }
 
     $sql .= " FROM projects p";
@@ -144,10 +202,33 @@ if ($db instanceof PDO) {
 
     if (!empty($assetCandidates)) {
         foreach ($projects as &$pp) {
+            $images = [];
+            if (!empty($pp['cover_images'])) {
+                $images = array_values(array_filter(array_map('trim', explode('||', (string)$pp['cover_images']))));
+            }
+            if (empty($images) && !empty($pp['cover_image'])) {
+                $images[] = (string)$pp['cover_image'];
+            }
             if (empty($pp['cover_image'])) {
                 $id = (int)($pp['id'] ?? 0);
                 $pp['cover_image'] = $assetCandidates[$id % count($assetCandidates)];
+                if (empty($images)) {
+                    $images[] = (string)$pp['cover_image'];
+                }
             }
+            $pp['cover_images_list'] = $images;
+        }
+        unset($pp);
+    } else {
+        foreach ($projects as &$pp) {
+            $images = [];
+            if (!empty($pp['cover_images'])) {
+                $images = array_values(array_filter(array_map('trim', explode('||', (string)$pp['cover_images']))));
+            }
+            if (empty($images) && !empty($pp['cover_image'])) {
+                $images[] = (string)$pp['cover_image'];
+            }
+            $pp['cover_images_list'] = $images;
         }
         unset($pp);
     }
@@ -196,6 +277,15 @@ $resolveRegion = static function (string $location): string {
   <style>
       .error { color: #94180C; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
       input.error, select.error, textarea.error { border-color: #94180C !important; background-color: #FFF5F5 !important; }
+
+      .project-card-media .project-cover-dots {
+          opacity: 0;
+          transition: opacity 0.3s ease;
+      }
+
+      .project-card-media:hover .project-cover-dots {
+          opacity: 1;
+      }
 
       @media (max-width: 767px) {
           .project-mobile-heading {
@@ -309,13 +399,39 @@ $resolveRegion = static function (string $location): string {
             <?php foreach ($projects as $p): ?>
             <?php $pStatus = strtolower((string)($p['status'] ?? 'planning')); ?>
             <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Global" data-status="<?php echo htmlspecialchars($pStatus); ?>">
-                <div class="h-56 bg-foundation-grey relative overflow-hidden">
-                    <?php if (!empty($p['cover_image'])): ?>
-                        <img src="<?php echo htmlspecialchars((string)$p['cover_image']); ?>" alt="<?php echo htmlspecialchars((string)$p['name']); ?>" class="absolute inset-0 w-full h-full object-cover">
+                <div class="project-card-media h-56 bg-foundation-grey relative overflow-hidden">
+                    <?php $coverImages = $p['cover_images_list'] ?? (!empty($p['cover_image']) ? [(string)$p['cover_image']] : []); ?>
+                    <?php if (!empty($coverImages)): ?>
+                        <?php foreach ($coverImages as $idx => $coverPath): ?>
+                            <img src="<?php echo htmlspecialchars((string)$coverPath); ?>" alt="<?php echo htmlspecialchars((string)$p['name']); ?>" class="project-cover-slide absolute inset-0 w-full h-full object-cover transition-opacity duration-700 <?php echo $idx === 0 ? 'opacity-100' : 'opacity-0'; ?>" data-slide-index="<?php echo (int)$idx; ?>">
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <?php if (!empty($coverImages) && count($coverImages) > 1): ?>
+                        <div class="project-cover-dots absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+                            <?php foreach ($coverImages as $idx => $coverPath): ?>
+                                <button
+                                    type="button"
+                                    class="project-cover-dot w-2 h-2 rounded-full border border-white/80 <?php echo $idx === 0 ? 'bg-white' : 'bg-white/35'; ?>"
+                                    data-slide-go="<?php echo (int)$idx; ?>"
+                                    aria-label="Show cover image <?php echo (int)$idx + 1; ?>">
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
                     <?php endif; ?>
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                        <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg"><?php echo htmlspecialchars(strtoupper($pStatus)); ?></span>
                        <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars((string)$p['name']); ?></h3>
+                    </div>
+                    <div class="absolute top-3 right-3 z-20">
+                        <form method="post" enctype="multipart/form-data" class="cover-edit-form inline-flex items-center gap-2 bg-black/35 backdrop-blur-sm px-2 py-1 rounded" data-project-id="<?php echo (int)$p['id']; ?>">
+                            <?php echo csrf_token_field(); ?>
+                            <input type="hidden" name="update_project_cover" value="1">
+                            <input type="hidden" name="project_id" value="<?php echo (int)$p['id']; ?>">
+                            <input type="file" name="project_photo[]" accept="image/*" multiple class="hidden project-cover-input" id="cover-input-<?php echo (int)$p['id']; ?>">
+                            <button type="button" class="cover-edit-btn text-white text-[10px] font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-rajkot-rust transition-colors" data-input-id="cover-input-<?php echo (int)$p['id']; ?>" title="Edit cover images">
+                                <i data-lucide="image-plus" class="w-4 h-4"></i> Edit Covers
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="p-4 md:p-6 flex-grow">
@@ -603,6 +719,82 @@ $resolveRegion = static function (string $location): string {
         // Close on backdrop click
         document.getElementById('ventureModal').addEventListener('click', function(e) {
             if (e.target === this) closeVentureModal();
+        });
+
+        // Auto-rotate project cover images every 7 seconds.
+        document.querySelectorAll('.project-card').forEach(function (card) {
+            const slides = card.querySelectorAll('.project-cover-slide');
+            const dots = card.querySelectorAll('.project-cover-dot');
+            if (!slides || slides.length <= 1) {
+                return;
+            }
+
+            let current = 0;
+            let autoScrollTimer = null;
+
+            function showSlide(index) {
+                slides[current].classList.remove('opacity-100');
+                slides[current].classList.add('opacity-0');
+                current = index;
+                slides[current].classList.remove('opacity-0');
+                slides[current].classList.add('opacity-100');
+
+                if (dots && dots.length) {
+                    dots.forEach(function (dot, i) {
+                        if (i === current) {
+                            dot.classList.remove('bg-white/35');
+                            dot.classList.add('bg-white');
+                        } else {
+                            dot.classList.remove('bg-white');
+                            dot.classList.add('bg-white/35');
+                        }
+                    });
+                }
+            }
+
+            function startAutoScroll() {
+                if (autoScrollTimer) {
+                    clearInterval(autoScrollTimer);
+                }
+                // Continuous autoplay: independent of hover/focus, loops forever.
+                autoScrollTimer = setInterval(function () {
+                    const next = (current + 1) % slides.length;
+                    showSlide(next);
+                }, 7000);
+            }
+
+            startAutoScroll();
+
+            if (dots && dots.length) {
+                dots.forEach(function (dot, index) {
+                    dot.addEventListener('click', function () {
+                        showSlide(index);
+                        startAutoScroll();
+                    });
+                });
+            }
+        });
+
+        // Existing project cover edit provision.
+        document.querySelectorAll('.cover-edit-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const inputId = btn.getAttribute('data-input-id');
+                const input = inputId ? document.getElementById(inputId) : null;
+                if (input) {
+                    input.click();
+                }
+            });
+        });
+
+        document.querySelectorAll('.cover-edit-form .project-cover-input').forEach(function (input) {
+            input.addEventListener('change', function () {
+                if (input.files && input.files.length > 0) {
+                    const form = input.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                }
+            });
         });
     </script>
   </div>

@@ -223,6 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_client_rating'
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     require_csrf();
+    $is_avatar_only = isset($_POST['avatar_only']) && (string)$_POST['avatar_only'] === '1';
     $full_name = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
@@ -231,10 +232,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $state = trim($_POST['state'] ?? '');
     $zip = trim($_POST['zip'] ?? '');
     
-    if (empty($full_name) || empty($email)) {
+    if (!$is_avatar_only && (empty($full_name) || empty($email))) {
         $message = 'Full Name and Email are required.';
         $message_type = 'danger';
     } else {
+        if ($is_avatar_only) {
+            $full_name = trim((string)($user_data['full_name'] ?? ''));
+            $email = trim((string)($user_data['email'] ?? ''));
+            $phone = (string)($user_data['phone'] ?? '');
+            $address = (string)($user_data['address'] ?? '');
+            $city = (string)($user_data['city'] ?? '');
+            $state = (string)($user_data['state'] ?? '');
+            $zip = (string)($user_data['zip'] ?? '');
+        }
+
         $nameParts = preg_split('/\s+/', $full_name);
         $derivedFirstName = trim((string)($nameParts[0] ?? ''));
         $derivedLastName = trim((string)implode(' ', array_slice($nameParts ?: [], 1)));
@@ -242,6 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         if (db_connected() && $user_id > 0) {
             try {
                 $db = get_db();
+                $avatar_updated = false;
 
                 // Handle optional avatar upload
                 if (isset($_FILES['avatar']) && is_array($_FILES['avatar']) && (int)($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
@@ -284,6 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                                     $upd = $db->prepare("UPDATE users SET avatar = ? WHERE id = ?");
                                     $upd->execute([$publicPath, $user_id]);
                                     $user_data['avatar'] = $publicPath;
+                                    $avatar_updated = true;
                                 } catch (Exception $e) {
                                     error_log('Failed to save avatar path: ' . $e->getMessage());
                                 }
@@ -292,30 +305,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                     }
                 }
 
-                $stmt = $db->prepare("UPDATE users SET full_name = ?, first_name = ?, last_name = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zip = ? WHERE id = ?");
-                $stmt->execute([$full_name, $derivedFirstName, $derivedLastName, $email, $phone, $address, $city, $state, $zip, $user_id]);
-                $message = 'Profile updated successfully!';
-                $message_type = 'success';
-                // Refresh data
-                $user_data['full_name'] = $full_name;
-                $user_data['first_name'] = $derivedFirstName;
-                $user_data['last_name'] = $derivedLastName;
-                $user_data['email'] = $email;
-                $user_data['phone'] = $phone;
-                $user_data['address'] = $address;
-                $user_data['city'] = $city;
-                $user_data['state'] = $state;
-                $user_data['zip'] = $zip;
+                if (!$is_avatar_only) {
+                    $stmt = $db->prepare("UPDATE users SET full_name = ?, first_name = ?, last_name = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zip = ? WHERE id = ?");
+                    $stmt->execute([$full_name, $derivedFirstName, $derivedLastName, $email, $phone, $address, $city, $state, $zip, $user_id]);
+                    $message = 'Profile updated successfully!';
+                    $message_type = 'success';
+                    // Refresh data
+                    $user_data['full_name'] = $full_name;
+                    $user_data['first_name'] = $derivedFirstName;
+                    $user_data['last_name'] = $derivedLastName;
+                    $user_data['email'] = $email;
+                    $user_data['phone'] = $phone;
+                    $user_data['address'] = $address;
+                    $user_data['city'] = $city;
+                    $user_data['state'] = $state;
+                    $user_data['zip'] = $zip;
 
-                // Keep active session user names in sync when editing own profile.
-                if (!empty($_SESSION['user']) && (int)($_SESSION['user']['id'] ?? 0) === $user_id) {
-                    $_SESSION['user']['full_name'] = $full_name;
-                    $_SESSION['user']['first_name'] = $derivedFirstName;
-                    $_SESSION['user']['last_name'] = $derivedLastName;
-                    $sessionDisplayName = trim($derivedFirstName . ' ' . $derivedLastName);
-                    if ($sessionDisplayName !== '') {
-                        $_SESSION['user']['name'] = $sessionDisplayName;
+                    // Keep active session user names in sync when editing own profile.
+                    if (!empty($_SESSION['user']) && (int)($_SESSION['user']['id'] ?? 0) === $user_id) {
+                        $_SESSION['user']['full_name'] = $full_name;
+                        $_SESSION['user']['first_name'] = $derivedFirstName;
+                        $_SESSION['user']['last_name'] = $derivedLastName;
+                        $sessionDisplayName = trim($derivedFirstName . ' ' . $derivedLastName);
+                        if ($sessionDisplayName !== '') {
+                            $_SESSION['user']['name'] = $sessionDisplayName;
+                        }
                     }
+                } else {
+                    $message = $avatar_updated ? 'Profile photo updated successfully!' : 'Unable to update profile photo. Please try a JPG, PNG, WEBP, or GIF image.';
+                    $message_type = $avatar_updated ? 'success' : 'danger';
                 }
             } catch (Exception $e) {
                 error_log('Profile update failed: ' . $e->getMessage());
@@ -410,6 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <form id="avatarFormSidebar" method="POST" enctype="multipart/form-data" class="mt-2">
                             <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="update_profile" value="1">
+                            <input type="hidden" name="avatar_only" value="1">
                             <input type="file" name="avatar" id="sidebarAvatarInput" accept="image/*" style="display:none">
                             <button type="button" id="avatarEditBtn" title="Edit profile photo" class="mx-auto inline-flex items-center gap-2 px-3 py-1 border rounded text-sm text-gray-600 hover:bg-gray-50">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>

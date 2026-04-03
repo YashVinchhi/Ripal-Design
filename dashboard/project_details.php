@@ -190,8 +190,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
   $budget = $_POST['budget'] ?? 0;
   $progress = $_POST['progress'] ?? 0;
   $due = $_POST['due'] ?? null;
-  $location = $_POST['location'] ?? '';
-    $address = $_POST['address'] ?? $location;
+    $currentLocation = trim((string)($project['location'] ?? ''));
+    $currentAddress = trim((string)($project['address'] ?? $currentLocation));
+    $location = array_key_exists('location', $_POST)
+        ? trim((string)$_POST['location'])
+        : $currentLocation;
+    $address = array_key_exists('address', $_POST)
+        ? trim((string)$_POST['address'])
+        : ($currentAddress !== '' ? $currentAddress : $location);
+    if ($address === '') {
+        $address = $location;
+    }
   $ownerName = $_POST['owner_name'] ?? '';
   $ownerContact = $_POST['owner_contact'] ?? '';
   $ownerEmail = $_POST['owner_email'] ?? '';
@@ -713,33 +722,59 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                                             type="number" name="progress" min="0" max="100" value="<?php echo intval($project['progress'] ?? 0); ?>" />
                                     </div>
                                 </div>
-                                <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase">Site Location
-                                        (Address)</label>
-                                    <input
-                                        class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"
-                                        type="text" name="location" value="<?php echo htmlspecialchars($project['location'] ?? $project['address'] ?? ''); ?>" />
-                                </div>
                                 <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
                                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Location Mapping
                                     </h3>
-                                    <div
-                                        class="bg-slate-100 dark:bg-slate-800 rounded-lg aspect-video flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
-                                        <div
-                                            class="absolute inset-0 bg-[url('../assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM (1).jpeg')] bg-cover opacity-20 group-hover:opacity-30 transition-opacity">
+                                    <?php $displayAddress = trim((string)($project['address'] ?? $project['location'] ?? '')); ?>
+                                    <input type="hidden" name="location" id="projectLocationInput" value="<?php echo htmlspecialchars($project['location'] ?? $project['address'] ?? ''); ?>" />
+                                    <input type="hidden" name="address" id="projectAddressInput" value="<?php echo htmlspecialchars($project['address'] ?? $project['location'] ?? ''); ?>" />
+                                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Address</p>
+                                                <p id="locationAddressDisplay" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed break-words cursor-text" title="Double-click to edit address">
+                                                    <?php if ($displayAddress !== ''): ?>
+                                                        This project is located at <?php echo htmlspecialchars($displayAddress); ?>.
+                                                    <?php else: ?>
+                                                        Address is not available yet. Add the location above to enable map preview.
+                                                    <?php endif; ?>
+                                                </p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Click the info button to reveal map preview.</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                id="locationInfoToggle"
+                                                class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                                title="Toggle map preview"
+                                                aria-label="Toggle map preview"
+                                                aria-expanded="false"
+                                                aria-controls="locationMapPreview">
+                                                <span class="material-icons text-base">info</span>
+                                            </button>
                                         </div>
-                                        <div class="z-10 text-center px-4">
-                                            <span class="material-icons text-4xl mb-2 opacity-50">map</span>
-                                            <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Map Preview
-                                                Unavailable</p>
-                                            <p class="text-xs opacity-60">Click Geocode to refresh coordinates</p>
+                                    </div>
+                                    <div id="locationMapPreview" class="hidden mt-4">
+                                        <div class="bg-slate-100 dark:bg-slate-800 rounded-lg aspect-video relative overflow-hidden border border-slate-200 dark:border-slate-700">
+                                            <iframe
+                                                id="projectMapIframe"
+                                                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d579.8316079220815!2d70.76881815290493!3d22.305545972075898!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1775195173048!5m2!1sen!2sin"
+                                                width="100%"
+                                                height="100%"
+                                                style="border:0; position:absolute; inset:0;"
+                                                allowfullscreen=""
+                                                loading="lazy"
+                                                referrerpolicy="no-referrer-when-downgrade"
+                                                title="Project map preview">
+                                            </iframe>
                                         </div>
                                     </div>
                                     <div class="mt-4 flex flex-col sm:flex-row gap-3">
                                         <input
+                                            id="geocodeSearchInput"
                                             class="flex-grow bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"
                                             placeholder="Search address to geocode..." type="text" />
                                         <button type="button"
+                                            id="geocodeSearchBtn"
                                             class="px-6 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 shadow-md">Geocode</button>
                                     </div>
                                 </div>
@@ -1329,6 +1364,142 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                     showNotification('Unable to share project link.', 'error');
                     console.error('Share error:', error);
                 }
+            });
+        }
+
+        // Location info button toggles the existing map preview.
+        const locationInfoToggle = document.getElementById('locationInfoToggle');
+        const locationMapPreview = document.getElementById('locationMapPreview');
+        if (locationInfoToggle && locationMapPreview) {
+            locationInfoToggle.addEventListener('click', function () {
+                const willShow = locationMapPreview.classList.contains('hidden');
+                locationMapPreview.classList.toggle('hidden');
+                locationInfoToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            });
+        }
+
+        // Double-click address text to edit location inline.
+        const locationAddressDisplay = document.getElementById('locationAddressDisplay');
+        const projectLocationInput = document.getElementById('projectLocationInput');
+        const projectAddressInput = document.getElementById('projectAddressInput');
+        const geocodeSearchInput = document.getElementById('geocodeSearchInput');
+        const geocodeSearchBtn = document.getElementById('geocodeSearchBtn');
+        const projectMapIframe = document.getElementById('projectMapIframe');
+
+        function renderAddressSentence(address) {
+            const cleanAddress = (address || '').trim();
+            if (cleanAddress === '') {
+                return 'Address is not available yet. Double-click to add it.';
+            }
+            return 'This project is located at ' + cleanAddress + '.';
+        }
+
+        function extractAddressFromSentence(text) {
+            const prefix = 'This project is located at ';
+            const trimmed = (text || '').trim();
+            if (trimmed.indexOf(prefix) === 0) {
+                return trimmed.substring(prefix.length).replace(/\.$/, '').trim();
+            }
+            if (trimmed.indexOf('Address is not available') === 0) {
+                return '';
+            }
+            return trimmed.replace(/\.$/, '').trim();
+        }
+
+        function buildMapEmbedUrl(query) {
+            const input = (query || '').trim();
+            const coordinateMatch = input.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+            if (coordinateMatch) {
+                const lat = coordinateMatch[1];
+                const lng = coordinateMatch[2];
+                return 'https://www.google.com/maps?q=' + encodeURIComponent(lat + ',' + lng) + '&z=17&output=embed';
+            }
+            return 'https://www.google.com/maps?q=' + encodeURIComponent(input) + '&output=embed';
+        }
+
+        function applyGeocodeSearch() {
+            if (!geocodeSearchInput || !projectMapIframe) {
+                return;
+            }
+            const query = (geocodeSearchInput.value || '').trim();
+            if (query === '') {
+                if (typeof showNotification === 'function') {
+                    showNotification('Enter an address or coordinates (lat,lng).', 'error');
+                }
+                return;
+            }
+
+            projectMapIframe.src = buildMapEmbedUrl(query);
+            if (projectLocationInput && projectAddressInput) {
+                projectLocationInput.value = query;
+                projectAddressInput.value = query;
+            }
+            if (locationAddressDisplay) {
+                locationAddressDisplay.textContent = renderAddressSentence(query);
+            }
+            if (locationMapPreview && locationMapPreview.classList.contains('hidden')) {
+                locationMapPreview.classList.remove('hidden');
+                if (locationInfoToggle) {
+                    locationInfoToggle.setAttribute('aria-expanded', 'true');
+                }
+            }
+        }
+
+        if (geocodeSearchBtn) {
+            geocodeSearchBtn.addEventListener('click', applyGeocodeSearch);
+        }
+        if (geocodeSearchInput) {
+            geocodeSearchInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    applyGeocodeSearch();
+                }
+            });
+        }
+
+        if (locationAddressDisplay && projectLocationInput && projectAddressInput) {
+            locationAddressDisplay.addEventListener('dblclick', function () {
+                if (locationAddressDisplay.dataset.editing === '1') {
+                    return;
+                }
+
+                const currentValue = extractAddressFromSentence(locationAddressDisplay.textContent || '');
+                const editor = document.createElement('input');
+                editor.type = 'text';
+                editor.value = currentValue;
+                editor.className = 'w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary';
+                editor.setAttribute('aria-label', 'Edit project address');
+
+                locationAddressDisplay.dataset.editing = '1';
+                locationAddressDisplay.replaceWith(editor);
+                editor.focus();
+                editor.select();
+
+                const finishEdit = function (save) {
+                    const nextValue = save ? editor.value.trim() : currentValue;
+                    if (save) {
+                        projectLocationInput.value = nextValue;
+                        projectAddressInput.value = nextValue;
+                    }
+
+                    locationAddressDisplay.textContent = renderAddressSentence(nextValue);
+                    locationAddressDisplay.dataset.editing = '0';
+                    editor.replaceWith(locationAddressDisplay);
+                };
+
+                editor.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        finishEdit(true);
+                    } else if (event.key === 'Escape') {
+                        event.preventDefault();
+                        finishEdit(false);
+                    }
+                });
+
+                editor.addEventListener('blur', function () {
+                    finishEdit(true);
+                });
             });
         }
 
