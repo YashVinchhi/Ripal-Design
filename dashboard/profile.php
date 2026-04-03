@@ -297,6 +297,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                                     $upd->execute([$publicPath, $user_id]);
                                     $user_data['avatar'] = $publicPath;
                                     $avatar_updated = true;
+                                    // Persist avatar in session for immediate propagation across pages
+                                    if (!empty($_SESSION['user']) && (int)($_SESSION['user']['id'] ?? 0) === $user_id) {
+                                        $_SESSION['user']['avatar'] = $publicPath;
+                                    }
                                 } catch (Exception $e) {
                                     error_log('Failed to save avatar path: ' . $e->getMessage());
                                 }
@@ -379,6 +383,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     }
 }
 ?>
+<?php
+// Prepare avatar initials fallback (used in the profile sidebar/avatar preview)
+$avatar_display_name = trim((string)($user_data['full_name'] ?? '')) !== '' ? trim((string)$user_data['full_name']) : trim((string)($user_data['username'] ?? ''));
+$avatar_initials = '';
+if ($avatar_display_name !== '') {
+    $nameParts = preg_split('/\s+/', $avatar_display_name);
+    $first = $nameParts[0] ?? '';
+    $second = $nameParts[1] ?? '';
+    if ($second !== '') {
+        $avatar_initials = strtoupper(mb_substr($first, 0, 1) . mb_substr($second, 0, 1));
+    } else {
+        $avatar_initials = strtoupper(mb_substr($first, 0, 2));
+    }
+}
+if ($avatar_initials === '') {
+    $avatar_initials = strtoupper(mb_substr((string)($user_data['username'] ?? ''), 0, 2));
+}
+?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
 <head>
@@ -418,14 +440,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 <aside class="lg:col-span-4 space-y-8">
                     <div class="bg-white shadow-premium border border-gray-100 p-8 text-center">
                         <?php if (!empty($user_data['avatar'])): ?>
-                            <img id="profileAvatarDisplay" src="<?php echo htmlspecialchars($user_data['avatar']); ?>" alt="Avatar" class="w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg">
+                            <img id="profileAvatarDisplay" src="<?php echo htmlspecialchars($user_data['avatar']); ?>" alt="Avatar" class="w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg" onerror="this.style.display='none'; var el=document.getElementById('profileAvatarInitials'); if(el){ el.style.display='flex'; }">
+                            <div id="profileAvatarInitials" class="w-24 h-24 bg-rajkot-rust text-white font-serif text-4xl font-bold flex items-center justify-center mx-auto mb-6 shadow-lg" style="display:none;">
+                                <?php echo htmlspecialchars($avatar_initials); ?>
+                            </div>
                         <?php else: ?>
                             <div id="profileAvatarDisplay" class="w-24 h-24 bg-rajkot-rust text-white font-serif text-4xl font-bold flex items-center justify-center mx-auto mb-6 shadow-lg">
-                                <?php echo strtoupper(substr($user_data['username'], 0, 1)); ?>
+                                <?php echo htmlspecialchars($avatar_initials); ?>
                             </div>
                         <?php endif; ?>
 
-                        <form id="avatarFormSidebar" method="POST" enctype="multipart/form-data" class="mt-2">
+                        <form id="avatarFormSidebar" method="POST" enctype="multipart/form-data" class="mt-2" data-ajax="true">
                             <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="update_profile" value="1">
                             <input type="hidden" name="avatar_only" value="1">
@@ -476,7 +501,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <div class="px-8 py-6 border-b border-gray-50">
                             <h3 class="text-xl font-serif font-bold">Personal Information</h3>
                         </div>
-                        <form method="POST" enctype="multipart/form-data" class="p-8 space-y-8">
+                        <form id="profileMainForm" method="POST" enctype="multipart/form-data" class="p-8 space-y-8" data-ajax="true">
                             <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="update_profile" value="1">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -564,7 +589,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                             <div class="px-8 py-6 border-b border-gray-50">
                                 <h3 class="text-xl font-serif font-bold">Client Member Rating</h3>
                             </div>
-                            <form method="POST" class="p-8 space-y-6">
+                            <form method="POST" id="clientRatingForm" class="p-8 space-y-6">
                                 <?php echo csrf_token_field(); ?>
                                 <input type="hidden" name="submit_client_rating" value="1">
 
@@ -639,7 +664,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <div class="px-8 py-6 border-b border-gray-50">
                             <h3 class="text-xl font-serif font-bold">Account Security</h3>
                         </div>
-                        <form method="POST" class="p-8 space-y-8">
+                        <form method="POST" id="profilePasswordForm" class="p-8 space-y-8" data-ajax="true">
                             <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="change_password" value="1">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -684,11 +709,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         try {
                             if (avatarElem && avatarElem.tagName === 'IMG') {
                                 avatarElem.src = ev.target.result;
+                                avatarElem.style.display = '';
+                                var initialsElem = document.getElementById('profileAvatarInitials');
+                                if (initialsElem) initialsElem.style.display = 'none';
                             } else if (avatarElem) {
                                 var img = document.createElement('img');
                                 img.id = 'profileAvatarDisplay';
+                                img.alt = 'Avatar';
                                 img.className = 'w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg';
                                 img.src = ev.target.result;
+                                img.onerror = function(){ this.style.display='none'; var el = document.getElementById('profileAvatarInitials'); if(el){ el.style.display='flex'; } };
                                 avatarElem.replaceWith(img);
                             }
                         } catch (e) {
@@ -697,9 +727,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     };
                     reader.readAsDataURL(f);
 
-                    // Auto-submit the small avatar form to persist on server
+                    // Auto-submit the small avatar form to persist on server (triggers AJAX submit handler)
                     var form = document.getElementById('avatarFormSidebar');
-                    if (form) form.submit();
+                    if (form) {
+                        if (typeof form.requestSubmit === 'function') {
+                            form.requestSubmit();
+                        } else {
+                            var ev = new Event('submit', { bubbles: true, cancelable: true });
+                            var prevented = !form.dispatchEvent(ev);
+                            if (!prevented) {
+                                try { form.submit(); } catch (e) {}
+                            }
+                        }
+                    }
                 });
             }
         });

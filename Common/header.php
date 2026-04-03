@@ -224,3 +224,5 @@ foreach ($stylesheetCandidates as $candidate) {
 
 <!-- Header Navigation Script -->
 <script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/header-nav.js" defer></script>
+<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/auto-hide-alerts.js" defer></script>
+<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/ajax-forms.js" defer></script>
