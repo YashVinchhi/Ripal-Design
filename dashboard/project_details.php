@@ -491,17 +491,11 @@ if ($pdo instanceof PDO) {
 
         body {
             font-family: 'Inter', sans-serif;
+            line-height: 1.35;
         }
 
         .font-serif {
             font-family: 'Playfair Display', serif;
-        }
-
-        /* Footer uses Cormorant Garamond to match other pages */
-        footer .font-serif,
-        footer h2.font-serif,
-        footer h3.font-serif {
-            font-family: 'Cormorant Garamond', serif;
         }
 
         .tab-content {
@@ -561,23 +555,12 @@ if ($pdo instanceof PDO) {
             border-color: #731209 !important;
         }
 
-        a {
+        main a {
             color: #731209;
         }
 
-        a:hover {
+        main a:hover {
             color: #5a0e07;
-        }
-
-        /* Footer-specific styles to match other pages */
-        footer.site-footer a,
-        footer.site-footer .btn-link,
-        footer.site-footer a.text-primary {
-            color: #731209 !important;
-        }
-
-        footer.site-footer .text-secondary {
-            color: rgba(255, 255, 255, 0.62) !important;
         }
     </style>
 </head>
@@ -586,8 +569,6 @@ if ($pdo instanceof PDO) {
     class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
     
     <?php 
-    // Allow only header/footer specific external CSS/JS, block all other external resources
-    $DISABLE_EXTERNAL_CSS = true;
     $HEADER_MODE = 'dashboard';
     require_once __DIR__ . '/../Common/header.php'; 
     ?>
