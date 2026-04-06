@@ -102,6 +102,24 @@ if ($userInitials === '') {
   $userInitials = 'RD';
 }
 
+// Resolve avatar URL: prefer session value, fall back to DB and persist to session
+$sessionAvatar = '';
+if (is_array($sessionUser) && !empty($sessionUser['avatar'])) {
+  $sessionAvatar = (string)$sessionUser['avatar'];
+} elseif ($sessionUserId > 0 && db_connected() && db_table_exists('users')) {
+  try {
+    $row = db_fetch('SELECT avatar FROM users WHERE id = ? LIMIT 1', [$sessionUserId]);
+    if ($row && !empty($row['avatar'])) {
+      $sessionAvatar = (string)$row['avatar'];
+      if (!empty($_SESSION['user']) && is_array($_SESSION['user'])) {
+        $_SESSION['user']['avatar'] = $sessionAvatar;
+      }
+    }
+  } catch (Exception $e) {
+    // ignore DB read errors for avatar fallback
+  }
+}
+
 $profileUrl = function_exists('base_path')
   ? base_path('dashboard/profile.php')
   : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
@@ -194,12 +212,18 @@ if ($isAdmin) {
     ['label' => 'Reviews Pending', 'value' => (int)$kpis['reviews_pending'], 'icon' => 'clipboard-list'],
   ];
 } elseif ($useWorkerProjectView) {
+  // Base stat cards for worker-style view
   $statCards = [
     ['label' => 'Assigned Projects', 'value' => count($projects), 'icon' => 'briefcase'],
     ['label' => 'Overdue', 'value' => $overdueCount, 'icon' => 'alert-triangle'],
     ['label' => 'Pending Reviews', 'value' => $pendingApprovals, 'icon' => 'check-square'],
-    ['label' => 'Read-Only Mode', 'value' => 'ON', 'icon' => 'shield'],
   ];
+
+  // Only show the explicit "Read-Only Mode" indicator for actual worker sessions,
+  // not for clients who are temporarily viewing the worker-style project list.
+  if (!$isClient) {
+    $statCards[] = ['label' => 'Read-Only Mode', 'value' => 'ON', 'icon' => 'shield'];
+  }
 } else {
   $statCards = [
     ['label' => 'Active Projects', 'value' => count($projects), 'icon' => 'layout'],
@@ -208,6 +232,13 @@ if ($isAdmin) {
     ['label' => 'Invoices Pending', 'value' => number_format($invoicePending, 0, '.', ','), 'icon' => 'indian-rupee'],
   ];
 }
+
+// Compute responsive grid columns so when a card is removed (e.g. Read-Only for clients)
+// the remaining cards expand to use the available space evenly.
+$statCount = max(0, count($statCards));
+$mdCols = ($statCount >= 3) ? 3 : max(1, $statCount);
+$lgCols = ($statCount >= 4) ? 4 : max(1, $statCount);
+$statGridClasses = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-{$mdCols} lg:grid-cols-{$lgCols} gap-4 md:gap-6 mb-8 md:mb-12";
 
 $actionCards = [
   ['label' => 'Profile', 'href' => base_path('dashboard/profile.php'), 'icon' => 'user'],
@@ -230,6 +261,7 @@ if ($useWorkerProjectView) {
   ];
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
 
@@ -247,26 +279,26 @@ if ($useWorkerProjectView) {
     <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
       <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
-          <h1 class="text-3xl md:text-4xl font-serif font-bold"><?php echo esc($pageHeading); ?></h1>
-          <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">
-            <?php echo esc($subtitle); ?> &middot; <?php echo esc($displayName); ?>
-          </p>
-          <p class="text-[11px] mt-2 uppercase tracking-widest text-gray-300">
-            Role: <?php echo esc($roleDisplayName); ?> &middot; Group: <?php echo esc($groupDisplayName); ?> &middot; <?php echo esc($badge); ?>
-          </p>
+          <h1 class="text-2xl md:text-3xl font-serif font-bold">Project Command Center</h1>
+          <p class="text-gray-300 mt-2 text-sm">Manage projects, teams, and progress.</p>
         </div>
-        <a
-          href="<?php echo esc_attr($profileUrl); ?>"
-          class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner no-underline text-white hover:bg-[#7f140a] transition-colors"
-          aria-label="Open profile settings"
-          title="Open Profile">
-          <?php echo esc($userInitials); ?>
+        <a href="<?php echo esc_attr($profileUrl); ?>" aria-label="Open profile settings" title="Open Profile" class="no-underline">
+          <?php if ($sessionAvatar !== ''): ?>
+            <div class="w-12 h-12 rounded-full overflow-hidden shadow-inner" style="display:inline-block;">
+              <img src="<?php echo esc_attr($sessionAvatar); ?>" alt="Avatar" class="w-12 h-12 object-cover block" onerror="this.style.display='none'; document.getElementById('dashProfileInitials').style.display='flex';">
+              <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg text-white" style="display:none;"><?php echo esc($userInitials); ?></div>
+            </div>
+          <?php else: ?>
+            <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner no-underline text-white hover:bg-[#7f140a] transition-colors">
+              <?php echo esc($userInitials); ?>
+            </div>
+          <?php endif; ?>
         </a>
       </div>
     </header>
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+      <div class="<?php echo $statGridClasses; ?>">
         <?php foreach ($statCards as $card): ?>
           <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden">
             <div class="flex items-start justify-between gap-4">

@@ -26,6 +26,38 @@ $footerText = static function ($key, $default = '') use ($footerContent) {
 $currentYear = date('Y');
 ?>
 
+<style>
+    /* Keep footer appearance consistent even when page-level styles override links/fonts */
+    .site-footer .font-serif,
+    .site-footer h2,
+    .site-footer h3 {
+        font-family: 'Cormorant Garamond', serif !important;
+    }
+
+    .site-footer .footer-cta-btn {
+        color: #ffffff !important;
+        text-decoration: none !important;
+    }
+
+    .site-footer .footer-contact-link {
+        color: #9ca3af !important;
+        text-decoration: none !important;
+    }
+
+    .site-footer .footer-contact-link:hover {
+        color: #94180C !important;
+    }
+
+    .site-footer .footer-legal-link {
+        color: #6b7280 !important;
+        text-decoration: none !important;
+    }
+
+    .site-footer .footer-legal-link:hover {
+        color: #ffffff !important;
+    }
+</style>
+
 <footer class="site-footer bg-foundation-grey text-white pt-16 pb-8 px-4 font-sans" role="contentinfo">
     <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -34,8 +66,8 @@ $currentYear = date('Y');
                 <p class="text-gray-400 mb-8 max-w-lg">
                     <?php echo esc($footerText('cta_description', "Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.")); ?>
                 </p>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php" 
-                   class="inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
+                     <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php" 
+                         class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
                    role="button">
                     <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
                 </a>
@@ -58,7 +90,7 @@ $currentYear = date('Y');
                     </div>
                     <div class="flex items-center gap-3">
                         <i data-lucide="mail" class="w-5 h-5 text-rajkot-rust"></i>
-                        <a href="mailto:<?php echo esc_attr($footerText('email', 'projects@ripaldesign.in')); ?>" class="text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
+                        <a href="mailto:<?php echo esc_attr($footerText('email', 'projects@ripaldesign.in')); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
                             <?php echo esc($footerText('email', 'projects@ripaldesign.in')); ?>
                         </a>
                     </div>
@@ -69,8 +101,8 @@ $currentYear = date('Y');
         <div class="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
             <div>&copy; <?php echo $currentYear; ?> <?php echo esc($footerText('copyright_brand', 'Ripal Design')); ?>. <?php echo esc($footerText('copyright_suffix', 'All rights reserved.')); ?></div>
             <div class="flex gap-6 mt-4 md:mt-0">
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
+                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
             </div>
         </div>
     </div>
@@ -103,6 +135,12 @@ if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {
             break;
         }
     }
+}
+
+// Include global tab persistence script if present
+$persistPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'persist-tabs.js';
+if (file_exists($persistPath)) {
+    echo '<script defer src="' . esc_attr(rtrim(BASE_PATH, '/') . '/assets/js/persist-tabs.js') . '"></script>' . "\n";
 }
 
 // Render any enqueued scripts from util.php

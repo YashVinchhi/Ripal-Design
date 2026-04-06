@@ -417,6 +417,22 @@ $statusColors = [
   'completed' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
 ];
 $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
+// Load registered users with role 'worker' for quick assignment picker
+$workerUsers = [];
+if ($pdo instanceof PDO) {
+    try {
+        if (function_exists('db_table_exists') && db_table_exists('users')) {
+            // Avoid referencing optional columns (phone/contact) which may not exist in all schemas.
+            // Use email/username as a safe contact fallback.
+            $stmt = $pdo->prepare("SELECT id, COALESCE(NULLIF(full_name, ''), TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')))) AS full_name, role, COALESCE(email, username) AS contact FROM users WHERE role = 'worker' ORDER BY full_name ASC");
+            $stmt->execute();
+            $workerUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (PDOException $e) {
+        error_log('Failed to load worker users: ' . $e->getMessage());
+        $workerUsers = [];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -475,17 +491,11 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
 
         body {
             font-family: 'Inter', sans-serif;
+            line-height: 1.35;
         }
 
         .font-serif {
             font-family: 'Playfair Display', serif;
-        }
-
-        /* Footer uses Cormorant Garamond to match other pages */
-        footer .font-serif,
-        footer h2.font-serif,
-        footer h3.font-serif {
-            font-family: 'Cormorant Garamond', serif;
         }
 
         .tab-content {
@@ -545,23 +555,12 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
             border-color: #731209 !important;
         }
 
-        a {
+        main a {
             color: #731209;
         }
 
-        a:hover {
+        main a:hover {
             color: #5a0e07;
-        }
-
-        /* Footer-specific styles to match other pages */
-        footer.site-footer a,
-        footer.site-footer .btn-link,
-        footer.site-footer a.text-primary {
-            color: #731209 !important;
-        }
-
-        footer.site-footer .text-secondary {
-            color: rgba(255, 255, 255, 0.62) !important;
         }
     </style>
 </head>
@@ -570,8 +569,6 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
     class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
     
     <?php 
-    // Allow only header/footer specific external CSS/JS, block all other external resources
-    $DISABLE_EXTERNAL_CSS = true;
     $HEADER_MODE = 'dashboard';
     require_once __DIR__ . '/../Common/header.php'; 
     ?>
@@ -1160,7 +1157,33 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                     </button>
                 </div>
             </div>
-            <form id="addTeamMemberForm" class="p-6 space-y-4">
+            <!-- Worker picker view -->
+            <div id="workerListView" class="p-6 space-y-4">
+                <?php if (!empty($workerUsers)): ?>
+                <div class="space-y-2 max-h-64 overflow-auto">
+                    <?php foreach ($workerUsers as $wu): ?>
+                    <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
+                        <div class="min-w-0 mr-3">
+                            <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($wu['full_name']); ?></p>
+                            <p class="text-sm text-slate-500 truncate"><?php echo htmlspecialchars($wu['role'] ?? 'Worker'); ?><?php if (!empty($wu['contact'])): ?> • <?php echo htmlspecialchars($wu['contact']); ?><?php endif; ?></p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button type="button" onclick="assignExistingWorker(<?php echo (int)$wu['id']; ?>)" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
+                    <p class="text-sm text-slate-500">No registered workers found. Use manual add below.</p>
+                <?php endif; ?>
+                <div class="pt-4">
+                    <button type="button" onclick="toggleAddManual(true)" class="px-4 py-2 border border-slate-200 rounded text-sm">Add Manually</button>
+                </div>
+            </div>
+
+            <!-- Manual add form (kept for backward compatibility) -->
+            <form id="addTeamMemberForm" class="p-6 space-y-4 hidden">
+                <?php echo csrf_token_field(); ?>
                 <div class="space-y-1">
                     <label class="text-xs font-semibold text-slate-500 uppercase">Name</label>
                     <input type="text" name="worker_name" required
@@ -1180,7 +1203,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         placeholder="+91 98765 43210" />
                 </div>
                 <div class="flex gap-3 pt-4">
-                    <button type="button" onclick="closeAddTeamMemberModal()"
+                    <button type="button" onclick="toggleAddManual(false)"
                         class="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                         Cancel
                     </button>
@@ -1274,6 +1297,9 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
     <script>
         const projectId = <?php echo json_encode($projectId); ?>;
         const projectShareUrl = <?php echo json_encode((!empty($projectId) ? rtrim(BASE_URL, '/') . '/dashboard/project_details.php?id=' . (int)$projectId : '')); ?>;
+        // Worker users available for quick assignment (loaded server-side)
+        const workerUsersData = <?php echo json_encode($workerUsers, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?> || [];
+        const csrfToken = <?php echo json_encode(csrf_token()); ?>;
 
         // Tab switching functionality
         document.querySelectorAll('.tab-link').forEach(tab => {
@@ -1296,6 +1322,43 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                 document.getElementById(tabName + '-tab').classList.add('active');
             });
         });
+
+        // Persist the active tab in the URL hash (and support ?tab=... on page load)
+        // Update the hash without adding a new history entry when user switches tabs.
+        document.querySelectorAll('.tab-link').forEach(tab => {
+            tab.addEventListener('click', function () {
+                const tabName = this.getAttribute('data-tab');
+                try {
+                    if (history.replaceState) {
+                        history.replaceState(null, '', '#' + tabName);
+                    } else {
+                        location.hash = tabName;
+                    }
+                } catch (err) {
+                    // ignore
+                }
+            });
+        });
+
+        // On load, restore tab from location.hash or ?tab= query param if present
+        (function restoreActiveTabFromUrl() {
+            try {
+                const fromHash = (location.hash || '').replace('#', '').trim();
+                const urlParams = new URLSearchParams(window.location.search);
+                const fromQuery = (urlParams.get('tab') || '').trim();
+                const desired = fromHash || fromQuery || '';
+                if (desired) {
+                    const desiredLink = document.querySelector('.tab-link[data-tab="' + desired + '"]');
+                    if (desiredLink) {
+                        // trigger click handler to set classes and content
+                        desiredLink.click();
+                        return;
+                    }
+                }
+            } catch (err) {
+                // ignore and fall back to default markup
+            }
+        })();
 
         // Keep native form submit so server redirects correctly after save/create.
 
@@ -1649,6 +1712,10 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
         // Delete team member function
         async function deleteTeamMember(workerId) {
             if (!confirm('Are you sure you want to remove this team member?')) return;
+            // Ensure URL reflects Team tab so reloads return here
+            try {
+                if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team';
+            } catch (err) {}
 
             try {
                 const response = await fetch('api/project_files.php', {
@@ -1746,12 +1813,76 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
 
         // Team member modal functions
         function showAddTeamMemberModal() {
-            document.getElementById('addTeamMemberModal').classList.remove('hidden');
+            const modal = document.getElementById('addTeamMemberModal');
+            if (!modal) return;
+            // Ensure URL reflects Team tab so reloads return here
+            try {
+                if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team';
+            } catch (err) {}
+            modal.classList.remove('hidden');
+            // default to worker list view
+            const list = document.getElementById('workerListView');
+            const form = document.getElementById('addTeamMemberForm');
+            if (list) list.classList.remove('hidden');
+            if (form) form.classList.add('hidden');
         }
 
         function closeAddTeamMemberModal() {
-            document.getElementById('addTeamMemberModal').classList.add('hidden');
-            document.getElementById('addTeamMemberForm').reset();
+            const modal = document.getElementById('addTeamMemberModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            const form = document.getElementById('addTeamMemberForm');
+            if (form) {
+                form.reset();
+                form.classList.add('hidden');
+            }
+            const list = document.getElementById('workerListView');
+            if (list) list.classList.remove('hidden');
+        }
+
+        function toggleAddManual(show) {
+            const list = document.getElementById('workerListView');
+            const form = document.getElementById('addTeamMemberForm');
+            if (show) {
+                if (list) list.classList.add('hidden');
+                if (form) form.classList.remove('hidden');
+            } else {
+                if (form) form.classList.add('hidden');
+                if (list) list.classList.remove('hidden');
+            }
+        }
+
+        async function assignExistingWorker(workerId) {
+            const worker = (workerUsersData || []).find(w => Number(w.id) === Number(workerId));
+            if (!worker) {
+                showNotification('Worker not found.', 'error');
+                return;
+            }
+            if (!confirm('Assign ' + (worker.full_name || 'this worker') + ' to the project?')) return;
+
+            const params = new URLSearchParams();
+            params.append('action', 'add_team_member');
+            params.append('project_id', projectId);
+            params.append('worker_name', worker.full_name || '');
+            params.append('worker_role', worker.role || 'Worker');
+            params.append('worker_contact', worker.contact || '');
+            params.append('csrf_token', csrfToken || '');
+
+            try {
+                const resp = await fetch('api/project_files.php', { method: 'POST', body: params });
+                const result = await resp.json();
+                if (result.success) {
+                    showNotification(result.message || 'Worker assigned.', 'success');
+                    logActivity('added team member', worker.full_name || '');
+                    try { if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team'; } catch (err) {}
+                    setTimeout(() => window.location.reload(), 900);
+                } else {
+                    showNotification(result.message || 'Failed to assign worker', 'error');
+                }
+            } catch (err) {
+                console.error('Assign worker error:', err);
+                showNotification('Network error occurred', 'error');
+            }
         }
 
         // Handle team member form submission
@@ -1780,6 +1911,7 @@ $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
                         showNotification('Team member added successfully!', 'success');
                         logActivity('added team member', formData.get('worker_name'));
                         closeAddTeamMemberModal();
+                        try { if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team'; } catch (err) {}
                         setTimeout(() => window.location.reload(), 1000);
                     } else {
                         showNotification(result.message || 'Failed to add member', 'error');

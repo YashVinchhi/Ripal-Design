@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Workforce Ratings (Redesigned)
  * 
@@ -55,21 +56,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_rating'])) {
     $worker_id = intval($_POST['worker_id'] ?? 0);
     $rating = intval($_POST['rating'] ?? 0);
     $comment = trim($_POST['comment'] ?? '');
-    
+
     if ($worker_id && $rating >= 1 && $rating <= 5) {
         if (db_connected()) {
             try {
                 $db = get_db();
                 $stmt = $db->prepare("INSERT INTO worker_ratings (worker_id, rated_by, rating, comment, created_at) VALUES (?, ?, ?, ?, NOW())");
                 $stmt->execute([$worker_id, $current_user, $rating, $comment]);
-            } catch (Exception $e) {}
+            } catch (Exception $e) {
+            }
         }
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
 }
 
-function render_stars($rating) {
+function render_stars($rating)
+{
     if (!$rating) return '<span class="text-gray-200">No Ratings</span>';
     $full = floor($rating);
     $half = ($rating - $full) >= 0.5;
@@ -84,14 +87,17 @@ function render_stars($rating) {
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Workforce Ratings | Ripal Design</title>
-    <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
+    <?php $HEADER_MODE = 'dashboard';
+    require_once __DIR__ . '/../Common/header.php'; ?>
 </head>
+
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
-    
+
     <div class="min-h-screen flex flex-col">
         <!-- Unified Dark Portal Header -->
         <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-12 border-b-2 border-rajkot-rust">
@@ -113,10 +119,10 @@ function render_stars($rating) {
         </header>
 
         <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-            
+
             <!-- Workforce Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <?php foreach($workers as $w): ?>
+                <?php foreach ($workers as $w): ?>
                     <div class="bg-white shadow-premium border border-gray-100 p-10 flex flex-col group hover:border-rajkot-rust transition-all relative overflow-hidden">
                         <!-- CAD accent corner -->
                         <div class="absolute top-0 right-0 w-16 h-16 bg-rajkot-rust/5 -mr-8 -mt-8 rotate-45 pointer-events-none group-hover:bg-rajkot-rust/10 transition-colors"></div>
@@ -136,7 +142,7 @@ function render_stars($rating) {
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-[1px] bg-rajkot-rust"></span> <?php echo htmlspecialchars($w['role']); ?>
                             </p>
-                            
+
                             <div class="bg-gray-50/50 p-4 border-l-2 border-rajkot-rust">
                                 <div class="flex items-center gap-3 mb-2">
                                     <div class="flex">
@@ -163,8 +169,8 @@ function render_stars($rating) {
                             <div class="flex items-center gap-3 text-[11px] font-medium text-gray-400">
                                 <i data-lucide="phone" class="w-3.5 h-3.5 opacity-50"></i> <?php echo htmlspecialchars($w['phone']); ?>
                             </div>
-                            <button onclick="document.getElementById('ratingModal_<?php echo $w['id']; ?>').classList.remove('hidden')" 
-                                    class="w-full py-5 bg-foundation-grey hover:bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-premium active:scale-[0.98] flex items-center justify-center gap-3">
+                            <button onclick="document.getElementById('ratingModal_<?php echo $w['id']; ?>').classList.remove('hidden')"
+                                class="w-full py-5 bg-foundation-grey hover:bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-premium active:scale-[0.98] flex items-center justify-center gap-3">
                                 <i data-lucide="clipboard-check" class="w-4 h-4"></i> Create Audit Entry
                             </button>
                         </div>
@@ -183,11 +189,11 @@ function render_stars($rating) {
                                 <input type="hidden" name="submit_rating" value="1">
                                 <input type="hidden" name="worker_id" value="<?php echo $w['id']; ?>">
                                 <input type="hidden" name="rating" value="" data-rating-input>
-                                
+
                                 <div class="space-y-6 text-center">
                                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] block">Evaluation Score (1-5 Star Audit)</label>
                                     <div class="flex justify-center gap-6" data-rating-stars>
-                                        <?php for($i=1; $i<=5; $i++): ?>
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
                                             <button type="button" class="group relative" data-rating-value="<?php echo $i; ?>" aria-label="Rate <?php echo $i; ?> stars">
                                                 <i data-lucide="star" class="w-10 h-10 text-gray-100 transition-all" data-rating-star></i>
                                                 <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-300 transition-colors"><?php echo $i; ?></span>
@@ -201,8 +207,8 @@ function render_stars($rating) {
                                         <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Observation Registry
                                     </label>
                                     <textarea name="comment" rows="4" required
-                                              class="w-full p-6 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium placeholder:text-gray-300" 
-                                              placeholder="Document specific project achievements or issues..."></textarea>
+                                        class="w-full p-6 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium placeholder:text-gray-300"
+                                        placeholder="Document specific project achievements or issues..."></textarea>
                                 </div>
 
                                 <button type="submit" class="w-full py-6 bg-foundation-grey hover:bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-[0.4em] shadow-premium transition-all active:scale-[0.98] flex items-center justify-center gap-4 group">
@@ -268,7 +274,7 @@ function render_stars($rating) {
     </div>
 
     <script>
-        document.querySelectorAll('[data-rating-form]').forEach(function (form) {
+        document.querySelectorAll('[data-rating-form]').forEach(function(form) {
             var ratingInput = form.querySelector('[data-rating-input]');
             var starButtons = form.querySelectorAll('[data-rating-value]');
 
@@ -277,7 +283,7 @@ function render_stars($rating) {
             }
 
             function paintStars(activeValue) {
-                starButtons.forEach(function (button) {
+                starButtons.forEach(function(button) {
                     var value = parseInt(button.getAttribute('data-rating-value'), 10);
                     var icon = button.querySelector('[data-rating-star]');
                     var label = button.querySelector('span');
@@ -300,24 +306,24 @@ function render_stars($rating) {
                 });
             }
 
-            starButtons.forEach(function (button) {
+            starButtons.forEach(function(button) {
                 var value = parseInt(button.getAttribute('data-rating-value'), 10);
 
-                button.addEventListener('mouseenter', function () {
+                button.addEventListener('mouseenter', function() {
                     paintStars(value);
                 });
 
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function() {
                     ratingInput.value = String(value);
                     paintStars(value);
                 });
             });
 
-            form.querySelector('[data-rating-stars]').addEventListener('mouseleave', function () {
+            form.querySelector('[data-rating-stars]').addEventListener('mouseleave', function() {
                 paintStars(parseInt(ratingInput.value || '0', 10));
             });
 
-            form.addEventListener('submit', function (event) {
+            form.addEventListener('submit', function(event) {
                 if (!ratingInput.value) {
                     event.preventDefault();
                     alert('Please select a rating between 1 and 5 stars.');
@@ -327,4 +333,5 @@ function render_stars($rating) {
     </script>
 
 </body>
+
 </html>
