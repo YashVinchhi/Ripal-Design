@@ -173,7 +173,7 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                     </div>
                                 <?php else: ?>
                                     <div class="flex justify-end gap-3">
-                                        <button onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['file']); ?>&project=Client Registry', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                                        <button onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['file']); ?>&project_id=<?php echo (int)$projectId; ?>&project=Client Registry', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
                                         <!-- <button class="text-gray-300 hover:text-foundation-grey transition-colors p-2"><i data-lucide="history" class="w-5 h-5"></i></button> -->
                                         <button type="button" onclick="handleDownload('<?php echo addslashes($d['file']); ?>')" class="text-gray-300 hover:text-blue-600 transition-colors p-2" title="Registry Download"><i data-lucide="download" class="w-5 h-5"></i></button>
                                     </div>
