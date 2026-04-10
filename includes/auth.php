@@ -86,14 +86,25 @@ function require_login($redirect_to = null) {
     }
     
     if (empty($_SESSION['user'])) {
-        // Store the intended destination for post-login redirect
-        if ($redirect_to === null) {
-            $redirect_to = $_SERVER['REQUEST_URI'] ?? '';
+        // Only store an intended destination for interactive HTML navigations.
+        // Do NOT save AJAX calls or API endpoints as post-login redirect targets
+        // because those are typically background requests and not a page the
+        // user should be sent to after authenticating.
+        $isAjax = strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+        $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $script = str_replace('\\\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+
+        $isApiPath = strpos($script, '/dashboard/api/') !== false || strpos($script, '/api/') !== false;
+
+        if (!$isAjax && strpos($accept, 'application/json') === false && !$isApiPath) {
+            if ($redirect_to === null) {
+                $redirect_to = $_SERVER['REQUEST_URI'] ?? '';
+            }
+            if (!empty($redirect_to)) {
+                $_SESSION['redirect_after_login'] = $redirect_to;
+            }
         }
-        if (!empty($redirect_to)) {
-            $_SESSION['redirect_after_login'] = $redirect_to;
-        }
-        
+
         // Determine the correct path to login.php for both docroot modes
         $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/') : '';
         $publicPrefix = defined('PUBLIC_PATH_PREFIX') ? PUBLIC_PATH_PREFIX : '/public';
