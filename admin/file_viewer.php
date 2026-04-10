@@ -913,6 +913,17 @@ if ($viewerMode === '3d' && $previewDirectUrl !== '') {
   $previewUrl = $previewDirectUrl;
 }
 
+// Prefer serving PDFs via the PHP stream endpoint to avoid direct URL 404s
+// when uploads live outside the webserver document root. Use stream when
+// available and the preview refers to a PDF.
+if ($viewerMode === 'pdf' && $resourceStreamUrl !== '') {
+  $previewUrl = $resourceStreamUrl;
+  $previewAbsoluteUrl = file_viewer_absolute_url($resourceStreamUrl);
+  // leave $previewAbsolutePath as-is for server-side checks, but ensure
+  // previewDirectUrl isn't used for PDFs.
+  $previewDirectUrl = '';
+}
+
 $cadSourceRawPath = $storagePath !== '' ? $storagePath : ($filePath !== '' ? $filePath : $file);
 $cadPreviewPath = file_viewer_cad_preview_paths($cadSourceRawPath);
 $cadPreviewExists = $viewerMode === 'cad' && $cadPreviewPath['absolute'] !== '' && is_file((string)$cadPreviewPath['absolute']);

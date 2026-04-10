@@ -89,7 +89,7 @@ function showActive($form, $active_form)
 
           <div class="meta-row">
             <div class="check-wrap">
-              <input type="checkbox" id="remember" name="remember" class="form-check-input" data-validation="required">
+              <input type="checkbox" id="remember" name="remember" class="form-check-input">
               <label for="remember" class="form-check-label"><?php echo esc($ct('label_remember', 'Remember me')); ?></label>
               <span id="terms_error" class="text-danger d-none"></span>
             </div>

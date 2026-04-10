@@ -759,7 +759,7 @@ function enforce_request_write_permission() {
  * @param int $days
  * @return bool True on success
  */
-function auth_set_remember_token($userId, $days = 30)
+function auth_set_remember_token($userId, $days = 365)
 {
     $db = get_db();
     if (!($db instanceof PDO) || $userId <= 0) {
@@ -781,13 +781,16 @@ function auth_set_remember_token($userId, $days = 30)
         // Set cookie with raw token (hashed copy stored in DB)
         $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
         // Use options array available in PHP 7.3+
-        setcookie('remember_me', $token, [
+        $cookieOptions = [
             'expires' => time() + ($days * 24 * 60 * 60),
             'path' => '/',
             'secure' => $secure,
             'httponly' => true,
             'samesite' => 'Lax',
-        ]);
+        ];
+        $setOk = @setcookie('remember_me', $token, $cookieOptions);
+        // Log for debugging persistent login issues (do not log token value)
+        error_log('auth_set_remember_token: user=' . (int)$userId . ' days=' . (int)$days . ' expires=' . $expiresAt . ' secure=' . ($secure ? '1' : '0') . ' setcookie_ok=' . ($setOk ? '1' : '0'));
 
         return true;
     } catch (Exception $e) {
@@ -813,18 +816,23 @@ function auth_try_auto_login()
         return false;
     }
 
+    // Debug: log whether remember cookie is present
     if (empty($_COOKIE['remember_me'])) {
+        error_log('auth_try_auto_login: no remember_me cookie present');
         return false;
     }
 
     $token = (string) $_COOKIE['remember_me'];
     if ($token === '') {
+        error_log('auth_try_auto_login: remember_me cookie empty string');
         return false;
     }
-
+    // Avoid logging raw token value
+    error_log('auth_try_auto_login: remember_me cookie length=' . strlen($token));
     $tokenHash = hash('sha256', $token);
     $db = get_db();
     if (!($db instanceof PDO)) {
+        error_log('auth_try_auto_login: DB unavailable');
         return false;
     }
 
@@ -833,7 +841,8 @@ function auth_try_auto_login()
         $stmt->execute([$tokenHash, 'remember']);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) {
-            // invalid token — clear cookie
+            // invalid token — clear cookie and log
+            error_log('auth_try_auto_login: token not found or expired in DB');
             auth_clear_remember_cookie();
             return false;
         }

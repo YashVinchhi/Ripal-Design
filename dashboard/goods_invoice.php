@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Load project and goods to compute invoice totals (needed for PDF/email)
         $project = ['id'=>$project_id,'name'=>'Project '.$project_id,'owner_name'=>'Client','owner_contact'=>''];
         if (isset($pdo) && $pdo instanceof PDO) {
-            $stmt = $pdo->prepare('SELECT id,name,owner_name,owner_contact,location FROM projects WHERE id = :id LIMIT 1');
+            $stmt = $pdo->prepare("SELECT id,name,owner_name,owner_contact,location,COALESCE(map_link, '') AS map_link, COALESCE(address, '') AS address FROM projects WHERE id = :id LIMIT 1");
             $stmt->execute(['id'=>$project_id]);
             $r = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($r) $project = $r;
@@ -294,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Load project
 $project = ['id'=>$project_id,'name'=>'Project '.$project_id,'owner_name'=>'Client','owner_contact'=>''];
 if (isset($pdo) && $pdo instanceof PDO) {
-    $stmt = $pdo->prepare('SELECT id,name,owner_name,owner_contact,location FROM projects WHERE id = :id LIMIT 1');
+    $stmt = $pdo->prepare("SELECT id,name,owner_name,owner_contact,location,COALESCE(map_link, '') AS map_link, COALESCE(address, '') AS address FROM projects WHERE id = :id LIMIT 1");
     $stmt->execute(['id'=>$project_id]);
     $r = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($r) $project = $r;
@@ -412,7 +412,20 @@ if (function_exists('render_flash')) { render_flash(); }
                     </h4>
                     <div class="text-lg font-serif font-bold text-foundation-grey mb-1"><?php echo h($project['owner_name'] ?? 'Client'); ?></div>
                     <?php if (!empty($project['owner_contact'])): ?><div class="text-sm text-gray-500 mb-1"><?php echo h($project['owner_contact']); ?></div><?php endif; ?>
-                    <?php if (!empty($project['location'])): ?><div class="text-sm text-gray-500 italic"><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> <?php echo h($project['location']); ?></div><?php endif; ?>
+                    <?php if (!empty($project['location']) || !empty($project['address']) || !empty($project['map_link'])): ?>
+                        <?php
+                            $directionDestination = trim((string)($project['address'] ?? $project['location'] ?? ''));
+                            $mapHref = build_google_maps_direction_href((string)($project['map_link'] ?? ''), $directionDestination);
+                        ?>
+                        <div class="text-sm text-gray-500 italic">
+                            <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+                            <?php if ($mapHref !== ''): ?>
+                                <a href="<?php echo htmlspecialchars($mapHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo h($project['address'] ?? $project['location']); ?></a>
+                            <?php else: ?>
+                                <?php echo h($project['address'] ?? $project['location']); ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                     
                     <!-- Meta Edit (no-print) - visible on hover -->
                     <?php if (!$isClientReadOnly): ?>
