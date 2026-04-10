@@ -77,6 +77,12 @@ foreach ($candidates as $c) {
                     }
                 }
 
+                $sessionRole = '';
+                if (function_exists('current_user')) {
+                    $sessionUser = current_user();
+                    $sessionRole = is_array($sessionUser) ? strtolower((string)($sessionUser['role'] ?? '')) : '';
+                }
+
                 $menuSections = [
                     'dashboard' => [
                         'title' => 'Dashboard',
@@ -90,7 +96,9 @@ foreach ($candidates as $c) {
                         'title' => 'Worker Portal',
                         'links' => [
                             ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => 'Worker Dashboard'],
-                            ['href' => BASE_PATH . '/worker/assigned_projects.php', 'label' => 'Assigned Projects'],
+                            ...($sessionRole === 'client' ? [] : [
+                                ['href' => BASE_PATH . '/worker/assigned_projects.php', 'label' => 'Assigned Projects'],
+                            ]),
                             ['href' => BASE_PATH . '/worker/worker_rating.php', 'label' => 'My Ratings'],
                         ],
                     ],
