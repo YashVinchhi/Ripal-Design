@@ -46,14 +46,26 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
         $sizeLabel = round($sizeBytes / (1024 * 1024), 1) . ' MB';
     }
 
-    db_query('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', [
-        $projectId,
-        $originalName,
-        strtoupper($ext),
-        $sizeLabel,
-        $publicPath,
-        $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System'),
-    ]);
+    if (function_exists('db_column_exists') && db_column_exists('project_files', 'storage_path')) {
+        db_query('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())', [
+            $projectId,
+            $originalName,
+            strtoupper($ext),
+            $sizeLabel,
+            $publicPath,
+            $publicPath,
+            $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System'),
+        ]);
+    } else {
+        db_query('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', [
+            $projectId,
+            $originalName,
+            strtoupper($ext),
+            $sizeLabel,
+            $publicPath,
+            $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System'),
+        ]);
+    }
 
     return true;
 };

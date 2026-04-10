@@ -232,6 +232,7 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
 
     $publicPath = rtrim((string)BASE_PATH, '/') . '/' . $relativeDir . '/' . $storedName;
     $sizeLabel = readable_size((int)($uploaded['size'] ?? 0));
+    $hasProjectFilesStoragePath = function_exists('db_column_exists') ? db_column_exists('project_files', 'storage_path') : false;
 
     try {
         if ($action === 'upload_drawing') {
@@ -282,11 +283,21 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
                 );
             }
 
-            $viewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . $newId;
+            $viewUrl = file_viewer_url([
+                'kind' => 'drawing',
+                'id' => $newId,
+                'project_id' => $projectId,
+                'ext' => strtolower((string)$ext),
+            ]);
         } else {
             $typeLabel = $ext !== '' ? strtoupper($ext) : 'FILE';
-            $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
-            $stmt->execute([$projectId, $originalName, $typeLabel, $sizeLabel, $publicPath, $currentUser]);
+            if ($hasProjectFilesStoragePath) {
+                $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())');
+                $stmt->execute([$projectId, $originalName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser]);
+            } else {
+                $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
+                $stmt->execute([$projectId, $originalName, $typeLabel, $sizeLabel, $publicPath, $currentUser]);
+            }
             $newId = (int)$db->lastInsertId();
 
             $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
@@ -314,7 +325,12 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
                 ]
             );
 
-            $viewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=file&id=' . $newId;
+            $viewUrl = file_viewer_url([
+                'kind' => 'file',
+                'id' => $newId,
+                'project_id' => $projectId,
+                'ext' => strtolower((string)$ext),
+            ]);
         }
 
         api_json(['success' => true, 'message' => 'Upload successful.', 'file_path' => $publicPath, 'view_url' => $viewUrl]);

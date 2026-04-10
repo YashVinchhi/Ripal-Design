@@ -335,7 +335,7 @@ function worker_file_url($path) {
             <div class="grid grid-cols-1 gap-3">
                 <?php foreach($project['drawings'] as $d): ?>
                 <?php $drawingUrl = worker_file_url($d['file_path'] ?? ''); ?>
-                <?php $drawingViewUrl = !empty($d['id']) ? (rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . (int)$d['id']) : ($drawingUrl !== '' ? $drawingUrl : ('../admin/file_viewer.php?file=' . urlencode($d['title']) . '&project=' . urlencode($project['name']))); ?>
+                <?php $drawingViewUrl = !empty($d['id']) ? file_viewer_url(['kind' => 'drawing', 'id' => (int)$d['id'], 'project_id' => (int)$projectId]) : ($drawingUrl !== '' ? file_viewer_url(['file' => $drawingUrl, 'project_id' => (int)$projectId]) : file_viewer_url(['file' => (string)$d['title'], 'project_id' => (int)$projectId])); ?>
                 <div class="bg-white p-4 shadow-premium border border-gray-100 flex items-center gap-4 group hover:border-rajkot-rust transition-colors cursor-pointer" onclick="window.open('<?php echo htmlspecialchars($drawingViewUrl, ENT_QUOTES, 'UTF-8'); ?>', '_blank')">
                     <div class="w-12 h-12 bg-foundation-grey group-hover:bg-rajkot-rust transition-colors flex items-center justify-center text-white shrink-0">
                         <i data-lucide="<?php echo $d['type'] == 'pdf' ? 'file-text' : 'image'; ?>" class="w-6 h-6"></i>

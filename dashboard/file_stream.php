@@ -3,6 +3,34 @@
 require_once __DIR__ . '/../includes/init.php';
 require_login();
 
+@ini_set('display_errors', '0');
+
+if (!function_exists('file_stream_resolve_mime')) {
+    function file_stream_resolve_mime($absolutePath) {
+        $ext = strtolower((string)pathinfo((string)$absolutePath, PATHINFO_EXTENSION));
+        $map = [
+            'glb' => 'model/gltf-binary',
+            'gltf' => 'model/gltf+json',
+            'obj' => 'model/obj',
+            'dwg' => 'image/vnd.dwg',
+            'skp' => 'application/vnd.sketchup.skp',
+            'webp' => 'image/webp',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'pdf' => 'application/pdf',
+            'mp4' => 'video/mp4',
+            'webm' => 'video/webm',
+            'ogg' => 'video/ogg',
+        ];
+        if (isset($map[$ext])) {
+            return $map[$ext];
+        }
+        $detected = function_exists('mime_content_type') ? (string)mime_content_type($absolutePath) : '';
+        return $detected !== '' ? $detected : 'application/octet-stream';
+    }
+}
+
 $kind = strtolower(trim((string)($_GET['kind'] ?? 'file')));
 $id = (int)($_GET['id'] ?? 0);
 
@@ -23,7 +51,11 @@ try {
     if ($kind === 'drawing') {
         $stmt = $db->prepare('SELECT name, file_path FROM project_drawings WHERE id = ? LIMIT 1');
     } else {
-        $stmt = $db->prepare('SELECT name, file_path FROM project_files WHERE id = ? LIMIT 1');
+        if (function_exists('db_column_exists') && db_column_exists('project_files', 'storage_path')) {
+            $stmt = $db->prepare('SELECT name, COALESCE(NULLIF(storage_path,\'\'), file_path) AS file_path FROM project_files WHERE id = ? LIMIT 1');
+        } else {
+            $stmt = $db->prepare('SELECT name, file_path FROM project_files WHERE id = ? LIMIT 1');
+        }
     }
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -69,13 +101,22 @@ if (!is_file($absolute) || !is_readable($absolute)) {
 }
 
 $filename = basename((string)($row['name'] ?? 'file'));
-$mime = function_exists('mime_content_type') ? (string)mime_content_type($absolute) : '';
-if ($mime === '') {
-    $mime = 'application/octet-stream';
+
+while (ob_get_level() > 0) {
+    @ob_end_clean();
 }
 
+$mime = file_stream_resolve_mime($absolute);
+
 header('Content-Type: ' . $mime);
+header('X-Content-Type-Options: nosniff');
 header('Content-Length: ' . (string)filesize($absolute));
 header('Content-Disposition: inline; filename="' . str_replace('"', '', $filename) . '"');
-readfile($absolute);
+$handle = @fopen($absolute, 'rb');
+if ($handle === false) {
+    http_response_code(500);
+    exit;
+}
+@fpassthru($handle);
+@fclose($handle);
 exit;

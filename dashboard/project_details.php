@@ -1081,7 +1081,12 @@ if ($pdo instanceof PDO) {
                 <?php foreach ($project['files'] as $file): 
                   $fileDisplay = getFileIcon($file['type']);
                                     $fileUrl = project_file_url($file['file_path'] ?? '');
-                                                                        $fileViewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=file&id=' . (int)($file['id'] ?? 0);
+                                                                        $fileViewUrl = file_viewer_url([
+                                                                            'kind' => 'file',
+                                                                            'id' => (int)($file['id'] ?? 0),
+                                                                            'project_id' => (int)$projectId,
+                                                                            'ext' => strtolower((string)($file['type'] ?? '')),
+                                                                        ]);
                 ?>
                 <div
                     class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
@@ -1208,7 +1213,12 @@ if ($pdo instanceof PDO) {
                 <?php foreach ($project['drawings'] as $drawing): 
                   $statusClass = $statusColors[$drawing['status']] ?? '';
                                     $drawingUrl = project_file_url($drawing['file_path'] ?? '');
-                                    $drawingViewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . (int)($drawing['id'] ?? 0);
+                                    $drawingViewUrl = file_viewer_url([
+                                        'kind' => 'drawing',
+                                        'id' => (int)($drawing['id'] ?? 0),
+                                        'project_id' => (int)$projectId,
+                                        'ext' => strtolower((string)pathinfo((string)($drawing['name'] ?? ''), PATHINFO_EXTENSION)),
+                                    ]);
                 ?>
                 <div
                     class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">

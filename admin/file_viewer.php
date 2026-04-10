@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../includes/init.php';
+require_login();
 
 $notice = '';
 $noticeType = 'info';
@@ -20,6 +21,48 @@ if (!function_exists('file_viewer_test_absolute_dir')) {
 if (!function_exists('file_viewer_history_path')) {
   function file_viewer_history_path() {
     return rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'file_viewer_test_history.json';
+  }
+}
+
+if (!function_exists('file_viewer_stereo_state_path')) {
+  function file_viewer_stereo_state_path() {
+    return rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'file_viewer_stereo_state.json';
+  }
+}
+
+if (!function_exists('file_viewer_load_stereo_state')) {
+  function file_viewer_load_stereo_state() {
+    $path = file_viewer_stereo_state_path();
+    if (!is_file($path)) {
+      return ['left' => '', 'right' => ''];
+    }
+    $raw = (string)@file_get_contents($path);
+    if ($raw === '') {
+      return ['left' => '', 'right' => ''];
+    }
+    $parsed = json_decode($raw, true);
+    if (!is_array($parsed)) {
+      return ['left' => '', 'right' => ''];
+    }
+    $left = str_replace('\\', '/', trim((string)($parsed['left'] ?? '')));
+    $right = str_replace('\\', '/', trim((string)($parsed['right'] ?? '')));
+    return ['left' => $left, 'right' => $right];
+  }
+}
+
+if (!function_exists('file_viewer_write_stereo_state')) {
+  function file_viewer_write_stereo_state($left, $right) {
+    $path = file_viewer_stereo_state_path();
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+      @mkdir($dir, 0775, true);
+    }
+    $payload = [
+      'left' => str_replace('\\', '/', trim((string)$left)),
+      'right' => str_replace('\\', '/', trim((string)$right)),
+      'updated_at' => date('c'),
+    ];
+    @file_put_contents($path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
   }
 }
 
@@ -79,9 +122,279 @@ if (!function_exists('file_viewer_format_bytes')) {
   }
 }
 
+if (!function_exists('file_viewer_store_test_upload')) {
+  function file_viewer_store_test_upload($upload, $targetDir, $allowed, $maxBytes, &$errorText = '') {
+    $originalName = (string)($upload['name'] ?? '');
+    $tmpName = (string)($upload['tmp_name'] ?? '');
+    $uploadError = (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE);
+    $sizeBytes = (int)($upload['size'] ?? 0);
+    $ext = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+
+    if ($uploadError !== UPLOAD_ERR_OK) {
+      $errorText = 'Upload failed. Please try again.';
+      return null;
+    }
+    if (!in_array($ext, $allowed, true)) {
+      $errorText = 'Unsupported file type for upload.';
+      return null;
+    }
+    if ($sizeBytes <= 0 || $sizeBytes > $maxBytes) {
+      $errorText = 'File size must be between 1 byte and 200 MB.';
+      return null;
+    }
+
+    $safeBase = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)pathinfo($originalName, PATHINFO_FILENAME));
+    $safeBase = trim((string)$safeBase, '_-');
+    if ($safeBase === '') {
+      $safeBase = 'test_file';
+    }
+
+    $finalName = $safeBase . '_' . date('Ymd_His') . '_' . substr(md5((string)microtime(true) . $originalName), 0, 6) . '.' . $ext;
+    $absolutePath = rtrim((string)$targetDir, '/\\') . DIRECTORY_SEPARATOR . $finalName;
+    $relativePath = file_viewer_test_relative_dir() . '/' . $finalName;
+
+    if (!@move_uploaded_file($tmpName, $absolutePath)) {
+      $errorText = 'Could not save uploaded file.';
+      return null;
+    }
+
+    return [
+      'relative' => $relativePath,
+      'absolute' => $absolutePath,
+      'size' => $sizeBytes,
+      'mime' => (string)($upload['type'] ?? ''),
+      'ext' => $ext,
+      'name' => $finalName,
+    ];
+  }
+}
+
+if (!function_exists('file_viewer_normalize_uploaded_stem')) {
+  function file_viewer_normalize_uploaded_stem($filename) {
+    $name = basename((string)$filename);
+    $stem = strtolower((string)pathinfo($name, PATHINFO_FILENAME));
+    // Strip generated suffix: _YYYYMMDD_HHMMSS_xxxxxx
+    $stem = preg_replace('/_\d{8}_\d{6}_[a-f0-9]{6}$/i', '', $stem);
+    return (string)$stem;
+  }
+}
+
+if (!function_exists('file_viewer_detect_eye_from_filename')) {
+  function file_viewer_detect_eye_from_filename($filename) {
+    $stem = file_viewer_normalize_uploaded_stem($filename);
+    if ((bool)preg_match('/(^|[_\-\s])(left)(?=$|[_\-\s])/i', $stem)) {
+      return 'left';
+    }
+    if ((bool)preg_match('/(^|[_\-\s])(right)(?=$|[_\-\s])/i', $stem)) {
+      return 'right';
+    }
+    return '';
+  }
+}
+
+if (!function_exists('file_viewer_stereo_pair_key')) {
+  function file_viewer_stereo_pair_key($filename) {
+    $stem = file_viewer_normalize_uploaded_stem($filename);
+    $stem = preg_replace('/(^|[_\-\s])(left|right)(?=$|[_\-\s])/i', '$1', $stem);
+    $stem = preg_replace('/[_\-\s]+/', '_', (string)$stem);
+    return trim((string)$stem, '_');
+  }
+}
+
+if (!function_exists('file_viewer_find_matching_eye_file')) {
+  function file_viewer_find_matching_eye_file($targetDir, $sourceFilename, $sourceEye) {
+    $sourceEye = strtolower(trim((string)$sourceEye));
+    $oppositeEye = $sourceEye === 'left' ? 'right' : ($sourceEye === 'right' ? 'left' : '');
+    if ($oppositeEye === '') {
+      return '';
+    }
+
+    $sourceKey = file_viewer_stereo_pair_key($sourceFilename);
+    if ($sourceKey === '') {
+      return '';
+    }
+
+    $bestFile = '';
+    $bestTime = 0;
+    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+    $entries = @scandir((string)$targetDir);
+    if (!is_array($entries)) {
+      return '';
+    }
+
+    foreach ($entries as $entry) {
+      if ($entry === '.' || $entry === '..') {
+        continue;
+      }
+      $absolutePath = rtrim((string)$targetDir, '/\\') . DIRECTORY_SEPARATOR . $entry;
+      if (!is_file($absolutePath)) {
+        continue;
+      }
+      $ext = strtolower((string)pathinfo($entry, PATHINFO_EXTENSION));
+      if (!in_array($ext, $allowed, true)) {
+        continue;
+      }
+      if (file_viewer_detect_eye_from_filename($entry) !== $oppositeEye) {
+        continue;
+      }
+      if (file_viewer_stereo_pair_key($entry) !== $sourceKey) {
+        continue;
+      }
+
+      $mtime = (int)@filemtime($absolutePath);
+      if ($mtime >= $bestTime) {
+        $bestTime = $mtime;
+        $bestFile = $entry;
+      }
+    }
+
+    if ($bestFile === '') {
+      return '';
+    }
+    return file_viewer_test_relative_dir() . '/' . $bestFile;
+  }
+}
+
+if (!function_exists('file_viewer_raw_to_upload_relative')) {
+  function file_viewer_raw_to_upload_relative($rawPath) {
+    $value = trim((string)$rawPath);
+    if ($value === '' || preg_match('/^https?:\/\//i', $value)) {
+      return '';
+    }
+    $normalized = str_replace('\\', '/', $value);
+    $uploadsPos = strpos($normalized, '/uploads/');
+    if ($uploadsPos === false && strpos($normalized, 'uploads/') === 0) {
+      $uploadsPos = 0;
+    }
+    if ($uploadsPos === false) {
+      return '';
+    }
+    $relative = $uploadsPos === 0 ? $normalized : substr($normalized, $uploadsPos + 1);
+    return ltrim($relative, '/');
+  }
+}
+
+if (!function_exists('file_viewer_relative_to_absolute')) {
+  function file_viewer_relative_to_absolute($relativePath) {
+    $relative = trim((string)$relativePath);
+    if ($relative === '') {
+      return '';
+    }
+    return rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+  }
+}
+
+if (!function_exists('file_viewer_relative_to_url')) {
+  function file_viewer_relative_to_url($relativePath) {
+    $relative = ltrim(trim((string)$relativePath), '/');
+    if ($relative === '') {
+      return '';
+    }
+    return function_exists('base_path') ? (string)base_path($relative) : ('/' . $relative);
+  }
+}
+
+if (!function_exists('file_viewer_cad_preview_paths')) {
+  function file_viewer_cad_preview_paths($sourceRawPath) {
+    $relativeSource = file_viewer_raw_to_upload_relative($sourceRawPath);
+    if ($relativeSource === '') {
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $sourceDir = str_replace('\\', '/', dirname($relativeSource));
+    if ($sourceDir === '.' || $sourceDir === '') {
+      $sourceDir = 'uploads';
+    }
+
+    $sourceName = basename((string)$relativeSource);
+    $sourceStem = (string)pathinfo($sourceName, PATHINFO_FILENAME);
+    if ($sourceStem === '') {
+      $sourceStem = 'cad_file';
+    }
+
+    $previewRelative = trim($sourceDir, '/') . '/' . $sourceStem . '_preview.glb';
+    return [
+      'relative' => $previewRelative,
+      'absolute' => file_viewer_relative_to_absolute($previewRelative),
+      'url' => file_viewer_relative_to_url($previewRelative),
+    ];
+  }
+}
+
+if (!function_exists('file_viewer_generate_local_cad_preview')) {
+  function file_viewer_generate_local_cad_preview($sourceRawPath, $sourceExt, &$message = '') {
+    $ext = strtolower(trim((string)$sourceExt));
+    if (!in_array($ext, ['dwg', 'skp'], true)) {
+      $message = 'Unsupported CAD format.';
+      return false;
+    }
+
+    $sourceRelative = file_viewer_raw_to_upload_relative($sourceRawPath);
+    if ($sourceRelative === '') {
+      $message = 'Source path is invalid.';
+      return false;
+    }
+
+    $sourceAbsolute = file_viewer_relative_to_absolute($sourceRelative);
+    if ($sourceAbsolute === '' || !is_file($sourceAbsolute)) {
+      $message = 'Source CAD file is missing.';
+      return false;
+    }
+
+    $preview = file_viewer_cad_preview_paths($sourceRawPath);
+    $previewAbsolute = (string)($preview['absolute'] ?? '');
+    if ($previewAbsolute === '') {
+      $message = 'Preview target path could not be prepared.';
+      return false;
+    }
+
+    $previewDir = dirname($previewAbsolute);
+    if (!is_dir($previewDir) && !@mkdir($previewDir, 0775, true) && !is_dir($previewDir)) {
+      $message = 'Could not create preview directory.';
+      return false;
+    }
+
+    $commandTemplate = $ext === 'dwg'
+      ? trim((string)getenv('CAD_DWG_CONVERTER_CMD'))
+      : trim((string)getenv('CAD_SKP_CONVERTER_CMD'));
+
+    if ($commandTemplate === '') {
+      $message = 'Set ' . ($ext === 'dwg' ? 'CAD_DWG_CONVERTER_CMD' : 'CAD_SKP_CONVERTER_CMD') . ' in environment.';
+      return false;
+    }
+
+    $command = str_replace(
+      ['{input}', '{output}'],
+      [escapeshellarg($sourceAbsolute), escapeshellarg($previewAbsolute)],
+      $commandTemplate
+    );
+
+    $output = [];
+    $exitCode = 1;
+    @exec($command . ' 2>&1', $output, $exitCode);
+
+    if ($exitCode !== 0 || !is_file($previewAbsolute)) {
+      $tail = '';
+      if (!empty($output)) {
+        $tail = ' ' . trim((string)end($output));
+      }
+      $message = 'CAD conversion failed.' . $tail;
+      return false;
+    }
+
+    $message = 'Local CAD preview generated.';
+    return true;
+  }
+}
+
 $file = trim((string)($_GET['file'] ?? ''));
+$resourceKind = strtolower(trim((string)($_GET['kind'] ?? '')));
+$resourceId = (int)($_GET['id'] ?? 0);
 $projectId = (int)($_GET['project_id'] ?? 0);
 $forcedView = strtolower(trim((string)($_GET['view'] ?? '')));
+$extHint = strtolower(trim((string)($_GET['ext'] ?? '')));
+$stereoLeftFile = '';
+$stereoRightFile = '';
 $fileName = $file !== '' ? basename($file) : 'N/A';
 $projectName = 'Unknown Project';
 $version = 'v1';
@@ -89,85 +402,208 @@ $status = 'under_review';
 $uploadedAt = '';
 $filePath = '';
 $storagePath = '';
+$resourceStreamUrl = '';
+$projectLibrary = [];
+
+if (db_connected() && $projectId > 0) {
+  $projectFilesRows = db_fetch_all('SELECT id, name, type, file_path, storage_path, uploaded_at FROM project_files WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId]);
+  foreach ($projectFilesRows as $item) {
+    $name = (string)($item['name'] ?? 'File');
+    $filePathCandidate = (string)($item['file_path'] ?? '');
+    $typeCandidate = strtolower(trim((string)($item['type'] ?? '')));
+    $extCandidate = $typeCandidate !== '' ? $typeCandidate : strtolower((string)pathinfo(($filePathCandidate !== '' ? $filePathCandidate : $name), PATHINFO_EXTENSION));
+    $projectLibrary[] = [
+      'kind' => 'file',
+      'id' => (int)($item['id'] ?? 0),
+      'name' => $name,
+      'uploaded_at' => (string)($item['uploaded_at'] ?? ''),
+      'ext' => $extCandidate,
+      'status' => '',
+      'version' => '',
+    ];
+  }
+
+  $projectDrawingRows = db_fetch_all('SELECT id, name, version, status, file_path, uploaded_at FROM project_drawings WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId]);
+  foreach ($projectDrawingRows as $item) {
+    $name = (string)($item['name'] ?? 'Drawing');
+    $filePathCandidate = (string)($item['file_path'] ?? '');
+    $extCandidate = strtolower((string)pathinfo(($filePathCandidate !== '' ? $filePathCandidate : $name), PATHINFO_EXTENSION));
+    $projectLibrary[] = [
+      'kind' => 'drawing',
+      'id' => (int)($item['id'] ?? 0),
+      'name' => $name,
+      'uploaded_at' => (string)($item['uploaded_at'] ?? ''),
+      'ext' => $extCandidate,
+      'status' => (string)($item['status'] ?? ''),
+      'version' => (string)($item['version'] ?? ''),
+    ];
+  }
+
+  usort($projectLibrary, function ($a, $b) {
+    $ta = strtotime((string)($a['uploaded_at'] ?? '')) ?: 0;
+    $tb = strtotime((string)($b['uploaded_at'] ?? '')) ?: 0;
+    if ($ta === $tb) {
+      return 0;
+    }
+    return $ta > $tb ? -1 : 1;
+  });
+} elseif (db_connected() && $projectId <= 0) {
+  $globalFiles = db_fetch_all('SELECT pf.id, pf.project_id, pf.name, pf.type, pf.uploaded_at, p.name AS project_name FROM project_files pf LEFT JOIN projects p ON p.id = pf.project_id ORDER BY pf.uploaded_at DESC LIMIT 200');
+  foreach ($globalFiles as $item) {
+    $projectLibrary[] = [
+      'kind' => 'file',
+      'id' => (int)($item['id'] ?? 0),
+      'name' => (string)($item['name'] ?? 'File'),
+      'uploaded_at' => (string)($item['uploaded_at'] ?? ''),
+      'ext' => strtolower(trim((string)($item['type'] ?? ''))),
+      'status' => '',
+      'version' => '',
+      'project_id' => (int)($item['project_id'] ?? 0),
+      'project_name' => (string)($item['project_name'] ?? ''),
+    ];
+  }
+
+  $globalDrawings = db_fetch_all('SELECT pd.id, pd.project_id, pd.name, pd.version, pd.status, pd.file_path, pd.uploaded_at, p.name AS project_name FROM project_drawings pd LEFT JOIN projects p ON p.id = pd.project_id ORDER BY pd.uploaded_at DESC LIMIT 200');
+  foreach ($globalDrawings as $item) {
+    $projectLibrary[] = [
+      'kind' => 'drawing',
+      'id' => (int)($item['id'] ?? 0),
+      'name' => (string)($item['name'] ?? 'Drawing'),
+      'uploaded_at' => (string)($item['uploaded_at'] ?? ''),
+      'ext' => strtolower((string)pathinfo((string)($item['file_path'] ?? ''), PATHINFO_EXTENSION)),
+      'status' => (string)($item['status'] ?? ''),
+      'version' => (string)($item['version'] ?? ''),
+      'project_id' => (int)($item['project_id'] ?? 0),
+      'project_name' => (string)($item['project_name'] ?? ''),
+    ];
+  }
+
+  usort($projectLibrary, function ($a, $b) {
+    $ta = strtotime((string)($a['uploaded_at'] ?? '')) ?: 0;
+    $tb = strtotime((string)($b['uploaded_at'] ?? '')) ?: 0;
+    if ($ta === $tb) {
+      return 0;
+    }
+    return $ta > $tb ? -1 : 1;
+  });
+}
+
+if ($projectId > 0 && $resourceId <= 0 && $file === '' && !empty($projectLibrary)) {
+  $firstEntry = $projectLibrary[0];
+  $resourceKind = (string)($firstEntry['kind'] ?? 'file');
+  $resourceId = (int)($firstEntry['id'] ?? 0);
+  if ($extHint === '') {
+    $extHint = strtolower((string)($firstEntry['ext'] ?? ''));
+  }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $postAction = trim((string)($_POST['test_action'] ?? ''));
   $redirectFile = $file;
   $redirectView = $forcedView;
+  $redirectKind = $resourceKind;
+  $redirectId = $resourceId;
+  $redirectExt = $extHint;
 
   if ($postAction === 'upload_test_file' && isset($_FILES['test_file'])) {
     $targetDir = file_viewer_test_absolute_dir();
     if (!is_dir($targetDir) && !@mkdir($targetDir, 0775, true) && !is_dir($targetDir)) {
-      $notice = 'Could not prepare test upload directory.';
+      $notice = 'Could not prepare upload directory.';
       $noticeType = 'error';
     } else {
       $upload = $_FILES['test_file'];
-      $originalName = (string)($upload['name'] ?? '');
-      $tmpName = (string)($upload['tmp_name'] ?? '');
-      $uploadError = (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE);
-      $sizeBytes = (int)($upload['size'] ?? 0);
-      $ext = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
       $allowed = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'glb', 'gltf', 'mp4', 'webm', 'ogg', 'obj'];
       $maxBytes = 200 * 1024 * 1024;
 
-      if ($uploadError !== UPLOAD_ERR_OK) {
-        $notice = 'Upload failed. Please try again.';
-        $noticeType = 'error';
-      } elseif (!in_array($ext, $allowed, true)) {
-        $notice = 'Unsupported file type for testing upload.';
-        $noticeType = 'error';
-      } elseif ($sizeBytes <= 0 || $sizeBytes > $maxBytes) {
-        $notice = 'File size must be between 1 byte and 200 MB.';
+      $uploadErrorText = '';
+      $stored = file_viewer_store_test_upload($upload, $targetDir, $allowed, $maxBytes, $uploadErrorText);
+      if (!is_array($stored)) {
+        $notice = $uploadErrorText !== '' ? $uploadErrorText : 'Could not save uploaded file.';
         $noticeType = 'error';
       } else {
-        $safeBase = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)pathinfo($originalName, PATHINFO_FILENAME));
-        $safeBase = trim((string)$safeBase, '_-');
-        if ($safeBase === '') {
-          $safeBase = 'test_file';
-        }
-        $finalName = $safeBase . '_' . date('Ymd_His') . '_' . substr(md5((string)microtime(true)), 0, 6) . '.' . $ext;
-        $absolutePath = $targetDir . DIRECTORY_SEPARATOR . $finalName;
-        $relativePath = file_viewer_test_relative_dir() . '/' . $finalName;
+        $notice = 'File uploaded successfully.';
+        $noticeType = 'success';
+        $redirectFile = (string)$stored['relative'];
+        if (in_array((string)$stored['ext'], ['jpg', 'jpeg', 'png', 'webp'], true)) {
+          $detectedEye = file_viewer_detect_eye_from_filename((string)$stored['name']);
+          if ($detectedEye !== '') {
+            $state = file_viewer_load_stereo_state();
+            $leftState = str_replace('\\', '/', trim((string)($state['left'] ?? '')));
+            $rightState = str_replace('\\', '/', trim((string)($state['right'] ?? '')));
 
-        if (@move_uploaded_file($tmpName, $absolutePath)) {
-          $notice = 'Test file uploaded successfully.';
-          $noticeType = 'success';
-          $redirectFile = $relativePath;
-          if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true) && preg_match('/(^|[_\-\s])(360|pano|panorama|equirect)/i', $finalName)) {
+            if ($detectedEye === 'left') {
+              $leftState = (string)$stored['relative'];
+              $candidate = file_viewer_find_matching_eye_file($targetDir, (string)$stored['name'], 'left');
+              if ($candidate !== '') {
+                $rightState = $candidate;
+              }
+            } else {
+              $rightState = (string)$stored['relative'];
+              $candidate = file_viewer_find_matching_eye_file($targetDir, (string)$stored['name'], 'right');
+              if ($candidate !== '') {
+                $leftState = $candidate;
+                $redirectFile = $leftState;
+              }
+            }
+
+            file_viewer_write_stereo_state($leftState, $rightState);
+            if ($leftState !== '' && $rightState !== '') {
+              $notice = 'Uploaded and paired for stereo VR.';
+            } else {
+              $notice = 'Uploaded ' . $detectedEye . '-eye image. Upload matching ' . ($detectedEye === 'left' ? 'right' : 'left') . '-eye image to complete stereo.';
+            }
+            $redirectView = '360';
+          } elseif (preg_match('/(^|[_\-\s])(360|pano|panorama|equirect)/i', (string)$stored['name'])) {
             $redirectView = '360';
           }
-          file_viewer_append_history('upload', $relativePath, 'saved', [
-            'size' => $sizeBytes,
-            'mime' => (string)($upload['type'] ?? ''),
-          ]);
-        } else {
-          $notice = 'Could not save uploaded test file.';
-          $noticeType = 'error';
         }
+        file_viewer_append_history('upload', (string)$stored['relative'], 'saved', [
+          'size' => (int)$stored['size'],
+          'mime' => (string)$stored['mime'],
+        ]);
       }
     }
   } elseif ($postAction === 'delete_test_file') {
     $relativePath = str_replace('\\', '/', trim((string)($_POST['relative_path'] ?? '')));
     $prefix = file_viewer_test_relative_dir() . '/';
     if ($relativePath === '' || strpos($relativePath, $prefix) !== 0 || strpos($relativePath, '..') !== false) {
-      $notice = 'Invalid test file path.';
+      $notice = 'Invalid file path.';
       $noticeType = 'error';
     } else {
       $absolutePath = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
       $deleted = is_file($absolutePath) ? @unlink($absolutePath) : false;
       if ($deleted) {
-        $notice = 'Test file deleted.';
+        $notice = 'File deleted.';
         $noticeType = 'success';
         file_viewer_append_history('delete', $relativePath, 'deleted');
         if ($file === $relativePath) {
           $redirectFile = '';
           $redirectView = '';
         }
+        $state = file_viewer_load_stereo_state();
+        $stateLeft = str_replace('\\', '/', trim((string)($state['left'] ?? '')));
+        $stateRight = str_replace('\\', '/', trim((string)($state['right'] ?? '')));
+        if ($stateLeft === $relativePath || $stateRight === $relativePath) {
+          if ($stateLeft === $relativePath) {
+            $stateLeft = '';
+          }
+          if ($stateRight === $relativePath) {
+            $stateRight = '';
+          }
+          file_viewer_write_stereo_state($stateLeft, $stateRight);
+        }
       } else {
-        $notice = 'Could not delete test file.';
+        $notice = 'Could not delete file.';
         $noticeType = 'error';
       }
     }
+  } elseif ($postAction === 'generate_cad_preview') {
+    $sourceRawPath = trim((string)($_POST['source_raw_path'] ?? ''));
+    $sourceExt = trim((string)($_POST['source_ext'] ?? ''));
+    $cadMessage = '';
+    $generated = file_viewer_generate_local_cad_preview($sourceRawPath, $sourceExt, $cadMessage);
+    $notice = $generated ? 'Local CAD preview is ready.' : ('Could not generate local CAD preview. ' . $cadMessage);
+    $noticeType = $generated ? 'success' : 'error';
   }
 
   $params = [];
@@ -179,6 +615,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   if ($redirectView !== '') {
     $params['view'] = $redirectView;
+  }
+  if (in_array($redirectKind, ['file', 'drawing'], true) && $redirectId > 0) {
+    $params['kind'] = $redirectKind;
+    $params['id'] = (string)$redirectId;
+  }
+  if ($redirectExt !== '') {
+    $params['ext'] = $redirectExt;
   }
   if ($notice !== '') {
     $params['notice'] = $notice;
@@ -240,34 +683,123 @@ if (!function_exists('resolve_preview_absolute_path')) {
   }
 }
 
-if (db_connected() && $file !== '') {
-  $projectFilterSql = $projectId > 0 ? ' AND pf.project_id = ' . (int)$projectId . ' ' : ' ';
-  $row = db_fetch("SELECT pf.filename, pf.name, pf.version, pf.status, pf.uploaded_at, p.name AS project_name, pf.file_path, pf.storage_path
-        FROM project_files pf
-        LEFT JOIN projects p ON p.id = pf.project_id
-        WHERE pf.filename = ? OR pf.file_path = ? OR pf.storage_path = ? OR pf.name = ?
-    " . $projectFilterSql . "
-        ORDER BY pf.uploaded_at DESC LIMIT 1", [$file, $file, $file, $file]);
+if (!function_exists('file_viewer_absolute_url')) {
+  function file_viewer_absolute_url($url) {
+    $value = trim((string)$url);
+    if ($value === '') {
+      return '';
+    }
+    if (preg_match('/^https?:\/\//i', $value)) {
+      return $value;
+    }
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = trim((string)($_SERVER['HTTP_HOST'] ?? ''));
+    if ($host === '') {
+      return $value;
+    }
+    return $scheme . '://' . $host . '/' . ltrim($value, '/');
+  }
+}
 
-    if (!$row) {
-    $projectFilterSql = $projectId > 0 ? ' AND pd.project_id = ' . (int)$projectId . ' ' : ' ';
-    $row = db_fetch("SELECT pd.name, pd.version, pd.status, pd.uploaded_at, p.name AS project_name, pd.file_path
+if (db_connected()) {
+  $hasProjectFilesStoragePath = function_exists('db_column_exists') ? db_column_exists('project_files', 'storage_path') : false;
+  $row = null;
+  if ($resourceId > 0 && in_array($resourceKind, ['file', 'drawing'], true)) {
+    $resourceStreamUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=' . rawurlencode($resourceKind) . '&id=' . (int)$resourceId;
+    if ($resourceKind === 'file') {
+      $projectFilterSql = $projectId > 0 ? ' AND pf.project_id = ' . (int)$projectId . ' ' : ' ';
+      $storageSelect = $hasProjectFilesStoragePath ? 'pf.storage_path AS storage_path' : "'' AS storage_path";
+      $row = db_fetch("SELECT pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . "
+            FROM project_files pf
+            LEFT JOIN projects p ON p.id = pf.project_id
+            WHERE pf.id = ? " . $projectFilterSql . "
+            ORDER BY pf.uploaded_at DESC LIMIT 1", [$resourceId]);
+    } else {
+      $projectFilterSql = $projectId > 0 ? ' AND pd.project_id = ' . (int)$projectId . ' ' : ' ';
+      $row = db_fetch("SELECT pd.name, pd.version, pd.status, pd.uploaded_at, p.name AS project_name, pd.file_path
             FROM project_drawings pd
             LEFT JOIN projects p ON p.id = pd.project_id
-            WHERE pd.file_path = ? OR pd.name = ?
-      " . $projectFilterSql . "
-            ORDER BY pd.uploaded_at DESC LIMIT 1", [$file, $file]);
+            WHERE pd.id = ? " . $projectFilterSql . "
+            ORDER BY pd.uploaded_at DESC LIMIT 1", [$resourceId]);
     }
+  }
 
-    if ($row) {
-        $fileName = (string)($row['filename'] ?? $row['name'] ?? $fileName);
-        $projectName = (string)($row['project_name'] ?? $projectName);
-        $version = (string)($row['version'] ?? $version);
-        $status = strtolower((string)($row['status'] ?? $status));
-        $uploadedAt = (string)($row['uploaded_at'] ?? '');
-        $filePath = (string)($row['file_path'] ?? '');
-        $storagePath = (string)($row['storage_path'] ?? '');
+  // Fallback lookup via direct PDO in case helper-level query fails unexpectedly.
+  if (!$row && $resourceId > 0 && in_array($resourceKind, ['file', 'drawing'], true)) {
+    $db = get_db();
+    if ($db instanceof PDO) {
+      try {
+        if ($resourceKind === 'file') {
+          if ($projectId > 0) {
+            if ($hasProjectFilesStoragePath) {
+              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, COALESCE(NULLIF(storage_path,\'\'), file_path) AS storage_path FROM project_files WHERE id = ? AND project_id = ? LIMIT 1');
+              $stmt->execute([$resourceId, $projectId]);
+            } else {
+              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, file_path AS storage_path FROM project_files WHERE id = ? AND project_id = ? LIMIT 1');
+              $stmt->execute([$resourceId, $projectId]);
+            }
+          } else {
+            if ($hasProjectFilesStoragePath) {
+              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, COALESCE(NULLIF(storage_path,\'\'), file_path) AS storage_path FROM project_files WHERE id = ? LIMIT 1');
+              $stmt->execute([$resourceId]);
+            } else {
+              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, file_path AS storage_path FROM project_files WHERE id = ? LIMIT 1');
+              $stmt->execute([$resourceId]);
+            }
+          }
+        } else {
+          if ($projectId > 0) {
+            $stmt = $db->prepare('SELECT name, uploaded_at, file_path, file_path AS storage_path FROM project_drawings WHERE id = ? AND project_id = ? LIMIT 1');
+            $stmt->execute([$resourceId, $projectId]);
+          } else {
+            $stmt = $db->prepare('SELECT name, uploaded_at, file_path, file_path AS storage_path FROM project_drawings WHERE id = ? LIMIT 1');
+            $stmt->execute([$resourceId]);
+          }
+        }
+        $fallback = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (is_array($fallback)) {
+          $fallback['project_name'] = $projectName;
+          $row = $fallback;
+        }
+      } catch (Throwable $e) {
+        // Keep existing behavior if fallback lookup also fails.
+      }
     }
+  }
+
+  if (!$row && $file !== '') {
+    $projectFilterSql = $projectId > 0 ? ' AND pf.project_id = ' . (int)$projectId . ' ' : ' ';
+    $storageSelect = $hasProjectFilesStoragePath ? 'pf.storage_path AS storage_path' : "'' AS storage_path";
+    $storageWhere = $hasProjectFilesStoragePath ? ' OR pf.storage_path = ? ' : ' ';
+    $params = [$file, $file];
+    if ($hasProjectFilesStoragePath) {
+      $params[] = $file;
+    }
+    $row = db_fetch("SELECT pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . "
+          FROM project_files pf
+          LEFT JOIN projects p ON p.id = pf.project_id
+          WHERE pf.name = ? OR pf.file_path = ? " . $storageWhere . "
+      " . $projectFilterSql . "
+          ORDER BY pf.uploaded_at DESC LIMIT 1", $params);
+
+      if (!$row) {
+      $projectFilterSql = $projectId > 0 ? ' AND pd.project_id = ' . (int)$projectId . ' ' : ' ';
+      $row = db_fetch("SELECT pd.name, pd.version, pd.status, pd.uploaded_at, p.name AS project_name, pd.file_path
+              FROM project_drawings pd
+              LEFT JOIN projects p ON p.id = pd.project_id
+              WHERE pd.file_path = ? OR pd.name = ?
+        " . $projectFilterSql . "
+              ORDER BY pd.uploaded_at DESC LIMIT 1", [$file, $file]);
+      }
+  }
+
+  if ($row) {
+      $fileName = (string)($row['name'] ?? $fileName);
+      $projectName = (string)($row['project_name'] ?? $projectName);
+      $uploadedAt = (string)($row['uploaded_at'] ?? '');
+      $filePath = (string)($row['file_path'] ?? '');
+      $storagePath = (string)($row['storage_path'] ?? '');
+  }
 }
 
 $testHistory = array_reverse(file_viewer_load_history());
@@ -291,18 +823,61 @@ foreach ($testHistory as $entry) {
 
 $previewUrl = '';
 $previewAbsolutePath = '';
+$previewDirectUrl = '';
+$previewAbsoluteUrl = '';
 foreach ([$storagePath, $filePath, $file] as $candidate) {
   $resolvedUrl = resolve_preview_url($candidate);
   if ($resolvedUrl === '') {
     continue;
+  }
+  if ($previewDirectUrl === '') {
+    $previewDirectUrl = $resolvedUrl;
+    $previewAbsoluteUrl = file_viewer_absolute_url($resolvedUrl);
   }
   $previewUrl = $resolvedUrl;
   $previewAbsolutePath = resolve_preview_absolute_path($candidate);
   break;
 }
 
+if ($previewUrl === '' && $resourceStreamUrl !== '') {
+  $previewUrl = $resourceStreamUrl;
+}
+
+$stereoLeftUrl = '';
+$stereoRightUrl = '';
+$stereoLeftAbsolutePath = '';
+$stereoRightAbsolutePath = '';
+
+$state = file_viewer_load_stereo_state();
+$stereoLeftFile = str_replace('\\', '/', trim((string)($state['left'] ?? '')));
+$stereoRightFile = str_replace('\\', '/', trim((string)($state['right'] ?? '')));
+
+if ($stereoLeftFile !== '' && $stereoRightFile !== '') {
+  $candidateLeftUrl = resolve_preview_url($stereoLeftFile);
+  $candidateRightUrl = resolve_preview_url($stereoRightFile);
+  $candidateLeftAbs = resolve_preview_absolute_path($stereoLeftFile);
+  $candidateRightAbs = resolve_preview_absolute_path($stereoRightFile);
+  $leftExt = strtolower((string)pathinfo($stereoLeftFile, PATHINFO_EXTENSION));
+  $rightExt = strtolower((string)pathinfo($stereoRightFile, PATHINFO_EXTENSION));
+
+  if ($candidateLeftUrl !== '' && $candidateRightUrl !== '' && $candidateLeftAbs !== '' && $candidateRightAbs !== '' && in_array($leftExt, ['jpg', 'jpeg', 'png', 'webp'], true) && in_array($rightExt, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+    $stereoLeftUrl = $candidateLeftUrl;
+    $stereoRightUrl = $candidateRightUrl;
+    $stereoLeftAbsolutePath = $candidateLeftAbs;
+    $stereoRightAbsolutePath = $candidateRightAbs;
+  }
+}
+
+if ($stereoLeftUrl !== '') {
+  $previewUrl = $stereoLeftUrl;
+  $previewAbsolutePath = $stereoLeftAbsolutePath;
+}
+
 $extensionSource = $filePath !== '' ? $filePath : ($storagePath !== '' ? $storagePath : $fileName);
 $ext = strtolower((string)pathinfo((string)$extensionSource, PATHINFO_EXTENSION));
+if ($extHint !== '' && preg_match('/^[a-z0-9]{2,8}$/', $extHint)) {
+  $ext = $extHint;
+}
 $isPanoramaName = (bool)preg_match('/(^|[_\-\s])(360|pano|panorama|equirect)/i', (string)$fileName);
 $isPanoramaRatio = false;
 if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true) && $previewAbsolutePath !== '' && function_exists('getimagesize')) {
@@ -328,6 +903,22 @@ if (in_array($ext, ['glb', 'gltf'], true)) {
 if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
   $viewerMode = '360';
 }
+
+if (in_array($ext, ['dwg', 'skp'], true)) {
+  $viewerMode = 'cad';
+}
+
+// For GLB/GLTF, prefer extension-preserving direct file URL over stream endpoint.
+if ($viewerMode === '3d' && $previewDirectUrl !== '') {
+  $previewUrl = $previewDirectUrl;
+}
+
+$cadSourceRawPath = $storagePath !== '' ? $storagePath : ($filePath !== '' ? $filePath : $file);
+$cadPreviewPath = file_viewer_cad_preview_paths($cadSourceRawPath);
+$cadPreviewExists = $viewerMode === 'cad' && $cadPreviewPath['absolute'] !== '' && is_file((string)$cadPreviewPath['absolute']);
+$cadPreviewUrl = $cadPreviewExists ? (string)$cadPreviewPath['url'] : '';
+
+$isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
@@ -339,7 +930,7 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
   <?php if ($viewerMode === '360' && $previewUrl !== ''): ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
   <?php endif; ?>
-  <?php if ($viewerMode === '3d' && $previewUrl !== ''): ?>
+  <?php if (($viewerMode === '3d' && $previewUrl !== '') || ($viewerMode === 'cad' && $cadPreviewUrl !== '')): ?>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <?php endif; ?>
   <?php if ($viewerMode === '360' && $previewUrl !== ''): ?>
@@ -422,6 +1013,23 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
       min-height: 0;
       overflow: hidden;
       background: #020617;
+    }
+
+    .viewer-3d-error {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      background: rgba(2, 6, 23, 0.9);
+      color: #e2e8f0;
+      z-index: 4;
+    }
+
+    .viewer-3d-error.is-visible {
+      display: flex;
     }
 
     .viewer-3d-chip {
@@ -538,7 +1146,7 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
     <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg mb-10 border-b-2 border-rajkot-rust">
       <div class="max-w-7xl mx-auto">
         <h1 class="text-4xl font-serif font-bold">File Viewer</h1>
-        <p class="text-gray-400 mt-2">Database-backed preview with temporary testing uploads and file history.</p>
+        <p class="text-gray-400 mt-2">Database-backed preview and project file manager.</p>
       </div>
     </header>
 
@@ -548,20 +1156,6 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
           <?php echo htmlspecialchars($notice); ?>
         </div>
       <?php endif; ?>
-
-      <div class="bg-white border border-gray-100 shadow-premium p-6 mb-6">
-        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-          <div>
-            <h2 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-2">Temporary Testing Upload</h2>
-            <p class="text-sm text-gray-500">Upload a file to <strong><?php echo htmlspecialchars(file_viewer_test_relative_dir()); ?></strong> for local preview testing only.</p>
-          </div>
-          <form method="post" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
-            <input type="hidden" name="test_action" value="upload_test_file">
-            <input type="file" name="test_file" required class="text-sm">
-            <button type="submit" class="bg-rajkot-rust hover:bg-red-700 text-white px-4 py-2 text-xs uppercase tracking-widest font-bold">Upload Test File</button>
-          </form>
-        </div>
-      </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <aside class="bg-white border border-gray-100 shadow-premium p-6">
@@ -574,46 +1168,38 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
             <p><strong>Uploaded:</strong> <?php echo $uploadedAt ? htmlspecialchars(date('M d, Y H:i', strtotime($uploadedAt))) : 'N/A'; ?></p>
           </div>
 
+          <?php if (!empty($projectLibrary)): ?>
           <div class="mt-6 pt-6 border-t border-gray-100">
-            <h3 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-3">Testing Files</h3>
-            <div class="space-y-3 max-h-64 overflow-auto pr-1">
-              <?php if (empty($testFiles)): ?>
-                <p class="text-xs text-gray-400">No uploaded testing files yet.</p>
-              <?php else: ?>
-                <?php foreach ($testFiles as $tf): ?>
-                  <div class="border border-gray-100 rounded p-3 bg-gray-50">
-                    <p class="text-xs font-bold text-foundation-grey break-all mb-1"><?php echo htmlspecialchars($tf['name']); ?></p>
-                    <p class="text-[11px] text-gray-500 mb-2"><?php echo htmlspecialchars(file_viewer_format_bytes($tf['size'])); ?> • <?php echo htmlspecialchars(date('M d, H:i', (int)$tf['mtime'])); ?></p>
-                    <div class="flex items-center gap-2">
-                      <a href="?file=<?php echo urlencode($tf['relative']); ?><?php echo $projectId > 0 ? '&project_id=' . (int)$projectId : ''; ?>" class="text-xs bg-foundation-grey hover:bg-rajkot-rust text-white px-2 py-1 no-underline">Open</a>
-                      <form method="post" onsubmit="return confirm('Delete this testing file?');" class="inline">
-                        <input type="hidden" name="test_action" value="delete_test_file">
-                        <input type="hidden" name="relative_path" value="<?php echo htmlspecialchars($tf['relative']); ?>">
-                        <button type="submit" class="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1">Delete</button>
-                      </form>
-                    </div>
-                  </div>
+            <h3 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-3"><?php echo $projectId > 0 ? 'Project Files' : 'File Manager'; ?></h3>
+            <div class="space-y-2 max-h-72 overflow-auto pr-1">
+                <?php foreach (array_slice($projectLibrary, 0, 80) as $entry): ?>
+                  <?php
+                    $entryKind = (string)($entry['kind'] ?? 'file');
+                    $entryId = (int)($entry['id'] ?? 0);
+                    $isActiveEntry = $resourceId > 0 && $resourceKind === $entryKind && $entryId === $resourceId;
+                    $entryExt = strtolower((string)($entry['ext'] ?? ''));
+                    $entryProjectId = (int)($entry['project_id'] ?? $projectId);
+                    $entryUrl = file_viewer_url([
+                      'kind' => $entryKind,
+                      'id' => $entryId,
+                      'project_id' => $entryProjectId,
+                      'ext' => $entryExt,
+                    ]);
+                  ?>
+                  <a href="<?php echo htmlspecialchars($entryUrl); ?>" class="block no-underline border rounded p-2 <?php echo $isActiveEntry ? 'border-rajkot-rust bg-red-50' : 'border-gray-100 bg-white hover:border-rajkot-rust'; ?>">
+                    <p class="text-xs font-semibold text-foundation-grey break-all"><?php echo htmlspecialchars((string)($entry['name'] ?? 'File')); ?></p>
+                    <p class="text-[10px] text-gray-500 mt-1">
+                      <?php echo htmlspecialchars(strtoupper($entryKind)); ?>
+                      <?php if (!empty($entry['project_name'])): ?> • <?php echo htmlspecialchars((string)$entry['project_name']); ?><?php endif; ?>
+                      <?php if (!empty($entry['uploaded_at'])): ?> • <?php echo htmlspecialchars(date('M d, H:i', strtotime((string)$entry['uploaded_at']))); ?><?php endif; ?>
+                      <?php if (!empty($entry['status'])): ?> • <?php echo htmlspecialchars((string)$entry['status']); ?><?php endif; ?>
+                    </p>
+                  </a>
                 <?php endforeach; ?>
-              <?php endif; ?>
             </div>
           </div>
+          <?php endif; ?>
 
-          <div class="mt-6 pt-6 border-t border-gray-100">
-            <h3 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-3">Testing History</h3>
-            <div class="space-y-2 max-h-56 overflow-auto pr-1">
-              <?php if (empty($testHistory)): ?>
-                <p class="text-xs text-gray-400">No history records yet.</p>
-              <?php else: ?>
-                <?php foreach (array_slice($testHistory, 0, 30) as $event): ?>
-                  <div class="text-xs border border-gray-100 bg-white p-2 rounded">
-                    <p class="font-semibold text-foundation-grey"><?php echo htmlspecialchars(strtoupper((string)($event['action'] ?? 'event'))); ?> • <?php echo htmlspecialchars((string)($event['status'] ?? '')); ?></p>
-                    <p class="text-gray-500 break-all"><?php echo htmlspecialchars((string)($event['file'] ?? '')); ?></p>
-                    <p class="text-gray-400"><?php echo htmlspecialchars(date('M d, Y H:i:s', strtotime((string)($event['timestamp'] ?? 'now')))); ?></p>
-                  </div>
-                <?php endforeach; ?>
-              <?php endif; ?>
-            </div>
-          </div>
         </aside>
 
         <section class="lg:col-span-2 bg-white border border-gray-100 shadow-premium p-6 min-h-[420px] flex flex-col">
@@ -621,6 +1207,9 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
             <h3 class="text-xl font-serif font-bold"><?php echo htmlspecialchars($fileName); ?></h3>
             <div class="flex items-center gap-2">
               <span class="text-[10px] uppercase tracking-widest px-2 py-1 bg-gray-50 border border-gray-100"><?php echo htmlspecialchars($status); ?></span>
+              <?php if ($isStereoPanorama): ?>
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 bg-slate-50 border border-slate-200 text-slate-700">Stereo VR</span>
+              <?php endif; ?>
             </div>
           </div>
           <?php if ($viewerMode === '360' && $previewUrl !== ''): ?>
@@ -637,6 +1226,9 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
                 </svg>
                 VR
               </button>
+              <?php if ($isStereoPanorama): ?>
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 bg-slate-100 border border-slate-200 text-slate-700">Left/Right Stereo Loaded</span>
+              <?php endif; ?>
             </div>
           <?php endif; ?>
           <div class="flex-grow border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
@@ -648,7 +1240,6 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
               <div class="h-full min-h-[520px] bg-slate-900 text-white flex flex-col">
                 <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-black/20">
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-widest bg-white/10 px-2 py-1 viewer-3d-chip">3D Interactive</span>
                     <span class="hidden sm:inline text-[10px] uppercase tracking-widest text-gray-300">Drag to rotate • Scroll to zoom</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-2 justify-end">
@@ -676,6 +1267,12 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
                   environment-image="neutral"
                   class="w-full h-[520px] bg-slate-950"
                 ></model-viewer>
+                <div id="inline3DError" class="viewer-3d-error" role="alert">
+                  <div>
+                    <p class="text-sm font-semibold mb-2">3D preview failed to load.</p>
+                    <a href="<?php echo htmlspecialchars($previewUrl); ?>" target="_blank" rel="noopener" class="inline-block text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open model directly</a>
+                  </div>
+                </div>
               </div>
             <?php elseif ($viewerMode === '360'): ?>
               <div id="panoViewer" class="w-full h-[520px]"></div>
@@ -688,6 +1285,40 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
                 <source src="<?php echo htmlspecialchars($previewUrl); ?>">
                 Your browser does not support video preview.
               </video>
+            <?php elseif ($viewerMode === 'cad'): ?>
+              <div class="h-full min-h-[520px] bg-slate-900 text-white flex flex-col">
+                <div class="px-4 py-3 border-b border-white/10 bg-black/20 text-[10px] uppercase tracking-widest text-gray-300">
+                  CAD Local Preview (<?php echo htmlspecialchars(strtoupper($ext)); ?>)
+                </div>
+                <div class="flex-1 min-h-0 bg-slate-950">
+                  <?php if ($cadPreviewExists): ?>
+                    <model-viewer
+                      src="<?php echo htmlspecialchars($cadPreviewUrl); ?>"
+                      camera-controls
+                      auto-rotate
+                      auto-rotate-delay="0"
+                      rotation-per-second="20deg"
+                      exposure="1"
+                      environment-image="neutral"
+                      class="w-full h-full"
+                    ></model-viewer>
+                  <?php else: ?>
+                    <div class="h-full min-h-[360px] flex flex-col items-center justify-center text-gray-400 px-8 text-center gap-4">
+                      <p>No local CAD preview generated yet.</p>
+                      <p class="text-xs text-gray-500">Configure local converter commands in environment:<br>CAD_DWG_CONVERTER_CMD / CAD_SKP_CONVERTER_CMD</p>
+                      <form method="post" class="inline-flex">
+                        <input type="hidden" name="test_action" value="generate_cad_preview">
+                        <input type="hidden" name="source_raw_path" value="<?php echo htmlspecialchars((string)$cadSourceRawPath); ?>">
+                        <input type="hidden" name="source_ext" value="<?php echo htmlspecialchars((string)$ext); ?>">
+                        <button type="submit" class="text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2">Generate Local Preview</button>
+                      </form>
+                    </div>
+                  <?php endif; ?>
+                </div>
+                <div class="px-4 py-3 border-t border-white/10 bg-black/30 flex gap-2">
+                  <a href="<?php echo htmlspecialchars($previewUrl); ?>" target="_blank" rel="noopener" class="text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open File</a>
+                </div>
+              </div>
             <?php else: ?>
               <div class="h-full min-h-[360px] flex flex-col items-center justify-center text-gray-500 gap-4 px-8 text-center">
                 <p>This file type cannot be previewed inline yet.</p>
@@ -725,6 +1356,12 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
             environment-image="neutral"
             class="viewer-3d-canvas"
           ></model-viewer>
+          <div id="modal3DError" class="viewer-3d-error" role="alert">
+            <div>
+              <p class="text-sm font-semibold mb-2">3D preview failed to load.</p>
+              <a href="<?php echo htmlspecialchars($previewUrl); ?>" target="_blank" rel="noopener" class="inline-block text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open model directly</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1214,7 +1851,7 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
           if (!vrPanoInitialized && window.pannellum) {
             vrPanoLeftViewer = pannellum.viewer('vrPanoLeft', {
               type: 'equirectangular',
-              panorama: <?php echo json_encode($previewUrl); ?>,
+              panorama: <?php echo json_encode($stereoLeftUrl !== '' ? $stereoLeftUrl : $previewUrl); ?>,
               autoLoad: true,
               compass: false,
               showZoomCtrl: false,
@@ -1229,7 +1866,7 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
 
             vrPanoRightViewer = pannellum.viewer('vrPanoRight', {
               type: 'equirectangular',
-              panorama: <?php echo json_encode($previewUrl); ?>,
+              panorama: <?php echo json_encode($stereoRightUrl !== '' ? $stereoRightUrl : $previewUrl); ?>,
               autoLoad: true,
               compass: false,
               showZoomCtrl: false,
@@ -1304,6 +1941,61 @@ if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true
             closeVr();
           }
         });
+      })();
+    </script>
+  <?php endif; ?>
+  <?php if ($viewerMode === '3d' && $previewUrl !== ''): ?>
+    <script>
+      (function () {
+        const modelEls = [
+          document.getElementById('inline3DViewer'),
+          document.getElementById('modal3DViewer'),
+          document.getElementById('vrModelLeft'),
+          document.getElementById('vrModelRight')
+        ].filter(Boolean);
+        const statusChip = document.getElementById('gpuRendererStatus');
+
+        if (modelEls.length === 0) {
+          return;
+        }
+
+        const hasWebGPU = typeof navigator !== 'undefined' && !!navigator.gpu;
+        if (hasWebGPU) {
+          modelEls.forEach(function (el) {
+            // model-viewer supports WebGPU through this renderer hint.
+            el.setAttribute('experimental-renderer', 'webgpu');
+          });
+          if (statusChip) {
+            statusChip.textContent = 'Renderer: WebGPU';
+          }
+        } else if (statusChip) {
+          statusChip.textContent = 'Renderer: WebGL';
+        }
+      })();
+    </script>
+  <?php endif; ?>
+  <?php if ($viewerMode === '3d' && $previewUrl !== ''): ?>
+    <script>
+      (function () {
+        const inlineViewer = document.getElementById('inline3DViewer');
+        const inlineError = document.getElementById('inline3DError');
+        const modalViewer = document.getElementById('modal3DViewer');
+        const modalError = document.getElementById('modal3DError');
+
+        function wireModelError(viewerEl, errorEl) {
+          if (!viewerEl || !errorEl) {
+            return;
+          }
+          viewerEl.addEventListener('error', function () {
+            errorEl.classList.add('is-visible');
+          });
+          viewerEl.addEventListener('load', function () {
+            errorEl.classList.remove('is-visible');
+          });
+        }
+
+        wireModelError(inlineViewer, inlineError);
+        wireModelError(modalViewer, modalError);
       })();
     </script>
   <?php endif; ?>

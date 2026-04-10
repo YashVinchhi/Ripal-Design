@@ -108,6 +108,50 @@ if (!function_exists('asset_url')) {
     }
 }
 
+if (!function_exists('file_viewer_url')) {
+    /**
+     * Build canonical URL for the file viewer.
+     *
+    * Supported params: kind (file|drawing), id, file, project_id, view, ext.
+     *
+     * @param array $params
+     * @return string
+     */
+    function file_viewer_url($params = []) {
+        $base = rtrim((string)base_path('admin/file_viewer.php'), '/');
+        $query = [];
+
+        $kind = strtolower(trim((string)($params['kind'] ?? '')));
+        $id = (int)($params['id'] ?? 0);
+        if (in_array($kind, ['file', 'drawing'], true) && $id > 0) {
+            $query['kind'] = $kind;
+            $query['id'] = $id;
+        }
+
+        $file = trim((string)($params['file'] ?? ''));
+        if ($file !== '') {
+            $query['file'] = $file;
+        }
+
+        $projectId = (int)($params['project_id'] ?? 0);
+        if ($projectId > 0) {
+            $query['project_id'] = $projectId;
+        }
+
+        $view = strtolower(trim((string)($params['view'] ?? '')));
+        if ($view !== '') {
+            $query['view'] = $view;
+        }
+
+        $ext = strtolower(trim((string)($params['ext'] ?? '')));
+        if ($ext !== '') {
+            $query['ext'] = $ext;
+        }
+
+        return empty($query) ? $base : ($base . '?' . http_build_query($query));
+    }
+}
+
 // ============================================================================
 // FLASH MESSAGES
 // ============================================================================

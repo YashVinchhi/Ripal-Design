@@ -63,14 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST[
 
 $drawings = [];
 if ($projectId > 0 && db_connected()) {
-    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(file_path,'') AS file, COALESCE(version,'v1') AS version, uploaded_at AS date, LOWER(REPLACE(status,' ', '_')) AS status
+    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(file_path,'') AS file, COALESCE(version,'v1') AS version, uploaded_at AS date, LOWER(REPLACE(status,' ', '_')) AS status, 'drawing' AS source_kind
         FROM project_drawings
         WHERE project_id = ?
         ORDER BY uploaded_at DESC", [$projectId]);
 }
 
 if (empty($drawings) && $projectId > 0 && db_connected()) {
-    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(filename,'') AS file, CONCAT('v', COALESCE(version,1)) AS version, uploaded_at AS date, 'approved' AS status
+    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(filename,'') AS file, CONCAT('v', COALESCE(version,1)) AS version, uploaded_at AS date, 'approved' AS status, 'file' AS source_kind
         FROM project_files
         WHERE project_id = ?
         ORDER BY uploaded_at DESC", [$projectId]);
@@ -205,6 +205,14 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                 <?php endif; ?>
                             </td>
                             <td class="px-10 py-8 text-right">
+                                <?php
+                                    $viewerKind = strtolower((string)($d['source_kind'] ?? 'drawing')) === 'file' ? 'file' : 'drawing';
+                                    $viewerUrl = file_viewer_url([
+                                        'kind' => $viewerKind,
+                                        'id' => (int)($d['id'] ?? 0),
+                                        'project_id' => (int)$projectId,
+                                    ]);
+                                ?>
                                 <?php if(in_array($d['status'], ['pending', 'under_review'], true)): ?>
                                     <div class="flex justify-end gap-3">
                                         <form method="post" class="flex gap-3">
@@ -219,7 +227,7 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                     </div>
                                 <?php else: ?>
                                     <div class="flex justify-end gap-3">
-                                        <button onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['file']); ?>&project_id=<?php echo (int)$projectId; ?>&project=Client Registry', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                                        <button onclick="window.open('<?php echo htmlspecialchars($viewerUrl, ENT_QUOTES, 'UTF-8'); ?>', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
                                         <!-- <button class="text-gray-300 hover:text-foundation-grey transition-colors p-2"><i data-lucide="history" class="w-5 h-5"></i></button> -->
                                         <button type="button" onclick="handleDownload('<?php echo addslashes($d['file']); ?>')" class="text-gray-300 hover:text-blue-600 transition-colors p-2" title="Registry Download"><i data-lucide="download" class="w-5 h-5"></i></button>
                                     </div>
