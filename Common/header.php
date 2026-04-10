@@ -111,7 +111,9 @@ foreach ($stylesheetCandidates as $candidate) {
 <?php endif; ?>
 
 <!-- Favicons -->
+<link rel="icon" href="<?php echo esc_attr($faviconImage); ?>" type="image/x-icon">
 <link rel="shortcut icon" href="<?php echo esc_attr($faviconImage); ?>" type="image/x-icon">
+<link rel="apple-touch-icon" href="<?php echo esc_attr($faviconImage); ?>">
 
 <!-- Header Navigation (Always loaded) -->
 <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header.css">

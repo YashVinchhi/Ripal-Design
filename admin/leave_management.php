@@ -32,7 +32,8 @@ if ($viewMode === 'archive') {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Leave Management | Ripal Design</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     function handleLeaveAction(employeeName, action, btn) {

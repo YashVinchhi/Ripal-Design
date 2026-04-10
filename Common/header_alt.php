@@ -35,7 +35,9 @@ foreach ($candidates as $c) {
     }
 }
 ?>
+<link rel="icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
 <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico">
 <!-- Immersive Navigation Header -->
 <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/Common/header.css">
 <?php if (isset($HEADER_MODE) && $HEADER_MODE === 'dashboard'): ?>
