@@ -71,6 +71,39 @@ try{
     $stmt = $pdo->prepare('INSERT INTO project_assignments (project_id, worker_id) VALUES (:project_id, :worker_id)');
     $stmt->execute(['project_id' => $project_id, 'worker_id' => $worker_id]);
 
+    $actorId = current_user_id();
+    $project = db_fetch('SELECT name, client_id FROM projects WHERE id = ? LIMIT 1', [$project_id]);
+    $projectName = (string)($project['name'] ?? ('Project #' . $project_id));
+
+    notifications_insert(
+        $worker_id,
+        'project',
+        'New Project Assigned',
+        'New project ' . $projectName . ' assigned.',
+        [
+            'actor_user_id' => $actorId,
+            'project_id' => $project_id,
+            'action_key' => 'project.assigned',
+            'deep_link' => rtrim((string)BASE_PATH, '/') . '/worker/project_details.php?id=' . $project_id,
+        ]
+    );
+
+    $clientId = (int)($project['client_id'] ?? 0);
+    if ($clientId > 0) {
+        notifications_insert(
+            $clientId,
+            'project',
+            'Team Assignment Updated',
+            'A worker was assigned to ' . $projectName . '.',
+            [
+                'actor_user_id' => $actorId,
+                'project_id' => $project_id,
+                'action_key' => 'project.assignment.updated',
+                'deep_link' => rtrim((string)BASE_PATH, '/') . '/client/client_files.php?project_id=' . $project_id,
+            ]
+        );
+    }
+
     echo json_encode(['success'=>true, 'message'=>'Worker assigned successfully.']);
     exit;
 } catch (Exception $e){

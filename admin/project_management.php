@@ -101,15 +101,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
     $projectType = trim((string)($_POST['project_type'] ?? 'Residential'));
     $budget = (float)preg_replace('/[^0-9.]/', '', (string)($_POST['project_budget'] ?? '0'));
     $location = trim((string)($_POST['project_location'] ?? ''));
+    $mapLink = trim((string)($_POST['project_map_link'] ?? ''));
     $ownerName = trim((string)($_POST['client_name'] ?? ''));
     $ownerContact = trim((string)($_POST['client_contact'] ?? ''));
     $ownerEmail = trim((string)($_POST['client_email'] ?? ''));
 
+    if ($mapLink !== '' && !is_valid_google_maps_url($mapLink)) {
+        set_flash('Please enter a valid Google Maps link.', 'error');
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    if ($mapLink !== '') {
+        $mapLink = canonicalize_google_maps_url($mapLink);
+    }
+
     if ($name !== '' && db_connected()) {
-        // Insert project and capture new ID so we can attach an uploaded photo
-        $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
-            $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
-        ]);
+        // Backward compatibility for databases that do not yet have projects.map_link.
+        $hasMapLinkColumn = db_column_exists('projects', 'map_link');
+        if (!$hasMapLinkColumn) {
+            try {
+                db_query('ALTER TABLE projects ADD COLUMN map_link TEXT DEFAULT NULL');
+            } catch (Throwable $e) {
+                // Ignore if ALTER is not allowed or column already exists in race conditions.
+            }
+            $hasMapLinkColumn = db_column_exists('projects', 'map_link');
+        }
+
+        // Insert project and capture new ID so we can attach an uploaded photo.
+        try {
+            if ($hasMapLinkColumn) {
+                $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, map_link, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                    $name, $budget, $location, $mapLink, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
+                ]);
+            } else {
+                $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
+                    $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
+                ]);
+            }
+        } catch (Throwable $e) {
+            // Final fallback to legacy INSERT for old schemas.
+            $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
+                $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
+            ]);
+        }
 
         $projectId = 0;
         $pdo = get_db();
@@ -121,6 +156,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
         if ($projectId > 0 && isset($_FILES['project_photo']) && is_array($_FILES['project_photo']) && (int)($_FILES['project_photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
             $storeProjectImage($projectId, $_FILES['project_photo']);
         }
+
+        notifications_notify_admins(
+            'project',
+            'New Project Created',
+            'A new project was created: ' . $name . '.',
+            [
+                'actor_user_id' => current_user_id(),
+                'project_id' => $projectId,
+                'action_key' => 'project.created',
+                'deep_link' => rtrim((string)BASE_PATH, '/') . '/admin/project_management.php',
+            ]
+        );
     }
 
     header('Location: ' . $_SERVER['PHP_SELF']);
@@ -528,6 +575,11 @@ $resolveRegion = static function (string $location): string {
                             <textarea name="project_location" rows="2" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm"></textarea>
                         </div>
                         <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Google Maps Link (Optional)</label>
+                            <input type="url" name="project_map_link" placeholder="https://maps.app.goo.gl/..." class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
+                            <p class="text-[10px] text-gray-400 mt-2 uppercase tracking-tight">Only Google Maps links are accepted.</p>
+                        </div>
+                        <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Project Cover Photo (optional)</label>
                             <input type="file" name="project_photo" accept="image/*" class="w-full bg-gray-50 border border-gray-200 p-2 outline-none focus:border-rajkot-rust text-sm">
                         </div>
@@ -558,7 +610,10 @@ $resolveRegion = static function (string $location): string {
                     },
                     project_name: "required",
                     project_budget: "required",
-                    project_location: "required"
+                    project_location: "required",
+                    project_map_link: {
+                        url: true
+                    }
                 },
                 messages: {
                     client_name: "Please enter the legal name",
@@ -566,7 +621,8 @@ $resolveRegion = static function (string $location): string {
                     client_email: "Valid registry email required",
                     project_name: "Project designation is mandatory",
                     project_budget: "Estimated budget required",
-                    project_location: "Site location must be specified"
+                    project_location: "Site location must be specified",
+                    project_map_link: "Please enter a valid URL"
                 },
                 submitHandler: function(form) {
                     form.submit();

@@ -85,6 +85,7 @@ $currentRole = strtolower(trim((string)(
     ?? $_SESSION['role']
     ?? 'unknown'
 )));
+$currentUserId = current_user_id();
 $uploaderLabel = $currentUser;
 if ($currentRole !== '') {
     $uploaderLabel .= ' (' . $currentRole . ')';
@@ -94,6 +95,7 @@ if ($action === 'add_team_member') {
     $name = trim((string)($_POST['worker_name'] ?? ''));
     $role = trim((string)($_POST['worker_role'] ?? ''));
     $contact = trim((string)($_POST['worker_contact'] ?? ''));
+    $workerUserId = (int)($_POST['worker_user_id'] ?? $body['worker_user_id'] ?? 0);
 
     if ($name === '' || $role === '' || $contact === '') {
         api_json(['success' => false, 'message' => 'All team member fields are required.'], 400);
@@ -103,8 +105,56 @@ if ($action === 'add_team_member') {
         $stmt = $db->prepare('INSERT INTO project_workers (project_id, worker_name, worker_role, worker_contact) VALUES (?, ?, ?, ?)');
         $stmt->execute([$projectId, $name, $role, $contact]);
 
+        $assignmentInserted = false;
+        if ($workerUserId > 0 && db_table_exists('project_assignments')) {
+            $existsStmt = $db->prepare('SELECT id FROM project_assignments WHERE project_id = ? AND worker_id = ? LIMIT 1');
+            $existsStmt->execute([$projectId, $workerUserId]);
+            $assignmentExists = (bool)$existsStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$assignmentExists) {
+                $assignStmt = $db->prepare('INSERT INTO project_assignments (project_id, worker_id) VALUES (?, ?)');
+                $assignStmt->execute([$projectId, $workerUserId]);
+                $assignmentInserted = true;
+            }
+        }
+
         $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
         $act->execute([$projectId, $currentUser, 'added team member', $name]);
+
+        if ($assignmentInserted) {
+            $actorId = current_user_id();
+            $project = db_fetch('SELECT name, client_id FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
+
+            notifications_insert(
+                $workerUserId,
+                'project',
+                'New Project Assigned',
+                'New project ' . $projectName . ' assigned.',
+                [
+                    'actor_user_id' => $actorId,
+                    'project_id' => $projectId,
+                    'action_key' => 'project.assigned',
+                    'deep_link' => rtrim((string)BASE_PATH, '/') . '/worker/project_details.php?id=' . $projectId,
+                ]
+            );
+
+            $clientId = (int)($project['client_id'] ?? 0);
+            if ($clientId > 0) {
+                notifications_insert(
+                    $clientId,
+                    'project',
+                    'Team Assignment Updated',
+                    'A worker was assigned to ' . $projectName . '.',
+                    [
+                        'actor_user_id' => $actorId,
+                        'project_id' => $projectId,
+                        'action_key' => 'project.assignment.updated',
+                        'deep_link' => rtrim((string)BASE_PATH, '/') . '/client/client_files.php?project_id=' . $projectId,
+                    ]
+                );
+            }
+        }
 
         api_json(['success' => true, 'message' => 'Team member added successfully.']);
     } catch (Exception $e) {
@@ -211,6 +261,27 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
             $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
             $act->execute([$projectId, $currentUser, 'uploaded drawing', $originalName]);
 
+            $participants = notifications_get_project_participants($projectId);
+            $clientId = (int)($participants['client_id'] ?? 0);
+            $project = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
+            if ($clientId > 0) {
+                notifications_insert(
+                    $clientId,
+                    'drawing',
+                    'Design Approval Required',
+                    'A new design drawing was uploaded for ' . $projectName . '. Please review it.',
+                    [
+                        'actor_user_id' => $currentUserId,
+                        'project_id' => $projectId,
+                        'entity_type' => 'drawing',
+                        'entity_id' => $newId,
+                        'action_key' => 'drawing.uploaded',
+                        'deep_link' => rtrim((string)BASE_PATH, '/') . '/client/client_files.php?project_id=' . $projectId,
+                    ]
+                );
+            }
+
             $viewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . $newId;
         } else {
             $typeLabel = $ext !== '' ? strtoupper($ext) : 'FILE';
@@ -220,6 +291,28 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
 
             $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
             $act->execute([$projectId, $currentUser, 'uploaded file', $originalName]);
+
+            $participants = notifications_get_project_participants($projectId);
+            $recipientIds = array_values(array_unique(array_filter(array_merge(
+                [(int)($participants['client_id'] ?? 0)],
+                array_map('intval', (array)($participants['worker_ids'] ?? []))
+            ))));
+            $project = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
+            notifications_insert_bulk(
+                $recipientIds,
+                'file',
+                'New Plan/File Uploaded',
+                $currentUser . ' uploaded ' . $originalName . ' in ' . $projectName . '.',
+                [
+                    'actor_user_id' => $currentUserId,
+                    'project_id' => $projectId,
+                    'entity_type' => 'file',
+                    'entity_id' => $newId,
+                    'action_key' => 'file.uploaded',
+                    'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . $projectId,
+                ]
+            );
 
             $viewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=file&id=' . $newId;
         }

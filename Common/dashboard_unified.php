@@ -138,7 +138,8 @@ $kpis = [
 if (db_connected() && db_table_exists('projects')) {
   if ($useWorkerProjectView && $sessionUserId > 0 && db_table_exists('project_assignments')) {
     $projects = db_fetch_all(
-      'SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, COALESCE(p.due,\'1970-01-01\') AS due, COALESCE(p.location,\'\') AS location, p.latitude, p.longitude
+      'SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, COALESCE(p.due,\'1970-01-01\') AS due, COALESCE(p.location,\'\') AS location,
+              COALESCE(NULLIF(p.address,\'\'), NULLIF(p.location,\'\'), \'\') AS address, p.latitude, p.longitude
              FROM project_assignments pa
              INNER JOIN projects p ON p.id = pa.project_id
              WHERE pa.worker_id = ?
@@ -150,7 +151,8 @@ if (db_connected() && db_table_exists('projects')) {
 
   if (empty($projects)) {
     $limit = $useWorkerProjectView ? 12 : 200;
-    $projects = db_fetch_all("SELECT id, name, status, COALESCE(progress,0) AS progress, COALESCE(due,'1970-01-01') AS due, COALESCE(location,'') AS location, latitude, longitude, budget FROM projects ORDER BY id DESC LIMIT {$limit}");
+    $projects = db_fetch_all("SELECT id, name, status, COALESCE(progress,0) AS progress, COALESCE(due,'1970-01-01') AS due, COALESCE(location,'') AS location,
+      COALESCE(NULLIF(address,''), NULLIF(location,''), '') AS address, latitude, longitude, budget FROM projects ORDER BY id DESC LIMIT {$limit}");
   }
 }
 
@@ -345,14 +347,36 @@ if ($useWorkerProjectView) {
                   <span class="text-xs text-gray-400 font-mono">#PRJ-<?php echo (int)($p['id'] ?? 0); ?></span>
                 </div>
                 <h3 class="text-lg font-serif font-bold group-hover:text-rajkot-rust transition-colors mb-2"><?php echo esc($p['name'] ?? 'Untitled'); ?></h3>
+                <?php
+                  $projectAddress = (string)(($p['address'] ?? '') !== '' ? $p['address'] : (($p['location'] ?? '') ?: 'Location not set'));
+                  $mapQuery = '';
+                  if (!empty($p['latitude']) && !empty($p['longitude'])) {
+                    $mapQuery = (string)$p['latitude'] . ',' . (string)$p['longitude'];
+                  } elseif ($projectAddress !== 'Location not set') {
+                    $mapQuery = $projectAddress;
+                  }
+                ?>
                 <div class="space-y-2 text-sm text-gray-500">
-                  <div class="flex items-center"><i data-lucide="map-pin" class="w-4 h-4 mr-2"></i><?php echo esc(($p['location'] ?? '') ?: 'Location not set'); ?></div>
+                  <div class="flex items-center"><i data-lucide="map-pin" class="w-4 h-4 mr-2"></i><?php echo esc($projectAddress); ?></div>
                   <div class="flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-2"></i>Due: <?php echo !empty($p['due']) && $p['due'] !== '1970-01-01' ? esc((string)$p['due']) : 'N/A'; ?></div>
                 </div>
+                <?php if ($useWorkerProjectView && $mapQuery !== ''): ?>
+                  <div class="mt-4 border border-gray-200 overflow-hidden rounded-sm">
+                    <iframe
+                      title="Project location map"
+                      class="w-full"
+                      style="aspect-ratio: 1 / 1;"
+                      loading="lazy"
+                      referrerpolicy="no-referrer-when-downgrade"
+                      src="https://maps.google.com/maps?q=<?php echo urlencode($mapQuery); ?>&amp;z=15&amp;output=embed"></iframe>
+                  </div>
+                <?php endif; ?>
               </div>
               <div class="mt-auto p-6 pt-0 flex gap-2 border-t border-gray-50 pt-6">
                 <?php if ($isClient): ?>
                   <a href="<?php echo esc_attr(base_path('worker/project_details.php?id=' . (int)$p['id'] . '&readonly=1')); ?>" class="flex-1 bg-foundation-grey hover:bg-black text-white text-center py-2 text-sm font-medium transition-colors no-underline">View</a>
+                <?php elseif ($useWorkerProjectView): ?>
+                  <a href="<?php echo esc_attr(base_path('worker/project_details.php?id=' . (int)$p['id'])); ?>" class="flex-1 bg-foundation-grey hover:bg-black text-white text-center py-2 text-sm font-medium transition-colors no-underline">View</a>
                 <?php else: ?>
                   <a href="<?php echo esc_attr(base_path('dashboard/project_details.php?id=' . (int)$p['id'])); ?>" class="flex-1 bg-foundation-grey hover:bg-black text-white text-center py-2 text-sm font-medium transition-colors no-underline">View</a>
                   <?php if (!$isReadOnly): ?>

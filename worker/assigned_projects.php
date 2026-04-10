@@ -7,7 +7,8 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 $projects = [];
 if (db_connected()) {
     if ($userId > 0) {
-        $projects = db_fetch_all("SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.due, COALESCE(p.location,'') AS location
+    $projects = db_fetch_all("SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.due, COALESCE(p.location,'') AS location,
+      COALESCE(NULLIF(p.address,''), NULLIF(p.location,''), '') AS address
             FROM project_assignments pa
             JOIN projects p ON p.id = pa.project_id
             WHERE pa.worker_id = ?
@@ -15,7 +16,8 @@ if (db_connected()) {
     }
 
     if (empty($projects)) {
-        $projects = db_fetch_all("SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.due, COALESCE(p.location,'') AS location
+    $projects = db_fetch_all("SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.due, COALESCE(p.location,'') AS location,
+      COALESCE(NULLIF(p.address,''), NULLIF(p.location,''), '') AS address
             FROM project_assignments pa
             JOIN projects p ON p.id = pa.project_id
             ORDER BY pa.assigned_at DESC LIMIT 50");
@@ -72,12 +74,18 @@ foreach ($projects as $p) {
             <h3 class="text-xl font-serif font-bold"><?php echo htmlspecialchars((string)$p['name']); ?></h3>
             <span class="text-[10px] uppercase tracking-widest px-2 py-1 bg-gray-50 border border-gray-100"><?php echo htmlspecialchars((string)$p['status']); ?></span>
           </div>
-          <p class="text-sm text-gray-500 mb-2"><?php echo htmlspecialchars((string)($p['location'] ?: 'Location not set')); ?></p>
+          <p class="text-sm text-gray-500 mb-2"><?php echo htmlspecialchars((string)(($p['address'] ?? '') !== '' ? $p['address'] : ($p['location'] ?? 'Location not set'))); ?></p>
           <p class="text-xs text-gray-400 mb-4">Due: <?php echo !empty($p['due']) ? htmlspecialchars((string)$p['due']) : 'N/A'; ?></p>
           <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-4">
             <div class="bg-rajkot-rust h-full" style="width: <?php echo (int)$p['progress']; ?>%"></div>
           </div>
-          <a href="project_details.php?id=<?php echo (int)$p['id']; ?>" class="inline-flex items-center justify-center bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all no-underline">Open Workspace</a>
+          <?php $directionTarget = (string)(($p['address'] ?? '') !== '' ? $p['address'] : ($p['location'] ?? '')); ?>
+          <div class="flex items-center gap-2">
+            <a href="project_details.php?id=<?php echo (int)$p['id']; ?>" class="inline-flex items-center justify-center bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all no-underline">Open Workspace</a>
+            <?php if ($directionTarget !== ''): ?>
+              <a href="https://www.google.com/maps/dir/?api=1&amp;destination=<?php echo urlencode($directionTarget); ?>" target="_blank" class="inline-flex items-center justify-center border border-rajkot-rust text-rajkot-rust hover:bg-rajkot-rust hover:text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all no-underline">Get Direction</a>
+            <?php endif; ?>
+          </div>
         </div>
         <?php endforeach; ?>
       </div>

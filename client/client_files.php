@@ -8,8 +8,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST[
     $drawingId = (int)$_POST['drawing_id'];
     $clientAction = (string)$_POST['client_action'];
     if ($drawingId > 0 && in_array($clientAction, ['authorize', 'redline'], true)) {
-        $status = $clientAction === 'authorize' ? 'approved' : 'changes_requested';
-        db_query('UPDATE project_drawings SET status = ? WHERE id = ?', [$status, $drawingId]);
+        $status = $clientAction === 'authorize' ? 'Approved' : 'Revision Needed';
+        db_query('UPDATE project_drawings SET status = ? WHERE id = ? AND project_id = ?', [$status, $drawingId, $projectId]);
+
+        $actorId = current_user_id();
+        $participants = notifications_get_project_participants($projectId);
+        $project = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+        $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
+
+        if ($clientAction === 'authorize') {
+            $recipientIds = array_map('intval', (array)($participants['worker_ids'] ?? []));
+            if (!empty($participants['created_by'])) {
+                $recipientIds[] = (int)$participants['created_by'];
+            }
+            notifications_insert_bulk(
+                $recipientIds,
+                'drawing',
+                'Design Approved by Client',
+                'A design drawing was approved by the client in ' . $projectName . '.',
+                [
+                    'actor_user_id' => $actorId,
+                    'project_id' => $projectId,
+                    'entity_type' => 'drawing',
+                    'entity_id' => $drawingId,
+                    'action_key' => 'drawing.approved',
+                    'deep_link' => rtrim((string)BASE_PATH, '/') . '/worker/project_details.php?id=' . $projectId,
+                ]
+            );
+        } else {
+            $recipientIds = [];
+            if (!empty($participants['created_by'])) {
+                $recipientIds[] = (int)$participants['created_by'];
+            }
+            $recipientIds = array_merge($recipientIds, notifications_get_user_ids_by_roles(['employee', 'admin']));
+            notifications_insert_bulk(
+                $recipientIds,
+                'drawing',
+                'Design Changes Requested',
+                'Client requested design changes in ' . $projectName . '.',
+                [
+                    'actor_user_id' => $actorId,
+                    'project_id' => $projectId,
+                    'entity_type' => 'drawing',
+                    'entity_id' => $drawingId,
+                    'action_key' => 'drawing.changes_requested',
+                    'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . $projectId,
+                ]
+            );
+        }
     }
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
@@ -159,7 +205,7 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                 <?php endif; ?>
                             </td>
                             <td class="px-10 py-8 text-right">
-                                <?php if($d['status'] === 'pending'): ?>
+                                <?php if(in_array($d['status'], ['pending', 'under_review'], true)): ?>
                                     <div class="flex justify-end gap-3">
                                         <form method="post" class="flex gap-3">
                                             <input type="hidden" name="drawing_id" value="<?php echo (int)$d['id']; ?>">

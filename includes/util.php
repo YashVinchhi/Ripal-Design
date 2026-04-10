@@ -375,6 +375,274 @@ if (!function_exists('db_table_exists')) {
     }
 }
 
+if (!function_exists('db_column_exists')) {
+    /**
+     * Check whether a column exists on a table in current database.
+     *
+     * @param string $table Table name
+     * @param string $column Column name
+     * @return bool
+     */
+    function db_column_exists($table, $column) {
+        $row = db_fetch(
+            'SELECT COUNT(*) AS c FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?',
+            [$table, $column]
+        );
+        return !empty($row) && (int)($row['c'] ?? 0) > 0;
+    }
+}
+
+if (!function_exists('is_valid_google_maps_url')) {
+    /**
+     * Validate if a URL points to a Google Maps domain.
+     *
+     * @param string $url
+     * @return bool
+     */
+    function is_valid_google_maps_url($url) {
+        $url = trim((string)$url);
+        if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $host = strtolower((string)(parse_url($url, PHP_URL_HOST) ?? ''));
+        if ($host === '') {
+            return false;
+        }
+
+        if (preg_match('/(^|\.)google\.[a-z.]+$/i', $host)) {
+            return true;
+        }
+
+        return in_array($host, ['maps.app.goo.gl', 'goo.gl'], true);
+    }
+}
+
+if (!function_exists('build_google_maps_embed_src')) {
+    /**
+     * Build a Google Maps iframe URL from a map link, coordinates, or plain address.
+     *
+     * @param string $value
+     * @return string
+     */
+    function build_google_maps_embed_src($value) {
+        $input = trim((string)$value);
+        if ($input === '') {
+            return '';
+        }
+
+        if (preg_match('/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/', $input, $m)) {
+            return 'https://www.google.com/maps?q=' . rawurlencode($m[1] . ',' . $m[2]) . '&z=17&output=embed';
+        }
+
+        if (filter_var($input, FILTER_VALIDATE_URL)) {
+            $normalized = normalize_google_maps_embed_query($input);
+            if ($normalized !== '') {
+                return 'https://www.google.com/maps?q=' . rawurlencode($normalized) . '&output=embed';
+            }
+        }
+
+        // Keep this generic so short links and place links both resolve.
+        return 'https://www.google.com/maps?q=' . rawurlencode($input) . '&output=embed';
+    }
+}
+
+if (!function_exists('normalize_google_maps_embed_query')) {
+    /**
+     * Best-effort normalization of Google Maps URLs into embeddable map queries.
+     *
+     * @param string $url
+     * @return string
+     */
+    function normalize_google_maps_embed_query($url) {
+        $url = trim((string)$url);
+        if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        $url = canonicalize_google_maps_url($url);
+
+        $parts = parse_url($url);
+        $path = rawurldecode((string)($parts['path'] ?? ''));
+        $queryString = (string)($parts['query'] ?? '');
+
+        if (preg_match('@/maps/search/([^/?]+)@', $path, $m)) {
+            $searchTerm = trim(str_replace('+', ' ', (string)$m[1]));
+            if ($searchTerm !== '') {
+                return $searchTerm;
+            }
+        }
+
+        if (preg_match('@/place/([^/]+)@', $path, $m)) {
+            return trim(str_replace('+', ' ', (string)$m[1]));
+        }
+
+        if (preg_match('/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/', $path, $m)) {
+            return $m[1] . ',' . $m[2];
+        }
+
+        $params = [];
+        parse_str($queryString, $params);
+        foreach (['q', 'query', 'destination', 'daddr'] as $key) {
+            $v = trim((string)($params[$key] ?? ''));
+            if ($v !== '') {
+                if (filter_var($v, FILTER_VALIDATE_URL)) {
+                    // Avoid recursive URL-as-query if nested links are present.
+                    continue;
+                }
+                return $v;
+            }
+        }
+
+        return '';
+    }
+}
+
+if (!function_exists('canonicalize_google_maps_url')) {
+    /**
+     * Expand/normalize Google Maps URLs (including short links) to a final URL.
+     *
+     * @param string $url
+     * @return string
+     */
+    function canonicalize_google_maps_url($url) {
+        $url = trim((string)$url);
+        if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        $host = strtolower((string)(parse_url($url, PHP_URL_HOST) ?? ''));
+        if (!in_array($host, ['maps.app.goo.gl', 'goo.gl'], true)) {
+            return $url;
+        }
+
+        $resolved = resolve_google_maps_short_url($url);
+        return $resolved !== '' ? $resolved : $url;
+    }
+}
+
+if (!function_exists('resolve_google_maps_short_url')) {
+    /**
+     * Resolve final URL for Google Maps short links using cURL if available.
+     *
+     * @param string $url
+     * @return string
+     */
+    function resolve_google_maps_short_url($url) {
+        $url = trim((string)$url);
+        if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        // Preferred resolver: cURL with redirect-follow.
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            if ($ch === false) {
+                return '';
+            }
+
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_MAXREDIRS => 8,
+                CURLOPT_CONNECTTIMEOUT => 4,
+                CURLOPT_TIMEOUT => 8,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; RipalMapsResolver/1.0)',
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2,
+            ]);
+
+            curl_exec($ch);
+            $effective = (string)curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+            $ok = curl_errno($ch) === 0 && $effective !== '';
+            curl_close($ch);
+
+            if ($ok && filter_var($effective, FILTER_VALIDATE_URL)) {
+                $effectiveHost = strtolower((string)(parse_url($effective, PHP_URL_HOST) ?? ''));
+                if ($effectiveHost !== '' && preg_match('/(^|\.)google\.[a-z.]+$/i', $effectiveHost)) {
+                    return $effective;
+                }
+            }
+        }
+
+        // Fallback resolver when cURL is unavailable or blocked.
+        if (!function_exists('get_headers')) {
+            return '';
+        }
+
+        $current = $url;
+        for ($i = 0; $i < 8; $i++) {
+            $headers = @get_headers($current, true);
+            if (!is_array($headers)) {
+                break;
+            }
+
+            $location = $headers['Location'] ?? null;
+            if ($location === null) {
+                break;
+            }
+
+            if (is_array($location)) {
+                $location = end($location);
+            }
+
+            $location = trim((string)$location);
+            if ($location === '') {
+                break;
+            }
+
+            if (!preg_match('#^https?://#i', $location)) {
+                $parts = parse_url($current);
+                $scheme = (string)($parts['scheme'] ?? 'https');
+                $host = (string)($parts['host'] ?? '');
+                if ($host === '') {
+                    break;
+                }
+                $location = $scheme . '://' . $host . (strpos($location, '/') === 0 ? '' : '/') . $location;
+            }
+
+            $current = $location;
+            if (!filter_var($current, FILTER_VALIDATE_URL)) {
+                break;
+            }
+        }
+
+        if (!filter_var($current, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        $currentHost = strtolower((string)(parse_url($current, PHP_URL_HOST) ?? ''));
+        if ($currentHost === '' || !preg_match('/(^|\.)google\.[a-z.]+$/i', $currentHost)) {
+            return '';
+        }
+
+        return $current;
+    }
+}
+
+if (!function_exists('build_google_maps_direction_href')) {
+    /**
+     * Build direction URL. If a Google Maps link is present, use it as-is.
+     *
+     * @param string $mapLink
+     * @param string $fallbackDestination
+     * @return string
+     */
+    function build_google_maps_direction_href($mapLink, $fallbackDestination = '') {
+        $mapLink = trim((string)$mapLink);
+        if ($mapLink !== '' && filter_var($mapLink, FILTER_VALIDATE_URL)) {
+            return $mapLink;
+        }
+
+        $destination = trim((string)$fallbackDestination);
+        if ($destination === '') {
+            return '';
+        }
+
+        return 'https://www.google.com/maps/dir/?api=1&destination=' . rawurlencode($destination);
+    }
+}
+
 if (!function_exists('get_user_role_counts')) {
     /**
      * Return user totals and per-role counts.
@@ -466,9 +734,18 @@ if (!function_exists('get_project_full_data')) {
         $project['goods'] = db_table_exists('project_goods')
             ? db_fetch_all('SELECT id, sku, name, description, unit, quantity, unit_price, total_price, created_at FROM project_goods WHERE project_id = ? ORDER BY created_at DESC', [$projectId])
             : [];
-        $project['drawings'] = db_table_exists('project_drawings')
-            ? db_fetch_all('SELECT * FROM project_drawings WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId])
-            : [];
+        if (db_table_exists('project_drawings')) {
+            $sessionUser = function_exists('current_user') ? current_user() : null;
+            $sessionRole = is_array($sessionUser) ? strtolower((string)($sessionUser['role'] ?? '')) : '';
+
+            if ($sessionRole === 'worker') {
+                $project['drawings'] = db_fetch_all('SELECT * FROM project_drawings WHERE project_id = ? AND LOWER(status) = "approved" ORDER BY uploaded_at DESC', [$projectId]);
+            } else {
+                $project['drawings'] = db_fetch_all('SELECT * FROM project_drawings WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId]);
+            }
+        } else {
+            $project['drawings'] = [];
+        }
         $project['files'] = db_table_exists('project_files')
             ? db_fetch_all('SELECT * FROM project_files WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId])
             : [];

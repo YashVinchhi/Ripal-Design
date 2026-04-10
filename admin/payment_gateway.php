@@ -15,6 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = (string)$_POST['action'];
     if ($action === 'batch_disbursement') {
         set_flash('Batch disbursement run initialized successfully.', 'success');
+
+        notifications_notify_admins(
+            'payment',
+            'Payment Batch Processed',
+            'A batch disbursement/payment workflow was initiated from Financial Gateway.',
+            [
+                'actor_user_id' => current_user_id(),
+                'action_key' => 'payment.received',
+                'deep_link' => rtrim((string)BASE_PATH, '/') . '/admin/payment_gateway.php',
+            ]
+        );
     }
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;

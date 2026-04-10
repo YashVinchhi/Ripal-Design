@@ -695,6 +695,11 @@ function enforce_request_write_permission() {
         }
     }
 
+    // Allow notification read APIs for authenticated users.
+    if (strpos($script, '/dashboard/api/notifications.php') !== false) {
+        return;
+    }
+
     $user = current_user();
     if (!is_array($user)) {
         return;
