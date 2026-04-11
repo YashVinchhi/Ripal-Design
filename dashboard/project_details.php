@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Project Details Page
  * Displays comprehensive project information with tabs for Overview, Team, Files, Activity, and Drawings
@@ -28,14 +29,16 @@ if (isset($_SESSION['project_error'])) {
 }
 
 // Helper function for date formatting
-function formatDate($dateString) {
+function formatDate($dateString)
+{
     if (empty($dateString)) return 'N/A';
     $date = strtotime($dateString);
     return date('M d, Y', $date);
 }
 
 // Normalize stored file paths into browser-openable URLs.
-function project_file_url($path) {
+function project_file_url($path)
+{
     $path = trim((string)$path);
     if ($path === '') {
         return '';
@@ -73,53 +76,53 @@ function project_file_url($path) {
 // Load project data
 $project = null;
 if ($projectId && isset($pdo) && $pdo instanceof PDO) {
-  try {
-    $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
-    $stmt->execute(['id' => $projectId]);
-    $project = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($project) {
-      // Load workers
-      $stmt = $pdo->prepare('SELECT * FROM project_workers WHERE project_id = :id');
-      $stmt->execute(['id' => $projectId]);
-      $project['workers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load milestones
-      $stmt = $pdo->prepare('SELECT * FROM project_milestones WHERE project_id = :id ORDER BY target_date ASC');
-      $stmt->execute(['id' => $projectId]);
-      $project['milestones'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load project files
-      $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
-      $stmt->execute(['id' => $projectId]);
-      $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load activity log
-      $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
-      $stmt->execute(['id' => $projectId]);
-      $project['activities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load drawings
-      $stmt = $pdo->prepare('SELECT * FROM project_drawings WHERE project_id = :id ORDER BY uploaded_at DESC');
-      $stmt->execute(['id' => $projectId]);
-      $project['drawings'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Format owner data
-      $project['owner'] = [
-        'name' => $project['owner_name'] ?? '',
-        'contact' => $project['owner_contact'] ?? '',
-        'email' => $project['owner_email'] ?? ''
-      ];
-    }
+    try {
+        $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
+        $stmt->execute(['id' => $projectId]);
+        $project = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($project) {
+            // Load workers
+            $stmt = $pdo->prepare('SELECT * FROM project_workers WHERE project_id = :id');
+            $stmt->execute(['id' => $projectId]);
+            $project['workers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load milestones
+            $stmt = $pdo->prepare('SELECT * FROM project_milestones WHERE project_id = :id ORDER BY target_date ASC');
+            $stmt->execute(['id' => $projectId]);
+            $project['milestones'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load project files
+            $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
+            $stmt->execute(['id' => $projectId]);
+            $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load activity log
+            $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
+            $stmt->execute(['id' => $projectId]);
+            $project['activities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load drawings
+            $stmt = $pdo->prepare('SELECT * FROM project_drawings WHERE project_id = :id ORDER BY uploaded_at DESC');
+            $stmt->execute(['id' => $projectId]);
+            $project['drawings'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Format owner data
+            $project['owner'] = [
+                'name' => $project['owner_name'] ?? '',
+                'contact' => $project['owner_contact'] ?? '',
+                'email' => $project['owner_email'] ?? ''
+            ];
+        }
     } catch (PDOException $e) {
-                error_log('Project details load error: ' . $e->getMessage());
-                $error = 'Unable to load project details right now.';
+        error_log('Project details load error: ' . $e->getMessage());
+        $error = 'Unable to load project details right now.';
     }
 }
 // Create tables if they don't exist
 if ($pdo instanceof PDO) {
-  try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS projects (
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS projects (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       status ENUM('planning', 'ongoing', 'paused', 'completed') DEFAULT 'ongoing',
@@ -143,7 +146,7 @@ if ($pdo instanceof PDO) {
             }
         }
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_workers (
+        $pdo->exec("CREATE TABLE IF NOT EXISTS project_workers (
       id INT AUTO_INCREMENT PRIMARY KEY,
       project_id INT NOT NULL,
       worker_name VARCHAR(255),
@@ -160,7 +163,7 @@ if ($pdo instanceof PDO) {
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
         )");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_files (
+        $pdo->exec("CREATE TABLE IF NOT EXISTS project_files (
       id INT AUTO_INCREMENT PRIMARY KEY,
       project_id INT NOT NULL,
       name VARCHAR(255) NOT NULL,
@@ -172,7 +175,7 @@ if ($pdo instanceof PDO) {
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_activity (
+        $pdo->exec("CREATE TABLE IF NOT EXISTS project_activity (
       id INT AUTO_INCREMENT PRIMARY KEY,
       project_id INT NOT NULL,
       user VARCHAR(255) NOT NULL,
@@ -182,7 +185,7 @@ if ($pdo instanceof PDO) {
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS project_drawings (
+        $pdo->exec("CREATE TABLE IF NOT EXISTS project_drawings (
       id INT AUTO_INCREMENT PRIMARY KEY,
       project_id INT NOT NULL,
       name VARCHAR(255) NOT NULL,
@@ -192,10 +195,141 @@ if ($pdo instanceof PDO) {
       uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )");
+    } catch (PDOException $e) {
+        $error = "Database Error: " . $e->getMessage();
+    }
+}
 
-  } catch (PDOException $e) {
-    $error = "Database Error: " . $e->getMessage();
-  }
+// AJAX Milestone endpoint (for in-place adding without full reload)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_milestone']) && $pdo instanceof PDO) {
+    $response = ['success' => false, 'message' => 'Unknown error'];
+    if ($isClientReadOnly) {
+        $response['message'] = 'Client accounts have view-only access.';
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit();
+    }
+
+    // Support delete via AJAX
+    $isDelete = !empty($_POST['ajax_milestone_delete']) || (!empty($_POST['delete']) && $_POST['delete'] == '1');
+    if ($isDelete) {
+        $mId = isset($_POST['milestone_id']) ? (int)$_POST['milestone_id'] : 0;
+        if ($mId <= 0) {
+            $response['message'] = 'Invalid milestone specified.';
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit();
+        }
+        try {
+            $del = $pdo->prepare('DELETE FROM project_milestones WHERE id = :id AND project_id = :project_id');
+            $del->execute(['id' => $mId, 'project_id' => $projectId]);
+
+            try {
+                $activityStmt = $pdo->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (:project_id, :user, :action, :item, NOW())');
+                $activityStmt->execute([
+                    'project_id' => $projectId,
+                    'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
+                    'action' => 'deleted milestone',
+                    'item' => 'milestone id ' . $mId
+                ]);
+            } catch (PDOException $e) {
+                error_log('Failed to log milestone deletion (AJAX): ' . $e->getMessage());
+            }
+
+            $response = ['success' => true, 'deleted' => $mId];
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit();
+        } catch (PDOException $e) {
+            error_log('AJAX milestone deletion failed: ' . $e->getMessage());
+            $response['message'] = 'Unable to delete milestone.';
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit();
+        }
+    }
+
+    $mTitle = trim((string)($_POST['title'] ?? ''));
+    if ($mTitle === '') {
+        $response['message'] = 'Title is required';
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit();
+    }
+
+    $mTarget = trim((string)($_POST['target_date'] ?? '')) ?: null;
+
+    try {
+        if ($projectId) {
+            $mId = isset($_POST['milestone_id']) ? (int)$_POST['milestone_id'] : 0;
+            if ($mId > 0) {
+                // update with optional target date
+                $stmt = $pdo->prepare('UPDATE project_milestones SET title = :title, target_date = :target_date WHERE id = :id AND project_id = :project_id');
+                $stmt->execute([
+                    'title' => $mTitle,
+                    'target_date' => $mTarget,
+                    'id' => $mId,
+                    'project_id' => $projectId
+                ]);
+
+                try {
+                    $activityStmt = $pdo->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (:project_id, :user, :action, :item, NOW())');
+                    $activityStmt->execute([
+                        'project_id' => $projectId,
+                        'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
+                        'action' => 'updated milestone',
+                        'item' => $mTitle
+                    ]);
+                } catch (PDOException $e) {
+                    error_log('Failed to log milestone update activity (AJAX): ' . $e->getMessage());
+                }
+
+                $response = ['success' => true, 'milestone' => ['id' => $mId, 'title' => $mTitle, 'target_date' => $mTarget, 'status' => 'pending']];
+                header('Content-Type: application/json');
+                echo json_encode($response);
+                exit();
+            } else {
+                // insert
+                $stmt = $pdo->prepare('INSERT INTO project_milestones (project_id, title, target_date, status) VALUES (:project_id, :title, :target_date, :status)');
+                $stmt->execute([
+                    'project_id' => $projectId,
+                    'title' => $mTitle,
+                    'target_date' => $mTarget,
+                    'status' => 'pending'
+                ]);
+                $newId = (int)$pdo->lastInsertId();
+
+                // Log activity
+                try {
+                    $activityStmt = $pdo->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (:project_id, :user, :action, :item, NOW())');
+                    $activityStmt->execute([
+                        'project_id' => $projectId,
+                        'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
+                        'action' => 'created milestone',
+                        'item' => $mTitle
+                    ]);
+                } catch (PDOException $e) {
+                    error_log('Failed to log milestone activity (AJAX): ' . $e->getMessage());
+                }
+
+                $response = ['success' => true, 'milestone' => ['id' => $newId, 'title' => $mTitle, 'target_date' => $mTarget, 'status' => 'pending']];
+                header('Content-Type: application/json');
+                echo json_encode($response);
+                exit();
+            }
+        } else {
+            $response['message'] = 'Project not specified.';
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit();
+        }
+    } catch (PDOException $e) {
+        error_log('AJAX milestone insert/update failed: ' . $e->getMessage());
+        $response['message'] = 'Database error';
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit();
+    }
 }
 
 // Handle form submission
@@ -203,207 +337,264 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
     if ($isClientReadOnly) {
         $error = 'Client accounts have view-only access for project details.';
     } else {
-  $name = $_POST['name'] ?? '';
-  $status = $_POST['status'] ?? 'ongoing';
-  $budget = $_POST['budget'] ?? 0;
-  $progress = $_POST['progress'] ?? 0;
-  $due = $_POST['due'] ?? null;
-    $currentLocation = trim((string)($project['location'] ?? ''));
-    $currentAddress = trim((string)($project['address'] ?? $currentLocation));
-    $location = array_key_exists('location', $_POST)
-        ? trim((string)$_POST['location'])
-        : $currentLocation;
-    $address = array_key_exists('address', $_POST)
-        ? trim((string)$_POST['address'])
-        : ($currentAddress !== '' ? $currentAddress : $location);
-    if ($address === '') {
-        $address = $location;
-    }
-  $ownerName = $_POST['owner_name'] ?? '';
-  $ownerContact = $_POST['owner_contact'] ?? '';
-  $ownerEmail = $_POST['owner_email'] ?? '';
-    $mapLink = array_key_exists('map_link', $_POST)
+        // Quick assign owner action (from Overview tab select or Owner modal)
+        if (isset($_POST['assign_owner_id'])) {
+            $assignId = (int)($_POST['assign_owner_id'] ?? 0);
+            try {
+                if ($projectId) {
+                    $previousOwnerName = $project['owner_name'] ?? '';
+                    if ($assignId > 0) {
+                        $uStmt = $pdo->prepare("SELECT COALESCE(NULLIF(full_name, ''), TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')))) AS full_name, COALESCE(email, username) AS contact, email FROM users WHERE id = :id LIMIT 1");
+                        $uStmt->execute(['id' => $assignId]);
+                        $u = $uStmt->fetch(PDO::FETCH_ASSOC);
+                        $newOwnerName = (string)($u['full_name'] ?? ($u['contact'] ?? ''));
+                        $newOwnerEmail = (string)($u['email'] ?? ($u['contact'] ?? ''));
+                        $newOwnerContact = (string)($u['contact'] ?? '');
+                    } else {
+                        // Unassign
+                        $newOwnerName = '';
+                        $newOwnerEmail = '';
+                        $newOwnerContact = '';
+                    }
+
+                    $upd = $pdo->prepare('UPDATE projects SET owner_name = :owner_name, owner_contact = :owner_contact, owner_email = :owner_email WHERE id = :id');
+                    $upd->execute([
+                        'owner_name' => $newOwnerName,
+                        'owner_contact' => $newOwnerContact,
+                        'owner_email' => $newOwnerEmail,
+                        'id' => $projectId,
+                    ]);
+
+                    // Log the owner change into project_activity so it appears in Activity tab
+                    try {
+                        $actor = $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin';
+                        $activityAction = 'updated owner';
+                        if ($assignId > 0) {
+                            $item = trim(($previousOwnerName ? 'from ' . $previousOwnerName . ' to ' : 'to ') . $newOwnerName);
+                        } else {
+                            $item = $previousOwnerName ? 'unassigned (was ' . $previousOwnerName . ')' : 'unassigned';
+                        }
+                        $activityStmt = $pdo->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (:project_id, :user, :action, :item, NOW())');
+                        $activityStmt->execute([
+                            'project_id' => $projectId,
+                            'user' => $actor,
+                            'action' => $activityAction,
+                            'item' => $item
+                        ]);
+                    } catch (PDOException $e) {
+                        error_log('Failed to log owner change activity: ' . $e->getMessage());
+                    }
+
+                    $_SESSION['project_success'] = 'Project owner updated successfully!';
+                    header('Location: project_details.php?id=' . (int)$projectId);
+                    exit();
+                }
+            } catch (Exception $e) {
+                error_log('Assign owner failed: ' . $e->getMessage());
+                $error = 'Unable to assign project owner.';
+            }
+        }
+        $name = $_POST['name'] ?? '';
+        $status = $_POST['status'] ?? 'ongoing';
+        $budget = $_POST['budget'] ?? 0;
+        $progress = $_POST['progress'] ?? 0;
+        $due = $_POST['due'] ?? null;
+        $currentLocation = trim((string)($project['location'] ?? ''));
+        $currentAddress = trim((string)($project['address'] ?? $currentLocation));
+        $location = array_key_exists('location', $_POST)
+            ? trim((string)$_POST['location'])
+            : $currentLocation;
+        $address = array_key_exists('address', $_POST)
+            ? trim((string)$_POST['address'])
+            : ($currentAddress !== '' ? $currentAddress : $location);
+        if ($address === '') {
+            $address = $location;
+        }
+        $ownerName = $_POST['owner_name'] ?? '';
+        $ownerContact = $_POST['owner_contact'] ?? '';
+        $ownerEmail = $_POST['owner_email'] ?? '';
+        $mapLink = array_key_exists('map_link', $_POST)
             ? trim((string)$_POST['map_link'])
             : trim((string)($project['map_link'] ?? ''));
-    if ($mapLink !== '' && !filter_var($mapLink, FILTER_VALIDATE_URL)) {
-        // Unified field accepts plain address/place text as well.
-        $mapLink = 'https://www.google.com/maps?q=' . rawurlencode($mapLink);
-    }
-
-  if (empty($name)) {
-    $error = 'Project name is required';
-    } elseif ($mapLink !== '' && !is_valid_google_maps_url($mapLink)) {
-        $error = 'Please enter a valid Google Maps link.';
-  } else {
-        if ($mapLink !== '') {
-            $mapLink = canonicalize_google_maps_url($mapLink);
+        if ($mapLink !== '' && !filter_var($mapLink, FILTER_VALIDATE_URL)) {
+            // Unified field accepts plain address/place text as well.
+            $mapLink = 'https://www.google.com/maps?q=' . rawurlencode($mapLink);
         }
 
-        $derivedMapAddress = $mapLink !== '' ? trim((string)normalize_google_maps_embed_query($mapLink)) : '';
-        $derivedMapLooksLikeCoordinates = (bool)preg_match('/^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/', $derivedMapAddress);
-        if ($derivedMapAddress !== '' && !$derivedMapLooksLikeCoordinates) {
-            if ($location === '') {
-                $location = $derivedMapAddress;
+        if (empty($name)) {
+            $error = 'Project name is required';
+        } elseif ($mapLink !== '' && !is_valid_google_maps_url($mapLink)) {
+            $error = 'Please enter a valid Google Maps link.';
+        } else {
+            if ($mapLink !== '') {
+                $mapLink = canonicalize_google_maps_url($mapLink);
             }
-            if ($address === '') {
-                $address = $derivedMapAddress;
+
+            $derivedMapAddress = $mapLink !== '' ? trim((string)normalize_google_maps_embed_query($mapLink)) : '';
+            $derivedMapLooksLikeCoordinates = (bool)preg_match('/^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/', $derivedMapAddress);
+            if ($derivedMapAddress !== '' && !$derivedMapLooksLikeCoordinates) {
+                if ($location === '') {
+                    $location = $derivedMapAddress;
+                }
+                if ($address === '') {
+                    $address = $derivedMapAddress;
+                }
             }
-        }
-    try {
-      if ($projectId) {
-                $previousStatus = strtolower((string)($project['status'] ?? ''));
-        // Update existing project
-        $stmt = $pdo->prepare('
+            try {
+                if ($projectId) {
+                    $previousStatus = strtolower((string)($project['status'] ?? ''));
+                    // Update existing project
+                    $stmt = $pdo->prepare('
           UPDATE projects 
           SET name = :name, status = :status, budget = :budget, 
               progress = :progress, due = :due, location = :location, map_link = :map_link, address = :address,
               owner_name = :owner_name, owner_contact = :owner_contact, owner_email = :owner_email
           WHERE id = :id
         ');
-        $stmt->execute([
-          'id' => $projectId,
-          'name' => $name,
-          'status' => $status,
-          'budget' => $budget,
-          'progress' => $progress,
-          'due' => $due,
-          'location' => $location,
-          'map_link' => $mapLink,
-                    'address' => $address,
-          'owner_name' => $ownerName,
-          'owner_contact' => $ownerContact,
-          'owner_email' => $ownerEmail
-        ]);
-        $_SESSION['project_success'] = 'Project updated successfully!';
-        
-        // Log activity
-        $activityStmt = $pdo->prepare('
+                    $stmt->execute([
+                        'id' => $projectId,
+                        'name' => $name,
+                        'status' => $status,
+                        'budget' => $budget,
+                        'progress' => $progress,
+                        'due' => $due,
+                        'location' => $location,
+                        'map_link' => $mapLink,
+                        'address' => $address,
+                        'owner_name' => $ownerName,
+                        'owner_contact' => $ownerContact,
+                        'owner_email' => $ownerEmail
+                    ]);
+                    $_SESSION['project_success'] = 'Project updated successfully!';
+
+                    // Log activity
+                    $activityStmt = $pdo->prepare('
           INSERT INTO project_activity (project_id, user, action, item, created_at)
           VALUES (:project_id, :user, :action, :item, NOW())
         ');
-                $activityStmt->execute([
-          'project_id' => $projectId,
-                    'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
-          'action' => 'updated project',
-          'item' => 'Project details'
-        ]);
+                    $activityStmt->execute([
+                        'project_id' => $projectId,
+                        'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
+                        'action' => 'updated project',
+                        'item' => 'Project details'
+                    ]);
 
-                if ($previousStatus !== 'completed' && strtolower((string)$status) === 'completed') {
-                    notifications_notify_admins(
-                        'project',
-                        'Project Completed',
-                        'Project marked as completed: ' . $name . '.',
-                        [
-                            'actor_user_id' => current_user_id(),
-                            'project_id' => (int)$projectId,
-                            'action_key' => 'project.completed',
-                            'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)$projectId,
-                        ]
-                    );
-                }
+                    if ($previousStatus !== 'completed' && strtolower((string)$status) === 'completed') {
+                        notifications_notify_admins(
+                            'project',
+                            'Project Completed',
+                            'Project marked as completed: ' . $name . '.',
+                            [
+                                'actor_user_id' => current_user_id(),
+                                'project_id' => (int)$projectId,
+                                'action_key' => 'project.completed',
+                                'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)$projectId,
+                            ]
+                        );
+                    }
 
-                                header('Location: project_details.php?id=' . (int)$projectId);
-                                exit;
-      } else {
-        // Create new project
-        $stmt = $pdo->prepare('
+                    header('Location: project_details.php?id=' . (int)$projectId);
+                    exit;
+                } else {
+                    // Create new project
+                    $stmt = $pdo->prepare('
                     INSERT INTO projects (name, status, budget, progress, due, location, map_link, address, owner_name, owner_contact, owner_email)
                                         VALUES (:name, :status, :budget, :progress, :due, :location, :map_link, :address, :owner_name, :owner_contact, :owner_email)
         ');
-        $stmt->execute([
-          'name' => $name,
-          'status' => $status,
-          'budget' => $budget,
-          'progress' => $progress,
-          'due' => $due,
-          'location' => $location,
-          'map_link' => $mapLink,
-                    'address' => $address,
-          'owner_name' => $ownerName,
-          'owner_contact' => $ownerContact,
-          'owner_email' => $ownerEmail
-        ]);
-        $projectId = $pdo->lastInsertId();
-        
-        // Log activity for new project
-        $activityStmt = $pdo->prepare('
+                    $stmt->execute([
+                        'name' => $name,
+                        'status' => $status,
+                        'budget' => $budget,
+                        'progress' => $progress,
+                        'due' => $due,
+                        'location' => $location,
+                        'map_link' => $mapLink,
+                        'address' => $address,
+                        'owner_name' => $ownerName,
+                        'owner_contact' => $ownerContact,
+                        'owner_email' => $ownerEmail
+                    ]);
+                    $projectId = $pdo->lastInsertId();
+
+                    // Log activity for new project
+                    $activityStmt = $pdo->prepare('
           INSERT INTO project_activity (project_id, user, action, item, created_at)
           VALUES (:project_id, :user, :action, :item, NOW())
         ');
-                $activityStmt->execute([
-          'project_id' => $projectId,
-                    'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
-          'action' => 'created project',
-          'item' => $name
-        ]);
+                    $activityStmt->execute([
+                        'project_id' => $projectId,
+                        'user' => $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'Admin',
+                        'action' => 'created project',
+                        'item' => $name
+                    ]);
 
-                notifications_notify_admins(
-                    'project',
-                    'New Project Created',
-                    'A new project was created: ' . $name . '.',
-                    [
-                        'actor_user_id' => current_user_id(),
-                        'project_id' => (int)$projectId,
-                        'action_key' => 'project.created',
-                        'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)$projectId,
-                    ]
-                );
+                    notifications_notify_admins(
+                        'project',
+                        'New Project Created',
+                        'A new project was created: ' . $name . '.',
+                        [
+                            'actor_user_id' => current_user_id(),
+                            'project_id' => (int)$projectId,
+                            'action_key' => 'project.created',
+                            'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)$projectId,
+                        ]
+                    );
 
-                $_SESSION['project_success'] = 'Project created successfully!';
-                header('Location: dashboard.php');
-        exit;
-      }
-    } catch (PDOException $e) {
-      $error = "Database Error: " . $e->getMessage();
-    }
-  }
+                    $_SESSION['project_success'] = 'Project created successfully!';
+                    header('Location: dashboard.php');
+                    exit;
+                }
+            } catch (PDOException $e) {
+                $error = "Database Error: " . $e->getMessage();
+            }
+        }
     }
 }
 
 // Load project data
 $project = null;
 if ($projectId && $pdo instanceof PDO) {
-  try {
-    $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
-    $stmt->execute(['id' => $projectId]);
-    $project = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($project) {
-      // Load workers
-      $stmt = $pdo->prepare('SELECT * FROM project_workers WHERE project_id = :id');
-      $stmt->execute(['id' => $projectId]);
-      $project['workers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load milestones
-      $stmt = $pdo->prepare('SELECT * FROM project_milestones WHERE project_id = :id ORDER BY target_date ASC');
-      $stmt->execute(['id' => $projectId]);
-      $project['milestones'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load project files
-      $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
-      $stmt->execute(['id' => $projectId]);
-      $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load activity log
-      $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
-      $stmt->execute(['id' => $projectId]);
-      $project['activities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Load drawings
-      $stmt = $pdo->prepare('SELECT * FROM project_drawings WHERE project_id = :id ORDER BY uploaded_at DESC');
-      $stmt->execute(['id' => $projectId]);
-      $project['drawings'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      
-      // Format owner data
-      $project['owner'] = [
-        'name' => $project['owner_name'] ?? '',
-        'contact' => $project['owner_contact'] ?? '',
-        'email' => $project['owner_email'] ?? ''
-      ];
+    try {
+        $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
+        $stmt->execute(['id' => $projectId]);
+        $project = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($project) {
+            // Load workers
+            $stmt = $pdo->prepare('SELECT * FROM project_workers WHERE project_id = :id');
+            $stmt->execute(['id' => $projectId]);
+            $project['workers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load milestones
+            $stmt = $pdo->prepare('SELECT * FROM project_milestones WHERE project_id = :id ORDER BY target_date ASC');
+            $stmt->execute(['id' => $projectId]);
+            $project['milestones'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load project files
+            $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
+            $stmt->execute(['id' => $projectId]);
+            $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load activity log
+            $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
+            $stmt->execute(['id' => $projectId]);
+            $project['activities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Load drawings
+            $stmt = $pdo->prepare('SELECT * FROM project_drawings WHERE project_id = :id ORDER BY uploaded_at DESC');
+            $stmt->execute(['id' => $projectId]);
+            $project['drawings'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Format owner data
+            $project['owner'] = [
+                'name' => $project['owner_name'] ?? '',
+                'contact' => $project['owner_contact'] ?? '',
+                'email' => $project['owner_email'] ?? ''
+            ];
+        }
+    } catch (PDOException $e) {
+        $error = "Database Error: " . $e->getMessage();
     }
-  } catch (PDOException $e) {
-    $error = "Database Error: " . $e->getMessage();
-  }
 }
 
 // Sample data fallback
@@ -432,53 +623,53 @@ if (!$project && !$projectId) {
 }
 
 if (!$project) {
-  $project = [
-    'id' => $projectId ?? 1,
-    'name' => 'Shanti Sadan',
-    'status' => 'ongoing',
-    'budget' => 4500000,
-    'progress' => 45,
-    'due' => date('Y-m-d', strtotime('+30 days')),
-    'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-    'map_link' => '',
-    'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-    'owner' => [
-      'name' => 'Amitbhai Patel',
-      'contact' => '+91 98765 43210',
-      'email' => 'amit.patel@example.com'
-    ],
-    'workers' => [
-      ['worker_name' => 'Rameshbhai Patel', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
-      ['worker_name' => 'Sureshbhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
-      ['worker_name' => 'Mohanbhai Ahir', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
-      ['worker_name' => 'Vijaybhai Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
-      ['worker_name' => 'Kiranbhai Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
-      ['worker_name' => 'Anilbhai Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
-    ],
-    'milestones' => [
-      ['title' => 'Foundation Completion', 'target_date' => '2026-02-28', 'status' => 'active'],
-      ['title' => 'Material Procurement', 'target_date' => '2026-03-15', 'status' => 'pending'],
-      ['title' => 'Electrical Rough-in', 'target_date' => '2026-04-05', 'status' => 'pending']
-    ],
-    'files' => [
-      ['id' => 1, 'name' => 'Site Plan.pdf', 'type' => 'PDF', 'size' => '2.4 MB', 'uploaded_at' => '2026-02-10 14:30:00', 'uploaded_by' => 'Admin', 'file_path' => '#'],
-      ['id' => 2, 'name' => 'Budget Estimate.xlsx', 'type' => 'Excel', 'size' => '856 KB', 'uploaded_at' => '2026-02-08 10:15:00', 'uploaded_by' => 'Amit Patel', 'file_path' => '#'],
-      ['id' => 3, 'name' => 'Design Mockup.jpg', 'type' => 'Image', 'size' => '4.2 MB', 'uploaded_at' => '2026-02-05 16:45:00', 'uploaded_by' => 'Architect', 'file_path' => '#'],
-      ['id' => 4, 'name' => 'Contract Agreement.pdf', 'type' => 'PDF', 'size' => '1.8 MB', 'uploaded_at' => '2026-01-28 09:00:00', 'uploaded_by' => 'Legal Team', 'file_path' => '#']
-    ],
-    'activities' => [
-      ['id' => 1, 'user' => 'Rameshbhai Patel', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
-      ['id' => 2, 'user' => 'Admin', 'action' => 'uploaded file', 'item' => 'Progress Photos.zip', 'created_at' => date('Y-m-d H:i:s', strtotime('-4 hours'))],
-      ['id' => 3, 'user' => 'Sureshbhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
-      ['id' => 4, 'user' => 'Vijaybhai Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
-    ],
-    'drawings' => [
-      ['id' => 1, 'name' => 'Floor Plan - Ground Floor', 'version' => 'v2.3', 'uploaded_at' => '2026-02-10 12:00:00', 'status' => 'Approved', 'file_path' => '#'],
-      ['id' => 2, 'name' => 'Elevation - Front View', 'version' => 'v1.8', 'uploaded_at' => '2026-02-08 11:30:00', 'status' => 'Under Review', 'file_path' => '#'],
-      ['id' => 3, 'name' => 'Electrical Layout', 'version' => 'v3.1', 'uploaded_at' => '2026-02-05 14:20:00', 'status' => 'Approved', 'file_path' => '#'],
-      ['id' => 4, 'name' => 'Plumbing Schematic', 'version' => 'v2.0', 'uploaded_at' => '2026-01-30 09:45:00', 'status' => 'Approved', 'file_path' => '#']
-    ]
-  ];
+    $project = [
+        'id' => $projectId ?? 1,
+        'name' => 'Shanti Sadan',
+        'status' => 'ongoing',
+        'budget' => 4500000,
+        'progress' => 45,
+        'due' => date('Y-m-d', strtotime('+30 days')),
+        'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
+        'map_link' => '',
+        'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
+        'owner' => [
+            'name' => 'Amitbhai Patel',
+            'contact' => '+91 98765 43210',
+            'email' => 'amit.patel@example.com'
+        ],
+        'workers' => [
+            ['worker_name' => 'Rameshbhai Patel', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
+            ['worker_name' => 'Sureshbhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
+            ['worker_name' => 'Mohanbhai Ahir', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
+            ['worker_name' => 'Vijaybhai Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
+            ['worker_name' => 'Kiranbhai Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
+            ['worker_name' => 'Anilbhai Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
+        ],
+        'milestones' => [
+            ['title' => 'Foundation Completion', 'target_date' => '2026-02-28', 'status' => 'active'],
+            ['title' => 'Material Procurement', 'target_date' => '2026-03-15', 'status' => 'pending'],
+            ['title' => 'Electrical Rough-in', 'target_date' => '2026-04-05', 'status' => 'pending']
+        ],
+        'files' => [
+            ['id' => 1, 'name' => 'Site Plan.pdf', 'type' => 'PDF', 'size' => '2.4 MB', 'uploaded_at' => '2026-02-10 14:30:00', 'uploaded_by' => 'Admin', 'file_path' => '#'],
+            ['id' => 2, 'name' => 'Budget Estimate.xlsx', 'type' => 'Excel', 'size' => '856 KB', 'uploaded_at' => '2026-02-08 10:15:00', 'uploaded_by' => 'Amit Patel', 'file_path' => '#'],
+            ['id' => 3, 'name' => 'Design Mockup.jpg', 'type' => 'Image', 'size' => '4.2 MB', 'uploaded_at' => '2026-02-05 16:45:00', 'uploaded_by' => 'Architect', 'file_path' => '#'],
+            ['id' => 4, 'name' => 'Contract Agreement.pdf', 'type' => 'PDF', 'size' => '1.8 MB', 'uploaded_at' => '2026-01-28 09:00:00', 'uploaded_by' => 'Legal Team', 'file_path' => '#']
+        ],
+        'activities' => [
+            ['id' => 1, 'user' => 'Rameshbhai Patel', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
+            ['id' => 2, 'user' => 'Admin', 'action' => 'uploaded file', 'item' => 'Progress Photos.zip', 'created_at' => date('Y-m-d H:i:s', strtotime('-4 hours'))],
+            ['id' => 3, 'user' => 'Sureshbhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
+            ['id' => 4, 'user' => 'Vijaybhai Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
+        ],
+        'drawings' => [
+            ['id' => 1, 'name' => 'Floor Plan - Ground Floor', 'version' => 'v2.3', 'uploaded_at' => '2026-02-10 12:00:00', 'status' => 'Approved', 'file_path' => '#'],
+            ['id' => 2, 'name' => 'Elevation - Front View', 'version' => 'v1.8', 'uploaded_at' => '2026-02-08 11:30:00', 'status' => 'Under Review', 'file_path' => '#'],
+            ['id' => 3, 'name' => 'Electrical Layout', 'version' => 'v3.1', 'uploaded_at' => '2026-02-05 14:20:00', 'status' => 'Approved', 'file_path' => '#'],
+            ['id' => 4, 'name' => 'Plumbing Schematic', 'version' => 'v2.0', 'uploaded_at' => '2026-01-30 09:45:00', 'status' => 'Approved', 'file_path' => '#']
+        ]
+    ];
 }
 
 // Format budget for display
@@ -501,13 +692,16 @@ $projectLocationSentenceValue = $projectAddressForMap;
 if ($projectLocationFromMapLink !== '' && !$projectMapLinkLooksLikeCoordinates) {
     $projectLocationSentenceValue = $projectLocationFromMapLink;
 }
+// Provide a Google Maps directions href and a display text variable used by the header.
+$projectDirectionHref = function_exists('build_google_maps_direction_href') ? build_google_maps_direction_href($projectMapLink, $projectMapSeed) : '';
+$projectLocationText = $projectLocationSentenceValue !== '' ? $projectLocationSentenceValue : 'Address is not available yet. Add the location above to enable map preview.';
 
 // Status badge colors
 $statusColors = [
-  'planning' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-  'ongoing' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-  'paused' => 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
-  'completed' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+    'planning' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+    'ongoing' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+    'paused' => 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+    'completed' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
 ];
 $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
 // Load registered users with role 'worker' for quick assignment picker
@@ -525,6 +719,19 @@ if ($pdo instanceof PDO) {
         error_log('Failed to load worker users: ' . $e->getMessage());
         $workerUsers = [];
     }
+        // Load possible owner candidates (clients, employees, admins) for quick assignment
+        $ownerCandidates = [];
+        try {
+                if (function_exists('db_table_exists') && db_table_exists('users')) {
+                // Restrict owner candidates to staff roles only (workers and employees)
+                $ownersStmt = $pdo->prepare("SELECT id, COALESCE(NULLIF(full_name, ''), TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')))) AS full_name, COALESCE(email, username) AS contact, role FROM users WHERE role IN ('worker','employee') ORDER BY full_name ASC");
+                $ownersStmt->execute();
+                $ownerCandidates = $ownersStmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+        } catch (PDOException $e) {
+            error_log('Failed to load owner candidates: ' . $e->getMessage());
+            $ownerCandidates = [];
+        }
 }
 ?>
 <!DOCTYPE html>
@@ -655,47 +862,130 @@ if ($pdo instanceof PDO) {
         main a:hover {
             color: #5a0e07;
         }
+
+        /* Make project details inputs use a readable light-gray surface.
+           Applied for both light and dark modes so fields remain consistent. */
+        #projectDetailsForm input[type="text"],
+        #projectDetailsForm input[type="number"],
+        #projectDetailsForm input[type="date"],
+        #projectDetailsForm select,
+        #projectDetailsForm textarea {
+            background-color: #f8fafc !important;
+            /* light gray */
+            border-color: #e6e6e6 !important;
+            color: #0f172a !important;
+            /* dark readable text */
+        }
+
+        #projectDetailsForm ::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        /* Keep the same light surface even when global .dark styles are present */
+        .dark #projectDetailsForm input[type="text"],
+        .dark #projectDetailsForm input[type="number"],
+        .dark #projectDetailsForm input[type="date"],
+        .dark #projectDetailsForm select,
+        .dark #projectDetailsForm textarea {
+            background-color: #f8fafc !important;
+            border-color: #e6e6e6 !important;
+            color: #0f172a !important;
+        }
+
+        .dark #projectDetailsForm ::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        /* Apply .text-sm style padding specifically inside project details inputs */
+        #projectDetailsForm input.text-sm,
+        #projectDetailsForm select.text-sm,
+        #projectDetailsForm textarea.text-sm {
+            font-size: 0.875rem !important;
+            padding: 0.2rem !important;
+            line-height: 1.25rem !important;
+        }
+
+
+        @media (prefers-color-scheme: dark) {
+
+            /* for project overview */
+            .dark\:bg-slate-800\/50 {
+                background-color: rgb(255 212 212 / 25%) !important;
+            }
+
+            .dark\:text-slate-100 {
+                --tw-text-opacity: 1;
+                color: rgb(0 0 0 / 86%) !important;
+            }
+
+            .dark\:text-slate-200 {
+                --tw-text-opacity: 1;
+                color: rgb(117 124 135) !important;
+            }
+
+            .dark\:hover\:bg-slate-800:hover {
+                --tw-bg-opacity: 1;
+                background-color: rgb(197 170 170 / 23%) !important;
+            }
+
+            .dark\:bg-slate-800 {
+                --tw-bg-opacity: 1;
+                background-color: rgb(218 218 218 / 35%) !important;
+            }
+
+            /* for files */
+
+            .dark\:text-slate-300 {
+                --tw-text-opacity: 1;
+                color: rgb(0 0 0) !important;
+            }
+
+            .dark\:text-red-300 {
+                --tw-text-opacity: 1;
+                color: rgb(255 0 0) !important;
+            }
+
+            .dark\:bg-yellow-900\/30 {
+                background-color: rgb(113 63 18) !important;
+            }
+
+            /* for status badges: */
+
+            .dark\:bg-blue-900\/30 {
+                background-color: rgb(30 58 138 / 90%) !important;
+            }
+
+            .dark\:bg-orange-900\/30 {
+                background-color: rgb(124 45 18) !important;
+            }
+
+            .dark\:bg-green-900\/30 {
+                background-color: rgb(20 83 45) !important;
+            }
     </style>
 </head>
 
 <body
     class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
-    
-    <?php 
+
+    <?php
     $HEADER_MODE = 'dashboard';
-    require_once __DIR__ . '/../Common/header.php'; 
+    require_once __DIR__ . '/../Common/header.php';
     ?>
 
     <?php if ($error): ?>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded">
-            <?php echo htmlspecialchars($error); ?>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
         </div>
-    </div>
     <?php endif; ?>
 
     <?php if ($success): ?>
-    <div id="projectSuccessAlertWrap" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 transition-opacity duration-500" role="status" aria-live="polite">
-        <div id="projectSuccessAlert" class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded transition-opacity duration-500">
-            <?php echo htmlspecialchars($success); ?>
-        </div>
-    </div>
-    <script>
-        (function () {
-            const wrap = document.getElementById('projectSuccessAlertWrap');
-            if (!wrap) {
-                return;
-            }
-            window.setTimeout(function () {
-                wrap.style.opacity = '0';
-                window.setTimeout(function () {
-                    if (wrap && wrap.parentNode) {
-                        wrap.parentNode.removeChild(wrap);
-                    }
-                }, 500);
-            }, 4000);
-        })();
-    </script>
+        <script>
+            // Only expose the success message to client script; do not render the centered alert.
+            window.__projectSuccessMessage = <?php echo json_encode($success); ?>;
+        </script>
     <?php endif; ?>
 
     <!-- Unified Dark Portal Header -->
@@ -708,14 +998,45 @@ if ($pdo instanceof PDO) {
                 <i data-lucide="chevron-right" class="w-3 h-3 text-gray-300"></i>
                 <span class="text-rajkot-rust">Project Details</span>
             </div>
-            
+
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 class="text-4xl font-serif font-bold text-white"><?php echo htmlspecialchars($project['name']); ?></h1>
-                    <?php
-                        $projectDirectionHref = build_google_maps_direction_href((string)($project['map_link'] ?? ''), $projectAddressForMap);
-                        $projectLocationText = htmlspecialchars($project['location'] ?? $project['address'] ?? 'Location not set');
-                    ?>
+                <!-- Owner Contact Modal -->
+                <div id="ownerContactModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                    <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
+                        <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100">Owner Contact Details</h3>
+                            <button onclick="closeOwnerContactModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-center gap-4">
+                                <div id="owner-contact-initials" class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">--</div>
+                                <div>
+                                    <h3 id="owner-contact-name" class="font-semibold text-slate-800 dark:text-slate-100">Name</h3>
+                                    <p id="owner-contact-role" class="text-sm text-slate-500">Owner</p>
+                                </div>
+                            </div>
+                            <div id="owner-contact-phones" class="space-y-2">
+                                <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                    <span class="material-icons text-sm">phone</span>
+                                    <span id="owner-contact-phone">Not available</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                    <span class="material-icons text-sm">email</span>
+                                    <span id="owner-contact-email">Not available</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button onclick="closeOwnerContactModal()" class="px-4 py-2 border rounded text-sm">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal for Adding Team Member -->
                     <p class="text-gray-400 mt-2 flex items-center gap-1">
                         <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust"></i>
                         <?php if ($projectDirectionHref !== ''): ?>
@@ -727,13 +1048,12 @@ if ($pdo instanceof PDO) {
                 </div>
                 <div class="flex gap-2">
                     <?php if (!$isClientReadOnly): ?>
-                    <button
-                        id="editProjectBtn"
-                        type="button"
-                        class="px-6 py-2.5 bg-white/10 border border-white/20 text-white rounded text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
-                        >
-                        <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Project
-                    </button>
+                        <button
+                            id="editProjectBtn"
+                            type="button"
+                            class="px-6 py-2.5 bg-white/10 border border-white/20 text-white rounded text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Project
+                        </button>
                     <?php endif; ?>
                     <button
                         id="shareProjectBtn"
@@ -793,6 +1113,8 @@ if ($pdo instanceof PDO) {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Overview quick-assign removed: owner assignment now handled via Owner modal -->
 
                     <!-- Project Details Form -->
                     <div
@@ -873,7 +1195,7 @@ if ($pdo instanceof PDO) {
                                                 aria-label="Toggle map preview"
                                                 aria-expanded="false"
                                                 aria-controls="locationMapPreview">
-                                                <span class="material-icons text-base">info</span>
+                                                <span class="material-icons text-base" style="color: #a52a2aba;">info</span>
                                             </button>
                                         </div>
                                     </div>
@@ -896,18 +1218,18 @@ if ($pdo instanceof PDO) {
                                 </div>
                             </div>
                             <?php if (!$isClientReadOnly): ?>
-                            <div class="p-6 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
-                                <button type="button"
-                                    class="px-6 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary"
-                                    onclick="window.location.reload()">Discard Changes</button>
-                                <button type="submit"
-                                    class="px-8 py-2 bg-primary text-white rounded text-sm font-semibold hover:opacity-95 shadow-md">Save
-                                    Project</button>
-                            </div>
+                                <div class="p-6 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                                    <button type="button"
+                                        class="px-6 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary"
+                                        onclick="window.location.reload()">Discard Changes</button>
+                                    <button type="submit"
+                                        class="px-8 py-2 bg-primary text-white rounded text-sm font-semibold hover:opacity-95 shadow-md">Save
+                                        Project</button>
+                                </div>
                             <?php else: ?>
-                            <div class="p-6 bg-slate-50 dark:bg-slate-800/50 text-sm text-slate-500">
-                                Client mode: view only.
-                            </div>
+                                <div class="p-6 bg-slate-50 dark:bg-slate-800/50 text-sm text-slate-500">
+                                    Client mode: view only.
+                                </div>
                             <?php endif; ?>
                         </form>
                     </div>
@@ -920,77 +1242,96 @@ if ($pdo instanceof PDO) {
                         class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Project Owner</h3>
                         <?php if (!empty($project['owner']['name'])): ?>
-                        <div class="flex items-center gap-4 mb-4">
-                            <div
-                                class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                                <?php 
-                                  $initials = '';
-                                  $nameParts = explode(' ', $project['owner']['name']);
-                                  if (count($nameParts) >= 2) {
-                                    $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
-                                  } else {
-                                    $initials = strtoupper(substr($project['owner']['name'], 0, 2));
-                                  }
-                                  echo $initials;
-                                ?>
+                            <div class="flex items-center gap-4 mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                                    <?php
+                                    $initials = '';
+                                    $nameParts = explode(' ', $project['owner']['name']);
+                                    if (count($nameParts) >= 2) {
+                                        $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
+                                    } else {
+                                        $initials = strtoupper(substr($project['owner']['name'], 0, 2));
+                                    }
+                                    echo $initials;
+                                    ?>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800 dark:text-slate-100"><?php echo htmlspecialchars($project['owner']['name']); ?></p>
+                                    <p class="text-sm text-slate-500">Client</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="font-semibold text-slate-800 dark:text-slate-100"><?php echo htmlspecialchars($project['owner']['name']); ?></p>
-                                <p class="text-sm text-slate-500">Client</p>
+                            <div class="space-y-3">
+                                <?php if (!empty($project['owner']['contact'])): ?>
+                                    <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                        <span class="material-icons text-sm">phone</span>
+                                        <span><?php echo htmlspecialchars($project['owner']['contact']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($project['owner']['email'])): ?>
+                                    <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                        <span class="material-icons text-sm">email</span>
+                                        <span><?php echo htmlspecialchars($project['owner']['email']); ?></span>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        </div>
-                        <div class="space-y-3">
-                            <?php if (!empty($project['owner']['contact'])): ?>
-                            <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                <span class="material-icons text-sm">phone</span>
-                                <span><?php echo htmlspecialchars($project['owner']['contact']); ?></span>
-                            </div>
-                            <?php endif; ?>
-                            <?php if (!empty($project['owner']['email'])): ?>
-                            <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                <span class="material-icons text-sm">email</span>
-                                <span><?php echo htmlspecialchars($project['owner']['email']); ?></span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        <button
-                            class="w-full mt-6 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            View Contact Details
-                        </button>
+                                    <button
+                                        onclick='openOwnerContactModal(<?php echo json_encode($project['owner'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'
+                                        class="w-full mt-6 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                        View Contact Details
+                                    </button>
+                                    <?php if (!$isClientReadOnly): ?>
+                                        <button onclick="openOwnerAssignModal()"
+                                            class="w-full mt-2 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                            Change Owner
+                                        </button>
+                                    <?php endif; ?>
                         <?php else: ?>
-                        <div
-                            class="bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6">
-                            <span class="material-icons text-3xl mb-2">person_off</span>
-                            <p class="text-sm">No owner assigned</p>
-                        </div>
+                                    <div
+                                        class="bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6">
+                                        <span class="material-icons text-3xl mb-2">person_off</span>
+                                        <p class="text-sm">No owner assigned</p>
+                                    </div>
+                                    <?php if (!$isClientReadOnly): ?>
+                                        <button onclick="openOwnerAssignModal()" class="w-full mt-4 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Assign Owner</button>
+                                    <?php endif; ?>
                         <?php endif; ?>
                     </div>
 
                     <!-- Upcoming Milestones -->
-                    <div
+                    <div id="milestonesCard"
                         class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Upcoming Milestones</h3>
+
                         <?php if (!empty($project['milestones'])): ?>
-                        <div class="space-y-4">
-                            <?php foreach ($project['milestones'] as $milestone): 
-                              $dotColor = ($milestone['status'] === 'completed') ? 'bg-green-500' : 
-                                         (($milestone['status'] === 'active') ? 'bg-primary' : 'bg-slate-300');
-                            ?>
-                            <div class="flex gap-3">
-                                <div class="mt-1 w-2 h-2 rounded-full <?php echo $dotColor; ?> shrink-0"></div>
-                                <div>
-                                    <p class="text-sm font-medium"><?php echo htmlspecialchars($milestone['title']); ?></p>
-                                    <p class="text-xs text-slate-500"><?php echo formatDate($milestone['target_date']); ?></p>
-                                </div>
+                            <div id="milestonesList" class="space-y-4">
+                                <?php foreach ($project['milestones'] as $milestone):
+                                    $dotColor = ($milestone['status'] === 'completed') ? 'bg-green-500' : (($milestone['status'] === 'active') ? 'bg-primary' : 'bg-slate-300');
+                                ?>
+                                     <div class="flex gap-3 cursor-pointer p-2 rounded hover:bg-slate-50" role="button" tabindex="0"
+                                         data-milestone='<?php echo htmlspecialchars(json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES); ?>'
+                                         onclick='openMilestoneModal(<?php echo json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                        <div class="mt-1 w-2 h-2 rounded-full <?php echo $dotColor; ?> shrink-0"></div>
+                                        <div>
+                                            <p class="text-sm font-medium"><?php echo htmlspecialchars($milestone['title']); ?></p>
+                                            <p class="text-xs text-slate-500"><?php echo formatDate($milestone['target_date']); ?></p>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
-                            <?php endforeach; ?>
-                        </div>
                         <?php else: ?>
-                        <div
-                            class="bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6">
-                            <span class="material-icons text-3xl mb-2">event_busy</span>
-                            <p class="text-sm">No milestones yet</p>
-                        </div>
+                            <div id="milestonesEmpty"
+                                class="bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6 cursor-pointer"
+                                role="button" tabindex="0" onclick="openMilestoneModal()">
+                                <span class="material-icons text-3xl mb-2">event_busy</span>
+                                <p class="text-sm">No milestones yet</p>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!$isClientReadOnly): ?>
+                            <div class="mt-4">
+                                <button onclick="openMilestoneModal()" class="w-full mt-4 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Add Milestone</button>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -1008,56 +1349,56 @@ if ($pdo instanceof PDO) {
             </div>
 
             <?php if (!empty($project['workers'])): ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <?php foreach ($project['workers'] as $member): 
-                  $initials = '';
-                  $nameParts = explode(' ', $member['worker_name']);
-                  if (count($nameParts) >= 2) {
-                    $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
-                  } else {
-                    $initials = strtoupper(substr($member['worker_name'], 0, 2));
-                  }
-                ?>
-                <div
-                    class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow">
-                    <div class="flex items-start gap-3 mb-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <?php foreach ($project['workers'] as $member):
+                        $initials = '';
+                        $nameParts = explode(' ', $member['worker_name']);
+                        if (count($nameParts) >= 2) {
+                            $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
+                        } else {
+                            $initials = strtoupper(substr($member['worker_name'], 0, 2));
+                        }
+                    ?>
                         <div
-                            class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold shrink-0">
-                            <?php echo $initials; ?>
+                            class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow">
+                            <div class="flex items-start gap-3 mb-3">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold shrink-0">
+                                    <?php echo $initials; ?>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($member['worker_name']); ?></p>
+                                    <p class="text-sm text-slate-500"><?php echo htmlspecialchars($member['worker_role']); ?></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-3">
+                                <span class="material-icons text-sm">phone</span>
+                                <span><?php echo htmlspecialchars($member['worker_contact']); ?></span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="viewMemberProfile(<?php echo (int)($member['id'] ?? 0); ?>, '<?php echo addslashes($member['worker_name']); ?>', '<?php echo addslashes($member['worker_role']); ?>')"
+                                    class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    View Profile
+                                </button>
+                                <button onclick="deleteTeamMember(<?php echo (int)($member['id'] ?? 0); ?>)"
+                                    class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                    <span class="material-icons text-sm">delete</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex-grow min-w-0">
-                            <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($member['worker_name']); ?></p>
-                            <p class="text-sm text-slate-500"><?php echo htmlspecialchars($member['worker_role']); ?></p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-3">
-                        <span class="material-icons text-sm">phone</span>
-                        <span><?php echo htmlspecialchars($member['worker_contact']); ?></span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="viewMemberProfile(<?php echo (int)($member['id'] ?? 0); ?>, '<?php echo addslashes($member['worker_name']); ?>', '<?php echo addslashes($member['worker_role']); ?>')"
-                            class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            View Profile
-                        </button>
-                        <button onclick="deleteTeamMember(<?php echo (int)($member['id'] ?? 0); ?>)"
-                            class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                            <span class="material-icons text-sm">delete</span>
-                        </button>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
-            </div>
             <?php else: ?>
-            <div
-                class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
-                <span class="material-icons text-6xl text-slate-300 mb-4">group_off</span>
-                <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Team Members</h3>
-                <p class="text-slate-500 dark:text-slate-400 mb-6">Start building your team by adding members.</p>
-                <button onclick="showAddTeamMemberModal()"
-                    class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
-                    <span class="material-icons text-sm">add</span> Add First Member
-                </button>
-            </div>
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
+                    <span class="material-icons text-6xl text-slate-300 mb-4">group_off</span>
+                    <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Team Members</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">Start building your team by adding members.</p>
+                    <button onclick="showAddTeamMemberModal()"
+                        class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
+                        <span class="material-icons text-sm">add</span> Add First Member
+                    </button>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -1071,69 +1412,70 @@ if ($pdo instanceof PDO) {
                 </button>
             </div>
 
-            <?php 
+            <?php
             // Function to get file icon and color based on type
-            function getFileIcon($type) {
-              $type = strtolower($type);
-              if (in_array($type, ['pdf'])) return ['icon' => 'picture_as_pdf', 'color' => 'text-red-500'];
-              if (in_array($type, ['xls', 'xlsx', 'csv', 'excel'])) return ['icon' => 'description', 'color' => 'text-green-500'];
-              if (in_array($type, ['jpg', 'jpeg', 'png', 'gif', 'image'])) return ['icon' => 'image', 'color' => 'text-blue-500'];
-              if (in_array($type, ['doc', 'docx', 'txt'])) return ['icon' => 'description', 'color' => 'text-blue-600'];
-              if (in_array($type, ['zip', 'rar', '7z'])) return ['icon' => 'folder_zip', 'color' => 'text-yellow-600'];
-              return ['icon' => 'insert_drive_file', 'color' => 'text-slate-500'];
+            function getFileIcon($type)
+            {
+                $type = strtolower($type);
+                if (in_array($type, ['pdf'])) return ['icon' => 'picture_as_pdf', 'color' => 'text-red-500'];
+                if (in_array($type, ['xls', 'xlsx', 'csv', 'excel'])) return ['icon' => 'description', 'color' => 'text-green-500'];
+                if (in_array($type, ['jpg', 'jpeg', 'png', 'gif', 'image'])) return ['icon' => 'image', 'color' => 'text-blue-500'];
+                if (in_array($type, ['doc', 'docx', 'txt'])) return ['icon' => 'description', 'color' => 'text-blue-600'];
+                if (in_array($type, ['zip', 'rar', '7z'])) return ['icon' => 'folder_zip', 'color' => 'text-yellow-600'];
+                return ['icon' => 'insert_drive_file', 'color' => 'text-slate-500'];
             }
             ?>
 
             <?php if (!empty($project['files'])): ?>
-            <div class="space-y-2">
-                <?php foreach ($project['files'] as $file): 
-                  $fileDisplay = getFileIcon($file['type']);
-                                    $fileUrl = project_file_url($file['file_path'] ?? '');
-                                                                        $fileViewUrl = file_viewer_url([
-                                                                            'kind' => 'file',
-                                                                            'id' => (int)($file['id'] ?? 0),
-                                                                            'project_id' => (int)$projectId,
-                                                                            'ext' => strtolower((string)($file['type'] ?? '')),
-                                                                        ]);
-                ?>
-                <div
-                    class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
-                    <div class="<?php echo $fileDisplay['color']; ?>">
-                        <span class="material-icons text-3xl"><?php echo $fileDisplay['icon']; ?></span>
-                    </div>
-                    <div class="flex-grow min-w-0">
-                        <p class="font-medium text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($file['name']); ?></p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400"><?php echo htmlspecialchars($file['type']); ?> • <?php echo htmlspecialchars($file['size']); ?> • Uploaded <?php echo formatDate($file['uploaded_at']); ?><?php if (!empty($file['uploaded_by'])): ?> by <?php echo htmlspecialchars($file['uploaded_by']); ?><?php endif; ?></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <?php if ($fileUrl !== ''): ?>
-                        <a href="<?php echo htmlspecialchars($fileViewUrl); ?>" target="_blank" rel="noopener noreferrer"
-                            class="px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline">
-                            View
-                        </a>
-                        <a href="<?php echo htmlspecialchars($fileUrl); ?>" download
-                            class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            Download
-                        </a>
-                        <?php endif; ?>
-                        <button onclick="deleteFile(<?php echo $file['id']; ?>)"
-                            class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                            <span class="material-icons text-sm">delete</span>
-                        </button>
-                    </div>
+                <div class="space-y-2">
+                    <?php foreach ($project['files'] as $file):
+                        $fileDisplay = getFileIcon($file['type']);
+                        $fileUrl = project_file_url($file['file_path'] ?? '');
+                        $fileViewUrl = file_viewer_url([
+                            'kind' => 'file',
+                            'id' => (int)($file['id'] ?? 0),
+                            'project_id' => (int)$projectId,
+                            'ext' => strtolower((string)($file['type'] ?? '')),
+                        ]);
+                    ?>
+                        <div
+                            class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
+                            <div class="<?php echo $fileDisplay['color']; ?>">
+                                <span class="material-icons text-3xl"><?php echo $fileDisplay['icon']; ?></span>
+                            </div>
+                            <div class="flex-grow min-w-0">
+                                <p class="font-medium text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($file['name']); ?></p>
+                                <p class="text-sm text-slate-500 dark:text-slate-400"><?php echo htmlspecialchars($file['type']); ?> • <?php echo htmlspecialchars($file['size']); ?> • Uploaded <?php echo formatDate($file['uploaded_at']); ?><?php if (!empty($file['uploaded_by'])): ?> by <?php echo htmlspecialchars($file['uploaded_by']); ?><?php endif; ?></p>
+                            </div>
+                            <div class="flex gap-2">
+                                <?php if ($fileUrl !== ''): ?>
+                                    <a href="<?php echo htmlspecialchars($fileViewUrl); ?>" target="_blank" rel="noopener noreferrer"
+                                        class="px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline">
+                                        View
+                                    </a>
+                                    <a href="<?php echo htmlspecialchars($fileUrl); ?>" download
+                                        class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                        Download
+                                    </a>
+                                <?php endif; ?>
+                                <button onclick="deleteFile(<?php echo $file['id']; ?>)"
+                                    class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                    <span class="material-icons text-sm">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
-            </div>
             <?php else: ?>
-            <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
-                <span class="material-icons text-6xl text-slate-300 mb-4">folder_open</span>
-                <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Files Yet</h3>
-                <p class="text-slate-500 dark:text-slate-400 mb-6">Upload files related to this project.</p>
-                <button onclick="document.getElementById('fileUploadInput').click()"
-                    class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
-                    <span class="material-icons text-sm">upload</span> Upload First File
-                </button>
-            </div>
+                <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
+                    <span class="material-icons text-6xl text-slate-300 mb-4">folder_open</span>
+                    <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Files Yet</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">Upload files related to this project.</p>
+                    <button onclick="document.getElementById('fileUploadInput').click()"
+                        class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
+                        <span class="material-icons text-sm">upload</span> Upload First File
+                    </button>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -1141,60 +1483,62 @@ if ($pdo instanceof PDO) {
         <div class="tab-content" id="activity-tab">
             <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-6">Recent Activity</h2>
 
-            <?php 
+            <?php
             // Function to get activity icon and color based on action
-            function getActivityIcon($action) {
-              $action = strtolower($action);
-              if (strpos($action, 'complet') !== false) return ['icon' => 'check_circle', 'color' => 'text-green-500'];
-              if (strpos($action, 'upload') !== false) return ['icon' => 'upload_file', 'color' => 'text-blue-500'];
-              if (strpos($action, 'updat') !== false) return ['icon' => 'update', 'color' => 'text-yellow-600'];
-              if (strpos($action, 'comment') !== false || strpos($action, 'add') !== false) return ['icon' => 'comment', 'color' => 'text-purple-500'];
-              if (strpos($action, 'delet') !== false) return ['icon' => 'delete', 'color' => 'text-red-500'];
-              if (strpos($action, 'creat') !== false) return ['icon' => 'add_circle', 'color' => 'text-green-600'];
-              return ['icon' => 'info', 'color' => 'text-slate-500'];
+            function getActivityIcon($action)
+            {
+                $action = strtolower($action);
+                if (strpos($action, 'complet') !== false) return ['icon' => 'check_circle', 'color' => 'text-green-500'];
+                if (strpos($action, 'upload') !== false) return ['icon' => 'upload_file', 'color' => 'text-blue-500'];
+                if (strpos($action, 'updat') !== false) return ['icon' => 'update', 'color' => 'text-yellow-600'];
+                if (strpos($action, 'comment') !== false || strpos($action, 'add') !== false) return ['icon' => 'comment', 'color' => 'text-purple-500'];
+                if (strpos($action, 'delet') !== false) return ['icon' => 'delete', 'color' => 'text-red-500'];
+                if (strpos($action, 'creat') !== false) return ['icon' => 'add_circle', 'color' => 'text-green-600'];
+                return ['icon' => 'info', 'color' => 'text-slate-500'];
             }
 
             // Function to format time ago
-            function timeAgo($timestamp) {
-              $time = strtotime($timestamp);
-              $diff = time() - $time;
-              if ($diff < 60) return 'Just now';
-              if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
-              if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
-              if ($diff < 604800) return floor($diff / 86400) . ' days ago';
-              return formatDate($timestamp);
+            function timeAgo($timestamp)
+            {
+                $time = strtotime($timestamp);
+                $diff = time() - $time;
+                if ($diff < 60) return 'Just now';
+                if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
+                if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
+                if ($diff < 604800) return floor($diff / 86400) . ' days ago';
+                return formatDate($timestamp);
             }
             ?>
 
             <?php if (!empty($project['activities'])): ?>
-            <div class="space-y-4">
-                <?php foreach ($project['activities'] as $activity): 
-                  $activityDisplay = getActivityIcon($activity['action']);
-                ?>
-                <div
-                    class="flex gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-                    <div class="<?php echo $activityDisplay['color']; ?> shrink-0">
-                        <span class="material-icons"><?php echo $activityDisplay['icon']; ?></span>
-                    </div>
-                    <div class="flex-grow">
-                        <p class="text-slate-800 dark:text-slate-100">
-                            <span class="font-semibold"><?php echo htmlspecialchars($activity['user']); ?></span>
-                            <span class="text-slate-600 dark:text-slate-400"> <?php echo htmlspecialchars($activity['action']); ?> </span>
-                            <?php if (!empty($activity['item'])): ?>
-                            <span class="font-medium"><?php echo htmlspecialchars($activity['item']); ?></span>
-                            <?php endif; ?>
-                        </p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1"><?php echo timeAgo($activity['created_at']); ?></p>
-                    </div>
+                <div class="space-y-4">
+                    <?php foreach ($project['activities'] as $activity):
+                        $activityDisplay = getActivityIcon($activity['action']);
+                    ?>
+                        <div
+                            class="flex gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+                            <div class="<?php echo $activityDisplay['color']; ?> shrink-0">
+                                <span class="material-icons"><?php echo $activityDisplay['icon']; ?></span>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-slate-800 dark:text-slate-100">
+                                    <span class="font-semibold"><?php echo htmlspecialchars($activity['user']); ?></span>
+                                    <span class="text-slate-600 dark:text-slate-400"> <?php echo htmlspecialchars($activity['action']); ?> </span>
+                                    <?php if (!empty($activity['item'])): ?>
+                                        <span class="font-medium"><?php echo htmlspecialchars($activity['item']); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1"><?php echo timeAgo($activity['created_at']); ?></p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
-            </div>
             <?php else: ?>
-            <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
-                <span class="material-icons text-6xl text-slate-300 mb-4">history</span>
-                <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Activity Yet</h3>
-                <p class="text-slate-500 dark:text-slate-400">Project activity will appear here as changes are made.</p>
-            </div>
+                <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
+                    <span class="material-icons text-6xl text-slate-300 mb-4">history</span>
+                    <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Activity Yet</h3>
+                    <p class="text-slate-500 dark:text-slate-400">Project activity will appear here as changes are made.</p>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -1208,72 +1552,114 @@ if ($pdo instanceof PDO) {
                 </button>
             </div>
 
-            <?php 
+            <?php
             $statusColors = [
-              'Approved' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-              'Under Review' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-              'Revision Needed' => 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                'Approved' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+                'Under Review' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+                'Revision Needed' => 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
             ];
             ?>
 
             <?php if (!empty($project['drawings'])): ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <?php foreach ($project['drawings'] as $drawing): 
-                  $statusClass = $statusColors[$drawing['status']] ?? '';
-                                    $drawingUrl = project_file_url($drawing['file_path'] ?? '');
-                                    $drawingViewUrl = file_viewer_url([
-                                        'kind' => 'drawing',
-                                        'id' => (int)($drawing['id'] ?? 0),
-                                        'project_id' => (int)$projectId,
-                                        'ext' => strtolower((string)pathinfo((string)($drawing['name'] ?? ''), PATHINFO_EXTENSION)),
-                                    ]);
-                ?>
-                <div
-                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                    <div class="aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        <span class="material-icons text-6xl text-slate-300">architecture</span>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-1"><?php echo htmlspecialchars($drawing['name']); ?></h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-2"><?php echo htmlspecialchars($drawing['version']); ?> • <?php echo formatDate($drawing['uploaded_at']); ?><?php if (!empty($drawing['uploaded_by'])): ?> • Uploaded by <?php echo htmlspecialchars($drawing['uploaded_by']); ?><?php endif; ?></p>
-                        <span class="inline-block px-2 py-0.5 <?php echo $statusClass; ?> rounded text-xs font-medium mb-3">
-                            <?php echo htmlspecialchars($drawing['status']); ?>
-                        </span>
-                        <div class="flex gap-2">
-                            <?php if ($drawingUrl !== ''): ?>
-                            <a href="<?php echo htmlspecialchars($drawingViewUrl); ?>" target="_blank" rel="noopener noreferrer"
-                                class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">
-                                View
-                            </a>
-                            <?php else: ?>
-                            <button disabled
-                                class="flex-1 px-3 py-1.5 bg-slate-300 text-slate-500 rounded text-xs font-medium cursor-not-allowed">
-                                View
-                            </button>
-                            <?php endif; ?>
-                            <button onclick="deleteDrawing(<?php echo $drawing['id']; ?>)"
-                                class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                                <span class="material-icons text-sm">delete</span>
-                            </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <?php foreach ($project['drawings'] as $drawing):
+                        $statusClass = $statusColors[$drawing['status']] ?? '';
+                        $drawingUrl = project_file_url($drawing['file_path'] ?? '');
+                        $drawingViewUrl = file_viewer_url([
+                            'kind' => 'drawing',
+                            'id' => (int)($drawing['id'] ?? 0),
+                            'project_id' => (int)$projectId,
+                            'ext' => strtolower((string)pathinfo((string)($drawing['name'] ?? ''), PATHINFO_EXTENSION)),
+                        ]);
+                    ?>
+                        <div
+                            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                            <div class="aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                <span class="material-icons text-6xl text-slate-300">architecture</span>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-1"><?php echo htmlspecialchars($drawing['name']); ?></h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-2"><?php echo htmlspecialchars($drawing['version']); ?> • <?php echo formatDate($drawing['uploaded_at']); ?><?php if (!empty($drawing['uploaded_by'])): ?> • Uploaded by <?php echo htmlspecialchars($drawing['uploaded_by']); ?><?php endif; ?></p>
+                                <span class="inline-block px-2 py-0.5 <?php echo $statusClass; ?> rounded text-xs font-medium mb-3">
+                                    <?php echo htmlspecialchars($drawing['status']); ?>
+                                </span>
+                                <div class="flex gap-2">
+                                    <?php if ($drawingUrl !== ''): ?>
+                                        <a href="<?php echo htmlspecialchars($drawingViewUrl); ?>" target="_blank" rel="noopener noreferrer"
+                                            class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">
+                                            View
+                                        </a>
+                                    <?php else: ?>
+                                        <button disabled
+                                            class="flex-1 px-3 py-1.5 bg-slate-300 text-slate-500 rounded text-xs font-medium cursor-not-allowed">
+                                            View
+                                        </button>
+                                    <?php endif; ?>
+                                    <button onclick="deleteDrawing(<?php echo $drawing['id']; ?>)"
+                                        class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                        <span class="material-icons text-sm">delete</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
-            </div>
             <?php else: ?>
-            <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
-                <span class="material-icons text-6xl text-slate-300 mb-4">architecture</span>
-                <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Drawings Yet</h3>
-                <p class="text-slate-500 dark:text-slate-400 mb-6">Upload technical drawings for this project.</p>
-                <button onclick="document.getElementById('drawingUploadInput').click()"
-                    class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
-                    <span class="material-icons text-sm">add</span> Upload First Drawing
-                </button>
-            </div>
+                <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
+                    <span class="material-icons text-6xl text-slate-300 mb-4">architecture</span>
+                    <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Drawings Yet</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">Upload technical drawings for this project.</p>
+                    <button onclick="document.getElementById('drawingUploadInput').click()"
+                        class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
+                        <span class="material-icons text-sm">add</span> Upload First Drawing
+                    </button>
+                </div>
             <?php endif; ?>
         </div>
 
     </main>
+
+    <!-- Owner Assign Modal -->
+    <div id="ownerAssignModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100">Assign Project Owner</h3>
+                <button onclick="closeOwnerAssignModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="ownerAssignForm" method="post" class="p-6 space-y-4">
+                <?php echo csrf_token_field(); ?>
+                <input type="hidden" name="assign_owner_id" id="assignOwnerIdInput" value="" />
+                <div class="max-h-64 overflow-auto space-y-2">
+                    <?php if (!empty($ownerCandidates)): ?>
+                        <?php foreach ($ownerCandidates as $oc): ?>
+                            <?php $ocId = (int)($oc['id'] ?? 0); $ocName = trim((string)($oc['full_name'] ?? $oc['contact'] ?? '')); ?>
+                            <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
+                                <div class="min-w-0 mr-3">
+                                    <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($ocName); ?></p>
+                                    <p class="text-sm text-slate-500 truncate"><?php echo htmlspecialchars($oc['contact'] ?? ''); ?> • <?php echo htmlspecialchars($oc['role'] ?? ''); ?></p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" onclick="selectOwner(<?php echo $ocId; ?>, '<?php echo addslashes($ocName); ?>')" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="p-3 text-sm text-slate-500">No owner candidates available.</div>
+                    <?php endif; ?>
+                    <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
+                        <div><p class="text-sm text-slate-500">— Unassign —</p></div>
+                        <div><button type="button" onclick="selectOwner(0, '')" class="px-3 py-1.5 border rounded text-xs">Unassign</button></div>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeOwnerAssignModal()" class="px-4 py-2 border border-slate-200 rounded text-sm">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded text-sm">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Modal for Adding Team Member -->
     <div id="addTeamMemberModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -1289,19 +1675,19 @@ if ($pdo instanceof PDO) {
             <!-- Worker picker view -->
             <div id="workerListView" class="p-6 space-y-4">
                 <?php if (!empty($workerUsers)): ?>
-                <div class="space-y-2 max-h-64 overflow-auto">
-                    <?php foreach ($workerUsers as $wu): ?>
-                    <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
-                        <div class="min-w-0 mr-3">
-                            <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($wu['full_name']); ?></p>
-                            <p class="text-sm text-slate-500 truncate"><?php echo htmlspecialchars($wu['role'] ?? 'Worker'); ?><?php if (!empty($wu['contact'])): ?> • <?php echo htmlspecialchars($wu['contact']); ?><?php endif; ?></p>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <button type="button" onclick="assignExistingWorker(<?php echo (int)$wu['id']; ?>)" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
-                        </div>
+                    <div class="space-y-2 max-h-64 overflow-auto">
+                        <?php foreach ($workerUsers as $wu): ?>
+                            <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
+                                <div class="min-w-0 mr-3">
+                                    <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($wu['full_name']); ?></p>
+                                    <p class="text-sm text-slate-500 truncate"><?php echo htmlspecialchars($wu['role'] ?? 'Worker'); ?><?php if (!empty($wu['contact'])): ?> • <?php echo htmlspecialchars($wu['contact']); ?><?php endif; ?></p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" onclick="assignExistingWorker(<?php echo (int)$wu['id']; ?>)" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
-                </div>
                 <?php else: ?>
                     <p class="text-sm text-slate-500">No registered workers found. Use manual add below.</p>
                 <?php endif; ?>
@@ -1347,6 +1733,38 @@ if ($pdo instanceof PDO) {
 
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 
+    <!-- Milestone Modal -->
+    <div id="milestoneModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="text-lg font-serif text-slate-800 dark:text-slate-100">Add Milestone</h3>
+                <button onclick="closeMilestoneModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="milestoneForm" class="p-6 space-y-4" onsubmit="return false;">
+                <input type="hidden" id="milestoneTempId" name="milestone_id" value="" />
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">TITLE</label>
+                    <input id="milestoneTitle" name="title" required placeholder="e.g., Project have good thing"
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary" />
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Target Date</label>
+                    <input id="milestoneDateInput" name="target_date" type="date"
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary" />
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeMilestoneModal()" class="px-4 py-2 border rounded text-sm">Cancel</button>
+                    <button type="button" id="milestoneDeleteBtn" class="px-4 py-2 border border-red-200 text-red-700 rounded text-sm hidden">Delete</button>
+                    <button id="milestoneSaveBtn" type="submit" class="px-4 py-2 bg-primary text-white rounded text-sm">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Member Profile Modal -->
     <div id="memberProfileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -1365,7 +1783,7 @@ if ($pdo instanceof PDO) {
                         <span class="material-icons">close</span>
                     </button>
                 </div>
-                
+
                 <div class="space-y-4 mb-8">
                     <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
                         <span class="material-icons text-lg">verified</span>
@@ -1396,7 +1814,7 @@ if ($pdo instanceof PDO) {
     </div>
 
     <!-- Hidden file upload inputs -->
-    
+
     <!-- Contact Modal (Internal Signal) -->
     <div id="contactModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -1427,12 +1845,12 @@ if ($pdo instanceof PDO) {
         const projectId = <?php echo json_encode($projectId); ?>;
         const projectShareUrl = <?php echo json_encode((!empty($projectId) ? rtrim(BASE_URL, '/') . '/dashboard/project_details.php?id=' . (int)$projectId : '')); ?>;
         // Worker users available for quick assignment (loaded server-side)
-        const workerUsersData = <?php echo json_encode($workerUsers, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?> || [];
+        const workerUsersData = <?php echo json_encode($workerUsers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?> || [];
         const csrfToken = <?php echo json_encode(csrf_token()); ?>;
 
         // Tab switching functionality
         document.querySelectorAll('.tab-link').forEach(tab => {
-            tab.addEventListener('click', function (e) {
+            tab.addEventListener('click', function(e) {
                 e.preventDefault();
 
                 // Remove active class from all tabs and contents
@@ -1455,7 +1873,7 @@ if ($pdo instanceof PDO) {
         // Persist the active tab in the URL hash (and support ?tab=... on page load)
         // Update the hash without adding a new history entry when user switches tabs.
         document.querySelectorAll('.tab-link').forEach(tab => {
-            tab.addEventListener('click', function () {
+            tab.addEventListener('click', function() {
                 const tabName = this.getAttribute('data-tab');
                 try {
                     if (history.replaceState) {
@@ -1495,7 +1913,7 @@ if ($pdo instanceof PDO) {
         const editProjectBtn = document.getElementById('editProjectBtn');
         const projectDetailsForm = document.getElementById('projectDetailsForm');
         if (editProjectBtn && projectDetailsForm) {
-            editProjectBtn.addEventListener('click', function () {
+            editProjectBtn.addEventListener('click', function() {
                 document.querySelectorAll('.tab-link').forEach(t => {
                     t.classList.remove('active', 'border-primary', 'text-primary');
                     t.classList.add('border-transparent', 'text-slate-500');
@@ -1513,7 +1931,10 @@ if ($pdo instanceof PDO) {
                 }
 
                 const top = Math.max(0, projectDetailsForm.getBoundingClientRect().top + window.pageYOffset - 100);
-                window.scrollTo({ top, behavior: 'smooth' });
+                window.scrollTo({
+                    top,
+                    behavior: 'smooth'
+                });
 
                 const firstInput = projectDetailsForm.querySelector('input[name="name"]');
                 if (firstInput) {
@@ -1525,7 +1946,7 @@ if ($pdo instanceof PDO) {
         // Share button: use Web Share API where available, otherwise copy link.
         const shareProjectBtn = document.getElementById('shareProjectBtn');
         if (shareProjectBtn) {
-            shareProjectBtn.addEventListener('click', async function () {
+            shareProjectBtn.addEventListener('click', async function() {
                 if (!projectId || !projectShareUrl) {
                     showNotification('Save the project first, then share it.', 'error');
                     return;
@@ -1563,7 +1984,7 @@ if ($pdo instanceof PDO) {
         const locationInfoToggle = document.getElementById('locationInfoToggle');
         const locationMapPreview = document.getElementById('locationMapPreview');
         if (locationInfoToggle && locationMapPreview) {
-            locationInfoToggle.addEventListener('click', function () {
+            locationInfoToggle.addEventListener('click', function() {
                 const willShow = locationMapPreview.classList.contains('hidden');
                 locationMapPreview.classList.toggle('hidden');
                 locationInfoToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
@@ -1723,7 +2144,7 @@ if ($pdo instanceof PDO) {
 
         if (projectMapInput) {
             projectMapInput.addEventListener('blur', applyMapInputPreview);
-            projectMapInput.addEventListener('keydown', function (event) {
+            projectMapInput.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     applyMapInputPreview();
@@ -1736,7 +2157,7 @@ if ($pdo instanceof PDO) {
         }
 
         if (locationAddressDisplay && projectLocationInput && projectAddressInput) {
-            locationAddressDisplay.addEventListener('dblclick', function () {
+            locationAddressDisplay.addEventListener('dblclick', function() {
                 if (locationAddressDisplay.dataset.editing === '1') {
                     return;
                 }
@@ -1753,7 +2174,7 @@ if ($pdo instanceof PDO) {
                 editor.focus();
                 editor.select();
 
-                const finishEdit = function (save) {
+                const finishEdit = function(save) {
                     const nextValue = save ? editor.value.trim() : currentValue;
                     if (save) {
                         projectLocationInput.value = nextValue;
@@ -1765,7 +2186,7 @@ if ($pdo instanceof PDO) {
                     editor.replaceWith(locationAddressDisplay);
                 };
 
-                editor.addEventListener('keydown', function (event) {
+                editor.addEventListener('keydown', function(event) {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         finishEdit(true);
@@ -1775,7 +2196,7 @@ if ($pdo instanceof PDO) {
                     }
                 });
 
-                editor.addEventListener('blur', function () {
+                editor.addEventListener('blur', function() {
                     finishEdit(true);
                 });
             });
@@ -1789,21 +2210,21 @@ if ($pdo instanceof PDO) {
                 input.value = '';
                 return;
             }
-            
+
             const file = input.files[0];
             const formData = new FormData();
             formData.append('file', file);
             formData.append('project_id', projectId);
             formData.append('action', 'upload_file');
-            
+
             showNotification(`Uploading ${file.name}...`, 'info');
-            
+
             try {
                 const response = await fetch('api/project_files.php', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     showNotification('File uploaded successfully!', 'success');
@@ -1819,7 +2240,7 @@ if ($pdo instanceof PDO) {
                 showNotification('Upload error occurred', 'error');
                 console.error('Error:', error);
             }
-            
+
             input.value = '';
         }
 
@@ -1831,21 +2252,21 @@ if ($pdo instanceof PDO) {
                 input.value = '';
                 return;
             }
-            
+
             const file = input.files[0];
             const formData = new FormData();
             formData.append('file', file);
             formData.append('project_id', projectId);
             formData.append('action', 'upload_drawing');
-            
+
             showNotification(`Uploading ${file.name}...`, 'info');
-            
+
             try {
                 const response = await fetch('api/project_files.php', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     showNotification('Drawing uploaded successfully!', 'success');
@@ -1858,14 +2279,14 @@ if ($pdo instanceof PDO) {
                 showNotification('Upload error occurred', 'error');
                 console.error('Error:', error);
             }
-            
+
             input.value = '';
         }
 
         // Delete file function
         async function deleteFile(fileId) {
             if (!confirm('Are you sure you want to delete this file?')) return;
-            
+
             try {
                 const response = await fetch('api/project_files.php', {
                     method: 'POST',
@@ -1878,7 +2299,7 @@ if ($pdo instanceof PDO) {
                         project_id: projectId
                     })
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     showNotification('File deleted successfully!', 'success');
@@ -1896,7 +2317,7 @@ if ($pdo instanceof PDO) {
         // Delete drawing function
         async function deleteDrawing(drawingId) {
             if (!confirm('Are you sure you want to delete this drawing?')) return;
-            
+
             try {
                 const response = await fetch('api/project_files.php', {
                     method: 'POST',
@@ -1909,7 +2330,7 @@ if ($pdo instanceof PDO) {
                         project_id: projectId
                     })
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     showNotification('Drawing deleted successfully!', 'success');
@@ -1929,7 +2350,8 @@ if ($pdo instanceof PDO) {
             if (!confirm('Are you sure you want to remove this team member?')) return;
             // Ensure URL reflects Team tab so reloads return here
             try {
-                if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team';
+                if (history.replaceState) history.replaceState(null, '', '#team');
+                else location.hash = 'team';
             } catch (err) {}
 
             try {
@@ -1986,13 +2408,13 @@ if ($pdo instanceof PDO) {
                 error: 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300',
                 info: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
             };
-            
+
             const notification = document.createElement('div');
             notification.className = `fixed top-20 right-4 max-w-md px-4 py-3 rounded border ${colors[type] || colors.info} shadow-lg z-50 animate-fade-in`;
             notification.innerHTML = message;
-            
+
             document.body.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.style.opacity = '0';
                 notification.style.transition = 'opacity 0.3s';
@@ -2000,11 +2422,23 @@ if ($pdo instanceof PDO) {
             }, 3000);
         }
 
+            // If server provided a success message, show it as a navbar popup using the shared notification helper
+            try {
+                if (window.__projectSuccessMessage) {
+                    showNotification(window.__projectSuccessMessage, 'success');
+                    // clear to avoid duplicate notifications on dynamic reloads
+                    window.__projectSuccessMessage = null;
+                }
+            } catch (e) {
+                // ignore if showNotification isn't available for any reason
+                console.warn('Notification display skipped:', e);
+            }
+
         // Real-time progress bar update
         function updateProgress(percentage) {
             const progressBar = document.querySelector('[style*="width:"]');
             const progressText = document.querySelector('.text-sm.font-semibold');
-            
+
             if (progressBar) {
                 progressBar.style.width = `${percentage}%`;
             }
@@ -2032,7 +2466,8 @@ if ($pdo instanceof PDO) {
             if (!modal) return;
             // Ensure URL reflects Team tab so reloads return here
             try {
-                if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team';
+                if (history.replaceState) history.replaceState(null, '', '#team');
+                else location.hash = 'team';
             } catch (err) {}
             modal.classList.remove('hidden');
             // default to worker list view
@@ -2085,12 +2520,18 @@ if ($pdo instanceof PDO) {
             params.append('csrf_token', csrfToken || '');
 
             try {
-                const resp = await fetch('api/project_files.php', { method: 'POST', body: params });
+                const resp = await fetch('api/project_files.php', {
+                    method: 'POST',
+                    body: params
+                });
                 const result = await resp.json();
                 if (result.success) {
                     showNotification(result.message || 'Worker assigned.', 'success');
                     logActivity('added team member', worker.full_name || '');
-                    try { if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team'; } catch (err) {}
+                    try {
+                        if (history.replaceState) history.replaceState(null, '', '#team');
+                        else location.hash = 'team';
+                    } catch (err) {}
                     setTimeout(() => window.location.reload(), 900);
                 } else {
                     showNotification(result.message || 'Failed to assign worker', 'error');
@@ -2106,28 +2547,31 @@ if ($pdo instanceof PDO) {
         if (teamMemberForm) {
             teamMemberForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 const formData = new FormData(this);
                 formData.append('project_id', projectId);
                 formData.append('action', 'add_team_member');
-                
+
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Adding...';
-                
+
                 try {
                     const response = await fetch('api/project_files.php', {
                         method: 'POST',
                         body: formData
                     });
-                    
+
                     const result = await response.json();
                     if (result.success) {
                         showNotification('Team member added successfully!', 'success');
                         logActivity('added team member', formData.get('worker_name'));
                         closeAddTeamMemberModal();
-                        try { if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team'; } catch (err) {}
+                        try {
+                            if (history.replaceState) history.replaceState(null, '', '#team');
+                            else location.hash = 'team';
+                        } catch (err) {}
                         setTimeout(() => window.location.reload(), 1000);
                     } else {
                         showNotification(result.message || 'Failed to add member', 'error');
@@ -2146,7 +2590,85 @@ if ($pdo instanceof PDO) {
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeAddTeamMemberModal();
+                // also close owner assign/contact modals if open
+                try { closeOwnerAssignModal(); } catch (err) {}
+                try { closeOwnerContactModal(); } catch (err) {}
             }
+        });
+
+        // Owner assign modal controls
+        function openOwnerAssignModal() {
+            const modal = document.getElementById('ownerAssignModal');
+            if (!modal) return;
+            try {
+                if (history.replaceState) history.replaceState(null, '', '#overview');
+                else location.hash = 'overview';
+            } catch (err) {}
+            modal.classList.remove('hidden');
+        }
+
+        function closeOwnerAssignModal() {
+            const modal = document.getElementById('ownerAssignModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
+        function selectOwner(id, name) {
+            const confirmText = id > 0 ? ('Assign ' + (name || 'this user') + ' as project owner?') : 'Remove current owner?';
+            if (!confirm(confirmText)) return;
+            const hidden = document.getElementById('assignOwnerIdInput');
+            if (!hidden) return;
+            hidden.value = id;
+            const form = document.getElementById('ownerAssignForm');
+            if (form) form.submit();
+        }
+
+        // Close owner modal on backdrop click
+        document.getElementById('ownerAssignModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeOwnerAssignModal();
+        });
+
+        // Owner contact modal controls
+        function openOwnerContactModal(owner) {
+            const modal = document.getElementById('ownerContactModal');
+            if (!modal) return;
+            const nameEl = modal.querySelector('#owner-contact-name');
+            const roleEl = modal.querySelector('#owner-contact-role');
+            const initialsEl = modal.querySelector('#owner-contact-initials');
+            const phoneEl = modal.querySelector('#owner-contact-phone');
+            const emailEl = modal.querySelector('#owner-contact-email');
+
+            const name = (owner && owner.name) ? owner.name : '';
+            const contact = (owner && owner.contact) ? owner.contact : '';
+            const email = (owner && owner.email) ? owner.email : '';
+            const role = (owner && owner.role) ? owner.role : 'Owner';
+
+            nameEl.textContent = name || '—';
+            roleEl.textContent = role || 'Owner';
+            phoneEl.textContent = contact || 'Not available';
+            emailEl.textContent = email || 'Not available';
+
+            let initials = '';
+            if (name) {
+                const parts = name.trim().split(/\s+/);
+                if (parts.length >= 2) initials = (parts[0][0] + parts[1][0]).toUpperCase();
+                else initials = parts[0].substring(0, 2).toUpperCase();
+            } else {
+                initials = '--';
+            }
+            initialsEl.textContent = initials;
+            modal.classList.remove('hidden');
+        }
+
+        function closeOwnerContactModal() {
+            const modal = document.getElementById('ownerContactModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
+        // Close owner contact modal on backdrop click
+        document.getElementById('ownerContactModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeOwnerContactModal();
         });
 
         // Member profile modal functions
@@ -2194,7 +2716,7 @@ if ($pdo instanceof PDO) {
         // Handle contact form submission
         const contactForm = document.getElementById('contactForm');
         if (contactForm) {
-            contactForm.addEventListener('submit', async function (e) {
+            contactForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const contactModal = document.getElementById('contactModal');
                 const memberId = contactModal?.dataset?.targetMemberId || 0;
@@ -2209,7 +2731,9 @@ if ($pdo instanceof PDO) {
                 try {
                     const response = await fetch('api/project_files.php', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify({
                             action: 'contact_via_signal',
                             project_id: projectId,
@@ -2240,6 +2764,256 @@ if ($pdo instanceof PDO) {
                 closeMemberProfileModal();
             }
         });
+        // Milestone modal controls + AJAX submit
+        function openMilestoneModal(m) {
+            const modal = document.getElementById('milestoneModal');
+            if (!modal) return;
+            const idInput = document.getElementById('milestoneTempId');
+            const titleInput = document.getElementById('milestoneTitle');
+            const dateInput = document.getElementById('milestoneDateInput');
+            const deleteBtn = document.getElementById('milestoneDeleteBtn');
+            if (m && typeof m === 'object') {
+                idInput.value = m.id || '';
+                titleInput.value = m.title || '';
+                dateInput.value = m.target_date || '';
+                if (deleteBtn) deleteBtn.classList.remove('hidden');
+            } else {
+                idInput.value = '';
+                titleInput.value = '';
+                dateInput.value = '';
+                if (deleteBtn) deleteBtn.classList.add('hidden');
+            }
+            modal.classList.remove('hidden');
+            setTimeout(() => { try { titleInput.focus(); } catch (e) {} }, 60);
+        }
+
+        function closeMilestoneModal() {
+            const modal = document.getElementById('milestoneModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
+        // Handle milestone form submit via AJAX so user can add multiple quickly
+        (function() {
+            const form = document.getElementById('milestoneForm');
+            const titleInput = document.getElementById('milestoneTitle');
+            const saveBtn = document.getElementById('milestoneSaveBtn');
+
+            if (!form || !titleInput || !saveBtn) return;
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const title = (titleInput.value || '').trim();
+                if (!title) {
+                    showNotification('Please enter a milestone title.', 'error');
+                    return;
+                }
+
+                saveBtn.disabled = true;
+                const fd = new FormData();
+                fd.append('ajax_milestone', '1');
+                fd.append('title', title);
+                const mid = (document.getElementById('milestoneTempId') || {}).value || '';
+                if (mid) fd.append('milestone_id', mid);
+                const dateVal = (document.getElementById('milestoneDateInput') || {}).value || '';
+                if (dateVal) fd.append('target_date', dateVal);
+
+                try {
+                    const resp = await fetch(location.pathname + '?id=' + encodeURIComponent(projectId), {
+                        method: 'POST',
+                        body: fd,
+                        credentials: 'same-origin'
+                    });
+                    const json = await resp.json();
+                    if (json && json.success) {
+                        appendMilestoneToList(json.milestone);
+                        // If we were editing an existing milestone, close modal; otherwise keep open for quick adds
+                        if (mid) {
+                            showNotification('Milestone updated.', 'success');
+                            closeMilestoneModal();
+                        } else {
+                            showNotification('Milestone added.', 'success');
+                            // clear title/date for next entry and keep modal open for adding more
+                            titleInput.value = '';
+                            const dateInputEl = document.getElementById('milestoneDateInput');
+                            if (dateInputEl) dateInputEl.value = '';
+                            titleInput.focus();
+                        }
+                    } else {
+                        showNotification(json.message || 'Failed to add milestone.', 'error');
+                    }
+                } catch (err) {
+                    console.error('Milestone add error:', err);
+                    showNotification('Network or server error.', 'error');
+                } finally {
+                    saveBtn.disabled = false;
+                }
+            });
+
+            // Delete button handler (AJAX)
+            const deleteBtn = document.getElementById('milestoneDeleteBtn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async function() {
+                    const mid = (document.getElementById('milestoneTempId') || {}).value || '';
+                    if (!mid) return;
+                    if (!confirm('Are you sure you want to delete this milestone?')) return;
+                    deleteBtn.disabled = true;
+                    const fd = new FormData();
+                    fd.append('ajax_milestone', '1');
+                    fd.append('ajax_milestone_delete', '1');
+                    fd.append('milestone_id', mid);
+                    try {
+                        const resp = await fetch(location.pathname + '?id=' + encodeURIComponent(projectId), {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin'
+                        });
+                        const json = await resp.json();
+                        if (json && json.success) {
+                            showNotification('Milestone deleted.', 'success');
+                            removeMilestoneFromList(mid);
+                            closeMilestoneModal();
+                        } else {
+                            showNotification(json.message || 'Failed to delete milestone.', 'error');
+                        }
+                    } catch (err) {
+                        console.error('Milestone delete error:', err);
+                        showNotification('Network or server error.', 'error');
+                    } finally {
+                        deleteBtn.disabled = false;
+                    }
+                });
+            }
+
+            function formatDateJS(dateString) {
+                if (!dateString) return '';
+                // Accept YYYY-MM-DD or ISO strings
+                const d = new Date(dateString);
+                if (isNaN(d)) return dateString;
+                return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            function appendMilestoneToList(m) {
+                if (!m) return;
+                const card = document.getElementById('milestonesCard');
+                if (!card) return;
+
+                let list = document.getElementById('milestonesList');
+                const empty = document.getElementById('milestonesEmpty');
+                if (!list) {
+                    list = document.createElement('div');
+                    list.id = 'milestonesList';
+                    list.className = 'space-y-4';
+                    if (empty) empty.replaceWith(list);
+                    else card.appendChild(list);
+                }
+
+                const dotClass = (m.status === 'completed') ? 'bg-green-500' : ((m.status === 'active') ? 'bg-primary' : 'bg-slate-300');
+
+                // If milestone ID exists, try to update existing row instead of appending
+                if (m.id) {
+                    const existingRows = list.querySelectorAll('[data-milestone]');
+                    for (const el of existingRows) {
+                        try {
+                            const dt = JSON.parse(el.dataset.milestone || '{}');
+                            if (dt && parseInt(dt.id, 10) === parseInt(m.id, 10)) {
+                                // update dataset and visible title
+                                el.dataset.milestone = JSON.stringify(m);
+                                const titleEl = el.querySelector('p.text-sm.font-medium');
+                                if (titleEl) titleEl.textContent = m.title || '';
+                                // update or insert date line
+                                const dateEl = el.querySelector('p.text-xs.text-slate-500');
+                                if (m.target_date) {
+                                    const fmt = formatDateJS(m.target_date);
+                                    if (dateEl) dateEl.textContent = fmt;
+                                    else if (titleEl && titleEl.parentElement) {
+                                        const p = document.createElement('p');
+                                        p.className = 'text-xs text-slate-500';
+                                        p.textContent = fmt;
+                                        titleEl.parentElement.appendChild(p);
+                                    }
+                                } else {
+                                    if (dateEl) dateEl.remove();
+                                }
+                                return;
+                            }
+                        } catch (e) {
+                            // continue
+                        }
+                    }
+                }
+
+                const row = document.createElement('div');
+                row.className = 'flex gap-3 cursor-pointer p-2 rounded hover:bg-slate-50';
+                // store milestone data for potential edit
+                try { row.dataset.milestone = JSON.stringify(m); } catch (e) { row.dataset.milestone = '' }
+
+                const formattedDate = m.target_date ? formatDateJS(m.target_date) : '';
+                row.innerHTML = `
+                    <div class="mt-1 w-2 h-2 rounded-full ${dotClass} shrink-0"></div>
+                    <div>
+                        <p class="text-sm font-medium">${escapeHtml(m.title)}</p>
+                        ${formattedDate ? `<p class="text-xs text-slate-500">${escapeHtml(formattedDate)}</p>` : ''}
+                    </div>
+                `;
+
+                row.addEventListener('click', function() {
+                    let data = null;
+                    try { data = JSON.parse(this.dataset.milestone || null); } catch (e) { data = null; }
+                    openMilestoneModal(data);
+                });
+
+                list.appendChild(row);
+            }
+
+            function removeMilestoneFromList(id) {
+                if (!id) return;
+                const list = document.getElementById('milestonesList');
+                const card = document.getElementById('milestonesCard');
+                if (list) {
+                    const rows = list.querySelectorAll('[data-milestone]');
+                    let removed = false;
+                    for (const r of rows) {
+                        try {
+                            const d = JSON.parse(r.dataset.milestone || '{}');
+                            if (d && String(d.id) === String(id)) {
+                                r.remove();
+                                removed = true;
+                                break;
+                            }
+                        } catch (e) {}
+                    }
+
+                    if (removed && list.children.length === 0) {
+                        // replace list with empty state
+                        const empty = document.createElement('div');
+                        empty.id = 'milestonesEmpty';
+                        empty.className = 'bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6 cursor-pointer';
+                        empty.setAttribute('role', 'button');
+                        empty.setAttribute('tabindex', '0');
+                        empty.innerHTML = '<span class="material-icons text-3xl mb-2">event_busy</span><p class="text-sm">No milestones yet</p>';
+                        list.replaceWith(empty);
+                    }
+                } else if (card) {
+                    // If no list but an element with data-milestone exists inside card
+                    const rows = card.querySelectorAll('[data-milestone]');
+                    for (const r of rows) {
+                        try {
+                            const d = JSON.parse(r.dataset.milestone || '{}');
+                            if (d && String(d.id) === String(id)) r.remove();
+                        } catch (e) {}
+                    }
+                }
+            }
+
+            // small HTML escaper
+            function escapeHtml(s) {
+                if (!s) return '';
+                return String(s).replace(/[&<>"']/g, function(c) {
+                    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c];
+                });
+            }
+        })();
     </script>
 </body>
 

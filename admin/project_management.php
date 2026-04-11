@@ -4,6 +4,24 @@ require_once __DIR__ . '/../includes/init.php';
 require_login();
 require_role('admin');
 
+$clientUsers = [];
+$clientLookup = [];
+if (db_connected()) {
+    $dbConn = get_db();
+    if ($dbConn instanceof PDO) {
+        try {
+            $stmt = $dbConn->prepare("SELECT id, COALESCE(NULLIF(full_name, ''), NULLIF(TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,''))), ''), NULLIF(username, ''), NULLIF(email, ''), CONCAT('Client #', id)) AS full_name, COALESCE(email, '') AS email, COALESCE(phone, '') AS phone FROM users WHERE role = 'client' ORDER BY full_name ASC");
+            $stmt->execute();
+            $clientUsers = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Throwable $e) {
+            $clientUsers = [];
+        }
+    }
+}
+foreach ($clientUsers as $clientRow) {
+    $clientLookup[(int)($clientRow['id'] ?? 0)] = $clientRow;
+}
+
 $storeProjectImage = static function (int $projectId, array $uploadedFile): bool {
     if ($projectId <= 0) {
         return false;
@@ -117,6 +135,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
     $ownerName = trim((string)($_POST['client_name'] ?? ''));
     $ownerContact = trim((string)($_POST['client_contact'] ?? ''));
     $ownerEmail = trim((string)($_POST['client_email'] ?? ''));
+    $selectedClientId = (int)($_POST['client_user_id'] ?? 0);
+
+    if ($selectedClientId > 0 && isset($clientLookup[$selectedClientId])) {
+        $selectedClient = (array)$clientLookup[$selectedClientId];
+        $ownerName = trim((string)($selectedClient['full_name'] ?? $ownerName));
+        $ownerEmail = trim((string)($selectedClient['email'] ?? $ownerEmail));
+        if (trim((string)($selectedClient['phone'] ?? '')) !== '') {
+            $ownerContact = trim((string)$selectedClient['phone']);
+        }
+    }
 
     if ($mapLink !== '' && !is_valid_google_maps_url($mapLink)) {
         set_flash('Please enter a valid Google Maps link.', 'error');
@@ -140,22 +168,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
             $hasMapLinkColumn = db_column_exists('projects', 'map_link');
         }
 
+        $hasClientIdColumn = db_column_exists('projects', 'client_id');
+        if (!$hasClientIdColumn) {
+            try {
+                db_query('ALTER TABLE projects ADD COLUMN client_id INT DEFAULT NULL');
+            } catch (Throwable $e) {
+                // Ignore if column already exists or schema cannot be altered.
+            }
+            $hasClientIdColumn = db_column_exists('projects', 'client_id');
+        }
+
+        $clientIdToSave = $selectedClientId > 0 ? $selectedClientId : null;
+
         // Insert project and capture new ID so we can attach an uploaded photo.
         try {
             if ($hasMapLinkColumn) {
-                $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, map_link, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)', [
-                    $name, $budget, $location, $mapLink, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
+                if ($hasClientIdColumn) {
+                    $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, map_link, address, owner_name, owner_contact, owner_email, project_type, client_id, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                        $name, $budget, $location, $mapLink, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $clientIdToSave, $_SESSION['user']['id'] ?? null,
+                    ]);
+                } else {
+                    $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, map_link, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                        $name, $budget, $location, $mapLink, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
+                    ]);
+                }
+            } else {
+                if ($hasClientIdColumn) {
+                    $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, client_id, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                        $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $clientIdToSave, $_SESSION['user']['id'] ?? null,
+                    ]);
+                } else {
+                    $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
+                        $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
+                    ]);
+                }
+            }
+        } catch (Throwable $e) {
+            // Final fallback to legacy INSERT for old schemas.
+            if ($hasClientIdColumn) {
+                $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, client_id, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                    $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $clientIdToSave, $_SESSION['user']['id'] ?? null,
                 ]);
             } else {
                 $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
                     $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
                 ]);
             }
-        } catch (Throwable $e) {
-            // Final fallback to legacy INSERT for old schemas.
-            $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
-                $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
-            ]);
         }
 
         $projectId = 0;
@@ -547,16 +605,32 @@ $resolveRegion = static function (string $location): string {
                     <div class="space-y-4">
                         <h3 class="text-[10px] font-bold uppercase tracking-widest text-rajkot-rust border-b border-rajkot-rust/20 pb-2">I. Client Identity</h3>
                         <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Assign Existing Client (Optional)</label>
+                            <select name="client_user_id" id="projectClientUserId" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
+                                <option value="">Select from registered clients</option>
+                                <?php foreach ($clientUsers as $client): ?>
+                                    <option
+                                        value="<?php echo (int)($client['id'] ?? 0); ?>"
+                                        data-name="<?php echo esc_attr((string)($client['full_name'] ?? '')); ?>"
+                                        data-email="<?php echo esc_attr((string)($client['email'] ?? '')); ?>"
+                                        data-phone="<?php echo esc_attr((string)($client['phone'] ?? '')); ?>">
+                                        <?php echo esc((string)($client['full_name'] ?? 'Client')); ?><?php echo !empty($client['email']) ? ' (' . esc((string)$client['email']) . ')' : ''; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="text-[10px] text-gray-400 mt-2 uppercase tracking-tight">Selecting a registered client auto-fills the contact fields below.</p>
+                        </div>
+                        <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Legal Full Name</label>
-                            <input type="text" name="client_name" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
+                            <input type="text" id="ventureClientName" name="client_name" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Contact Primary (Mobile / Official)</label>
-                            <input type="tel" name="client_contact" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
+                            <input type="tel" id="ventureClientContact" name="client_contact" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Email Address</label>
-                            <input type="email" name="client_email" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
+                            <input type="email" id="ventureClientEmail" name="client_email" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
                         </div>
                     </div>
 
@@ -757,6 +831,38 @@ $resolveRegion = static function (string $location): string {
             // Handled by jQuery Validation's submitHandler
             return false;
         }
+
+        (function initClientAutofill() {
+            const clientSelect = document.getElementById('projectClientUserId');
+            const nameInput = document.getElementById('ventureClientName');
+            const contactInput = document.getElementById('ventureClientContact');
+            const emailInput = document.getElementById('ventureClientEmail');
+
+            if (!clientSelect || !nameInput || !contactInput || !emailInput) {
+                return;
+            }
+
+            clientSelect.addEventListener('change', function () {
+                const option = clientSelect.options[clientSelect.selectedIndex];
+                if (!option || !option.value) {
+                    return;
+                }
+
+                const selectedName = (option.getAttribute('data-name') || '').trim();
+                const selectedEmail = (option.getAttribute('data-email') || '').trim();
+                const selectedPhone = (option.getAttribute('data-phone') || '').trim();
+
+                if (selectedName !== '') {
+                    nameInput.value = selectedName;
+                }
+                if (selectedEmail !== '') {
+                    emailInput.value = selectedEmail;
+                }
+                if (selectedPhone !== '') {
+                    contactInput.value = selectedPhone;
+                }
+            });
+        })();
 
         document.getElementById('newProjectBtn').addEventListener('click', function () {
             openVentureModal();

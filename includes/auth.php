@@ -178,6 +178,7 @@ if (!function_exists('auth_dashboard_url')) {
         $routeByRole = [
             'admin' => '/admin/dashboard.php',
             'worker' => '/worker/dashboard.php',
+            'client' => '/client/dashboard.php',
             'dashboard' => '/dashboard/dashboard.php',
         ];
 

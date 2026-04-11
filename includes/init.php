@@ -43,6 +43,16 @@ if (file_exists(__DIR__ . '/notification_service.php')) {
     require_once __DIR__ . '/notification_service.php';
 }
 
+// Load PayPal service helpers (depends on config/util/db)
+if (file_exists(__DIR__ . '/paypal_service.php')) {
+    require_once __DIR__ . '/paypal_service.php';
+}
+
+// Load billing service helpers (depends on db/util/auth)
+if (file_exists(__DIR__ . '/billing_service.php')) {
+    require_once __DIR__ . '/billing_service.php';
+}
+
 // Load public content helpers (depends on util/db/auth)
 if (file_exists(__DIR__ . '/public_content.php')) {
     require_once __DIR__ . '/public_content.php';
