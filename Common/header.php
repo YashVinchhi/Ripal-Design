@@ -121,7 +121,7 @@ foreach ($stylesheetCandidates as $candidate) {
 <nav class="alt-header">
     <div class="alt-logo">
         <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php" class="flex items-center gap-3 no-underline">
-            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10">
+            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
             <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo esc($headerText('brand_name', 'Ripal Design')); ?></span>
         </a>
     </div>

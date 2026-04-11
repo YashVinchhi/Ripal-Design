@@ -625,6 +625,7 @@ if (!function_exists('public_content_image_url')) {
             return '';
         }
 
+        // Prepare encoded parts for safe URL generation
         $parts = array_values(array_filter(explode('/', $relative), static function ($part) {
             return $part !== '';
         }));
@@ -633,16 +634,64 @@ if (!function_exists('public_content_image_url')) {
         }, $parts);
         $encoded = implode('/', $encodedParts);
 
-        if (function_exists('base_path')) {
-            $resolved = (string)base_path($encoded);
-            return str_replace('/./', '/', $resolved);
-        }
-        if (defined('BASE_PATH')) {
-            $resolved = rtrim((string)BASE_PATH, '/') . '/' . $encoded;
-            return str_replace('/./', '/', $resolved);
+        // If the file exists on disk at the supplied relative path, return that URL
+        $absCandidate = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        if (is_file($absCandidate)) {
+            if (function_exists('base_path')) {
+                $resolved = (string)base_path($encoded);
+                return str_replace('/./', '/', $resolved);
+            }
+            if (defined('BASE_PATH')) {
+                $resolved = rtrim((string)BASE_PATH, '/') . '/' . $encoded;
+                return str_replace('/./', '/', $resolved);
+            }
+            return '/' . $encoded;
         }
 
-        return '/' . $encoded;
+        // Try a few conventional fallback directories using the same filename
+        $filename = rawurldecode((string)end($parts));
+        $fallbackDirs = [
+            'assets/Content',
+            'assets/images',
+            'uploads/content',
+            'uploads',
+            'public/assets/Content',
+            'public/images',
+            'assets/Content/brand',
+        ];
+
+        foreach ($fallbackDirs as $dir) {
+            $abs = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $dir) . DIRECTORY_SEPARATOR . $filename;
+            if (is_file($abs)) {
+                $fallbackParts = array_values(array_filter(explode('/', ltrim($dir . '/' . $filename, '/')), static function ($p) { return $p !== ''; }));
+                $encodedFallbackParts = array_map(static function ($part) { return rawurlencode(rawurldecode((string)$part)); }, $fallbackParts);
+                $encodedFallback = implode('/', $encodedFallbackParts);
+
+                if (function_exists('base_path')) {
+                    $resolved = (string)base_path($encodedFallback);
+                    return str_replace('/./', '/', $resolved);
+                }
+                if (defined('BASE_PATH')) {
+                    $resolved = rtrim((string)BASE_PATH, '/') . '/' . $encodedFallback;
+                    return str_replace('/./', '/', $resolved);
+                }
+                return '/' . $encodedFallback;
+            }
+        }
+
+        // If a fallback value was provided, try to resolve it (allow absolute URLs)
+        if ($fallback !== '') {
+            $f = public_content_sanitize_image($fallback);
+            if (preg_match('#^https?://#i', $f)) {
+                return $f;
+            }
+            if ($f !== $candidate) {
+                return public_content_image_url($f, '');
+            }
+        }
+
+        // Last resort: return an external placeholder so the UI still shows something
+        return 'https://placehold.co/240x60/ffffff/000000?text=No+Image';
     }
 }
 

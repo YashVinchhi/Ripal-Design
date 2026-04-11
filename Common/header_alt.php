@@ -44,7 +44,7 @@ foreach ($candidates as $c) {
 <nav class="alt-header">
     <div class="alt-logo">
         <a href="<?php echo BASE_PATH; ?>/public/index.php" class="flex items-center gap-3 no-underline">
-            <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10">
+            <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
             <span class="text-white font-serif font-bold text-xl tracking-tight">Ripal Design</span>
         </a>
     </div>
