@@ -27,6 +27,36 @@ if (!($db instanceof PDO)) {
     api_json(['success' => false, 'message' => 'Database connection unavailable.'], 500);
 }
 
+// Detect oversized requests early: when the request body exceeds PHP's
+// `post_max_size`, PHP will discard `$_POST`/`$_FILES` and leave us with
+// empty input. This often manifests as "Invalid project ID." — provide a
+// clear error instead so callers know to increase server limits.
+function parse_ini_size_to_bytes(string $val): int {
+    $val = trim($val);
+    $last = strtolower($val[strlen($val)-1] ?? '');
+    $num = (int)$val;
+    switch ($last) {
+        case 'g':
+            return $num * 1024 * 1024 * 1024;
+        case 'm':
+            return $num * 1024 * 1024;
+        case 'k':
+            return $num * 1024;
+        default:
+            return $num;
+    }
+}
+
+$contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+$postMax = parse_ini_size_to_bytes((string)ini_get('post_max_size'));
+$uploadMax = parse_ini_size_to_bytes((string)ini_get('upload_max_filesize'));
+if ($contentLength > 0 && $postMax > 0 && $contentLength > $postMax) {
+    api_json([
+        'success' => false,
+        'message' => 'Request body too large. Increase PHP post_max_size (' . ini_get('post_max_size') . ') and upload_max_filesize (' . ini_get('upload_max_filesize') . ').'
+    ], 413);
+}
+
 $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 if ($method !== 'POST') {
     api_json(['success' => false, 'message' => 'Method not allowed.'], 405);
@@ -195,8 +225,30 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
     }
 
     $uploaded = $_FILES['file'];
-    if ((int)($uploaded['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        api_json(['success' => false, 'message' => 'File upload failed.'], 400);
+    $fileError = (int)($uploaded['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($fileError !== UPLOAD_ERR_OK) {
+        switch ($fileError) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                $maxUpload = ini_get('upload_max_filesize') ?: 'unknown';
+                $postMax = ini_get('post_max_size') ?: 'unknown';
+                api_json([
+                    'success' => false,
+                    'message' => 'Uploaded file exceeds server allowed size. Increase PHP upload_max_filesize/post_max_size (current: upload_max_filesize=' . $maxUpload . ', post_max_size=' . $postMax . ').'
+                ], 400);
+            case UPLOAD_ERR_PARTIAL:
+                api_json(['success' => false, 'message' => 'File was only partially uploaded.'], 400);
+            case UPLOAD_ERR_NO_FILE:
+                api_json(['success' => false, 'message' => 'No file uploaded.'], 400);
+            case UPLOAD_ERR_NO_TMP_DIR:
+                api_json(['success' => false, 'message' => 'Missing temporary folder on server.'], 500);
+            case UPLOAD_ERR_CANT_WRITE:
+                api_json(['success' => false, 'message' => 'Failed to write uploaded file to disk.'], 500);
+            case UPLOAD_ERR_EXTENSION:
+                api_json(['success' => false, 'message' => 'File upload stopped by PHP extension.'], 500);
+            default:
+                api_json(['success' => false, 'message' => 'File upload failed (error code: ' . $fileError . ').'], 400);
+        }
     }
 
     $originalName = (string)($uploaded['name'] ?? 'upload');

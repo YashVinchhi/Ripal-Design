@@ -316,21 +316,27 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
                 </div>
 
                 <div class="flex items-center justify-between py-3 border-y border-gray-50">
-                  <div class="flex items-center text-sm text-gray-600 truncate mr-4">
-                    <i data-lucide="map-pin" class="w-4 h-4 mr-2 shrink-0 text-gray-400"></i>
-                    <span class="truncate"><?php echo esc(($p['address'] ?? '') !== '' ? (string)$p['address'] : (string)($p['location'] ?? 'Location not set')); ?></span>
-                  </div>
                   <?php
-                    $directionDestination = '';
+                    $locationText = (($p['address'] ?? '') !== '') ? (string)$p['address'] : ((string)($p['location'] ?? 'Location not set'));
                     if (!empty($p['latitude']) && !empty($p['longitude'])) {
                         $directionDestination = (string)$p['latitude'] . ',' . (string)$p['longitude'];
                     } else {
                         $directionDestination = (string)(($p['address'] ?? '') !== '' ? $p['address'] : ($p['location'] ?? ''));
                     }
-                    $directionHref = build_google_maps_direction_href((string)($p['map_link'] ?? ''), $directionDestination);
+                    $mapHref = build_google_maps_direction_href((string)($p['map_link'] ?? ''), $directionDestination);
                   ?>
-                  <?php if ($directionHref !== ''): ?>
-                    <a href="<?php echo esc_attr($directionHref); ?>" target="_blank" class="shrink-0 text-rajkot-rust hover:underline text-xs font-bold flex items-center gap-1">
+                  <div class="flex items-center text-sm text-gray-600 truncate mr-4">
+                    <i data-lucide="map-pin" class="w-4 h-4 mr-2 shrink-0 text-gray-400"></i>
+                    <span class="truncate">
+                      <?php if ($mapHref !== ''): ?>
+                        <a href="<?php echo esc_attr($mapHref); ?>" target="_blank" rel="noopener noreferrer" title="Open location in Google Maps"><?php echo esc($locationText); ?></a>
+                      <?php else: ?>
+                        <?php echo esc($locationText); ?>
+                      <?php endif; ?>
+                    </span>
+                  </div>
+                  <?php if ($mapHref !== ''): ?>
+                    <a href="<?php echo esc_attr($mapHref); ?>" target="_blank" rel="noopener noreferrer" class="shrink-0 text-rajkot-rust hover:underline text-xs font-bold flex items-center gap-1">
                       DIRECTIONS <i data-lucide="external-link" class="w-3 h-3"></i>
                     </a>
                   <?php endif; ?>
@@ -435,8 +441,24 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
               </div>
               <h3 class="text-xl font-serif font-bold group-hover:text-rajkot-rust transition-colors line-clamp-2 min-h-[3.5rem] mb-2"><?php echo esc($p['name'] ?? 'Untitled'); ?></h3>
               <div class="space-y-3 mt-4">
+                <?php
+                  $locationText = (($p['address'] ?? '') !== '') ? (string)$p['address'] : ((string)($p['location'] ?? 'Location not set'));
+                  if (!empty($p['latitude']) && !empty($p['longitude'])) {
+                      $directionDestination = (string)$p['latitude'] . ',' . (string)$p['longitude'];
+                  } else {
+                      $directionDestination = (string)(($p['address'] ?? '') !== '' ? $p['address'] : ($p['location'] ?? ''));
+                  }
+                  $mapHref = build_google_maps_direction_href((string)($p['map_link'] ?? ''), $directionDestination);
+                ?>
                 <div class="flex items-center text-sm text-gray-500">
-                  <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i> <?php echo esc(($p['location'] ?? '') ?: 'Location not set'); ?>
+                  <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                  <span>
+                    <?php if ($mapHref !== ''): ?>
+                      <a href="<?php echo esc_attr($mapHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc($locationText); ?></a>
+                    <?php else: ?>
+                      <?php echo esc($locationText); ?>
+                    <?php endif; ?>
+                  </span>
                 </div>
                 <div class="flex items-center text-sm text-gray-500">
                   <i data-lucide="calendar" class="w-4 h-4 mr-2"></i> Due: <?php echo !empty($p['due']) ? esc((string)$p['due']) : 'N/A'; ?>

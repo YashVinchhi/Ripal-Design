@@ -712,9 +712,17 @@ if ($pdo instanceof PDO) {
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 class="text-4xl font-serif font-bold text-white"><?php echo htmlspecialchars($project['name']); ?></h1>
+                    <?php
+                        $projectDirectionHref = build_google_maps_direction_href((string)($project['map_link'] ?? ''), $projectAddressForMap);
+                        $projectLocationText = htmlspecialchars($project['location'] ?? $project['address'] ?? 'Location not set');
+                    ?>
                     <p class="text-gray-400 mt-2 flex items-center gap-1">
                         <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust"></i>
-                        <?php echo htmlspecialchars($project['location'] ?? $project['address'] ?? 'Location not set'); ?>
+                        <?php if ($projectDirectionHref !== ''): ?>
+                            <a href="<?php echo htmlspecialchars($projectDirectionHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo $projectLocationText; ?></a>
+                        <?php else: ?>
+                            <?php echo $projectLocationText; ?>
+                        <?php endif; ?>
                     </p>
                 </div>
                 <div class="flex gap-2">
