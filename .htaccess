@@ -1,0 +1,17 @@
+# Apache per-directory PHP values (works with mod_php)
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 450M
+    php_value post_max_size 460M
+    php_value memory_limit 1024M
+    php_value max_execution_time 600
+    php_value max_input_time 600
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 450M
+    php_value post_max_size 460M
+    php_value memory_limit 1024M
+    php_value max_execution_time 600
+    php_value max_input_time 600
+</IfModule>
+
+# If using PHP-FPM with Apache + mod_proxy_fcgi, use .user.ini instead (already present)

@@ -962,6 +962,52 @@ if ($pdo instanceof PDO) {
             .dark\:bg-green-900\/30 {
                 background-color: rgb(20 83 45) !important;
             }
+
+            /* Mobile-specific adjustments to improve stacking and button behavior */
+            @media (max-width: 640px) {
+                /* File cards should stack vertically on small screens */
+                .project-file-card {
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 0.75rem !important;
+                }
+
+                /* Ensure the metadata area can wrap and not overflow */
+                .project-file-card .flex-grow {
+                    min-width: 0 !important;
+                    word-break: break-word !important;
+                }
+
+                /* Actions should take full width and stack nicely */
+                .project-file-card .file-actions {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.5rem !important;
+                    width: 100% !important;
+                }
+
+                .project-file-card .file-actions a,
+                .project-file-card .file-actions button {
+                    width: 100% !important;
+                    justify-content: center !important;
+                }
+
+                header h1 {
+                    font-size: 1.5rem !important;
+                    line-height: 1.2 !important;
+                }
+
+</pre>            /* Slightly reduce horizontal tab padding on very small screens */
+                .tab-link {
+                    padding-left: 0.6rem !important;
+                    padding-right: 0.6rem !important;
+                }
+            }
+
+            /* Make all corners sharp to match UI theme */
+            *, *::before, *::after {
+                border-radius: 0 !important;
+            }
     </style>
 </head>
 
@@ -1439,27 +1485,27 @@ if ($pdo instanceof PDO) {
                         ]);
                     ?>
                         <div
-                            class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
-                            <div class="<?php echo $fileDisplay['color']; ?>">
+                            class="project-file-card flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
+                            <div class="<?php echo $fileDisplay['color']; ?> w-12 h-12 flex items-center justify-center shrink-0">
                                 <span class="material-icons text-3xl"><?php echo $fileDisplay['icon']; ?></span>
                             </div>
                             <div class="flex-grow min-w-0">
                                 <p class="font-medium text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($file['name']); ?></p>
                                 <p class="text-sm text-slate-500 dark:text-slate-400"><?php echo htmlspecialchars($file['type']); ?> • <?php echo htmlspecialchars($file['size']); ?> • Uploaded <?php echo formatDate($file['uploaded_at']); ?><?php if (!empty($file['uploaded_by'])): ?> by <?php echo htmlspecialchars($file['uploaded_by']); ?><?php endif; ?></p>
                             </div>
-                            <div class="flex gap-2">
+                            <div class="file-actions flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
                                 <?php if ($fileUrl !== ''): ?>
                                     <a href="<?php echo htmlspecialchars($fileViewUrl); ?>" target="_blank" rel="noopener noreferrer"
-                                        class="px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline">
+                                        class="w-full sm:w-auto px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline text-center">
                                         View
                                     </a>
                                     <a href="<?php echo htmlspecialchars($fileUrl); ?>" download
-                                        class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                        class="w-full sm:w-auto px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center">
                                         Download
                                     </a>
                                 <?php endif; ?>
                                 <button onclick="deleteFile(<?php echo $file['id']; ?>)"
-                                    class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                    class="w-full sm:w-auto px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
                                     <span class="material-icons text-sm">delete</span>
                                 </button>
                             </div>
@@ -1847,6 +1893,8 @@ if ($pdo instanceof PDO) {
         // Worker users available for quick assignment (loaded server-side)
         const workerUsersData = <?php echo json_encode($workerUsers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?> || [];
         const csrfToken = <?php echo json_encode(csrf_token()); ?>;
+        // Client-side upload guard: 450 MB limit (450 * 1024 * 1024 bytes)
+        const MAX_UPLOAD_BYTES = 450 * 1024 * 1024;
 
         // Tab switching functionality
         document.querySelectorAll('.tab-link').forEach(tab => {
@@ -2212,6 +2260,11 @@ if ($pdo instanceof PDO) {
             }
 
             const file = input.files[0];
+            if (typeof MAX_UPLOAD_BYTES !== 'undefined' && file.size > MAX_UPLOAD_BYTES) {
+                showNotification('File is too large. Maximum allowed is 450MB. Increase server PHP limits to accept larger files.', 'error');
+                input.value = '';
+                return;
+            }
             const formData = new FormData();
             formData.append('file', file);
             formData.append('project_id', projectId);
@@ -2254,6 +2307,11 @@ if ($pdo instanceof PDO) {
             }
 
             const file = input.files[0];
+            if (typeof MAX_UPLOAD_BYTES !== 'undefined' && file.size > MAX_UPLOAD_BYTES) {
+                showNotification('Drawing is too large. Maximum allowed is 450MB. Increase server PHP limits to accept larger files.', 'error');
+                input.value = '';
+                return;
+            }
             const formData = new FormData();
             formData.append('file', file);
             formData.append('project_id', projectId);

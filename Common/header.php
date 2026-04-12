@@ -246,6 +246,20 @@ foreach ($stylesheetCandidates as $candidate) {
                 <?php if ($headerMode !== 'dashboard'): ?>
                     <a href="<?php echo esc_attr($roleDashboardLink); ?>" class="btn-alt btn-login"><?php echo esc($headerText('btn_dashboard', 'Dashboard')); ?></a>
                 <?php endif; ?>
+                <!-- Global override: enforce sharp (square) corners across the site -->
+                <style>
+                    /* Remove rounded corners globally; use !important to override framework defaults */
+                    *, *::before, *::after {
+                        border-radius: 0 !important;
+                    }
+
+                    /* Ensure common Bootstrap/Tailwind rounded utility classes are neutralized */
+                    .rounded, .rounded-top, .rounded-bottom, .rounded-start, .rounded-end,
+                    .btn, .badge, .card, .modal-content, .dropdown-menu, .nav-pills .nav-link,
+                    .alt-hamburger span {
+                        border-radius: 0 !important;
+                    }
+                </style>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo esc($headerText('btn_logout', 'Logout')); ?></a>
             <?php else: ?>
                 <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login"><?php echo esc($headerText('btn_login', 'Login')); ?></a>
