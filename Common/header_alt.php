@@ -43,7 +43,25 @@ foreach ($candidates as $c) {
 <?php endif; ?>
 <nav class="alt-header">
     <div class="alt-logo">
-        <a href="<?php echo BASE_PATH; ?>/public/index.php" class="flex items-center gap-3 no-underline">
+        <?php
+            $logoHref = rtrim((string)BASE_PATH, '/') . '/public/index.php';
+            if (function_exists('current_user')) {
+                $cu = current_user();
+                $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
+                if ($role === 'client') {
+                    $logoHref = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
+                } elseif ($role === 'worker') {
+                    $logoHref = rtrim((string)BASE_PATH, '/') . '/worker/dashboard.php';
+                } elseif ($role === 'admin') {
+                    $logoHref = rtrim((string)BASE_PATH, '/') . '/admin/dashboard.php';
+                } elseif (function_exists('auth_dashboard_url')) {
+                    $logoHref = auth_dashboard_url();
+                }
+            } elseif (function_exists('is_logged_in') && is_logged_in() && function_exists('auth_dashboard_url')) {
+                $logoHref = auth_dashboard_url();
+            }
+        ?>
+        <a href="<?php echo htmlspecialchars($logoHref, ENT_QUOTES, 'UTF-8'); ?>" class="flex items-center gap-3 no-underline">
             <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
             <span class="text-white font-serif font-bold text-xl tracking-tight">Ripal Design</span>
         </a>
@@ -83,11 +101,28 @@ foreach ($candidates as $c) {
                     $sessionRole = is_array($sessionUser) ? strtolower((string)($sessionUser['role'] ?? '')) : '';
                 }
 
+                $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php';
+                if (function_exists('current_user')) {
+                    $cu = current_user();
+                    $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
+                    if ($role === 'client') {
+                        $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
+                    } elseif ($role === 'worker') {
+                        $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/worker/dashboard.php';
+                    } elseif ($role === 'admin') {
+                        $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/admin/dashboard.php';
+                    } elseif (function_exists('auth_dashboard_url')) {
+                        $roleDashboardLink = auth_dashboard_url();
+                    }
+                } elseif (function_exists('is_logged_in') && is_logged_in() && function_exists('auth_dashboard_url')) {
+                    $roleDashboardLink = auth_dashboard_url();
+                }
+
                 $menuSections = [
                     'dashboard' => [
                         'title' => 'Dashboard',
                         'links' => [
-                            ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => 'Dashboard Home'],
+                            ['href' => $roleDashboardLink, 'label' => 'Dashboard Home'],
                             ['href' => $dashboardProfileUrl, 'label' => 'Profile Settings'],
                             ['href' => BASE_PATH . '/dashboard/review_requests.php', 'label' => 'Review Requests'],
                         ],
