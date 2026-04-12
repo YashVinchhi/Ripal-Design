@@ -385,7 +385,18 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
             ]);
         }
 
-        api_json(['success' => true, 'message' => 'Upload successful.', 'file_path' => $publicPath, 'view_url' => $viewUrl]);
+        // Provide enough metadata for client-side in-place rendering
+        $typeLabel = isset($typeLabel) ? $typeLabel : ($ext !== '' ? strtoupper($ext) : 'FILE');
+        api_json([
+            'success' => true,
+            'message' => 'Upload successful.',
+            'id' => $newId,
+            'name' => $originalName,
+            'type' => $typeLabel,
+            'size_label' => $sizeLabel,
+            'file_path' => $publicPath,
+            'view_url' => $viewUrl
+        ]);
     } catch (Exception $e) {
         @unlink($absolutePath);
         api_json(['success' => false, 'message' => 'Failed to store file metadata.'], 500);

@@ -13,6 +13,9 @@ $sessionRole = strtolower(trim((string)($sessionUser['role'] ?? '')));
 $isClientReadOnly = ($sessionRole === 'client');
 
 $pdo = get_db();
+// Non-destructive toggle: set to false to hide the Drawings tab in the UI
+// while keeping all backend code and upload endpoints intact.
+$SHOW_DRAWINGS_TAB = false;
 
 // Get project ID from URL
 $projectId = $_GET['id'] ?? null;
@@ -719,19 +722,19 @@ if ($pdo instanceof PDO) {
         error_log('Failed to load worker users: ' . $e->getMessage());
         $workerUsers = [];
     }
-        // Load possible owner candidates (clients, employees, admins) for quick assignment
-        $ownerCandidates = [];
-        try {
-                if (function_exists('db_table_exists') && db_table_exists('users')) {
-                // Restrict owner candidates to staff roles only (workers and employees)
-                $ownersStmt = $pdo->prepare("SELECT id, COALESCE(NULLIF(full_name, ''), TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')))) AS full_name, COALESCE(email, username) AS contact, role FROM users WHERE role IN ('worker','employee') ORDER BY full_name ASC");
-                $ownersStmt->execute();
-                $ownerCandidates = $ownersStmt->fetchAll(PDO::FETCH_ASSOC);
-            }
-        } catch (PDOException $e) {
-            error_log('Failed to load owner candidates: ' . $e->getMessage());
-            $ownerCandidates = [];
+    // Load possible owner candidates (clients, employees, admins) for quick assignment
+    $ownerCandidates = [];
+    try {
+        if (function_exists('db_table_exists') && db_table_exists('users')) {
+            // Restrict owner candidates to staff roles only (workers and employees)
+            $ownersStmt = $pdo->prepare("SELECT id, COALESCE(NULLIF(full_name, ''), TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')))) AS full_name, COALESCE(email, username) AS contact, role FROM users WHERE role IN ('worker','employee') ORDER BY full_name ASC");
+            $ownersStmt->execute();
+            $ownerCandidates = $ownersStmt->fetchAll(PDO::FETCH_ASSOC);
         }
+    } catch (PDOException $e) {
+        error_log('Failed to load owner candidates: ' . $e->getMessage());
+        $ownerCandidates = [];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -965,6 +968,7 @@ if ($pdo instanceof PDO) {
 
             /* Mobile-specific adjustments to improve stacking and button behavior */
             @media (max-width: 640px) {
+
                 /* File cards should stack vertically on small screens */
                 .project-file-card {
                     flex-direction: column !important;
@@ -997,7 +1001,7 @@ if ($pdo instanceof PDO) {
                     line-height: 1.2 !important;
                 }
 
-</pre>            /* Slightly reduce horizontal tab padding on very small screens */
+                /* Slightly reduce horizontal tab padding on very small screens */
                 .tab-link {
                     padding-left: 0.6rem !important;
                     padding-right: 0.6rem !important;
@@ -1005,7 +1009,9 @@ if ($pdo instanceof PDO) {
             }
 
             /* Make all corners sharp to match UI theme */
-            *, *::before, *::after {
+            *,
+            *::before,
+            *::after {
                 border-radius: 0 !important;
             }
     </style>
@@ -1048,41 +1054,41 @@ if ($pdo instanceof PDO) {
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 class="text-4xl font-serif font-bold text-white"><?php echo htmlspecialchars($project['name']); ?></h1>
-                <!-- Owner Contact Modal -->
-                <div id="ownerContactModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-                    <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
-                        <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                            <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100">Owner Contact Details</h3>
-                            <button onclick="closeOwnerContactModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                                <span class="material-icons">close</span>
-                            </button>
-                        </div>
-                        <div class="p-6 space-y-4">
-                            <div class="flex items-center gap-4">
-                                <div id="owner-contact-initials" class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">--</div>
-                                <div>
-                                    <h3 id="owner-contact-name" class="font-semibold text-slate-800 dark:text-slate-100">Name</h3>
-                                    <p id="owner-contact-role" class="text-sm text-slate-500">Owner</p>
-                                </div>
+                    <!-- Owner Contact Modal -->
+                    <div id="ownerContactModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
+                            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100">Owner Contact Details</h3>
+                                <button onclick="closeOwnerContactModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                    <span class="material-icons">close</span>
+                                </button>
                             </div>
-                            <div id="owner-contact-phones" class="space-y-2">
-                                <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                    <span class="material-icons text-sm">phone</span>
-                                    <span id="owner-contact-phone">Not available</span>
+                            <div class="p-6 space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <div id="owner-contact-initials" class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">--</div>
+                                    <div>
+                                        <h3 id="owner-contact-name" class="font-semibold text-slate-800 dark:text-slate-100">Name</h3>
+                                        <p id="owner-contact-role" class="text-sm text-slate-500">Owner</p>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                    <span class="material-icons text-sm">email</span>
-                                    <span id="owner-contact-email">Not available</span>
+                                <div id="owner-contact-phones" class="space-y-2">
+                                    <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                        <span class="material-icons text-sm">phone</span>
+                                        <span id="owner-contact-phone">Not available</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                        <span class="material-icons text-sm">email</span>
+                                        <span id="owner-contact-email">Not available</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="flex justify-end">
-                                <button onclick="closeOwnerContactModal()" class="px-4 py-2 border rounded text-sm">Close</button>
+                                <div class="flex justify-end">
+                                    <button onclick="closeOwnerContactModal()" class="px-4 py-2 border rounded text-sm">Close</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Modal for Adding Team Member -->
+                    <!-- Modal for Adding Team Member -->
                     <p class="text-gray-400 mt-2 flex items-center gap-1">
                         <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust"></i>
                         <?php if ($projectDirectionHref !== ''): ?>
@@ -1124,8 +1130,10 @@ if ($pdo instanceof PDO) {
                 data-tab="files">Files</a>
             <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
                 data-tab="activity">Activity</a>
-            <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
-                data-tab="drawings">Drawings</a>
+            <?php if (!empty($SHOW_DRAWINGS_TAB)): ?>
+                <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
+                    data-tab="drawings">Drawings</a>
+            <?php endif; ?>
         </div>
 
         <!-- Overview Tab -->
@@ -1321,26 +1329,26 @@ if ($pdo instanceof PDO) {
                                     </div>
                                 <?php endif; ?>
                             </div>
-                                    <button
-                                        onclick='openOwnerContactModal(<?php echo json_encode($project['owner'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'
-                                        class="w-full mt-6 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                        View Contact Details
-                                    </button>
-                                    <?php if (!$isClientReadOnly): ?>
-                                        <button onclick="openOwnerAssignModal()"
-                                            class="w-full mt-2 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                            Change Owner
-                                        </button>
-                                    <?php endif; ?>
+                            <button
+                                onclick='openOwnerContactModal(<?php echo json_encode($project['owner'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'
+                                class="w-full mt-6 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                View Contact Details
+                            </button>
+                            <?php if (!$isClientReadOnly): ?>
+                                <button onclick="openOwnerAssignModal()"
+                                    class="w-full mt-2 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    Change Owner
+                                </button>
+                            <?php endif; ?>
                         <?php else: ?>
-                                    <div
-                                        class="bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6">
-                                        <span class="material-icons text-3xl mb-2">person_off</span>
-                                        <p class="text-sm">No owner assigned</p>
-                                    </div>
-                                    <?php if (!$isClientReadOnly): ?>
-                                        <button onclick="openOwnerAssignModal()" class="w-full mt-4 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Assign Owner</button>
-                                    <?php endif; ?>
+                            <div
+                                class="bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6">
+                                <span class="material-icons text-3xl mb-2">person_off</span>
+                                <p class="text-sm">No owner assigned</p>
+                            </div>
+                            <?php if (!$isClientReadOnly): ?>
+                                <button onclick="openOwnerAssignModal()" class="w-full mt-4 py-2 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Assign Owner</button>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
 
@@ -1354,9 +1362,9 @@ if ($pdo instanceof PDO) {
                                 <?php foreach ($project['milestones'] as $milestone):
                                     $dotColor = ($milestone['status'] === 'completed') ? 'bg-green-500' : (($milestone['status'] === 'active') ? 'bg-primary' : 'bg-slate-300');
                                 ?>
-                                     <div class="flex gap-3 cursor-pointer p-2 rounded hover:bg-slate-50" role="button" tabindex="0"
-                                         data-milestone='<?php echo htmlspecialchars(json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES); ?>'
-                                         onclick='openMilestoneModal(<?php echo json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                    <div class="flex gap-3 cursor-pointer p-2 rounded hover:bg-slate-50" role="button" tabindex="0"
+                                        data-milestone='<?php echo htmlspecialchars(json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES); ?>'
+                                        onclick='openMilestoneModal(<?php echo json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                         <div class="mt-1 w-2 h-2 rounded-full <?php echo $dotColor; ?> shrink-0"></div>
                                         <div>
                                             <p class="text-sm font-medium"><?php echo htmlspecialchars($milestone['title']); ?></p>
@@ -1472,7 +1480,7 @@ if ($pdo instanceof PDO) {
             }
             ?>
 
-            <?php if (!empty($project['files'])): ?>
+                <?php if (!empty($project['files'])): ?>
                 <div class="space-y-2">
                     <?php foreach ($project['files'] as $file):
                         $fileDisplay = getFileIcon($file['type']);
@@ -1484,7 +1492,7 @@ if ($pdo instanceof PDO) {
                             'ext' => strtolower((string)($file['type'] ?? '')),
                         ]);
                     ?>
-                        <div
+                        <div id="file-card-<?php echo (int)$file['id']; ?>"
                             class="project-file-card flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
                             <div class="<?php echo $fileDisplay['color']; ?> w-12 h-12 flex items-center justify-center shrink-0">
                                 <span class="material-icons text-3xl"><?php echo $fileDisplay['icon']; ?></span>
@@ -1589,79 +1597,81 @@ if ($pdo instanceof PDO) {
         </div>
 
         <!-- Drawings Tab -->
-        <div class="tab-content" id="drawings-tab">
-            <div class="mb-6 flex justify-between items-center">
-                <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Technical Drawings</h2>
-                <button onclick="document.getElementById('drawingUploadInput').click()"
-                    class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-                    <span class="material-icons text-sm">add</span> Upload Drawing
-                </button>
-            </div>
-
-            <?php
-            $statusColors = [
-                'Approved' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-                'Under Review' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-                'Revision Needed' => 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-            ];
-            ?>
-
-            <?php if (!empty($project['drawings'])): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <?php foreach ($project['drawings'] as $drawing):
-                        $statusClass = $statusColors[$drawing['status']] ?? '';
-                        $drawingUrl = project_file_url($drawing['file_path'] ?? '');
-                        $drawingViewUrl = file_viewer_url([
-                            'kind' => 'drawing',
-                            'id' => (int)($drawing['id'] ?? 0),
-                            'project_id' => (int)$projectId,
-                            'ext' => strtolower((string)pathinfo((string)($drawing['name'] ?? ''), PATHINFO_EXTENSION)),
-                        ]);
-                    ?>
-                        <div
-                            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                            <div class="aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <span class="material-icons text-6xl text-slate-300">architecture</span>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-1"><?php echo htmlspecialchars($drawing['name']); ?></h3>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-2"><?php echo htmlspecialchars($drawing['version']); ?> • <?php echo formatDate($drawing['uploaded_at']); ?><?php if (!empty($drawing['uploaded_by'])): ?> • Uploaded by <?php echo htmlspecialchars($drawing['uploaded_by']); ?><?php endif; ?></p>
-                                <span class="inline-block px-2 py-0.5 <?php echo $statusClass; ?> rounded text-xs font-medium mb-3">
-                                    <?php echo htmlspecialchars($drawing['status']); ?>
-                                </span>
-                                <div class="flex gap-2">
-                                    <?php if ($drawingUrl !== ''): ?>
-                                        <a href="<?php echo htmlspecialchars($drawingViewUrl); ?>" target="_blank" rel="noopener noreferrer"
-                                            class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">
-                                            View
-                                        </a>
-                                    <?php else: ?>
-                                        <button disabled
-                                            class="flex-1 px-3 py-1.5 bg-slate-300 text-slate-500 rounded text-xs font-medium cursor-not-allowed">
-                                            View
-                                        </button>
-                                    <?php endif; ?>
-                                    <button onclick="deleteDrawing(<?php echo $drawing['id']; ?>)"
-                                        class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                                        <span class="material-icons text-sm">delete</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
-                    <span class="material-icons text-6xl text-slate-300 mb-4">architecture</span>
-                    <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Drawings Yet</h3>
-                    <p class="text-slate-500 dark:text-slate-400 mb-6">Upload technical drawings for this project.</p>
+        <?php if (!empty($SHOW_DRAWINGS_TAB)): ?>
+            <div class="tab-content" id="drawings-tab">
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Technical Drawings</h2>
                     <button onclick="document.getElementById('drawingUploadInput').click()"
-                        class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
-                        <span class="material-icons text-sm">add</span> Upload First Drawing
+                        class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                        <span class="material-icons text-sm">add</span> Upload Drawing
                     </button>
                 </div>
-            <?php endif; ?>
-        </div>
+
+                <?php
+                $statusColors = [
+                    'Approved' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+                    'Under Review' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+                    'Revision Needed' => 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                ];
+                ?>
+
+                <?php if (!empty($project['drawings'])): ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <?php foreach ($project['drawings'] as $drawing):
+                            $statusClass = $statusColors[$drawing['status']] ?? '';
+                            $drawingUrl = project_file_url($drawing['file_path'] ?? '');
+                            $drawingViewUrl = file_viewer_url([
+                                'kind' => 'drawing',
+                                'id' => (int)($drawing['id'] ?? 0),
+                                'project_id' => (int)$projectId,
+                                'ext' => strtolower((string)pathinfo((string)($drawing['name'] ?? ''), PATHINFO_EXTENSION)),
+                            ]);
+                        ?>
+                            <div id="drawing-card-<?php echo (int)$drawing['id']; ?>"
+                                class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                                <div class="aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                    <span class="material-icons text-6xl text-slate-300">architecture</span>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-1"><?php echo htmlspecialchars($drawing['name']); ?></h3>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-2"><?php echo htmlspecialchars($drawing['version']); ?> • <?php echo formatDate($drawing['uploaded_at']); ?><?php if (!empty($drawing['uploaded_by'])): ?> • Uploaded by <?php echo htmlspecialchars($drawing['uploaded_by']); ?><?php endif; ?></p>
+                                    <span class="inline-block px-2 py-0.5 <?php echo $statusClass; ?> rounded text-xs font-medium mb-3">
+                                        <?php echo htmlspecialchars($drawing['status']); ?>
+                                    </span>
+                                    <div class="flex gap-2">
+                                        <?php if ($drawingUrl !== ''): ?>
+                                            <a href="<?php echo htmlspecialchars($drawingViewUrl); ?>" target="_blank" rel="noopener noreferrer"
+                                                class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">
+                                                View
+                                            </a>
+                                        <?php else: ?>
+                                            <button disabled
+                                                class="flex-1 px-3 py-1.5 bg-slate-300 text-slate-500 rounded text-xs font-medium cursor-not-allowed">
+                                                View
+                                            </button>
+                                        <?php endif; ?>
+                                        <button onclick="deleteDrawing(<?php echo $drawing['id']; ?>)"
+                                            class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                            <span class="material-icons text-sm">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12 text-center">
+                        <span class="material-icons text-6xl text-slate-300 mb-4">architecture</span>
+                        <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Drawings Yet</h3>
+                        <p class="text-slate-500 dark:text-slate-400 mb-6">Upload technical drawings for this project.</p>
+                        <button onclick="document.getElementById('drawingUploadInput').click()"
+                            class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
+                            <span class="material-icons text-sm">add</span> Upload First Drawing
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
     </main>
 
@@ -1680,7 +1690,8 @@ if ($pdo instanceof PDO) {
                 <div class="max-h-64 overflow-auto space-y-2">
                     <?php if (!empty($ownerCandidates)): ?>
                         <?php foreach ($ownerCandidates as $oc): ?>
-                            <?php $ocId = (int)($oc['id'] ?? 0); $ocName = trim((string)($oc['full_name'] ?? $oc['contact'] ?? '')); ?>
+                            <?php $ocId = (int)($oc['id'] ?? 0);
+                            $ocName = trim((string)($oc['full_name'] ?? $oc['contact'] ?? '')); ?>
                             <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
                                 <div class="min-w-0 mr-3">
                                     <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($ocName); ?></p>
@@ -1695,7 +1706,9 @@ if ($pdo instanceof PDO) {
                         <div class="p-3 text-sm text-slate-500">No owner candidates available.</div>
                     <?php endif; ?>
                     <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
-                        <div><p class="text-sm text-slate-500">— Unassign —</p></div>
+                        <div>
+                            <p class="text-sm text-slate-500">— Unassign —</p>
+                        </div>
                         <div><button type="button" onclick="selectOwner(0, '')" class="px-3 py-1.5 border rounded text-xs">Unassign</button></div>
                     </div>
                 </div>
@@ -2250,6 +2263,112 @@ if ($pdo instanceof PDO) {
             });
         }
 
+        // Helper: create element from HTML string
+        function createElementFromHTML(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html.trim();
+            return div.firstElementChild;
+        }
+
+        // Helper: basic HTML escape for inserted text
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>\"']/g, function (m) {
+                return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+            });
+        }
+
+        // Insert a newly uploaded file into the Files list without reloading
+        function insertFileCard(data) {
+            try {
+                const filesTab = document.getElementById('files-tab');
+                let container = filesTab ? filesTab.querySelector('.space-y-2') : null;
+                if (!container && filesTab) {
+                    // remove fallback card if present
+                    const fallback = filesTab.querySelector('.p-12.text-center');
+                    if (fallback) fallback.remove();
+                    container = document.createElement('div');
+                    container.className = 'space-y-2';
+                    filesTab.appendChild(container);
+                }
+                if (!container) return;
+
+                const id = String(data.id || 'new');
+                const viewUrl = data.view_url || '#';
+                const filePath = data.file_path || '#';
+                const type = data.type || 'FILE';
+                const sizeLabel = data.size_label || '';
+                const name = data.name || 'New File';
+
+                const fileHtml = `
+                    <div id="file-card-${id}" class="project-file-card flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
+                        <div class="text-slate-500 w-12 h-12 flex items-center justify-center shrink-0">
+                            <span class="material-icons text-3xl">insert_drive_file</span>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <p class="font-medium text-slate-800 dark:text-slate-100 truncate">${escapeHtml(name)}</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">${escapeHtml(type)} • ${escapeHtml(sizeLabel)} • Uploaded just now by You</p>
+                        </div>
+                        <div class="file-actions flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
+                            <a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline text-center">View</a>
+                            <a href="${escapeHtml(filePath)}" download class="w-full sm:w-auto px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center">Download</a>
+                            <button onclick="deleteFile(${id})" class="w-full sm:w-auto px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"><span class="material-icons text-sm">delete</span></button>
+                        </div>
+                    </div>
+                `;
+
+                const el = createElementFromHTML(fileHtml);
+                container.insertBefore(el, container.firstChild);
+            } catch (e) {
+                console.error('insertFileCard error', e);
+            }
+        }
+
+        // Insert a newly uploaded drawing into the Drawings grid without reloading
+        function insertDrawingCard(data) {
+            try {
+                const drawingsTab = document.getElementById('drawings-tab');
+                let container = drawingsTab ? drawingsTab.querySelector('.grid') : null;
+                if (!container && drawingsTab) {
+                    const fallback = drawingsTab.querySelector('.p-12.text-center');
+                    if (fallback) fallback.remove();
+                    container = document.createElement('div');
+                    container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+                    drawingsTab.appendChild(container);
+                }
+                if (!container) return;
+
+                const id = String(data.id || 'new');
+                const viewUrl = data.view_url || '#';
+                const filePath = data.file_path || '#';
+                const name = data.name || 'New Drawing';
+                const type = data.type || '';
+
+                const drawingHtml = `
+                    <div id="drawing-card-${id}" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                            <span class="material-icons text-6xl text-slate-300">architecture</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-1">${escapeHtml(name)}</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">Uploaded just now • by You</p>
+                            <div class="flex gap-2">
+                                <a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener noreferrer" class="flex-1 px-3 py-1.5 bg-primary text-white rounded text-xs text-center font-medium hover:opacity-90 transition-opacity">View</a>
+                                <button onclick="deleteDrawing(${id})" class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"><span class="material-icons text-sm">delete</span></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const el = createElementFromHTML(drawingHtml);
+                container.insertBefore(el, container.firstChild);
+            } catch (e) {
+                console.error('insertDrawingCard error', e);
+            }
+        }
+
+        // Basic attribute escape (uses same escaping as escapeHtml for safety)
+        function escapeAttr(s) { return escapeHtml(s); }
+
         // File upload function
         async function uploadFile(input) {
             if (!input.files || input.files.length === 0) return;
@@ -2282,10 +2401,8 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('File uploaded successfully!', 'success');
                     logActivity('uploaded file', file.name);
-                    if (result.view_url) {
-                        window.open(result.view_url, '_blank', 'noopener,noreferrer');
-                    }
-                    setTimeout(() => window.location.reload(), 1000);
+                    // Do not auto-open preview tab; instead insert the new file card into the list
+                    if (result.id) insertFileCard(result);
                 } else {
                     showNotification(result.message || 'Upload failed', 'error');
                 }
@@ -2329,7 +2446,7 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('Drawing uploaded successfully!', 'success');
                     logActivity('uploaded drawing', file.name);
-                    setTimeout(() => window.location.reload(), 1000);
+                    if (result.id) insertDrawingCard(result);
                 } else {
                     showNotification(result.message || 'Upload failed', 'error');
                 }
@@ -2362,7 +2479,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('File deleted successfully!', 'success');
                     logActivity('deleted file', '');
-                    setTimeout(() => window.location.reload(), 1000);
+                    // Remove the file card from DOM instead of reloading
+                    const el = document.getElementById('file-card-' + fileId);
+                    if (el && el.parentNode) el.parentNode.removeChild(el);
                 } else {
                     showNotification(result.message || 'Delete failed', 'error');
                 }
@@ -2393,7 +2512,8 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('Drawing deleted successfully!', 'success');
                     logActivity('deleted drawing', '');
-                    setTimeout(() => window.location.reload(), 1000);
+                    const el = document.getElementById('drawing-card-' + drawingId);
+                    if (el && el.parentNode) el.parentNode.removeChild(el);
                 } else {
                     showNotification(result.message || 'Delete failed', 'error');
                 }
@@ -2480,17 +2600,17 @@ if ($pdo instanceof PDO) {
             }, 3000);
         }
 
-            // If server provided a success message, show it as a navbar popup using the shared notification helper
-            try {
-                if (window.__projectSuccessMessage) {
-                    showNotification(window.__projectSuccessMessage, 'success');
-                    // clear to avoid duplicate notifications on dynamic reloads
-                    window.__projectSuccessMessage = null;
-                }
-            } catch (e) {
-                // ignore if showNotification isn't available for any reason
-                console.warn('Notification display skipped:', e);
+        // If server provided a success message, show it as a navbar popup using the shared notification helper
+        try {
+            if (window.__projectSuccessMessage) {
+                showNotification(window.__projectSuccessMessage, 'success');
+                // clear to avoid duplicate notifications on dynamic reloads
+                window.__projectSuccessMessage = null;
             }
+        } catch (e) {
+            // ignore if showNotification isn't available for any reason
+            console.warn('Notification display skipped:', e);
+        }
 
         // Real-time progress bar update
         function updateProgress(percentage) {
@@ -2649,8 +2769,12 @@ if ($pdo instanceof PDO) {
             if (e.key === 'Escape') {
                 closeAddTeamMemberModal();
                 // also close owner assign/contact modals if open
-                try { closeOwnerAssignModal(); } catch (err) {}
-                try { closeOwnerContactModal(); } catch (err) {}
+                try {
+                    closeOwnerAssignModal();
+                } catch (err) {}
+                try {
+                    closeOwnerContactModal();
+                } catch (err) {}
             }
         });
 
@@ -2842,7 +2966,11 @@ if ($pdo instanceof PDO) {
                 if (deleteBtn) deleteBtn.classList.add('hidden');
             }
             modal.classList.remove('hidden');
-            setTimeout(() => { try { titleInput.focus(); } catch (e) {} }, 60);
+            setTimeout(() => {
+                try {
+                    titleInput.focus();
+                } catch (e) {}
+            }, 60);
         }
 
         function closeMilestoneModal() {
@@ -2948,7 +3076,11 @@ if ($pdo instanceof PDO) {
                 // Accept YYYY-MM-DD or ISO strings
                 const d = new Date(dateString);
                 if (isNaN(d)) return dateString;
-                return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                return d.toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
             }
 
             function appendMilestoneToList(m) {
@@ -3004,7 +3136,11 @@ if ($pdo instanceof PDO) {
                 const row = document.createElement('div');
                 row.className = 'flex gap-3 cursor-pointer p-2 rounded hover:bg-slate-50';
                 // store milestone data for potential edit
-                try { row.dataset.milestone = JSON.stringify(m); } catch (e) { row.dataset.milestone = '' }
+                try {
+                    row.dataset.milestone = JSON.stringify(m);
+                } catch (e) {
+                    row.dataset.milestone = ''
+                }
 
                 const formattedDate = m.target_date ? formatDateJS(m.target_date) : '';
                 row.innerHTML = `
@@ -3017,7 +3153,11 @@ if ($pdo instanceof PDO) {
 
                 row.addEventListener('click', function() {
                     let data = null;
-                    try { data = JSON.parse(this.dataset.milestone || null); } catch (e) { data = null; }
+                    try {
+                        data = JSON.parse(this.dataset.milestone || null);
+                    } catch (e) {
+                        data = null;
+                    }
                     openMilestoneModal(data);
                 });
 
@@ -3068,7 +3208,13 @@ if ($pdo instanceof PDO) {
             function escapeHtml(s) {
                 if (!s) return '';
                 return String(s).replace(/[&<>"']/g, function(c) {
-                    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c];
+                    return {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": "&#39;"
+                    } [c];
                 });
             }
         })();
