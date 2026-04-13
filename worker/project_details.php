@@ -104,6 +104,88 @@ function worker_file_url($path) {
     $normalized = ltrim($normalized, '/');
     return rtrim((string)BASE_PATH, '/') . '/' . $normalized;
 }
+
+$selectedResourceKind = strtolower(trim((string)($_GET['resource_kind'] ?? ($_GET['kind'] ?? ''))));
+$selectedResourceId = (int)($_GET['resource_id'] ?? ($_GET['id'] ?? 0));
+if ($selectedResourceId <= 0 && isset($_GET['drawing_id'])) {
+    $selectedResourceKind = 'drawing';
+    $selectedResourceId = (int)$_GET['drawing_id'];
+}
+if ($selectedResourceId <= 0 && isset($_GET['file_id'])) {
+    $selectedResourceKind = 'file';
+    $selectedResourceId = (int)$_GET['file_id'];
+}
+
+$projectResources = [];
+
+foreach ($project['files'] ?? [] as $f) {
+    $typeHint = strtolower(trim((string)($f['type'] ?? '')));
+    $path = (string)($f['file_path'] ?? ($f['storage_path'] ?? ''));
+    $ext = strtolower((string)pathinfo((string)$path, PATHINFO_EXTENSION));
+    if ($ext === '' && preg_match('/^[a-z0-9]{2,8}$/', $typeHint)) {
+        $ext = $typeHint;
+    }
+    $projectResources[] = [
+        'kind' => 'file',
+        'id' => (int)($f['id'] ?? 0),
+        'title' => (string)($f['name'] ?? 'File'),
+        'date' => (string)($f['uploaded_at'] ?? date('Y-m-d H:i:s')),
+        'status' => 'uploaded',
+        'version' => '',
+        'file_path' => $path,
+        'file_url' => worker_file_url($path),
+        'ext' => $ext,
+        'viewer_url' => rtrim((string)BASE_PATH, '/') . '/worker/project_details.php?id=' . (int)$projectId . '&resource_kind=file&resource_id=' . (int)($f['id'] ?? 0) . '#drawings',
+    ];
+}
+
+foreach ($project['drawings'] ?? [] as $d) {
+    $path = (string)($d['file_path'] ?? '');
+    $projectResources[] = [
+        'kind' => 'drawing',
+        'id' => (int)($d['id'] ?? 0),
+        'title' => (string)($d['title'] ?? 'Drawing'),
+        'date' => (string)($d['date'] ?? date('Y-m-d H:i:s')),
+        'status' => (string)($d['status'] ?? 'under_review'),
+        'version' => (string)($d['version'] ?? 'v1'),
+        'file_path' => $path,
+        'file_url' => worker_file_url($path),
+        'ext' => strtolower((string)pathinfo((string)(($path !== '') ? $path : ($d['title'] ?? '')), PATHINFO_EXTENSION)),
+        'viewer_url' => rtrim((string)BASE_PATH, '/') . '/worker/project_details.php?id=' . (int)$projectId . '&resource_kind=drawing&resource_id=' . (int)($d['id'] ?? 0) . '#drawings',
+    ];
+}
+
+usort($projectResources, function ($a, $b) {
+    $ta = strtotime((string)($a['date'] ?? '')) ?: 0;
+    $tb = strtotime((string)($b['date'] ?? '')) ?: 0;
+    return $tb <=> $ta;
+});
+
+$activeResource = !empty($projectResources) ? $projectResources[0] : null;
+foreach ($projectResources as $resource) {
+    if ($selectedResourceId > 0 && (int)$resource['id'] === $selectedResourceId && ($selectedResourceKind === '' || $selectedResourceKind === (string)$resource['kind'])) {
+        $activeResource = $resource;
+        break;
+    }
+}
+
+$workerPreviewUrl = (string)($activeResource['file_url'] ?? '');
+$workerFileName = (string)($activeResource['title'] ?? 'N/A');
+$workerStatus = (string)($activeResource['status'] ?? 'under_review');
+$workerVersion = (string)($activeResource['version'] ?? 'v1');
+$workerUploadedAt = (string)($activeResource['date'] ?? '');
+$workerExt = strtolower((string)($activeResource['ext'] ?? ''));
+$workerViewerMode = 'unsupported';
+if (in_array($workerExt, ['glb', 'gltf'], true)) {
+    $workerViewerMode = '3d';
+} elseif (in_array($workerExt, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+    $isPanoName = (bool)preg_match('/(^|[_\-\s])(360|pano|panorama|equirect)/i', $workerFileName);
+    $workerViewerMode = $isPanoName ? '360' : 'image';
+} elseif ($workerExt === 'pdf') {
+    $workerViewerMode = 'pdf';
+} elseif (in_array($workerExt, ['mp4', 'webm', 'ogg'], true)) {
+    $workerViewerMode = 'video';
+}
 ?>
 <!doctype html>
 <html lang="en" class="bg-canvas-white">
@@ -151,10 +233,69 @@ function worker_file_url($path) {
         $request_sent = true;
     }
     ?>
+    <?php if ($workerViewerMode === '360' && $workerPreviewUrl !== ''): ?>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+    <?php endif; ?>
+    <?php if ($workerViewerMode === '3d' && $workerPreviewUrl !== ''): ?>
+        <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <?php endif; ?>
+    <?php if ($workerViewerMode === '360' && $workerPreviewUrl !== ''): ?>
+        <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <?php endif; ?>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <style>
         .error { color: #94180C; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
+        .viewer-3d-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            transition: opacity 220ms ease;
+        }
+        .viewer-3d-modal.is-open { display: flex; opacity: 1; }
+        .viewer-3d-dialog {
+            width: min(96vw, 1400px);
+            height: min(92vh, 900px);
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .viewer-3d-canvas {
+            width: 100%;
+            height: 100%;
+            --progress-bar-color: #94180c;
+            --poster-color: #0f172a;
+        }
+        .viewer-3d-viewport {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            background: #020617;
+        }
+        .viewer-3d-error {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            background: rgba(2, 6, 23, 0.9);
+            color: #e2e8f0;
+            z-index: 4;
+        }
+        .viewer-3d-error.is-visible { display: flex; }
     </style>
 </head>
 <body class="font-sans text-foundation-grey bg-canvas-white">
@@ -332,35 +473,103 @@ function worker_file_url($path) {
                 <i data-lucide="file-text" class="w-4 h-4 text-rajkot-rust text-opacity-50"></i>
                 Technical Drawings
             </h2>
-            <div class="grid grid-cols-1 gap-3">
-                <?php foreach($project['drawings'] as $d): ?>
-                <?php $drawingUrl = worker_file_url($d['file_path'] ?? ''); ?>
-                <?php $drawingViewUrl = !empty($d['id']) ? file_viewer_url(['kind' => 'drawing', 'id' => (int)$d['id'], 'project_id' => (int)$projectId]) : ($drawingUrl !== '' ? file_viewer_url(['file' => $drawingUrl, 'project_id' => (int)$projectId]) : file_viewer_url(['file' => (string)$d['title'], 'project_id' => (int)$projectId])); ?>
-                <div class="bg-white p-4 shadow-premium border border-gray-100 flex items-center gap-4 group hover:border-rajkot-rust transition-colors cursor-pointer" onclick="window.open('<?php echo htmlspecialchars($drawingViewUrl, ENT_QUOTES, 'UTF-8'); ?>', '_blank')">
-                    <div class="w-12 h-12 bg-foundation-grey group-hover:bg-rajkot-rust transition-colors flex items-center justify-center text-white shrink-0">
-                        <i data-lucide="<?php echo $d['type'] == 'pdf' ? 'file-text' : 'image'; ?>" class="w-6 h-6"></i>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <aside class="bg-white border border-gray-100 shadow-premium p-6 lg:col-span-1" style="height:80vh; overflow:auto;">
+                    <h2 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-4">File Details</h2>
+                    <div class="space-y-3 text-sm">
+                        <p><strong>Project:</strong> <?php echo htmlspecialchars((string)$project['name']); ?></p>
+                        <p><strong>File:</strong> <?php echo htmlspecialchars($workerFileName); ?></p>
+                        <p><strong>Version:</strong> <?php echo htmlspecialchars($workerVersion !== '' ? $workerVersion : 'v1'); ?></p>
+                        <p><strong>Status:</strong> <?php echo htmlspecialchars($workerStatus); ?></p>
+                        <p><strong>Uploaded:</strong> <?php echo $workerUploadedAt ? htmlspecialchars(date('M d, Y H:i', strtotime($workerUploadedAt))) : 'N/A'; ?></p>
                     </div>
-                    <div class="flex-grow min-w-0">
-                        <h4 class="font-bold text-foundation-grey truncate group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars($d['title']); ?></h4>
-                        <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">
-                            Issued: <?php echo date('M d, Y', strtotime($d['date'])); ?> &bull; <span class="text-approval-green">Issued for Construction</span>
-                            <?php if (!empty($d['uploaded_by'])): ?>
-                                &bull; Uploaded by: <?php echo htmlspecialchars($d['uploaded_by']); ?>
-                            <?php endif; ?>
-                        </p>
-                    </div>
-                    <div class="text-gray-300">
-                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                    </div>
-                </div>
-                <?php endforeach; ?>
 
-                <?php if (!$isWorkerReadOnly): ?>
-                <div class="mt-4 p-8 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400">
-                    <i data-lucide="upload-cloud" class="w-10 h-10 mb-2 opacity-50"></i>
-                    <span class="text-xs font-bold uppercase tracking-widest">Share On-site Photo</span>
-                </div>
-                <?php endif; ?>
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <h3 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-3">Project Files</h3>
+                        <div class="space-y-2 max-h-72 overflow-auto pr-1">
+                            <?php foreach ($projectResources as $entry): ?>
+                                <?php $isActiveEntry = !empty($activeResource['id']) && (int)$entry['id'] === (int)$activeResource['id'] && (string)$entry['kind'] === (string)($activeResource['kind'] ?? ''); ?>
+                                <a href="<?php echo htmlspecialchars((string)$entry['viewer_url']); ?>" class="block no-underline border rounded p-2 <?php echo $isActiveEntry ? 'border-rajkot-rust bg-red-50' : 'border-gray-100 bg-white hover:border-rajkot-rust'; ?>">
+                                    <p class="text-xs font-semibold text-foundation-grey break-all"><?php echo htmlspecialchars((string)$entry['title']); ?></p>
+                                    <p class="text-[10px] text-gray-500 mt-1">
+                                        <?php echo htmlspecialchars(strtoupper((string)$entry['kind'])); ?>
+                                        <?php if (!empty($entry['date'])): ?> • <?php echo htmlspecialchars(date('M d, H:i', strtotime((string)$entry['date']))); ?><?php endif; ?>
+                                    </p>
+                                </a>
+                            <?php endforeach; ?>
+                            <?php if (empty($projectResources)): ?>
+                                <p class="text-xs text-gray-400">No files uploaded for this project yet.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="lg:col-span-4 bg-white border border-gray-100 shadow-premium p-6 flex flex-col" style="height:80vh;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-serif font-bold"><?php echo htmlspecialchars($workerFileName); ?></h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] uppercase tracking-widest px-2 py-1 bg-gray-50 border border-gray-100"><?php echo htmlspecialchars($workerStatus); ?></span>
+                        </div>
+                    </div>
+                    <div class="flex-grow border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
+                        <?php if ($workerPreviewUrl === ''): ?>
+                            <div class="h-full flex items-center justify-center text-gray-400 px-8 text-center">
+                                Preview unavailable. File path could not be resolved from saved metadata.
+                            </div>
+                        <?php elseif ($workerViewerMode === '3d'): ?>
+                            <div class="h-full bg-slate-900 text-white flex flex-col">
+                                <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-black/20">
+                                    <div class="flex items-center gap-2">
+                                        <span class="hidden sm:inline text-[10px] uppercase tracking-widest text-gray-300">Drag to rotate • Scroll to zoom</span>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2 justify-end">
+                                        <button type="button" id="open3DPopup" class="text-xs uppercase tracking-widest bg-rajkot-rust hover:bg-red-700 px-3 py-2 text-white font-bold">Fullscreen 3D</button>
+                                    </div>
+                                </div>
+                                <model-viewer
+                                    id="inline3DViewer"
+                                    src="<?php echo htmlspecialchars($workerPreviewUrl); ?>"
+                                    camera-controls
+                                    auto-rotate
+                                    auto-rotate-delay="0"
+                                    rotation-per-second="25deg"
+                                    autoplay
+                                    shadow-intensity="1"
+                                    exposure="1"
+                                    environment-image="neutral"
+                                    class="w-full h-full bg-slate-950"
+                                ></model-viewer>
+                                <div id="inline3DError" class="viewer-3d-error" role="alert">
+                                    <div>
+                                        <p class="text-sm font-semibold mb-2">3D preview failed to load.</p>
+                                        <a href="<?php echo htmlspecialchars($workerPreviewUrl); ?>" target="_blank" rel="noopener" class="inline-block text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open model directly</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php elseif ($workerViewerMode === '360'): ?>
+                            <div class="mb-3 flex flex-wrap items-center gap-2 p-2">
+                                <button type="button" id="zoomInBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Zoom +</button>
+                                <button type="button" id="zoomOutBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Zoom -</button>
+                                <button type="button" id="resetViewBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Reset</button>
+                            </div>
+                            <div id="panoViewer" class="w-full h-full"></div>
+                        <?php elseif ($workerViewerMode === 'image'): ?>
+                            <img src="<?php echo htmlspecialchars($workerPreviewUrl); ?>" alt="<?php echo htmlspecialchars($workerFileName); ?>" class="w-full h-full object-contain bg-white" loading="lazy">
+                        <?php elseif ($workerViewerMode === 'pdf'): ?>
+                            <iframe src="<?php echo htmlspecialchars($workerPreviewUrl); ?>" class="w-full h-full bg-white" title="PDF Preview"></iframe>
+                        <?php elseif ($workerViewerMode === 'video'): ?>
+                            <video controls class="w-full h-full bg-black">
+                                <source src="<?php echo htmlspecialchars($workerPreviewUrl); ?>">
+                                Your browser does not support video preview.
+                            </video>
+                        <?php else: ?>
+                            <div class="h-full flex flex-col items-center justify-center text-gray-500 gap-4 px-8 text-center">
+                                <p>This file type cannot be previewed inline yet.</p>
+                                <a href="<?php echo htmlspecialchars($workerPreviewUrl); ?>" target="_blank" rel="noopener" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-2 text-xs uppercase tracking-wider font-bold no-underline">Open File</a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </section>
             </div>
         </div>
 
@@ -415,6 +624,40 @@ function worker_file_url($path) {
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </div>
 
+<?php if ($workerViewerMode === '3d' && $workerPreviewUrl !== ''): ?>
+    <div id="threeDModal" class="viewer-3d-modal" aria-hidden="true">
+        <div class="viewer-3d-dialog" role="dialog" aria-modal="true" aria-label="3D model fullscreen viewer">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 text-white bg-black/30">
+                <div class="text-xs uppercase tracking-widest text-gray-200">Fullscreen 3D Viewer</div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="modalClose3D" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1">Close</button>
+                </div>
+            </div>
+            <div class="viewer-3d-viewport" id="modal3DViewport">
+                <model-viewer
+                    id="modal3DViewer"
+                    src="<?php echo htmlspecialchars($workerPreviewUrl); ?>"
+                    camera-controls
+                    auto-rotate
+                    auto-rotate-delay="0"
+                    rotation-per-second="30deg"
+                    autoplay
+                    shadow-intensity="1"
+                    exposure="1"
+                    environment-image="neutral"
+                    class="viewer-3d-canvas"
+                ></model-viewer>
+                <div id="modal3DError" class="viewer-3d-error" role="alert">
+                    <div>
+                        <p class="text-sm font-semibold mb-2">3D preview failed to load.</p>
+                        <a href="<?php echo htmlspecialchars($workerPreviewUrl); ?>" target="_blank" rel="noopener" class="inline-block text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open model directly</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
 <script>
     function switchTab(tab) {
         // Update Buttons
@@ -446,34 +689,128 @@ function worker_file_url($path) {
 
     $(document).ready(function() {
         if (!document.getElementById('requestForm')) {
-            return;
+            // Viewer logic should still run without request form.
+        } else {
+            $("#requestForm").validate({
+                rules: {
+                    request_subject: {
+                        required: true,
+                        minlength: 5
+                    },
+                    request_details: {
+                        required: true,
+                        minlength: 10
+                    }
+                },
+                messages: {
+                    request_subject: {
+                        required: "Subject is required for registry",
+                        minlength: "Subject must be at least 5 characters"
+                    },
+                    request_details: {
+                        required: "Detailed context is mandatory",
+                        minlength: "Please provide more detail for the architect"
+                    }
+                },
+                errorPlacement: function(error, element) {
+                    error.insertAfter(element);
+                }
+            });
         }
 
-        $("#requestForm").validate({
-            rules: {
-                request_subject: {
-                    required: true,
-                    minlength: 5
-                },
-                request_details: {
-                    required: true,
-                    minlength: 10
+        <?php if ($workerViewerMode === '3d' && $workerPreviewUrl !== ''): ?>
+        const open3DPopup = document.getElementById('open3DPopup');
+        const threeDModal = document.getElementById('threeDModal');
+        const modalClose3D = document.getElementById('modalClose3D');
+        const inline3DViewer = document.getElementById('inline3DViewer');
+        const modal3DViewer = document.getElementById('modal3DViewer');
+        const inline3DError = document.getElementById('inline3DError');
+        const modal3DError = document.getElementById('modal3DError');
+
+        function open3DModal() {
+            if (!threeDModal) {
+                return;
+            }
+            threeDModal.classList.add('is-open');
+            threeDModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function close3DModal() {
+            if (!threeDModal) {
+                return;
+            }
+            threeDModal.classList.remove('is-open');
+            threeDModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        if (open3DPopup) {
+            open3DPopup.addEventListener('click', open3DModal);
+        }
+        if (modalClose3D) {
+            modalClose3D.addEventListener('click', close3DModal);
+        }
+        if (threeDModal) {
+            threeDModal.addEventListener('click', function(event) {
+                if (event.target === threeDModal) {
+                    close3DModal();
                 }
-            },
-            messages: {
-                request_subject: {
-                    required: "Subject is required for registry",
-                    minlength: "Subject must be at least 5 characters"
-                },
-                request_details: {
-                    required: "Detailed context is mandatory",
-                    minlength: "Please provide more detail for the architect"
-                }
-            },
-            errorPlacement: function(error, element) {
-                error.insertAfter(element);
+            });
+        }
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && threeDModal && threeDModal.classList.contains('is-open')) {
+                close3DModal();
             }
         });
+
+        if (inline3DViewer && inline3DError) {
+            inline3DViewer.addEventListener('error', function() {
+                inline3DError.classList.add('is-visible');
+            });
+        }
+        if (modal3DViewer && modal3DError) {
+            modal3DViewer.addEventListener('error', function() {
+                modal3DError.classList.add('is-visible');
+            });
+        }
+        <?php endif; ?>
+
+        <?php if ($workerViewerMode === '360' && $workerPreviewUrl !== ''): ?>
+        if (window.pannellum) {
+            const panoViewer = pannellum.viewer('panoViewer', {
+                type: 'equirectangular',
+                panorama: <?php echo json_encode($workerPreviewUrl); ?>,
+                autoLoad: true,
+                compass: false,
+                showZoomCtrl: true,
+                showFullscreenCtrl: true,
+                mouseZoom: true
+            });
+
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const resetViewBtn = document.getElementById('resetViewBtn');
+
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', function() {
+                    panoViewer.setHfov(panoViewer.getHfov() - 10);
+                });
+            }
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', function() {
+                    panoViewer.setHfov(panoViewer.getHfov() + 10);
+                });
+            }
+            if (resetViewBtn) {
+                resetViewBtn.addEventListener('click', function() {
+                    panoViewer.setPitch(0);
+                    panoViewer.setYaw(0);
+                    panoViewer.setHfov(100);
+                });
+            }
+        }
+        <?php endif; ?>
     });
 </script>
 

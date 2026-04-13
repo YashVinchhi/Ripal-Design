@@ -76,6 +76,54 @@ function project_file_url($path)
     return $basePath . '/' . $normalized;
 }
 
+// Keep only the latest row per logical file so revisions don't appear as separate cards.
+function collapse_project_file_revisions(array $files): array
+{
+    if (empty($files)) {
+        return [];
+    }
+
+    $collapsed = [];
+    $seen = [];
+
+    $nameToGroup = [];
+    foreach ($files as $row) {
+        $projectId = (int)($row['project_id'] ?? 0);
+        $nameKey = strtolower(trim((string)($row['name'] ?? '')));
+        $nameKey = preg_replace('/\s+/', ' ', $nameKey);
+        $group = trim((string)($row['revision_group'] ?? ''));
+        if ($group !== '' && $nameKey !== '') {
+            $nameToGroup[$projectId . '|' . $nameKey] = $group;
+        }
+    }
+
+    foreach ($files as $row) {
+        $projectId = (int)($row['project_id'] ?? 0);
+        $nameKey = strtolower(trim((string)($row['name'] ?? '')));
+        $nameKey = preg_replace('/\s+/', ' ', $nameKey);
+        $group = trim((string)($row['revision_group'] ?? ''));
+        if ($group === '' && $nameKey !== '') {
+            $group = (string)($nameToGroup[$projectId . '|' . $nameKey] ?? '');
+        }
+        if ($group === '') {
+            $group = $nameKey;
+        }
+        $groupKey = $projectId . '|' . $group;
+
+        if (isset($seen[$groupKey])) {
+            continue;
+        }
+
+        $seen[$groupKey] = true;
+        if (!isset($row['revision_no']) || (int)$row['revision_no'] <= 0) {
+            $row['revision_no'] = 1;
+        }
+        $collapsed[] = $row;
+    }
+
+    return $collapsed;
+}
+
 // Load project data
 $project = null;
 if ($projectId && isset($pdo) && $pdo instanceof PDO) {
@@ -98,7 +146,7 @@ if ($projectId && isset($pdo) && $pdo instanceof PDO) {
             // Load project files
             $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
             $stmt->execute(['id' => $projectId]);
-            $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $project['files'] = collapse_project_file_revisions($stmt->fetchAll(PDO::FETCH_ASSOC));
 
             // Load activity log
             $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
@@ -576,7 +624,7 @@ if ($projectId && $pdo instanceof PDO) {
             // Load project files
             $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :id ORDER BY uploaded_at DESC');
             $stmt->execute(['id' => $projectId]);
-            $project['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $project['files'] = collapse_project_file_revisions($stmt->fetchAll(PDO::FETCH_ASSOC));
 
             // Load activity log
             $stmt = $pdo->prepare('SELECT * FROM project_activity WHERE project_id = :id ORDER BY created_at DESC LIMIT 20');
@@ -1500,6 +1548,9 @@ if ($pdo instanceof PDO) {
                             <div class="flex-grow min-w-0">
                                 <p class="font-medium text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($file['name']); ?></p>
                                 <p class="text-sm text-slate-500 dark:text-slate-400"><?php echo htmlspecialchars($file['type']); ?> • <?php echo htmlspecialchars($file['size']); ?> • Uploaded <?php echo formatDate($file['uploaded_at']); ?><?php if (!empty($file['uploaded_by'])): ?> by <?php echo htmlspecialchars($file['uploaded_by']); ?><?php endif; ?></p>
+                                <?php if (!empty($file['revision_no'])): ?>
+                                    <p class="text-xs text-slate-400 mt-1">Version: v<?php echo (int)$file['revision_no']; ?></p>
+                                <?php endif; ?>
                             </div>
                             <div class="file-actions flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
                                 <?php if ($fileUrl !== ''): ?>
@@ -1507,6 +1558,10 @@ if ($pdo instanceof PDO) {
                                         class="w-full sm:w-auto px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline text-center">
                                         View
                                     </a>
+                                    <button type="button" onclick="openRevisionUpload(<?php echo (int)$file['id']; ?>)"
+                                        class="w-full sm:w-auto px-3 py-1.5 border border-amber-300 text-amber-700 rounded text-xs font-medium hover:bg-amber-50 transition-colors text-center">
+                                        Revision
+                                    </button>
                                     <a href="<?php echo htmlspecialchars($fileUrl); ?>" download
                                         class="w-full sm:w-auto px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center">
                                         Download
@@ -1898,6 +1953,7 @@ if ($pdo instanceof PDO) {
         </div>
     </div>
     <input type="file" id="fileUploadInput" style="display: none;" accept="*/*" onchange="uploadFile(this)" />
+    <input type="file" id="fileRevisionUploadInput" style="display: none;" accept="image/*" onchange="uploadRevision(this)" />
     <input type="file" id="drawingUploadInput" style="display: none;" accept=".pdf,.dwg,.dxf,image/*" onchange="uploadDrawing(this)" />
 
     <script>
@@ -2298,6 +2354,7 @@ if ($pdo instanceof PDO) {
                 const type = data.type || 'FILE';
                 const sizeLabel = data.size_label || '';
                 const name = data.name || 'New File';
+                const revisionNo = Number(data.revision_no || 1);
 
                 const fileHtml = `
                     <div id="file-card-${id}" class="project-file-card flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
@@ -2307,9 +2364,11 @@ if ($pdo instanceof PDO) {
                         <div class="flex-grow min-w-0">
                             <p class="font-medium text-slate-800 dark:text-slate-100 truncate">${escapeHtml(name)}</p>
                             <p class="text-sm text-slate-500 dark:text-slate-400">${escapeHtml(type)} • ${escapeHtml(sizeLabel)} • Uploaded just now by You</p>
+                            <p class="text-xs text-slate-400 mt-1">Version: v${escapeHtml(revisionNo)}</p>
                         </div>
                         <div class="file-actions flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
                             <a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline text-center">View</a>
+                            <button type="button" onclick="openRevisionUpload(${id})" class="w-full sm:w-auto px-3 py-1.5 border border-amber-300 text-amber-700 rounded text-xs font-medium hover:bg-amber-50 transition-colors text-center">Revision</button>
                             <a href="${escapeHtml(filePath)}" download class="w-full sm:w-auto px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center">Download</a>
                             <button onclick="deleteFile(${id})" class="w-full sm:w-auto px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"><span class="material-icons text-sm">delete</span></button>
                         </div>
@@ -2369,6 +2428,13 @@ if ($pdo instanceof PDO) {
         // Basic attribute escape (uses same escaping as escapeHtml for safety)
         function escapeAttr(s) { return escapeHtml(s); }
 
+        function openRevisionUpload(fileId) {
+            const revisionInput = document.getElementById('fileRevisionUploadInput');
+            if (!revisionInput) return;
+            revisionInput.dataset.baseFileId = String(fileId || '');
+            revisionInput.click();
+        }
+
         // File upload function
         async function uploadFile(input) {
             if (!input.files || input.files.length === 0) return;
@@ -2412,6 +2478,59 @@ if ($pdo instanceof PDO) {
             }
 
             input.value = '';
+        }
+
+        async function uploadRevision(input) {
+            if (!input.files || input.files.length === 0) return;
+            if (!projectId || Number(projectId) <= 0) {
+                showNotification('Save the project first, then upload revisions.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const baseFileId = Number(input.dataset.baseFileId || 0);
+            if (!baseFileId) {
+                showNotification('No base file selected for revision.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const file = input.files[0];
+            if (typeof MAX_UPLOAD_BYTES !== 'undefined' && file.size > MAX_UPLOAD_BYTES) {
+                showNotification('File is too large. Maximum allowed is 450MB.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('project_id', projectId);
+            formData.append('base_file_id', String(baseFileId));
+            formData.append('action', 'upload_file_revision');
+
+            showNotification(`Uploading revision ${file.name}...`, 'info');
+
+            try {
+                const response = await fetch('api/project_files.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Revision uploaded successfully!', 'success');
+                    logActivity('uploaded file revision', file.name);
+                    window.location.hash = 'files';
+                    window.location.reload();
+                } else {
+                    showNotification(result.message || 'Revision upload failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Upload error occurred', 'error');
+                console.error('Error:', error);
+            }
+
+            input.value = '';
+            input.dataset.baseFileId = '';
         }
 
         // Drawing upload function

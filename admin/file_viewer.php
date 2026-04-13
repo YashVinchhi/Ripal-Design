@@ -7,31 +7,36 @@ $notice = '';
 $noticeType = 'info';
 
 if (!function_exists('file_viewer_test_relative_dir')) {
-  function file_viewer_test_relative_dir() {
+  function file_viewer_test_relative_dir()
+  {
     return 'uploads/file_viewer_testing';
   }
 }
 
 if (!function_exists('file_viewer_test_absolute_dir')) {
-  function file_viewer_test_absolute_dir() {
+  function file_viewer_test_absolute_dir()
+  {
     return rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, file_viewer_test_relative_dir());
   }
 }
 
 if (!function_exists('file_viewer_history_path')) {
-  function file_viewer_history_path() {
+  function file_viewer_history_path()
+  {
     return rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'file_viewer_test_history.json';
   }
 }
 
 if (!function_exists('file_viewer_stereo_state_path')) {
-  function file_viewer_stereo_state_path() {
+  function file_viewer_stereo_state_path()
+  {
     return rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'file_viewer_stereo_state.json';
   }
 }
 
 if (!function_exists('file_viewer_load_stereo_state')) {
-  function file_viewer_load_stereo_state() {
+  function file_viewer_load_stereo_state()
+  {
     $path = file_viewer_stereo_state_path();
     if (!is_file($path)) {
       return ['left' => '', 'right' => ''];
@@ -51,7 +56,8 @@ if (!function_exists('file_viewer_load_stereo_state')) {
 }
 
 if (!function_exists('file_viewer_write_stereo_state')) {
-  function file_viewer_write_stereo_state($left, $right) {
+  function file_viewer_write_stereo_state($left, $right)
+  {
     $path = file_viewer_stereo_state_path();
     $dir = dirname($path);
     if (!is_dir($dir)) {
@@ -66,8 +72,77 @@ if (!function_exists('file_viewer_write_stereo_state')) {
   }
 }
 
+if (!function_exists('file_viewer_vr_settings_path')) {
+  function file_viewer_vr_settings_path()
+  {
+    return rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'file_viewer_vr_settings.json';
+  }
+}
+
+if (!function_exists('file_viewer_load_vr_settings')) {
+  function file_viewer_load_vr_settings()
+  {
+    $path = file_viewer_vr_settings_path();
+    if (!is_file($path)) {
+      return [
+        'device' => 'Custom',
+        'screensize' => '6.1',
+        'ipd' => '63.5',
+        'headset' => 'No Distortion',
+        'custom' => '',
+        'updated_at' => '',
+      ];
+    }
+    $raw = @file_get_contents($path);
+    if ($raw === '') {
+      return [
+        'device' => 'Custom',
+        'screensize' => '6.1',
+        'ipd' => '63.5',
+        'headset' => 'No Distortion',
+        'custom' => '',
+        'updated_at' => '',
+      ];
+    }
+    $parsed = json_decode($raw, true);
+    if (!is_array($parsed)) {
+      return [
+        'device' => 'Custom',
+        'screensize' => '6.1',
+        'ipd' => '63.5',
+        'headset' => 'No Distortion',
+        'custom' => '',
+        'updated_at' => '',
+      ];
+    }
+    return array_merge([
+      'device' => 'Custom',
+      'screensize' => '6.1',
+      'ipd' => '63.5',
+      'headset' => 'No Distortion',
+      'custom' => '',
+      'updated_at' => '',
+    ], $parsed);
+  }
+}
+
+if (!function_exists('file_viewer_write_vr_settings')) {
+  function file_viewer_write_vr_settings($settings)
+  {
+    $path = file_viewer_vr_settings_path();
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+      @mkdir($dir, 0775, true);
+    }
+    $payload = is_array($settings) ? $settings : [];
+    $payload['updated_at'] = date('c');
+    @file_put_contents($path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+  }
+}
+
 if (!function_exists('file_viewer_load_history')) {
-  function file_viewer_load_history() {
+  function file_viewer_load_history()
+  {
     $path = file_viewer_history_path();
     if (!is_file($path)) {
       return [];
@@ -82,7 +157,8 @@ if (!function_exists('file_viewer_load_history')) {
 }
 
 if (!function_exists('file_viewer_write_history')) {
-  function file_viewer_write_history($items) {
+  function file_viewer_write_history($items)
+  {
     $path = file_viewer_history_path();
     $dir = dirname($path);
     if (!is_dir($dir)) {
@@ -93,7 +169,8 @@ if (!function_exists('file_viewer_write_history')) {
 }
 
 if (!function_exists('file_viewer_append_history')) {
-  function file_viewer_append_history($action, $relativePath, $statusText, $meta = []) {
+  function file_viewer_append_history($action, $relativePath, $statusText, $meta = [])
+  {
     $items = file_viewer_load_history();
     $items[] = [
       'timestamp' => date('c'),
@@ -110,7 +187,8 @@ if (!function_exists('file_viewer_append_history')) {
 }
 
 if (!function_exists('file_viewer_format_bytes')) {
-  function file_viewer_format_bytes($bytes) {
+  function file_viewer_format_bytes($bytes)
+  {
     $size = (float)$bytes;
     $units = ['B', 'KB', 'MB', 'GB'];
     $i = 0;
@@ -123,7 +201,8 @@ if (!function_exists('file_viewer_format_bytes')) {
 }
 
 if (!function_exists('file_viewer_store_test_upload')) {
-  function file_viewer_store_test_upload($upload, $targetDir, $allowed, $maxBytes, &$errorText = '') {
+  function file_viewer_store_test_upload($upload, $targetDir, $allowed, $maxBytes, &$errorText = '')
+  {
     $originalName = (string)($upload['name'] ?? '');
     $tmpName = (string)($upload['tmp_name'] ?? '');
     $uploadError = (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE);
@@ -170,7 +249,8 @@ if (!function_exists('file_viewer_store_test_upload')) {
 }
 
 if (!function_exists('file_viewer_normalize_uploaded_stem')) {
-  function file_viewer_normalize_uploaded_stem($filename) {
+  function file_viewer_normalize_uploaded_stem($filename)
+  {
     $name = basename((string)$filename);
     $stem = strtolower((string)pathinfo($name, PATHINFO_FILENAME));
     // Strip generated suffix: _YYYYMMDD_HHMMSS_xxxxxx
@@ -180,7 +260,8 @@ if (!function_exists('file_viewer_normalize_uploaded_stem')) {
 }
 
 if (!function_exists('file_viewer_detect_eye_from_filename')) {
-  function file_viewer_detect_eye_from_filename($filename) {
+  function file_viewer_detect_eye_from_filename($filename)
+  {
     $stem = file_viewer_normalize_uploaded_stem($filename);
     if ((bool)preg_match('/(^|[_\-\s])(left)(?=$|[_\-\s])/i', $stem)) {
       return 'left';
@@ -193,7 +274,8 @@ if (!function_exists('file_viewer_detect_eye_from_filename')) {
 }
 
 if (!function_exists('file_viewer_stereo_pair_key')) {
-  function file_viewer_stereo_pair_key($filename) {
+  function file_viewer_stereo_pair_key($filename)
+  {
     $stem = file_viewer_normalize_uploaded_stem($filename);
     $stem = preg_replace('/(^|[_\-\s])(left|right)(?=$|[_\-\s])/i', '$1', $stem);
     $stem = preg_replace('/[_\-\s]+/', '_', (string)$stem);
@@ -202,7 +284,8 @@ if (!function_exists('file_viewer_stereo_pair_key')) {
 }
 
 if (!function_exists('file_viewer_find_matching_eye_file')) {
-  function file_viewer_find_matching_eye_file($targetDir, $sourceFilename, $sourceEye) {
+  function file_viewer_find_matching_eye_file($targetDir, $sourceFilename, $sourceEye)
+  {
     $sourceEye = strtolower(trim((string)$sourceEye));
     $oppositeEye = $sourceEye === 'left' ? 'right' : ($sourceEye === 'right' ? 'left' : '');
     if ($oppositeEye === '') {
@@ -256,7 +339,8 @@ if (!function_exists('file_viewer_find_matching_eye_file')) {
 }
 
 if (!function_exists('file_viewer_raw_to_upload_relative')) {
-  function file_viewer_raw_to_upload_relative($rawPath) {
+  function file_viewer_raw_to_upload_relative($rawPath)
+  {
     $value = trim((string)$rawPath);
     if ($value === '' || preg_match('/^https?:\/\//i', $value)) {
       return '';
@@ -275,7 +359,8 @@ if (!function_exists('file_viewer_raw_to_upload_relative')) {
 }
 
 if (!function_exists('file_viewer_relative_to_absolute')) {
-  function file_viewer_relative_to_absolute($relativePath) {
+  function file_viewer_relative_to_absolute($relativePath)
+  {
     $relative = trim((string)$relativePath);
     if ($relative === '') {
       return '';
@@ -285,7 +370,8 @@ if (!function_exists('file_viewer_relative_to_absolute')) {
 }
 
 if (!function_exists('file_viewer_relative_to_url')) {
-  function file_viewer_relative_to_url($relativePath) {
+  function file_viewer_relative_to_url($relativePath)
+  {
     $relative = ltrim(trim((string)$relativePath), '/');
     if ($relative === '') {
       return '';
@@ -295,7 +381,8 @@ if (!function_exists('file_viewer_relative_to_url')) {
 }
 
 if (!function_exists('file_viewer_cad_preview_paths')) {
-  function file_viewer_cad_preview_paths($sourceRawPath) {
+  function file_viewer_cad_preview_paths($sourceRawPath)
+  {
     $relativeSource = file_viewer_raw_to_upload_relative($sourceRawPath);
     if ($relativeSource === '') {
       return ['relative' => '', 'absolute' => '', 'url' => ''];
@@ -322,7 +409,8 @@ if (!function_exists('file_viewer_cad_preview_paths')) {
 }
 
 if (!function_exists('file_viewer_generate_local_cad_preview')) {
-  function file_viewer_generate_local_cad_preview($sourceRawPath, $sourceExt, &$message = '') {
+  function file_viewer_generate_local_cad_preview($sourceRawPath, $sourceExt, &$message = '')
+  {
     $ext = strtolower(trim((string)$sourceExt));
     if (!in_array($ext, ['dwg', 'skp'], true)) {
       $message = 'Unsupported CAD format.';
@@ -387,9 +475,234 @@ if (!function_exists('file_viewer_generate_local_cad_preview')) {
   }
 }
 
+if (!function_exists('file_viewer_is_likely_text')) {
+  function file_viewer_is_likely_text($absolutePath)
+  {
+    if (!is_file($absolutePath) || !is_readable($absolutePath)) {
+      return false;
+    }
+    $fh = @fopen($absolutePath, 'rb');
+    if (!$fh) {
+      return false;
+    }
+    $chunk = @fread($fh, 4096);
+    @fclose($fh);
+    if ($chunk === false) {
+      return false;
+    }
+    // If we find a NUL byte, treat as binary.
+    if (strpos($chunk, "\0") !== false) {
+      return false;
+    }
+    return true;
+  }
+}
+
+if (!function_exists('file_viewer_generate_image_preview')) {
+  function file_viewer_generate_image_preview($sourceRawPath, $maxWidth = 1600, &$message = '')
+  {
+    $relativeSource = file_viewer_raw_to_upload_relative($sourceRawPath);
+    if ($relativeSource === '') {
+      $message = 'Source path invalid.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $sourceAbsolute = file_viewer_relative_to_absolute($relativeSource);
+    if ($sourceAbsolute === '' || !is_file($sourceAbsolute)) {
+      $message = 'Source missing.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    if (!extension_loaded('imagick')) {
+      $message = 'Imagick not available.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    try {
+      $img = new Imagick($sourceAbsolute);
+      // For multi-page TIFFs, keep the first image.
+      if ($img->getNumberImages() > 1) {
+        $img->setFirstIterator();
+      }
+      $img->setImageColorspace(Imagick::COLORSPACE_RGB);
+      $img->setImageFormat('jpeg');
+      $img->stripImage();
+      $width = $img->getImageWidth();
+      if ($width > $maxWidth) {
+        $img->resizeImage($maxWidth, 0, Imagick::FILTER_LANCZOS, 1);
+      }
+    } catch (Throwable $e) {
+      $message = 'Image conversion failed.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $safeBase = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)pathinfo($relativeSource, PATHINFO_FILENAME));
+    if ($safeBase === '') {
+      $safeBase = 'preview';
+    }
+    $destRel = file_viewer_test_relative_dir() . '/previews/' . $safeBase . '_' . substr(md5($sourceAbsolute), 0, 8) . '.jpg';
+    $destAbs = file_viewer_relative_to_absolute($destRel);
+    $destDir = dirname($destAbs);
+    if (!is_dir($destDir) && !@mkdir($destDir, 0775, true) && !is_dir($destDir)) {
+      $message = 'Could not create preview directory.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    try {
+      $img->writeImage($destAbs);
+    } catch (Throwable $e) {
+      $message = 'Could not write preview file.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    return ['relative' => $destRel, 'absolute' => $destAbs, 'url' => file_viewer_relative_to_url($destRel)];
+  }
+}
+
+if (!function_exists('file_viewer_generate_image_preview_cli')) {
+  function file_viewer_generate_image_preview_cli($sourceRawPath, $maxWidth = 1600, &$message = '')
+  {
+    $relativeSource = file_viewer_raw_to_upload_relative($sourceRawPath);
+    if ($relativeSource === '') {
+      $message = 'Source path invalid.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $sourceAbsolute = file_viewer_relative_to_absolute($relativeSource);
+    if ($sourceAbsolute === '' || !is_file($sourceAbsolute)) {
+      // if file doesn't yet exist at computed absolute path, try building absolute regardless
+      $sourceAbsolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($relativeSource, '/'));
+      if (!is_file($sourceAbsolute)) {
+        $message = 'Source missing.';
+        return ['relative' => '', 'absolute' => '', 'url' => ''];
+      }
+    }
+
+    if (!function_exists('exec')) {
+      $message = 'exec unavailable.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $convertCmd = null;
+    @exec('magick -version 2>&1', $out, $code);
+    if (isset($code) && $code === 0) {
+      $convertCmd = 'magick';
+    } else {
+      @exec('convert -version 2>&1', $out2, $code2);
+      if (isset($code2) && $code2 === 0) {
+        $convertCmd = 'convert';
+      }
+    }
+
+    if ($convertCmd === null) {
+      $message = 'ImageMagick CLI not available.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $safeBase = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)pathinfo($relativeSource, PATHINFO_FILENAME));
+    if ($safeBase === '') {
+      $safeBase = 'preview';
+    }
+    $hash = substr(md5($sourceAbsolute . '|' . @filemtime($sourceAbsolute)), 0, 10);
+    $destRel = file_viewer_test_relative_dir() . '/previews/' . $safeBase . '_' . $hash . '.jpg';
+    $destAbs = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($destRel, '/'));
+    $destDir = dirname($destAbs);
+    if (!is_dir($destDir) && !@mkdir($destDir, 0775, true) && !is_dir($destDir)) {
+      $message = 'Could not create preview directory.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    // Build resize argument (keep aspect ratio, limit by width)
+    $resizeArg = escapeshellarg($maxWidth . 'x');
+    if ($convertCmd === 'magick') {
+      $cmd = 'magick ' . escapeshellarg($sourceAbsolute) . ' -resize ' . $maxWidth . 'x -strip ' . escapeshellarg($destAbs);
+    } else {
+      $cmd = 'convert ' . escapeshellarg($sourceAbsolute) . ' -resize ' . $maxWidth . 'x -strip ' . escapeshellarg($destAbs);
+    }
+
+    @exec($cmd . ' 2>&1', $convOut, $convCode);
+    if (!empty($convCode) && $convCode !== 0) {
+      $message = 'CLI conversion failed.' . (is_array($convOut) ? (' ' . implode('\n', $convOut)) : '');
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    if (!is_file($destAbs)) {
+      $message = 'Converted preview not found.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    return ['relative' => $destRel, 'absolute' => $destAbs, 'url' => file_viewer_relative_to_url($destRel)];
+  }
+}
+
+if (!function_exists('file_viewer_generate_video_mp4_cli')) {
+  function file_viewer_generate_video_mp4_cli($sourceRawPath, &$message = '')
+  {
+    $relativeSource = file_viewer_raw_to_upload_relative($sourceRawPath);
+    if ($relativeSource === '') {
+      $message = 'Source path invalid.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $sourceAbsolute = file_viewer_relative_to_absolute($relativeSource);
+    if ($sourceAbsolute === '' || !is_file($sourceAbsolute)) {
+      $sourceAbsolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($relativeSource, '/'));
+      if (!is_file($sourceAbsolute)) {
+        $message = 'Source missing.';
+        return ['relative' => '', 'absolute' => '', 'url' => ''];
+      }
+    }
+
+    if (!function_exists('exec')) {
+      $message = 'exec unavailable.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    @exec('ffmpeg -version 2>&1', $ffout, $ffcode);
+    if (!isset($ffcode) || $ffcode !== 0) {
+      $message = 'ffmpeg not available.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    $safeBase = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)pathinfo($relativeSource, PATHINFO_FILENAME));
+    if ($safeBase === '') {
+      $safeBase = 'video';
+    }
+    $hash = substr(md5($sourceAbsolute . '|' . @filemtime($sourceAbsolute)), 0, 10);
+    $destRel = file_viewer_test_relative_dir() . '/previews/' . $safeBase . '_' . $hash . '.mp4';
+    $destAbs = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($destRel, '/'));
+    $destDir = dirname($destAbs);
+    if (!is_dir($destDir) && !@mkdir($destDir, 0775, true) && !is_dir($destDir)) {
+      $message = 'Could not create preview directory.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    // If already exists and is newer than source, reuse
+    if (is_file($destAbs) && @filemtime($destAbs) >= @filemtime($sourceAbsolute)) {
+      return ['relative' => $destRel, 'absolute' => $destAbs, 'url' => file_viewer_relative_to_url($destRel)];
+    }
+
+    // Transcode to H.264/AAC MP4 for broad browser support
+    $cmd = 'ffmpeg -hide_banner -loglevel error -y -i ' . escapeshellarg($sourceAbsolute) . ' -c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 128k -movflags +faststart ' . escapeshellarg($destAbs);
+    @exec($cmd . ' 2>&1', $out, $code);
+    if (!isset($code) || $code !== 0) {
+      $message = 'ffmpeg failed to transcode.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    if (!is_file($destAbs)) {
+      $message = 'Transcoded file not found.';
+      return ['relative' => '', 'absolute' => '', 'url' => ''];
+    }
+
+    return ['relative' => $destRel, 'absolute' => $destAbs, 'url' => file_viewer_relative_to_url($destRel)];
+  }
+}
+
 $file = trim((string)($_GET['file'] ?? ''));
 $resourceKind = strtolower(trim((string)($_GET['kind'] ?? '')));
 $resourceId = (int)($_GET['id'] ?? 0);
+$versionFileId = (int)($_GET['version_id'] ?? 0);
 $projectId = (int)($_GET['project_id'] ?? 0);
 $forcedView = strtolower(trim((string)($_GET['view'] ?? '')));
 $extHint = strtolower(trim((string)($_GET['ext'] ?? '')));
@@ -404,9 +717,22 @@ $filePath = '';
 $storagePath = '';
 $resourceStreamUrl = '';
 $projectLibrary = [];
+$projectLibraryVersionMap = [];
+$selectedFileGroupKey = '';
+$fileVersionButtons = [];
+$fileVersionSelectedId = 0;
+$hasProjectFilesRevisionGroup = false;
+$hasProjectFilesRevisionNo = false;
+
+if (db_connected()) {
+  $hasProjectFilesRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
+  $hasProjectFilesRevisionNo = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_no') : false;
+}
 
 if (db_connected() && $projectId > 0) {
-  $projectFilesRows = db_fetch_all('SELECT id, name, type, file_path, storage_path, uploaded_at FROM project_files WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId]);
+  $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
+  $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
+  $projectFilesRows = db_fetch_all('SELECT id, name, type, file_path, storage_path, uploaded_at, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId]);
   foreach ($projectFilesRows as $item) {
     $name = (string)($item['name'] ?? 'File');
     $filePathCandidate = (string)($item['file_path'] ?? '');
@@ -420,6 +746,8 @@ if (db_connected() && $projectId > 0) {
       'ext' => $extCandidate,
       'status' => '',
       'version' => '',
+      'revision_group' => (string)($item['revision_group'] ?? ''),
+      'revision_no' => (int)($item['revision_no'] ?? 1),
     ];
   }
 
@@ -448,7 +776,9 @@ if (db_connected() && $projectId > 0) {
     return $ta > $tb ? -1 : 1;
   });
 } elseif (db_connected() && $projectId <= 0) {
-  $globalFiles = db_fetch_all('SELECT pf.id, pf.project_id, pf.name, pf.type, pf.uploaded_at, p.name AS project_name FROM project_files pf LEFT JOIN projects p ON p.id = pf.project_id ORDER BY pf.uploaded_at DESC LIMIT 200');
+  $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(pf.revision_group, \'\') AS revision_group' : "'' AS revision_group";
+  $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(pf.revision_no, 1) AS revision_no' : '1 AS revision_no';
+  $globalFiles = db_fetch_all('SELECT pf.id, pf.project_id, pf.name, pf.type, pf.uploaded_at, p.name AS project_name, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files pf LEFT JOIN projects p ON p.id = pf.project_id ORDER BY pf.uploaded_at DESC LIMIT 200');
   foreach ($globalFiles as $item) {
     $projectLibrary[] = [
       'kind' => 'file',
@@ -460,6 +790,8 @@ if (db_connected() && $projectId > 0) {
       'version' => '',
       'project_id' => (int)($item['project_id'] ?? 0),
       'project_name' => (string)($item['project_name'] ?? ''),
+      'revision_group' => (string)($item['revision_group'] ?? ''),
+      'revision_no' => (int)($item['revision_no'] ?? 1),
     ];
   }
 
@@ -497,7 +829,112 @@ if ($projectId > 0 && $resourceId <= 0 && $file === '' && !empty($projectLibrary
   }
 }
 
+if (!empty($projectLibrary)) {
+  $collapsedLibrary = [];
+  $seenFileGroups = [];
+  $nameToGroupMap = [];
+
+  foreach ($projectLibrary as $entry) {
+    $entryKind = (string)($entry['kind'] ?? 'file');
+    if ($entryKind !== 'file') {
+      continue;
+    }
+    $entryProjectId = (int)($entry['project_id'] ?? $projectId);
+    $entryNameKey = strtolower(trim((string)($entry['name'] ?? '')));
+    $entryNameKey = preg_replace('/\s+/', ' ', $entryNameKey);
+    $entryGroup = trim((string)($entry['revision_group'] ?? ''));
+    if ($entryGroup !== '' && $entryNameKey !== '') {
+      $nameToGroupMap[$entryProjectId . '|' . $entryNameKey] = $entryGroup;
+    }
+  }
+
+  foreach ($projectLibrary as $entry) {
+    $entryKind = (string)($entry['kind'] ?? 'file');
+    if ($entryKind !== 'file') {
+      $collapsedLibrary[] = $entry;
+      continue;
+    }
+
+    $entryProjectId = (int)($entry['project_id'] ?? $projectId);
+    $entryNameKey = strtolower(trim((string)($entry['name'] ?? '')));
+    $entryNameKey = preg_replace('/\s+/', ' ', $entryNameKey);
+    $entryGroup = trim((string)($entry['revision_group'] ?? ''));
+    if ($entryGroup === '') {
+      $entryGroup = (string)($nameToGroupMap[$entryProjectId . '|' . $entryNameKey] ?? $entryNameKey);
+    }
+    $entryGroup = preg_replace('/\s+/', ' ', (string)$entryGroup);
+    $groupKey = $entryProjectId . '|' . $entryGroup;
+
+    if (!isset($projectLibraryVersionMap[$groupKey])) {
+      $projectLibraryVersionMap[$groupKey] = [];
+    }
+    $projectLibraryVersionMap[$groupKey][] = [
+      'id' => (int)($entry['id'] ?? 0),
+      'revision_no' => (int)($entry['revision_no'] ?? 1),
+      'uploaded_at' => (string)($entry['uploaded_at'] ?? ''),
+      'ext' => strtolower((string)($entry['ext'] ?? '')),
+      'project_id' => $entryProjectId,
+    ];
+
+    if (isset($seenFileGroups[$groupKey])) {
+      continue;
+    }
+
+    $seenFileGroups[$groupKey] = true;
+    $entry['group_key'] = $groupKey;
+    $collapsedLibrary[] = $entry;
+  }
+
+  foreach ($projectLibraryVersionMap as $mapKey => $versions) {
+    usort($versions, function ($a, $b) {
+      $ra = (int)($a['revision_no'] ?? 1);
+      $rb = (int)($b['revision_no'] ?? 1);
+      if ($ra !== $rb) {
+        return $rb <=> $ra;
+      }
+      $ta = strtotime((string)($a['uploaded_at'] ?? '')) ?: 0;
+      $tb = strtotime((string)($b['uploaded_at'] ?? '')) ?: 0;
+      if ($ta !== $tb) {
+        return $tb <=> $ta;
+      }
+      return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
+    });
+    $projectLibraryVersionMap[$mapKey] = $versions;
+  }
+
+  $projectLibrary = $collapsedLibrary;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $vrAction = trim((string)($_POST['vr_action'] ?? ''));
+  if ($vrAction === 'save_settings') {
+    $device = trim((string)($_POST['vr_device'] ?? 'Custom'));
+    $screensize = trim((string)($_POST['vr_screensize'] ?? '6.1'));
+    $ipd = trim((string)($_POST['vr_ipd'] ?? '63.5'));
+    $headset = trim((string)($_POST['vr_headset'] ?? 'No Distortion'));
+    $custom = trim((string)($_POST['vr_custom'] ?? ''));
+    $settings = [
+      'device' => $device,
+      'screensize' => $screensize,
+      'ipd' => $ipd,
+      'headset' => $headset,
+      'custom' => $custom,
+    ];
+    file_viewer_write_vr_settings($settings);
+    $notice = 'VR settings saved.';
+    $noticeType = 'success';
+    $redirectParams = [];
+    if ($projectId > 0) {
+      $redirectParams['project_id'] = (string)$projectId;
+    }
+    if ($file !== '') {
+      $redirectParams['file'] = (string)$file;
+    }
+    $redirectParams['notice'] = $notice;
+    $redirectParams['notice_type'] = $noticeType;
+    header('Location: ' . $_SERVER['PHP_SELF'] . (empty($redirectParams) ? '' : ('?' . http_build_query($redirectParams))));
+    exit;
+  }
   $postAction = trim((string)($_POST['test_action'] ?? ''));
   $redirectFile = $file;
   $redirectView = $forcedView;
@@ -635,7 +1072,8 @@ $notice = trim((string)($_GET['notice'] ?? $notice));
 $noticeType = trim((string)($_GET['notice_type'] ?? $noticeType));
 
 if (!function_exists('resolve_preview_url')) {
-  function resolve_preview_url($rawPath) {
+  function resolve_preview_url($rawPath)
+  {
     $value = trim((string)$rawPath);
     if ($value === '') {
       return '';
@@ -661,7 +1099,8 @@ if (!function_exists('resolve_preview_url')) {
 }
 
 if (!function_exists('resolve_preview_absolute_path')) {
-  function resolve_preview_absolute_path($rawPath) {
+  function resolve_preview_absolute_path($rawPath)
+  {
     $value = trim((string)$rawPath);
     if ($value === '' || preg_match('/^https?:\/\//i', $value)) {
       return '';
@@ -684,7 +1123,8 @@ if (!function_exists('resolve_preview_absolute_path')) {
 }
 
 if (!function_exists('file_viewer_absolute_url')) {
-  function file_viewer_absolute_url($url) {
+  function file_viewer_absolute_url($url)
+  {
     $value = trim((string)$url);
     if ($value === '') {
       return '';
@@ -709,7 +1149,9 @@ if (db_connected()) {
     if ($resourceKind === 'file') {
       $projectFilterSql = $projectId > 0 ? ' AND pf.project_id = ' . (int)$projectId . ' ' : ' ';
       $storageSelect = $hasProjectFilesStoragePath ? 'pf.storage_path AS storage_path' : "'' AS storage_path";
-      $row = db_fetch("SELECT pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . "
+      $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(pf.revision_group, \'\') AS revision_group' : "'' AS revision_group";
+      $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(pf.revision_no, 1) AS revision_no' : '1 AS revision_no';
+      $row = db_fetch("SELECT pf.id, pf.project_id, pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . ", " . $revisionGroupSelect . ", " . $revisionNoSelect . "
             FROM project_files pf
             LEFT JOIN projects p ON p.id = pf.project_id
             WHERE pf.id = ? " . $projectFilterSql . "
@@ -732,18 +1174,26 @@ if (db_connected()) {
         if ($resourceKind === 'file') {
           if ($projectId > 0) {
             if ($hasProjectFilesStoragePath) {
-              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, COALESCE(NULLIF(storage_path,\'\'), file_path) AS storage_path FROM project_files WHERE id = ? AND project_id = ? LIMIT 1');
+              $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
+              $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
+              $stmt = $db->prepare('SELECT id, project_id, name, uploaded_at, file_path, COALESCE(NULLIF(storage_path,\'\'), file_path) AS storage_path, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE id = ? AND project_id = ? LIMIT 1');
               $stmt->execute([$resourceId, $projectId]);
             } else {
-              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, file_path AS storage_path FROM project_files WHERE id = ? AND project_id = ? LIMIT 1');
+              $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
+              $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
+              $stmt = $db->prepare('SELECT id, project_id, name, uploaded_at, file_path, file_path AS storage_path, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE id = ? AND project_id = ? LIMIT 1');
               $stmt->execute([$resourceId, $projectId]);
             }
           } else {
             if ($hasProjectFilesStoragePath) {
-              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, COALESCE(NULLIF(storage_path,\'\'), file_path) AS storage_path FROM project_files WHERE id = ? LIMIT 1');
+              $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
+              $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
+              $stmt = $db->prepare('SELECT id, project_id, name, uploaded_at, file_path, COALESCE(NULLIF(storage_path,\'\'), file_path) AS storage_path, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE id = ? LIMIT 1');
               $stmt->execute([$resourceId]);
             } else {
-              $stmt = $db->prepare('SELECT name, uploaded_at, file_path, file_path AS storage_path FROM project_files WHERE id = ? LIMIT 1');
+              $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
+              $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
+              $stmt = $db->prepare('SELECT id, project_id, name, uploaded_at, file_path, file_path AS storage_path, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE id = ? LIMIT 1');
               $stmt->execute([$resourceId]);
             }
           }
@@ -775,14 +1225,16 @@ if (db_connected()) {
     if ($hasProjectFilesStoragePath) {
       $params[] = $file;
     }
-    $row = db_fetch("SELECT pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . "
+    $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(pf.revision_group, \'\') AS revision_group' : "'' AS revision_group";
+    $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(pf.revision_no, 1) AS revision_no' : '1 AS revision_no';
+    $row = db_fetch("SELECT pf.id, pf.project_id, pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . ", " . $revisionGroupSelect . ", " . $revisionNoSelect . "
           FROM project_files pf
           LEFT JOIN projects p ON p.id = pf.project_id
           WHERE pf.name = ? OR pf.file_path = ? " . $storageWhere . "
       " . $projectFilterSql . "
           ORDER BY pf.uploaded_at DESC LIMIT 1", $params);
 
-      if (!$row) {
+    if (!$row) {
       $projectFilterSql = $projectId > 0 ? ' AND pd.project_id = ' . (int)$projectId . ' ' : ' ';
       $row = db_fetch("SELECT pd.name, pd.version, pd.status, pd.uploaded_at, p.name AS project_name, pd.file_path
               FROM project_drawings pd
@@ -790,15 +1242,55 @@ if (db_connected()) {
               WHERE pd.file_path = ? OR pd.name = ?
         " . $projectFilterSql . "
               ORDER BY pd.uploaded_at DESC LIMIT 1", [$file, $file]);
+    }
+  }
+
+  if ($row && $resourceKind === 'file') {
+    $selectedProjectId = (int)($row['project_id'] ?? $projectId);
+    $selectedName = (string)($row['name'] ?? '');
+    $selectedGroup = trim((string)($row['revision_group'] ?? ''));
+    $selectedFileGroupKey = $selectedProjectId . '|' . ($selectedGroup !== '' ? $selectedGroup : strtolower(trim($selectedName)));
+    $storageSelectSql = $hasProjectFilesStoragePath ? 'COALESCE(NULLIF(storage_path,\'\'), file_path) AS storage_path' : 'file_path AS storage_path';
+    $revisionNoSelectSql = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
+
+    if ($selectedProjectId > 0) {
+      if ($hasProjectFilesRevisionGroup && $selectedGroup !== '') {
+        $fileVersionButtons = db_fetch_all('SELECT id, name, uploaded_at, file_path, ' . $storageSelectSql . ', ' . $revisionNoSelectSql . ' FROM project_files WHERE project_id = ? AND revision_group = ? ORDER BY revision_no DESC, uploaded_at DESC, id DESC', [$selectedProjectId, $selectedGroup]);
+      } elseif ($selectedName !== '') {
+        $fileVersionButtons = db_fetch_all('SELECT id, name, uploaded_at, file_path, ' . $storageSelectSql . ', ' . $revisionNoSelectSql . ' FROM project_files WHERE project_id = ? AND name = ? ORDER BY revision_no DESC, uploaded_at DESC, id DESC', [$selectedProjectId, $selectedName]);
       }
+    }
+
+    if (!empty($fileVersionButtons)) {
+      $selectedVersionRow = $fileVersionButtons[0];
+      if ($versionFileId > 0) {
+        foreach ($fileVersionButtons as $versionRow) {
+          if ((int)($versionRow['id'] ?? 0) === $versionFileId) {
+            $selectedVersionRow = $versionRow;
+            break;
+          }
+        }
+      }
+
+      $row['id'] = (int)($selectedVersionRow['id'] ?? $row['id'] ?? $resourceId);
+      $row['name'] = (string)($selectedVersionRow['name'] ?? $row['name'] ?? '');
+      $row['uploaded_at'] = (string)($selectedVersionRow['uploaded_at'] ?? $row['uploaded_at'] ?? '');
+      $row['file_path'] = (string)($selectedVersionRow['file_path'] ?? $row['file_path'] ?? '');
+      $row['storage_path'] = (string)($selectedVersionRow['storage_path'] ?? $row['storage_path'] ?? '');
+      $row['revision_no'] = (int)($selectedVersionRow['revision_no'] ?? 1);
+
+      $resourceId = (int)($row['id'] ?? $resourceId);
+      $fileVersionSelectedId = $resourceId;
+      $version = 'v' . (int)($row['revision_no'] ?? 1);
+    }
   }
 
   if ($row) {
-      $fileName = (string)($row['name'] ?? $fileName);
-      $projectName = (string)($row['project_name'] ?? $projectName);
-      $uploadedAt = (string)($row['uploaded_at'] ?? '');
-      $filePath = (string)($row['file_path'] ?? '');
-      $storagePath = (string)($row['storage_path'] ?? '');
+    $fileName = (string)($row['name'] ?? $fileName);
+    $projectName = (string)($row['project_name'] ?? $projectName);
+    $uploadedAt = (string)($row['uploaded_at'] ?? '');
+    $filePath = (string)($row['file_path'] ?? '');
+    $storagePath = (string)($row['storage_path'] ?? '');
   }
 }
 
@@ -892,15 +1384,17 @@ $is360Suitable = $isPanoramaName || $isPanoramaRatio;
 $viewerMode = 'unsupported';
 if (in_array($ext, ['glb', 'gltf'], true)) {
   $viewerMode = '3d';
-} elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+} elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'tif', 'tiff'], true)) {
   $viewerMode = $is360Suitable ? '360' : 'image';
 } elseif ($ext === 'pdf') {
   $viewerMode = 'pdf';
-} elseif (in_array($ext, ['mp4', 'webm', 'ogg'], true)) {
+} elseif ($ext === 'txt') {
+  $viewerMode = 'text';
+} elseif (in_array($ext, ['mp4', 'webm', 'ogg', 'avi', 'mov', 'mkv'], true)) {
   $viewerMode = 'video';
 }
 
-if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+if ($forcedView === '360' && in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'tif', 'tiff'], true)) {
   $viewerMode = '360';
 }
 
@@ -924,20 +1418,40 @@ if ($viewerMode === 'pdf' && $resourceStreamUrl !== '') {
   $previewDirectUrl = '';
 }
 
+// For video files, attempt to produce a web-friendly MP4 using ffmpeg if available.
+if ($viewerMode === 'video') {
+  $videoSourceRaw = $storagePath !== '' ? $storagePath : ($filePath !== '' ? $filePath : $file);
+  if ($videoSourceRaw !== '') {
+    $videoMsg = '';
+    // Only attempt transcoding for containers / non-mp4 formats to avoid unnecessary work
+    if (!in_array($ext, ['mp4'], true)) {
+      $videoGenerated = file_viewer_generate_video_mp4_cli($videoSourceRaw, $videoMsg);
+      if (!empty($videoGenerated['url'])) {
+        $previewUrl = $videoGenerated['url'];
+        $previewAbsolutePath = $videoGenerated['absolute'];
+        $previewDirectUrl = '';
+      }
+    }
+  }
+}
+
 $cadSourceRawPath = $storagePath !== '' ? $storagePath : ($filePath !== '' ? $filePath : $file);
 $cadPreviewPath = file_viewer_cad_preview_paths($cadSourceRawPath);
 $cadPreviewExists = $viewerMode === 'cad' && $cadPreviewPath['absolute'] !== '' && is_file((string)$cadPreviewPath['absolute']);
 $cadPreviewUrl = $cadPreviewExists ? (string)$cadPreviewPath['url'] : '';
 
 $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
+$vrSettings = file_viewer_load_vr_settings();
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>File Viewer | Ripal Design</title>
-  <?php $HEADER_MODE = 'dashboard'; require_once __DIR__ . '/../Common/header.php'; ?>
+  <?php $HEADER_MODE = 'dashboard';
+  require_once __DIR__ . '/../Common/header.php'; ?>
   <?php if ($viewerMode === '360' && $previewUrl !== ''): ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
   <?php endif; ?>
@@ -1146,12 +1660,48 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
     }
 
     @keyframes chipPulse {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-1px); }
-      100% { transform: translateY(0); }
+      0% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-1px);
+      }
+
+      100% {
+        transform: translateY(0);
+      }
     }
+    /* VR Setup Modal */
+    .vr-setup-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10050;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+    }
+    .vr-setup-modal.is-open { display: flex; }
+    .vr-setup-dialog {
+      width: min(92vw, 1100px);
+      max-height: min(90vh, 820px);
+      overflow: auto;
+      background: rgba(3,7,18,0.96);
+      color: #fff;
+      padding: 28px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .vr-setup-dialog h2 { font-size: 28px; margin-bottom: 12px; letter-spacing: 0.06em; }
+    .vr-setup-row { display:flex; gap:12px; align-items:center; justify-content:center; margin:10px 0; }
+    .vr-setup-row input, .vr-setup-row select, .vr-setup-row textarea { padding:8px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color:#fff; }
+    .vr-setup-actions { display:flex; gap:18px; justify-content:center; margin-top:18px; }
+    .vr-setup-actions button { min-width:80px; padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); }
   </style>
 </head>
+
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   <div class="min-h-screen flex flex-col">
     <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg mb-10 border-b-2 border-rajkot-rust">
@@ -1161,15 +1711,15 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
       </div>
     </header>
 
-    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <main class="flex-grow mx-auto px-4 sm:px-6 lg:px-8 pb-20" style="max-width:95vw;">
       <?php if ($notice !== ''): ?>
         <div class="mb-6 px-4 py-3 border <?php echo $noticeType === 'success' ? 'border-approval-green text-approval-green bg-approval-green/5' : 'border-red-300 text-red-700 bg-red-50'; ?> rounded">
           <?php echo htmlspecialchars($notice); ?>
         </div>
       <?php endif; ?>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <aside class="bg-white border border-gray-100 shadow-premium p-6">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <aside class="bg-white border border-gray-100 shadow-premium p-6 lg:col-span-1" style="height:80vh; overflow:auto;">
           <h2 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-4">File Details</h2>
           <div class="space-y-3 text-sm">
             <p><strong>Project:</strong> <?php echo htmlspecialchars($projectName); ?></p>
@@ -1178,42 +1728,51 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
             <p><strong>Status:</strong> <?php echo htmlspecialchars($status); ?></p>
             <p><strong>Uploaded:</strong> <?php echo $uploadedAt ? htmlspecialchars(date('M d, Y H:i', strtotime($uploadedAt))) : 'N/A'; ?></p>
           </div>
-
           <?php if (!empty($projectLibrary)): ?>
-          <div class="mt-6 pt-6 border-t border-gray-100">
-            <h3 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-3"><?php echo $projectId > 0 ? 'Project Files' : 'File Manager'; ?></h3>
-            <div class="space-y-2 max-h-72 overflow-auto pr-1">
+            <div class="mt-6 pt-6 border-t border-gray-100">
+              <h3 class="text-[10px] uppercase tracking-widest text-rajkot-rust font-bold mb-3"><?php echo $projectId > 0 ? 'Project Files' : 'File Manager'; ?></h3>
+              <div class="space-y-2 max-h-72 overflow-auto pr-1">
                 <?php foreach (array_slice($projectLibrary, 0, 80) as $entry): ?>
                   <?php
-                    $entryKind = (string)($entry['kind'] ?? 'file');
-                    $entryId = (int)($entry['id'] ?? 0);
-                    $isActiveEntry = $resourceId > 0 && $resourceKind === $entryKind && $entryId === $resourceId;
-                    $entryExt = strtolower((string)($entry['ext'] ?? ''));
-                    $entryProjectId = (int)($entry['project_id'] ?? $projectId);
-                    $entryUrl = file_viewer_url([
-                      'kind' => $entryKind,
-                      'id' => $entryId,
-                      'project_id' => $entryProjectId,
-                      'ext' => $entryExt,
-                    ]);
+                  $entryKind = (string)($entry['kind'] ?? 'file');
+                  $entryId = (int)($entry['id'] ?? 0);
+                  $entryProjectId = (int)($entry['project_id'] ?? $projectId);
+                  $entryGroup = trim((string)($entry['revision_group'] ?? ''));
+                  if ($entryGroup === '') {
+                    $entryGroup = strtolower(trim((string)($entry['name'] ?? '')));
+                  }
+                  $entryGroup = preg_replace('/\s+/', ' ', (string)$entryGroup);
+                  $entryGroupKey = $entryProjectId . '|' . $entryGroup;
+                  $isActiveEntry = $resourceId > 0 && $resourceKind === $entryKind && $entryId === $resourceId;
+                  if ($entryKind === 'file' && $selectedFileGroupKey !== '') {
+                    $isActiveEntry = ($selectedFileGroupKey === $entryGroupKey);
+                  }
+                  $entryExt = strtolower((string)($entry['ext'] ?? ''));
+                  $entryUrl = file_viewer_url([
+                    'kind' => $entryKind,
+                    'id' => $entryId,
+                    'project_id' => $entryProjectId,
+                    'ext' => $entryExt,
+                  ]);
                   ?>
                   <a href="<?php echo htmlspecialchars($entryUrl); ?>" class="block no-underline border rounded p-2 <?php echo $isActiveEntry ? 'border-rajkot-rust bg-red-50' : 'border-gray-100 bg-white hover:border-rajkot-rust'; ?>">
                     <p class="text-xs font-semibold text-foundation-grey break-all"><?php echo htmlspecialchars((string)($entry['name'] ?? 'File')); ?></p>
                     <p class="text-[10px] text-gray-500 mt-1">
                       <?php echo htmlspecialchars(strtoupper($entryKind)); ?>
                       <?php if (!empty($entry['project_name'])): ?> • <?php echo htmlspecialchars((string)$entry['project_name']); ?><?php endif; ?>
-                      <?php if (!empty($entry['uploaded_at'])): ?> • <?php echo htmlspecialchars(date('M d, H:i', strtotime((string)$entry['uploaded_at']))); ?><?php endif; ?>
-                      <?php if (!empty($entry['status'])): ?> • <?php echo htmlspecialchars((string)$entry['status']); ?><?php endif; ?>
+                        <?php if (!empty($entry['uploaded_at'])): ?> • <?php echo htmlspecialchars(date('M d, H:i', strtotime((string)$entry['uploaded_at']))); ?><?php endif; ?>
+                          <?php if (!empty($entry['status'])): ?> • <?php echo htmlspecialchars((string)$entry['status']); ?><?php endif; ?>
                     </p>
+                    <?php // Version chips removed per user request. ?>
                   </a>
                 <?php endforeach; ?>
+              </div>
             </div>
-          </div>
           <?php endif; ?>
 
         </aside>
 
-        <section class="lg:col-span-2 bg-white border border-gray-100 shadow-premium p-6 min-h-[420px] flex flex-col">
+        <section class="lg:col-span-4 bg-white border border-gray-100 shadow-premium p-6 flex flex-col" style="height:80vh;">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-serif font-bold"><?php echo htmlspecialchars($fileName); ?></h3>
             <div class="flex items-center gap-2">
@@ -1223,17 +1782,47 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
               <?php endif; ?>
             </div>
           </div>
+          <?php if ($resourceKind === 'file' && count($fileVersionButtons) > 1): ?>
+            <div class="mb-4 flex flex-wrap items-center gap-2">
+              <span class="text-[10px] uppercase tracking-widest text-slate-500">Versions:</span>
+              <?php foreach ($fileVersionButtons as $index => $versionEntry): ?>
+                <?php
+                  $versionEntryId = (int)($versionEntry['id'] ?? 0);
+                  if ($versionEntryId <= 0) {
+                    continue;
+                  }
+                  $versionEntryNo = (int)($versionEntry['revision_no'] ?? ($index + 1));
+                  $isActiveVersion = $fileVersionSelectedId > 0 ? ($fileVersionSelectedId === $versionEntryId) : ($index === 0);
+                  $versionParams = [
+                    'kind' => 'file',
+                    'id' => (string)$resourceId,
+                    'project_id' => (string)$projectId,
+                    'version_id' => (string)$versionEntryId,
+                  ];
+                  if ($ext !== '') {
+                    $versionParams['ext'] = $ext;
+                  }
+                  $versionUrl = $_SERVER['PHP_SELF'] . '?' . http_build_query($versionParams);
+                ?>
+                <a href="<?php echo htmlspecialchars($versionUrl); ?>"
+                  class="inline-flex items-center px-2 py-1 text-[10px] rounded border no-underline <?php echo $isActiveVersion ? 'bg-rajkot-rust text-white border-rajkot-rust' : 'bg-white text-slate-600 border-slate-300 hover:border-rajkot-rust'; ?>">
+                  v<?php echo (int)$versionEntryNo; ?>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
           <?php if ($viewerMode === '360' && $previewUrl !== ''): ?>
             <div class="mb-3 flex flex-wrap items-center gap-2">
               <button type="button" id="zoomInBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Zoom +</button>
               <button type="button" id="zoomOutBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Zoom -</button>
               <button type="button" id="resetViewBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Reset</button>
               <button type="button" id="fullscreenBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Fullscreen</button>
+              
               <button type="button" id="openVrModeBtn" class="vr-phone-only shrink-0 text-xs bg-slate-accent text-white px-2 py-1 items-center gap-1" title="Open VR mode">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M3 7h18a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-4.5a2.5 2.5 0 0 1-2.4-1.8l-.2-.7a2 2 0 0 0-1.9-1.5 2 2 0 0 0-1.9 1.5l-.2.7A2.5 2.5 0 0 1 7.5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/>
-                  <circle cx="7.5" cy="12" r="1.2"/>
-                  <circle cx="16.5" cy="12" r="1.2"/>
+                  <path d="M3 7h18a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-4.5a2.5 2.5 0 0 1-2.4-1.8l-.2-.7a2 2 0 0 0-1.9-1.5 2 2 0 0 0-1.9 1.5l-.2.7A2.5 2.5 0 0 1 7.5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+                  <circle cx="7.5" cy="12" r="1.2" />
+                  <circle cx="16.5" cy="12" r="1.2" />
                 </svg>
                 VR
               </button>
@@ -1248,18 +1837,19 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
                 Preview unavailable. File path could not be resolved from saved metadata.
               </div>
             <?php elseif ($viewerMode === '3d'): ?>
-              <div class="h-full min-h-[520px] bg-slate-900 text-white flex flex-col">
+              <div class="h-full bg-slate-900 text-white flex flex-col">
                 <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-black/20">
                   <div class="flex items-center gap-2">
                     <span class="hidden sm:inline text-[10px] uppercase tracking-widest text-gray-300">Drag to rotate • Scroll to zoom</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-2 justify-end">
                     <button type="button" id="open3DPopup" class="text-xs uppercase tracking-widest bg-rajkot-rust hover:bg-red-700 px-3 py-2 text-white font-bold">Fullscreen 3D</button>
+                    
                     <button type="button" id="openVrModeBtn" class="vr-phone-only shrink-0 text-xs uppercase tracking-widest bg-slate-accent hover:bg-foundation-grey px-3 py-2 text-white font-bold items-center gap-1" title="Open VR mode">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M3 7h18a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-4.5a2.5 2.5 0 0 1-2.4-1.8l-.2-.7a2 2 0 0 0-1.9-1.5 2 2 0 0 0-1.9 1.5l-.2.7A2.5 2.5 0 0 1 7.5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/>
-                        <circle cx="7.5" cy="12" r="1.2"/>
-                        <circle cx="16.5" cy="12" r="1.2"/>
+                        <path d="M3 7h18a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-4.5a2.5 2.5 0 0 1-2.4-1.8l-.2-.7a2 2 0 0 0-1.9-1.5 2 2 0 0 0-1.9 1.5l-.2.7A2.5 2.5 0 0 1 7.5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+                        <circle cx="7.5" cy="12" r="1.2" />
+                        <circle cx="16.5" cy="12" r="1.2" />
                       </svg>
                       VR
                     </button>
@@ -1276,8 +1866,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
                   shadow-intensity="1"
                   exposure="1"
                   environment-image="neutral"
-                  class="w-full h-[520px] bg-slate-950"
-                ></model-viewer>
+                  class="w-full h-full bg-slate-950"></model-viewer>
                 <div id="inline3DError" class="viewer-3d-error" role="alert">
                   <div>
                     <p class="text-sm font-semibold mb-2">3D preview failed to load.</p>
@@ -1286,18 +1875,77 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
                 </div>
               </div>
             <?php elseif ($viewerMode === '360'): ?>
-              <div id="panoViewer" class="w-full h-[520px]"></div>
+              <div id="panoViewer" class="w-full h-full"></div>
+            <?php elseif ($viewerMode === 'text'): ?>
+              <?php if ($previewAbsolutePath !== '' && is_file($previewAbsolutePath) && file_viewer_is_likely_text($previewAbsolutePath)): ?>
+                <?php
+                  $maxBytes = 512 * 1024; // 512 KB
+                  $fileSize = (int)@filesize($previewAbsolutePath);
+                  if ($fileSize > $maxBytes) {
+                ?>
+                  <div class="h-full min-h-[360px] flex flex-col items-center justify-center text-gray-400 px-8 text-center gap-3">
+                    <p>Text file too large to preview (<?php echo htmlspecialchars(file_viewer_format_bytes($fileSize)); ?>).</p>
+                    <a href="<?php echo htmlspecialchars($previewUrl); ?>" target="_blank" rel="noopener" class="text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open / Download</a>
+                  </div>
+                <?php
+                  } else {
+                    $contents = @file_get_contents($previewAbsolutePath);
+                    if ($contents === false) {
+                ?>
+                  <div class="h-full min-h-[360px] flex items-center justify-center text-gray-400 px-8 text-center">
+                    Could not read text file for preview.
+                  </div>
+                <?php
+                    } else {
+                ?>
+                  <div class="h-full overflow-auto bg-white p-4 text-sm text-slate-800">
+                    <pre class="whitespace-pre-wrap break-words font-mono text-xs"><?php echo htmlspecialchars($contents); ?></pre>
+                  </div>
+                <?php
+                    }
+                  }
+                ?>
+              <?php else: ?>
+                <div class="h-full min-h-[360px] flex flex-col items-center justify-center text-gray-400 px-8 text-center gap-3">
+                  <p>Text preview unavailable.</p>
+                  <a href="<?php echo htmlspecialchars($previewUrl); ?>" target="_blank" rel="noopener" class="text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open / Download</a>
+                </div>
+              <?php endif; ?>
             <?php elseif ($viewerMode === 'image'): ?>
-              <img src="<?php echo htmlspecialchars($previewUrl); ?>" alt="<?php echo htmlspecialchars($fileName); ?>" class="w-full h-[520px] object-contain bg-white" loading="lazy">
+              <?php
+                $generated = ['url' => ''];
+                if (in_array($ext, ['tif', 'tiff'], true)) {
+                  $tiffMsg = '';
+                  // Prefer PHP Imagick when available, fall back to ImageMagick CLI if needed.
+                  $generated = file_viewer_generate_image_preview($storagePath !== '' ? $storagePath : ($filePath !== '' ? $filePath : $file), 1600, $tiffMsg);
+                  if (empty($generated['url'])) {
+                    $cliMsg = '';
+                    $generated = file_viewer_generate_image_preview_cli($storagePath !== '' ? $storagePath : ($filePath !== '' ? $filePath : $file), 1600, $cliMsg);
+                    if (!empty($generated['url'])) {
+                      $tiffMsg = $cliMsg;
+                    }
+                  }
+                  if (!empty($generated['url'])) {
+                    $previewUrl = $generated['url'];
+                    $previewAbsolutePath = $generated['absolute'];
+                  }
+                }
+              ?>
+              <img src="<?php echo htmlspecialchars($previewUrl); ?>" alt="<?php echo htmlspecialchars($fileName); ?>" class="w-full h-full object-contain bg-white" loading="lazy">
+              <?php if (in_array($ext, ['tif', 'tiff'], true) && empty((string)($generated['url'] ?? ''))): ?>
+                <div class="h-full min-h-[360px] flex items-center justify-center text-gray-400 px-8 text-center">
+                  TIFF preview unavailable. <a href="<?php echo htmlspecialchars($previewUrl); ?>" target="_blank" rel="noopener" class="text-xs bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 no-underline">Open File</a>
+                </div>
+              <?php endif; ?>
             <?php elseif ($viewerMode === 'pdf'): ?>
-              <iframe src="<?php echo htmlspecialchars($previewUrl); ?>" class="w-full h-[520px] bg-white" title="PDF Preview"></iframe>
+              <iframe src="<?php echo htmlspecialchars($previewUrl); ?>" class="w-full h-full bg-white" title="PDF Preview"></iframe>
             <?php elseif ($viewerMode === 'video'): ?>
-              <video controls class="w-full h-[520px] bg-black">
+              <video controls class="w-full h-full bg-black">
                 <source src="<?php echo htmlspecialchars($previewUrl); ?>">
                 Your browser does not support video preview.
               </video>
             <?php elseif ($viewerMode === 'cad'): ?>
-              <div class="h-full min-h-[520px] bg-slate-900 text-white flex flex-col">
+              <div class="h-full bg-slate-900 text-white flex flex-col">
                 <div class="px-4 py-3 border-b border-white/10 bg-black/20 text-[10px] uppercase tracking-widest text-gray-300">
                   CAD Local Preview (<?php echo htmlspecialchars(strtoupper($ext)); ?>)
                 </div>
@@ -1311,8 +1959,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
                       rotation-per-second="20deg"
                       exposure="1"
                       environment-image="neutral"
-                      class="w-full h-full"
-                    ></model-viewer>
+                      class="w-full h-full"></model-viewer>
                   <?php else: ?>
                     <div class="h-full min-h-[360px] flex flex-col items-center justify-center text-gray-400 px-8 text-center gap-4">
                       <p>No local CAD preview generated yet.</p>
@@ -1365,8 +2012,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
             shadow-intensity="1"
             exposure="1"
             environment-image="neutral"
-            class="viewer-3d-canvas"
-          ></model-viewer>
+            class="viewer-3d-canvas"></model-viewer>
           <div id="modal3DError" class="viewer-3d-error" role="alert">
             <div>
               <p class="text-sm font-semibold mb-2">3D preview failed to load.</p>
@@ -1387,6 +2033,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
         </div>
         <div class="flex items-center gap-2">
           <button type="button" id="enableGyroBtn" class="text-xs bg-slate-accent hover:bg-foundation-grey text-white px-3 py-1">Enable Gyro</button>
+          <button type="button" class="openVrSetupBtn text-xs bg-foundation-grey hover:bg-rajkot-rust text-white px-3 py-1">Setup</button>
           <button type="button" id="closeVrModeBtn" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1">Close</button>
         </div>
       </div>
@@ -1403,8 +2050,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
               camera-orbit="-3deg 75deg auto"
               exposure="1"
               shadow-intensity="1"
-              environment-image="neutral"
-            ></model-viewer>
+              environment-image="neutral"></model-viewer>
           </div>
           <div class="vr-eye vr-eye-slave" id="vrEyeRight">
             <model-viewer
@@ -1417,12 +2063,15 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
               camera-orbit="3deg 75deg auto"
               exposure="1"
               shadow-intensity="1"
-              environment-image="neutral"
-            ></model-viewer>
+              environment-image="neutral"></model-viewer>
           </div>
         <?php else: ?>
-          <div class="vr-eye" id="vrEyeLeft"><div id="vrPanoLeft" class="vr-pano"></div></div>
-          <div class="vr-eye vr-eye-slave" id="vrEyeRight"><div id="vrPanoRight" class="vr-pano"></div></div>
+          <div class="vr-eye" id="vrEyeLeft">
+            <div id="vrPanoLeft" class="vr-pano"></div>
+          </div>
+          <div class="vr-eye vr-eye-slave" id="vrEyeRight">
+            <div id="vrPanoRight" class="vr-pano"></div>
+          </div>
         <?php endif; ?>
       </div>
     </div>
@@ -1444,7 +2093,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
   <?php endif; ?>
   <?php if ($viewerMode === '360' && $previewUrl !== ''): ?>
     <script>
-      (function () {
+      (function() {
         if (!window.pannellum) {
           return;
         }
@@ -1514,24 +2163,24 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
         }
 
         if (zoomInBtn) {
-          zoomInBtn.addEventListener('click', function () {
+          zoomInBtn.addEventListener('click', function() {
             viewer.setHfov(viewer.getHfov() - 10);
           });
         }
         if (zoomOutBtn) {
-          zoomOutBtn.addEventListener('click', function () {
+          zoomOutBtn.addEventListener('click', function() {
             viewer.setHfov(viewer.getHfov() + 10);
           });
         }
         if (resetViewBtn) {
-          resetViewBtn.addEventListener('click', function () {
+          resetViewBtn.addEventListener('click', function() {
             viewer.setPitch(0);
             viewer.setYaw(0);
             viewer.setHfov(100);
           });
         }
         if (fullscreenBtn) {
-          fullscreenBtn.addEventListener('click', function () {
+          fullscreenBtn.addEventListener('click', function() {
             openPanoFullscreen();
           });
         }
@@ -1541,7 +2190,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
         }
 
         if (panoFsResetBtn) {
-          panoFsResetBtn.addEventListener('click', function () {
+          panoFsResetBtn.addEventListener('click', function() {
             if (!panoFsViewer) {
               return;
             }
@@ -1552,14 +2201,14 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
         }
 
         if (panoFsModal) {
-          panoFsModal.addEventListener('click', function (event) {
+          panoFsModal.addEventListener('click', function(event) {
             if (event.target === panoFsModal) {
               closePanoFullscreen();
             }
           });
         }
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', function(event) {
           if (event.key === 'Escape' && panoFsModal && panoFsModal.classList.contains('is-open')) {
             closePanoFullscreen();
           }
@@ -1567,9 +2216,52 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
       })();
     </script>
   <?php endif; ?>
+  <!-- VR Setup Modal -->
+  <div id="vrSetupModal" class="vr-setup-modal" aria-hidden="true">
+    <div class="vr-setup-dialog" role="dialog" aria-modal="true" aria-label="Mobile VR Setup">
+      <form method="post" id="vrSetupForm">
+        <input type="hidden" name="vr_action" value="save_settings">
+        <h2>MOBILE VR SETUP</h2>
+        <div class="vr-setup-row">
+          <label style="min-width:110px;text-align:right;">Device:</label>
+          <input type="text" name="vr_device" id="vr_device" value="<?php echo htmlspecialchars((string)($vrSettings['device'] ?? 'Custom')); ?>">
+        </div>
+        <div class="vr-setup-row">
+          <label style="min-width:110px;text-align:right;">Screensize:</label>
+          <input type="text" name="vr_screensize" id="vr_screensize" value="<?php echo htmlspecialchars((string)($vrSettings['screensize'] ?? '6.1')); ?>"> <span style="opacity:0.8;margin-left:6px">inch</span>
+        </div>
+        <div class="vr-setup-row">
+          <label style="min-width:110px;text-align:right;">IPD:</label>
+          <input type="text" name="vr_ipd" id="vr_ipd" value="<?php echo htmlspecialchars((string)($vrSettings['ipd'] ?? '63.5')); ?>"> <span style="opacity:0.8;margin-left:6px">mm</span>
+        </div>
+        <div class="vr-setup-row">
+          <label style="min-width:110px;text-align:right;">VR Headset:</label>
+          <select name="vr_headset" id="vr_headset">
+            <?php $hs = htmlspecialchars((string)($vrSettings['headset'] ?? 'No Distortion')); ?>
+            <option value="No Distortion" <?php echo $hs === 'No Distortion' ? 'selected' : ''; ?>>No Distortion</option>
+            <option value="Cardboard" <?php echo $hs === 'Cardboard' ? 'selected' : ''; ?>>Cardboard</option>
+            <option value="Custom" <?php echo $hs === 'Custom' ? 'selected' : ''; ?>>Custom</option>
+          </select>
+          <button type="button" id="openVrCustomizeBtn" class="text-xs ml-2">Customize</button>
+        </div>
+        <div class="vr-setup-row">
+          <label style="min-width:110px;text-align:right;">Custom Params:</label>
+          <textarea name="vr_custom" id="vr_custom" rows="3" style="width:60%;"><?php echo htmlspecialchars((string)($vrSettings['custom'] ?? '')); ?></textarea>
+        </div>
+        <div class="vr-setup-row">
+          <button type="button" id="calibrateGyroBtn" class="text-sm bg-foundation-grey text-white px-4 py-2">Calibrate Gyroscope</button>
+        </div>
+        <div class="vr-setup-actions">
+          <button type="submit" id="vrSaveBtn" class="bg-rajkot-rust text-white">SAVE</button>
+          <button type="button" id="vrResetBtn" class="bg-slate-700 text-white">RESET</button>
+          <button type="button" id="vrCloseBtn" class="bg-red-600 text-white">CLOSE</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <?php if (($viewerMode === '3d' || $viewerMode === '360') && $previewUrl !== ''): ?>
     <script>
-      (function () {
+      (function() {
         const openBtn = document.getElementById('openVrModeBtn');
         const modal = document.getElementById('vrModeModal');
         const closeBtn = document.getElementById('closeVrModeBtn');
@@ -1695,9 +2387,9 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
           }
 
           <?php if ($viewerMode === '3d'): ?>
-          sync3DViews();
+            sync3DViews();
           <?php else: ?>
-          sync360Views();
+            sync360Views();
           <?php endif; ?>
 
           vrSyncFrame = requestAnimationFrame(runVrSyncLoop);
@@ -1774,7 +2466,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
 
         async function enableGyro() {
           <?php if ($viewerMode !== '360'): ?>
-          return;
+            return;
           <?php endif; ?>
           if (!vrPanoLeftViewer || !vrPanoRightViewer) {
             return;
@@ -1841,7 +2533,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
           }
           setGyroStatus(true, 'Gyro On');
 
-          gyroNoDataTimer = window.setTimeout(function () {
+          gyroNoDataTimer = window.setTimeout(function() {
             if (gyroEnabled && !gyroUsingNativeOrientation && gyroEventCount === 0) {
               setGyroStatus(false, 'No Sensor Data');
             }
@@ -1855,67 +2547,67 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
           updateVrCompensation();
 
           if (modal.requestFullscreen) {
-            modal.requestFullscreen().catch(function () {});
+            modal.requestFullscreen().catch(function() {});
           }
 
           <?php if ($viewerMode === '360'): ?>
-          if (!vrPanoInitialized && window.pannellum) {
-            vrPanoLeftViewer = pannellum.viewer('vrPanoLeft', {
-              type: 'equirectangular',
-              panorama: <?php echo json_encode($stereoLeftUrl !== '' ? $stereoLeftUrl : $previewUrl); ?>,
-              autoLoad: true,
-              compass: false,
-              showZoomCtrl: false,
-              showFullscreenCtrl: false,
-              mouseZoom: true,
-              draggable: true,
-              orientationOnByDefault: false,
-              pitch: 0,
-              yaw: 0,
-              hfov: 100
-            });
+            if (!vrPanoInitialized && window.pannellum) {
+              vrPanoLeftViewer = pannellum.viewer('vrPanoLeft', {
+                type: 'equirectangular',
+                panorama: <?php echo json_encode($stereoLeftUrl !== '' ? $stereoLeftUrl : $previewUrl); ?>,
+                autoLoad: true,
+                compass: false,
+                showZoomCtrl: false,
+                showFullscreenCtrl: false,
+                mouseZoom: true,
+                draggable: true,
+                orientationOnByDefault: false,
+                pitch: 0,
+                yaw: 0,
+                hfov: 100
+              });
 
-            vrPanoRightViewer = pannellum.viewer('vrPanoRight', {
-              type: 'equirectangular',
-              panorama: <?php echo json_encode($stereoRightUrl !== '' ? $stereoRightUrl : $previewUrl); ?>,
-              autoLoad: true,
-              compass: false,
-              showZoomCtrl: false,
-              showFullscreenCtrl: false,
-              mouseZoom: true,
-              draggable: true,
-              orientationOnByDefault: false,
-              pitch: 0,
-              yaw: 0,
-              hfov: 100
-            });
-            vrPanoInitialized = true;
-          }
-
-          if (vrPanoLeftViewer && vrPanoRightViewer) {
-            const basePitch = vrPanoLeftViewer.getPitch();
-            const baseYaw = vrPanoLeftViewer.getYaw();
-            const baseHfov = vrPanoLeftViewer.getHfov();
-            vrPanoRightViewer.setPitch(basePitch, false);
-            vrPanoRightViewer.setYaw(baseYaw, false);
-            vrPanoRightViewer.setHfov(baseHfov, false);
-          }
-
-          if (vrEyeRight) {
-            vrEyeRight.classList.add('vr-eye-slave');
-          }
-
-          if (enableGyroBtn) {
-            enableGyroBtn.textContent = 'Enable Gyro';
-          }
-          if (!hasSecureGyroContext()) {
-            if (enableGyroBtn) {
-              enableGyroBtn.textContent = 'HTTPS Required';
+              vrPanoRightViewer = pannellum.viewer('vrPanoRight', {
+                type: 'equirectangular',
+                panorama: <?php echo json_encode($stereoRightUrl !== '' ? $stereoRightUrl : $previewUrl); ?>,
+                autoLoad: true,
+                compass: false,
+                showZoomCtrl: false,
+                showFullscreenCtrl: false,
+                mouseZoom: true,
+                draggable: true,
+                orientationOnByDefault: false,
+                pitch: 0,
+                yaw: 0,
+                hfov: 100
+              });
+              vrPanoInitialized = true;
             }
-            setGyroStatus(false, 'HTTPS Required');
-          } else {
-            setGyroStatus(false, 'Tap Enable Gyro');
-          }
+
+            if (vrPanoLeftViewer && vrPanoRightViewer) {
+              const basePitch = vrPanoLeftViewer.getPitch();
+              const baseYaw = vrPanoLeftViewer.getYaw();
+              const baseHfov = vrPanoLeftViewer.getHfov();
+              vrPanoRightViewer.setPitch(basePitch, false);
+              vrPanoRightViewer.setYaw(baseYaw, false);
+              vrPanoRightViewer.setHfov(baseHfov, false);
+            }
+
+            if (vrEyeRight) {
+              vrEyeRight.classList.add('vr-eye-slave');
+            }
+
+            if (enableGyroBtn) {
+              enableGyroBtn.textContent = 'Enable Gyro';
+            }
+            if (!hasSecureGyroContext()) {
+              if (enableGyroBtn) {
+                enableGyroBtn.textContent = 'HTTPS Required';
+              }
+              setGyroStatus(false, 'HTTPS Required');
+            } else {
+              setGyroStatus(false, 'Tap Enable Gyro');
+            }
           <?php endif; ?>
 
           startVrSync();
@@ -1928,7 +2620,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
           disableGyro();
           stopVrSync();
           if (document.fullscreenElement && document.exitFullscreen) {
-            document.exitFullscreen().catch(function () {});
+            document.exitFullscreen().catch(function() {});
           }
         }
 
@@ -1936,7 +2628,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
         closeBtn.addEventListener('click', closeVr);
 
         if (enableGyroBtn) {
-          enableGyroBtn.addEventListener('click', function () {
+          enableGyroBtn.addEventListener('click', function() {
             enableGyro();
           });
         }
@@ -1947,7 +2639,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
         }
         window.addEventListener('resize', updateVrCompensation);
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', function(event) {
           if (event.key === 'Escape' && modal.classList.contains('is-open')) {
             closeVr();
           }
@@ -1957,7 +2649,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
   <?php endif; ?>
   <?php if ($viewerMode === '3d' && $previewUrl !== ''): ?>
     <script>
-      (function () {
+      (function() {
         const modelEls = [
           document.getElementById('inline3DViewer'),
           document.getElementById('modal3DViewer'),
@@ -1972,7 +2664,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
 
         const hasWebGPU = typeof navigator !== 'undefined' && !!navigator.gpu;
         if (hasWebGPU) {
-          modelEls.forEach(function (el) {
+          modelEls.forEach(function(el) {
             // model-viewer supports WebGPU through this renderer hint.
             el.setAttribute('experimental-renderer', 'webgpu');
           });
@@ -1985,9 +2677,88 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
       })();
     </script>
   <?php endif; ?>
+    <script>
+      (function() {
+        const modal = document.getElementById('vrSetupModal');
+        if (!modal) return;
+        const setupBtns = Array.from(document.querySelectorAll('.openVrSetupBtn'));
+        const closeBtn = document.getElementById('vrCloseBtn');
+        const resetBtn = document.getElementById('vrResetBtn');
+        const calibrateBtn = document.getElementById('calibrateGyroBtn');
+        const enableGyroBtn = document.getElementById('enableGyroBtn');
+        const form = document.getElementById('vrSetupForm');
+
+        // Capture initial values for reset
+        const initial = {};
+        ['vr_device','vr_screensize','vr_ipd','vr_headset','vr_custom'].forEach(function(id) {
+          const el = document.getElementById(id);
+          initial[id] = el ? el.value : '';
+        });
+
+        function openModal() {
+          modal.classList.add('is-open');
+          modal.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        }
+
+        setupBtns.forEach(function(b) {
+          b.addEventListener('click', function() { openModal(); });
+        });
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function() { closeModal(); });
+        }
+
+        if (resetBtn) {
+          resetBtn.addEventListener('click', function() {
+            ['vr_device','vr_screensize','vr_ipd','vr_headset','vr_custom'].forEach(function(id) {
+              const el = document.getElementById(id);
+              if (!el) return;
+              el.value = initial[id] || '';
+            });
+          });
+        }
+
+        if (calibrateBtn) {
+          calibrateBtn.addEventListener('click', function() {
+            // Trigger existing gyro enable button if present
+            if (enableGyroBtn) {
+              enableGyroBtn.click();
+              // Also open VR modal so user can see calibration
+              const vrModeModal = document.getElementById('vrModeModal');
+              if (vrModeModal) {
+                vrModeModal.classList.add('is-open');
+                vrModeModal.setAttribute('aria-hidden','false');
+              }
+            } else {
+              alert('Gyroscope control not available in this view.');
+            }
+          });
+        }
+
+        // Close modal when clicking backdrop
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+
+        // Escape closes
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+            closeModal();
+          }
+        });
+      })();
+    </script>
   <?php if ($viewerMode === '3d' && $previewUrl !== ''): ?>
     <script>
-      (function () {
+      (function() {
         const inlineViewer = document.getElementById('inline3DViewer');
         const inlineError = document.getElementById('inline3DError');
         const modalViewer = document.getElementById('modal3DViewer');
@@ -1997,10 +2768,10 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
           if (!viewerEl || !errorEl) {
             return;
           }
-          viewerEl.addEventListener('error', function () {
+          viewerEl.addEventListener('error', function() {
             errorEl.classList.add('is-visible');
           });
-          viewerEl.addEventListener('load', function () {
+          viewerEl.addEventListener('load', function() {
             errorEl.classList.remove('is-visible');
           });
         }
@@ -2012,7 +2783,7 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
   <?php endif; ?>
   <?php if ($viewerMode === '3d' && $previewUrl !== ''): ?>
     <script>
-      (function () {
+      (function() {
         const openBtn = document.getElementById('open3DPopup');
         const modal = document.getElementById('threeDModal');
         const closeBtn = document.getElementById('modalClose3D');
@@ -2040,20 +2811,20 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
         openBtn.addEventListener('click', openModal);
         closeBtn.addEventListener('click', closeModal);
 
-        modal.addEventListener('click', function (event) {
+        modal.addEventListener('click', function(event) {
           if (event.target === modal) {
             closeModal();
           }
         });
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', function(event) {
           if (event.key === 'Escape' && modal.classList.contains('is-open')) {
             closeModal();
           }
         });
 
         if (orbitToggle) {
-          orbitToggle.addEventListener('click', function () {
+          orbitToggle.addEventListener('click', function() {
             orbitEnabled = !orbitEnabled;
             if (orbitEnabled) {
               modalViewer.setAttribute('auto-rotate', '');
@@ -2066,4 +2837,5 @@ $isStereoPanorama = ($stereoLeftUrl !== '' && $stereoRightUrl !== '');
     </script>
   <?php endif; ?>
 </body>
+
 </html>

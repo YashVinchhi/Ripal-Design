@@ -22,6 +22,35 @@ function readable_size(int $bytes): string
     return round($bytes / (1024 * 1024), 1) . ' MB';
 }
 
+function ensure_project_files_revision_columns(PDO $db): array
+{
+    $hasRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
+    $hasRevisionNo = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_no') : false;
+
+    if (!$hasRevisionGroup) {
+        try {
+            $db->exec("ALTER TABLE project_files ADD COLUMN revision_group VARCHAR(120) DEFAULT NULL");
+            $hasRevisionGroup = true;
+        } catch (Throwable $e) {
+            $hasRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
+        }
+    }
+
+    if (!$hasRevisionNo) {
+        try {
+            $db->exec("ALTER TABLE project_files ADD COLUMN revision_no INT DEFAULT 1");
+            $hasRevisionNo = true;
+        } catch (Throwable $e) {
+            $hasRevisionNo = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_no') : false;
+        }
+    }
+
+    return [
+        'has_revision_group' => $hasRevisionGroup,
+        'has_revision_no' => $hasRevisionNo,
+    ];
+}
+
 $db = get_db();
 if (!($db instanceof PDO)) {
     api_json(['success' => false, 'message' => 'Database connection unavailable.'], 500);
@@ -78,6 +107,7 @@ $projectId = (int)($body['project_id'] ?? $_POST['project_id'] ?? 0);
 $sessionRole = strtolower(trim((string)($_SESSION['user']['role'] ?? '')));
 $clientBlockedActions = [
     'upload_file',
+    'upload_file_revision',
     'upload_drawing',
     'add_team_member',
     'remove_team_member',
@@ -219,7 +249,7 @@ if ($action === 'remove_team_member') {
     }
 }
 
-if ($action === 'upload_file' || $action === 'upload_drawing') {
+if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'upload_file_revision') {
     if (!isset($_FILES['file']) || !is_array($_FILES['file'])) {
         api_json(['success' => false, 'message' => 'No file uploaded.'], 400);
     }
@@ -261,6 +291,17 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
         $allowed = ['pdf', 'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'webp'];
         if ($ext !== '' && !in_array($ext, $allowed, true)) {
             api_json(['success' => false, 'message' => 'Unsupported drawing file type.'], 400);
+        }
+    }
+
+    $baseFileId = (int)($_POST['base_file_id'] ?? $body['base_file_id'] ?? 0);
+    if ($action === 'upload_file_revision') {
+        $allowedRevisionTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if ($ext === '' || !in_array($ext, $allowedRevisionTypes, true)) {
+            api_json(['success' => false, 'message' => 'Revision upload supports image files only (jpg, jpeg, png, webp, gif).'], 400);
+        }
+        if ($baseFileId <= 0) {
+            api_json(['success' => false, 'message' => 'Base file is required for revision upload.'], 400);
         }
     }
 
@@ -342,18 +383,74 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
                 'ext' => strtolower((string)$ext),
             ]);
         } else {
+            $revisionSchema = ensure_project_files_revision_columns($db);
+            $hasRevisionGroup = (bool)($revisionSchema['has_revision_group'] ?? false);
+            $hasRevisionNo = (bool)($revisionSchema['has_revision_no'] ?? false);
+
+            $revisionGroup = '';
+            $revisionNo = 1;
+            $displayName = $originalName;
+
+            if ($action === 'upload_file_revision') {
+                $revisionGroupSelect = $hasRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
+                $revisionNoSelect = $hasRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
+                $baseStmt = $db->prepare('SELECT id, project_id, name, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE id = ? AND project_id = ? LIMIT 1');
+                $baseStmt->execute([$baseFileId, $projectId]);
+                $baseRow = $baseStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$baseRow) {
+                    api_json(['success' => false, 'message' => 'Base file not found for revision.'], 404);
+                }
+
+                $displayName = (string)($baseRow['name'] ?? $originalName);
+                $existingGroup = trim((string)($baseRow['revision_group'] ?? ''));
+                if ($hasRevisionGroup) {
+                    if ($existingGroup === '') {
+                        $existingGroup = 'pf_' . (int)$baseFileId;
+                        $updateBaseGroup = $db->prepare('UPDATE project_files SET revision_group = ? WHERE id = ? LIMIT 1');
+                        $updateBaseGroup->execute([$existingGroup, $baseFileId]);
+                    }
+                    $revisionGroup = $existingGroup;
+                }
+
+                if ($hasRevisionNo) {
+                    if ($hasRevisionGroup && $revisionGroup !== '') {
+                        $maxStmt = $db->prepare('SELECT COALESCE(MAX(revision_no), 1) FROM project_files WHERE project_id = ? AND revision_group = ?');
+                        $maxStmt->execute([$projectId, $revisionGroup]);
+                    } else {
+                        $maxStmt = $db->prepare('SELECT COALESCE(MAX(revision_no), 1) FROM project_files WHERE project_id = ? AND name = ?');
+                        $maxStmt->execute([$projectId, $displayName]);
+                    }
+                    $revisionNo = ((int)$maxStmt->fetchColumn()) + 1;
+                }
+            } else {
+                if ($hasRevisionGroup) {
+                    $revisionGroup = 'pf_' . bin2hex(random_bytes(6));
+                }
+                $revisionNo = 1;
+            }
+
             $typeLabel = $ext !== '' ? strtoupper($ext) : 'FILE';
-            if ($hasProjectFilesStoragePath) {
+            if ($hasProjectFilesStoragePath && $hasRevisionGroup && $hasRevisionNo) {
+                $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, revision_group, revision_no, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())');
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser, $revisionGroup !== '' ? $revisionGroup : null, $revisionNo]);
+            } elseif ($hasProjectFilesStoragePath && $hasRevisionGroup) {
+                $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, revision_group, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())');
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser, $revisionGroup !== '' ? $revisionGroup : null]);
+            } elseif ($hasProjectFilesStoragePath && $hasRevisionNo) {
+                $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, revision_no, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())');
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser, $revisionNo]);
+            } elseif ($hasProjectFilesStoragePath) {
                 $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $originalName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser]);
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser]);
             } else {
                 $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $originalName, $typeLabel, $sizeLabel, $publicPath, $currentUser]);
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $currentUser]);
             }
             $newId = (int)$db->lastInsertId();
 
             $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
-            $act->execute([$projectId, $currentUser, 'uploaded file', $originalName]);
+            $activityAction = $action === 'upload_file_revision' ? 'uploaded file revision' : 'uploaded file';
+            $act->execute([$projectId, $currentUser, $activityAction, $displayName]);
 
             $participants = notifications_get_project_participants($projectId);
             $recipientIds = array_values(array_unique(array_filter(array_merge(
@@ -372,7 +469,7 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
                     'project_id' => $projectId,
                     'entity_type' => 'file',
                     'entity_id' => $newId,
-                    'action_key' => 'file.uploaded',
+                    'action_key' => $action === 'upload_file_revision' ? 'file.revision.uploaded' : 'file.uploaded',
                     'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . $projectId,
                 ]
             );
@@ -391,11 +488,12 @@ if ($action === 'upload_file' || $action === 'upload_drawing') {
             'success' => true,
             'message' => 'Upload successful.',
             'id' => $newId,
-            'name' => $originalName,
+            'name' => isset($displayName) ? $displayName : $originalName,
             'type' => $typeLabel,
             'size_label' => $sizeLabel,
             'file_path' => $publicPath,
-            'view_url' => $viewUrl
+            'view_url' => $viewUrl,
+            'revision_no' => isset($revisionNo) ? (int)$revisionNo : 1
         ]);
     } catch (Exception $e) {
         @unlink($absolutePath);
