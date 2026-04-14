@@ -25,6 +25,6 @@ jobs:
             echo "Logging into GHCR"
             echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cd ${{ secrets.DEPLOY_PATH }}
-            docker pull ghcr.io/${{ toLower(github.repository) }}:latest || true
+            docker pull ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):latest || true
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
