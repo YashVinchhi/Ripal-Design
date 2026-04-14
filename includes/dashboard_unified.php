@@ -71,7 +71,10 @@ if ($variant === 'main') {
 
 if ($variant === 'worker') {
     if (db_connected() && db_table_exists('projects')) {
-        $projects = db_fetch_all("SELECT DISTINCT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, COALESCE(p.due,'1970-01-01') AS due, COALESCE(p.location,'') AS location, p.latitude, p.longitude
+    $mapLinkSelect = db_column_exists('projects', 'map_link') ? 'COALESCE(p.map_link,\'\') AS map_link' : "'' AS map_link";
+    $projects = db_fetch_all("SELECT DISTINCT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, COALESCE(p.due,'1970-01-01') AS due, COALESCE(p.location,'') AS location,
+      {$mapLinkSelect},
+      COALESCE(NULLIF(p.address,''), NULLIF(p.location,''), '') AS address, p.latitude, p.longitude
             FROM projects p
             LEFT JOIN project_assignments pa ON pa.project_id = p.id
             ORDER BY p.id DESC LIMIT 200");
@@ -315,10 +318,19 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
                 <div class="flex items-center justify-between py-3 border-y border-gray-50">
                   <div class="flex items-center text-sm text-gray-600 truncate mr-4">
                     <i data-lucide="map-pin" class="w-4 h-4 mr-2 shrink-0 text-gray-400"></i>
-                    <span class="truncate"><?php echo esc($p['location'] ?? ''); ?></span>
+                    <span class="truncate"><?php echo esc(($p['address'] ?? '') !== '' ? (string)$p['address'] : (string)($p['location'] ?? 'Location not set')); ?></span>
                   </div>
-                  <?php if (!empty($p['latitude']) && !empty($p['longitude'])): ?>
-                    <a href="https://www.google.com/maps/dir/?api=1&amp;destination=<?php echo urlencode($p['latitude'] . ',' . $p['longitude']); ?>" target="_blank" class="shrink-0 text-rajkot-rust hover:underline text-xs font-bold flex items-center gap-1">
+                  <?php
+                    $directionDestination = '';
+                    if (!empty($p['latitude']) && !empty($p['longitude'])) {
+                        $directionDestination = (string)$p['latitude'] . ',' . (string)$p['longitude'];
+                    } else {
+                        $directionDestination = (string)(($p['address'] ?? '') !== '' ? $p['address'] : ($p['location'] ?? ''));
+                    }
+                    $directionHref = build_google_maps_direction_href((string)($p['map_link'] ?? ''), $directionDestination);
+                  ?>
+                  <?php if ($directionHref !== ''): ?>
+                    <a href="<?php echo esc_attr($directionHref); ?>" target="_blank" class="shrink-0 text-rajkot-rust hover:underline text-xs font-bold flex items-center gap-1">
                       DIRECTIONS <i data-lucide="external-link" class="w-3 h-3"></i>
                     </a>
                   <?php endif; ?>

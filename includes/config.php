@@ -108,19 +108,20 @@ function getBaseUrl() {
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
     
-    // Detect if we're in a subdirectory (public/dashboard/admin/etc)
-    // If so, remove that folder from the path to get the app root
+    // Detect if we're in a subdirectory (public/dashboard/admin/client/worker/api)
+    // Remove trailing app folders to get the application root path.
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
-        $lastPart = $parts[count($parts) - 1];
-        
-        // List of known application subfolders
-        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker'];
-        
-        if (in_array($lastPart, $appFolders)) {
+        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
+
+        while (!empty($parts)) {
+            $lastPart = $parts[count($parts) - 1];
+            if (!in_array($lastPart, $appFolders, true)) {
+                break;
+            }
             array_pop($parts);
         }
-        
+
         $appPath = !empty($parts) ? '/' . implode('/', $parts) : '';
     } else {
         $appPath = '';
@@ -153,18 +154,19 @@ function getBasePath() {
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
     
-    // Detect if we're in a subdirectory
+    // Detect if we're in a subdirectory and remove trailing app folders
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
-        $lastPart = $parts[count($parts) - 1];
-        
-        // List of known application subfolders
-        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker'];
-        
-        if (in_array($lastPart, $appFolders)) {
+        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
+
+        while (!empty($parts)) {
+            $lastPart = $parts[count($parts) - 1];
+            if (!in_array($lastPart, $appFolders, true)) {
+                break;
+            }
             array_pop($parts);
         }
-        
+
         $basePath = !empty($parts) ? '/' . implode('/', $parts) : '';
     } else {
         $basePath = '';

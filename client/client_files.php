@@ -8,8 +8,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST[
     $drawingId = (int)$_POST['drawing_id'];
     $clientAction = (string)$_POST['client_action'];
     if ($drawingId > 0 && in_array($clientAction, ['authorize', 'redline'], true)) {
-        $status = $clientAction === 'authorize' ? 'approved' : 'changes_requested';
-        db_query('UPDATE project_drawings SET status = ? WHERE id = ?', [$status, $drawingId]);
+        $status = $clientAction === 'authorize' ? 'Approved' : 'Revision Needed';
+        db_query('UPDATE project_drawings SET status = ? WHERE id = ? AND project_id = ?', [$status, $drawingId, $projectId]);
+
+        $actorId = current_user_id();
+        $participants = notifications_get_project_participants($projectId);
+        $project = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+        $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
+
+        if ($clientAction === 'authorize') {
+            $recipientIds = array_map('intval', (array)($participants['worker_ids'] ?? []));
+            if (!empty($participants['created_by'])) {
+                $recipientIds[] = (int)$participants['created_by'];
+            }
+            notifications_insert_bulk(
+                $recipientIds,
+                'drawing',
+                'Design Approved by Client',
+                'A design drawing was approved by the client in ' . $projectName . '.',
+                [
+                    'actor_user_id' => $actorId,
+                    'project_id' => $projectId,
+                    'entity_type' => 'drawing',
+                    'entity_id' => $drawingId,
+                    'action_key' => 'drawing.approved',
+                    'deep_link' => rtrim((string)BASE_PATH, '/') . '/worker/project_details.php?id=' . $projectId,
+                ]
+            );
+        } else {
+            $recipientIds = [];
+            if (!empty($participants['created_by'])) {
+                $recipientIds[] = (int)$participants['created_by'];
+            }
+            $recipientIds = array_merge($recipientIds, notifications_get_user_ids_by_roles(['employee', 'admin']));
+            notifications_insert_bulk(
+                $recipientIds,
+                'drawing',
+                'Design Changes Requested',
+                'Client requested design changes in ' . $projectName . '.',
+                [
+                    'actor_user_id' => $actorId,
+                    'project_id' => $projectId,
+                    'entity_type' => 'drawing',
+                    'entity_id' => $drawingId,
+                    'action_key' => 'drawing.changes_requested',
+                    'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . $projectId,
+                ]
+            );
+        }
     }
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
@@ -17,14 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST[
 
 $drawings = [];
 if ($projectId > 0 && db_connected()) {
-    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(file_path,'') AS file, COALESCE(version,'v1') AS version, uploaded_at AS date, LOWER(REPLACE(status,' ', '_')) AS status
+    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(file_path,'') AS file, COALESCE(version,'v1') AS version, uploaded_at AS date, LOWER(REPLACE(status,' ', '_')) AS status, 'drawing' AS source_kind
         FROM project_drawings
         WHERE project_id = ?
         ORDER BY uploaded_at DESC", [$projectId]);
 }
 
 if (empty($drawings) && $projectId > 0 && db_connected()) {
-    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(filename,'') AS file, CONCAT('v', COALESCE(version,1)) AS version, uploaded_at AS date, 'approved' AS status
+    $drawings = db_fetch_all("SELECT id, name AS title, COALESCE(filename,'') AS file, CONCAT('v', COALESCE(version,1)) AS version, uploaded_at AS date, 'approved' AS status, 'file' AS source_kind
         FROM project_files
         WHERE project_id = ?
         ORDER BY uploaded_at DESC", [$projectId]);
@@ -159,7 +205,15 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                 <?php endif; ?>
                             </td>
                             <td class="px-10 py-8 text-right">
-                                <?php if($d['status'] === 'pending'): ?>
+                                <?php
+                                    $viewerKind = strtolower((string)($d['source_kind'] ?? 'drawing')) === 'file' ? 'file' : 'drawing';
+                                    $viewerUrl = file_viewer_url([
+                                        'kind' => $viewerKind,
+                                        'id' => (int)($d['id'] ?? 0),
+                                        'project_id' => (int)$projectId,
+                                    ]);
+                                ?>
+                                <?php if(in_array($d['status'], ['pending', 'under_review'], true)): ?>
                                     <div class="flex justify-end gap-3">
                                         <form method="post" class="flex gap-3">
                                             <input type="hidden" name="drawing_id" value="<?php echo (int)$d['id']; ?>">
@@ -173,7 +227,7 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                     </div>
                                 <?php else: ?>
                                     <div class="flex justify-end gap-3">
-                                        <button onclick="window.open('../admin/file_viewer.php?file=<?php echo urlencode($d['file']); ?>&project=Client Registry', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                                        <button onclick="window.open('<?php echo htmlspecialchars($viewerUrl, ENT_QUOTES, 'UTF-8'); ?>', '_blank')" class="text-gray-300 hover:text-rajkot-rust transition-colors p-2" title="View Document"><i data-lucide="eye" class="w-5 h-5"></i></button>
                                         <!-- <button class="text-gray-300 hover:text-foundation-grey transition-colors p-2"><i data-lucide="history" class="w-5 h-5"></i></button> -->
                                         <button type="button" onclick="handleDownload('<?php echo addslashes($d['file']); ?>')" class="text-gray-300 hover:text-blue-600 transition-colors p-2" title="Registry Download"><i data-lucide="download" class="w-5 h-5"></i></button>
                                     </div>

@@ -336,6 +336,10 @@
   .notif-item:hover { background: rgba(0,0,0,0.25) !important; }
   .notif-item { padding:10px 8px; border-radius:8px; background: rgba(255,255,255,0.03); margin-bottom:8px; cursor: pointer; transition: background .18s ease; }
   .notif-item:hover { background: rgba(255,255,255,0.08); }
+    .notif-item.unread {
+            box-shadow: inset 2px 0 0 #ffffff;
+            background: rgba(255,255,255,0.08);
+    }
   .notif-main { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
   .notif-title { font-size:14px; color:#fff; font-weight:500; line-height:1.4; }
   .notif-meta { font-size:12px; color:rgba(255,255,255,0.65); margin-top:4px; }

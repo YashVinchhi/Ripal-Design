@@ -38,6 +38,11 @@ if (file_exists(__DIR__ . '/util.php')) {
     require_once __DIR__ . '/util.php';
 }
 
+// Load notification helpers (depends on db/auth/util)
+if (file_exists(__DIR__ . '/notification_service.php')) {
+    require_once __DIR__ . '/notification_service.php';
+}
+
 // Load public content helpers (depends on util/db/auth)
 if (file_exists(__DIR__ . '/public_content.php')) {
     require_once __DIR__ . '/public_content.php';

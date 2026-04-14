@@ -50,8 +50,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         if (db_connected()) {
             try {
                 $db = get_db();
+                $requestRow = db_fetch('SELECT project_id, submitted_by, subject FROM review_requests WHERE id = ? LIMIT 1', [$id]);
                 $stmt = $db->prepare("UPDATE review_requests SET status = ?, updated_at = NOW() WHERE id = ?");
                 $stmt->execute([$status, $id]);
+
+                if ($requestRow) {
+                    $recipientId = (int)($requestRow['submitted_by'] ?? 0);
+                    $projectId = (int)($requestRow['project_id'] ?? 0);
+                    $subject = (string)($requestRow['subject'] ?? 'Review Request');
+                    $statusText = strtoupper(str_replace('_', ' ', $status));
+
+                    notifications_insert(
+                        $recipientId,
+                        'review',
+                        'Review Request Updated',
+                        $subject . ' is now ' . $statusText . '.',
+                        [
+                            'actor_user_id' => current_user_id(),
+                            'project_id' => $projectId,
+                            'action_key' => 'review.resolved',
+                            'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/review_requests.php',
+                        ]
+                    );
+                }
             } catch (Exception $e) {}
         }
         header('Location: ' . $_SERVER['PHP_SELF']);

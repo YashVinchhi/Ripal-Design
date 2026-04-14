@@ -43,13 +43,13 @@ if (db_connected() && $projectId > 0) {
           <div class="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h3 class="text-lg font-serif font-bold"><?php echo htmlspecialchars((string)$r['name']); ?></h3>
-              <p class="text-xs text-gray-400 mt-1">Version: <?php echo htmlspecialchars((string)($r['version'] ?: 'v1')); ?> • <?php echo date('M d, Y H:i', strtotime((string)$r['uploaded_at'])); ?></p>
+              <p class="text-xs text-gray-400 mt-1">Version: <?php echo htmlspecialchars((string)($r['version'] ?: 'v1')); ?> ï¿½ <?php echo date('M d, Y H:i', strtotime((string)$r['uploaded_at'])); ?></p>
             </div>
             <span class="text-[10px] uppercase tracking-widest px-2 py-1 border border-gray-100 bg-gray-50"><?php echo htmlspecialchars($status); ?></span>
           </div>
           <?php if (!empty($r['file_path'])): ?>
           <div class="mt-4">
-            <a class="text-rajkot-rust text-xs font-bold uppercase tracking-widest" href="../admin/file_viewer.php?file=<?php echo urlencode((string)$r['file_path']); ?>" target="_blank">Open File</a>
+            <a class="text-rajkot-rust text-xs font-bold uppercase tracking-widest" href="<?php echo htmlspecialchars(file_viewer_url(['kind' => 'drawing', 'id' => (int)($r['id'] ?? 0), 'project_id' => (int)$projectId])); ?>" target="_blank">Open File</a>
           </div>
           <?php endif; ?>
         </div>
