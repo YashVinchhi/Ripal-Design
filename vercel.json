@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "build": {
+    "env": {
+      "VERCEL_ANALYZE_BUILD_OUTPUT": "1"
+    }
+  },
   "functions": {
     "api/*.php": {
       "runtime": "vercel-php@0.9.0"
