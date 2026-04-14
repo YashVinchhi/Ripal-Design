@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS projects (
   progress INT DEFAULT 0,
   due DATE DEFAULT NULL,
   location TEXT DEFAULT NULL,
+  map_link TEXT DEFAULT NULL,
   site_location VARCHAR(255) DEFAULT NULL,
   address TEXT DEFAULT NULL,
   owner_name VARCHAR(255) DEFAULT NULL,
@@ -246,10 +247,23 @@ CREATE TABLE IF NOT EXISTS notifications (
   type VARCHAR(100) DEFAULT NULL,
   title VARCHAR(255) DEFAULT NULL,
   body TEXT DEFAULT NULL,
+  actor_user_id INT DEFAULT NULL,
+  project_id INT DEFAULT NULL,
+  entity_type VARCHAR(50) DEFAULT NULL,
+  entity_id INT DEFAULT NULL,
+  action_key VARCHAR(100) DEFAULT NULL,
+  deep_link VARCHAR(500) DEFAULT NULL,
+  metadata_json JSON DEFAULT NULL,
   is_read TINYINT(1) DEFAULT 0,
+  read_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_notifications_user (user_id)
+  FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+  INDEX idx_notifications_user (user_id),
+  INDEX idx_notifications_user_read_created (user_id, is_read, created_at),
+  INDEX idx_notifications_project_created (project_id, created_at),
+  INDEX idx_notifications_action_created (action_key, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================

@@ -18,6 +18,15 @@ $projectId = $_GET['id'] ?? null;
 $error = null;
 $success = null;
 
+if (isset($_SESSION['project_success'])) {
+    $success = (string)$_SESSION['project_success'];
+    unset($_SESSION['project_success']);
+}
+if (isset($_SESSION['project_error'])) {
+    $error = (string)$_SESSION['project_error'];
+    unset($_SESSION['project_error']);
+}
+
 // Helper function for date formatting
 function formatDate($dateString) {
     if (empty($dateString)) return 'N/A';
@@ -118,12 +127,21 @@ if ($pdo instanceof PDO) {
       progress INT DEFAULT 0,
       due DATE,
       location TEXT,
+            map_link TEXT,
       address TEXT,
       owner_name VARCHAR(255),
       owner_contact VARCHAR(50),
       owner_email VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
+
+        if (!db_column_exists('projects', 'map_link')) {
+            try {
+                $pdo->exec("ALTER TABLE projects ADD COLUMN map_link TEXT");
+            } catch (Throwable $e) {
+                // Ignore if another request adds it first.
+            }
+        }
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS project_workers (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -204,17 +222,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
   $ownerName = $_POST['owner_name'] ?? '';
   $ownerContact = $_POST['owner_contact'] ?? '';
   $ownerEmail = $_POST['owner_email'] ?? '';
+    $mapLink = array_key_exists('map_link', $_POST)
+            ? trim((string)$_POST['map_link'])
+            : trim((string)($project['map_link'] ?? ''));
+    if ($mapLink !== '' && !filter_var($mapLink, FILTER_VALIDATE_URL)) {
+        // Unified field accepts plain address/place text as well.
+        $mapLink = 'https://www.google.com/maps?q=' . rawurlencode($mapLink);
+    }
 
   if (empty($name)) {
     $error = 'Project name is required';
+    } elseif ($mapLink !== '' && !is_valid_google_maps_url($mapLink)) {
+        $error = 'Please enter a valid Google Maps link.';
   } else {
+        if ($mapLink !== '') {
+            $mapLink = canonicalize_google_maps_url($mapLink);
+        }
+
+        $derivedMapAddress = $mapLink !== '' ? trim((string)normalize_google_maps_embed_query($mapLink)) : '';
+        $derivedMapLooksLikeCoordinates = (bool)preg_match('/^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/', $derivedMapAddress);
+        if ($derivedMapAddress !== '' && !$derivedMapLooksLikeCoordinates) {
+            if ($location === '') {
+                $location = $derivedMapAddress;
+            }
+            if ($address === '') {
+                $address = $derivedMapAddress;
+            }
+        }
     try {
       if ($projectId) {
+                $previousStatus = strtolower((string)($project['status'] ?? ''));
         // Update existing project
         $stmt = $pdo->prepare('
           UPDATE projects 
           SET name = :name, status = :status, budget = :budget, 
-              progress = :progress, due = :due, location = :location, address = :address,
+              progress = :progress, due = :due, location = :location, map_link = :map_link, address = :address,
               owner_name = :owner_name, owner_contact = :owner_contact, owner_email = :owner_email
           WHERE id = :id
         ');
@@ -226,12 +268,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
           'progress' => $progress,
           'due' => $due,
           'location' => $location,
+          'map_link' => $mapLink,
                     'address' => $address,
           'owner_name' => $ownerName,
           'owner_contact' => $ownerContact,
           'owner_email' => $ownerEmail
         ]);
-        $success = "Project updated successfully!";
+        $_SESSION['project_success'] = 'Project updated successfully!';
         
         // Log activity
         $activityStmt = $pdo->prepare('
@@ -244,11 +287,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
           'action' => 'updated project',
           'item' => 'Project details'
         ]);
+
+                if ($previousStatus !== 'completed' && strtolower((string)$status) === 'completed') {
+                    notifications_notify_admins(
+                        'project',
+                        'Project Completed',
+                        'Project marked as completed: ' . $name . '.',
+                        [
+                            'actor_user_id' => current_user_id(),
+                            'project_id' => (int)$projectId,
+                            'action_key' => 'project.completed',
+                            'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)$projectId,
+                        ]
+                    );
+                }
+
+                                header('Location: project_details.php?id=' . (int)$projectId);
+                                exit;
       } else {
         // Create new project
         $stmt = $pdo->prepare('
-          INSERT INTO projects (name, status, budget, progress, due, location, address, owner_name, owner_contact, owner_email)
-                    VALUES (:name, :status, :budget, :progress, :due, :location, :address, :owner_name, :owner_contact, :owner_email)
+                    INSERT INTO projects (name, status, budget, progress, due, location, map_link, address, owner_name, owner_contact, owner_email)
+                                        VALUES (:name, :status, :budget, :progress, :due, :location, :map_link, :address, :owner_name, :owner_contact, :owner_email)
         ');
         $stmt->execute([
           'name' => $name,
@@ -257,6 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
           'progress' => $progress,
           'due' => $due,
           'location' => $location,
+          'map_link' => $mapLink,
                     'address' => $address,
           'owner_name' => $ownerName,
           'owner_contact' => $ownerContact,
@@ -275,6 +336,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
           'action' => 'created project',
           'item' => $name
         ]);
+
+                notifications_notify_admins(
+                    'project',
+                    'New Project Created',
+                    'A new project was created: ' . $name . '.',
+                    [
+                        'actor_user_id' => current_user_id(),
+                        'project_id' => (int)$projectId,
+                        'action_key' => 'project.created',
+                        'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)$projectId,
+                    ]
+                );
 
                 $_SESSION['project_success'] = 'Project created successfully!';
                 header('Location: dashboard.php');
@@ -343,6 +416,7 @@ if (!$project && !$projectId) {
         'progress' => 0,
         'due' => date('Y-m-d', strtotime('+30 days')),
         'location' => '',
+        'map_link' => '',
         'address' => '',
         'owner' => [
             'name' => '',
@@ -366,6 +440,7 @@ if (!$project) {
     'progress' => 45,
     'due' => date('Y-m-d', strtotime('+30 days')),
     'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
+    'map_link' => '',
     'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
     'owner' => [
       'name' => 'Amitbhai Patel',
@@ -408,6 +483,24 @@ if (!$project) {
 
 // Format budget for display
 $budgetFormatted = '₹ ' . number_format($project['budget'] ?? 0, 0, '.', ',');
+
+$projectMapLink = trim((string)($project['map_link'] ?? ''));
+$projectAddressForMap = trim((string)($project['address'] ?? $project['location'] ?? ''));
+$projectMapSeed = $projectMapLink !== '' ? $projectMapLink : $projectAddressForMap;
+$projectMapEmbedSrc = build_google_maps_embed_src($projectMapSeed);
+$projectMapInputValue = $projectMapLink !== '' ? trim((string)normalize_google_maps_embed_query($projectMapLink)) : $projectAddressForMap;
+if ($projectMapInputValue === '') {
+    $projectMapInputValue = $projectMapLink;
+}
+$projectLocationFromMapLink = '';
+if ($projectMapLink !== '') {
+    $projectLocationFromMapLink = trim((string)normalize_google_maps_embed_query($projectMapLink));
+}
+$projectMapLinkLooksLikeCoordinates = (bool)preg_match('/^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/', $projectLocationFromMapLink);
+$projectLocationSentenceValue = $projectAddressForMap;
+if ($projectLocationFromMapLink !== '' && !$projectMapLinkLooksLikeCoordinates) {
+    $projectLocationSentenceValue = $projectLocationFromMapLink;
+}
 
 // Status badge colors
 $statusColors = [
@@ -601,11 +694,27 @@ if ($pdo instanceof PDO) {
     <?php endif; ?>
 
     <?php if ($success): ?>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded">
+    <div id="projectSuccessAlertWrap" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 transition-opacity duration-500" role="status" aria-live="polite">
+        <div id="projectSuccessAlert" class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded transition-opacity duration-500">
             <?php echo htmlspecialchars($success); ?>
         </div>
     </div>
+    <script>
+        (function () {
+            const wrap = document.getElementById('projectSuccessAlertWrap');
+            if (!wrap) {
+                return;
+            }
+            window.setTimeout(function () {
+                wrap.style.opacity = '0';
+                window.setTimeout(function () {
+                    if (wrap && wrap.parentNode) {
+                        wrap.parentNode.removeChild(wrap);
+                    }
+                }, 500);
+            }, 4000);
+        })();
+    </script>
     <?php endif; ?>
 
     <!-- Unified Dark Portal Header -->
@@ -765,10 +874,24 @@ if ($pdo instanceof PDO) {
                                 <div class="pt-4 border-t border-slate-100">
                                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Location Mapping
                                     </h3>
-                                    <?php $displayAddress = trim((string)($project['address'] ?? $project['location'] ?? '')); ?>
+                                    <?php $displayAddress = $projectLocationSentenceValue; ?>
                                     <input type="hidden" name="location" id="projectLocationInput" value="<?php echo htmlspecialchars($project['location'] ?? $project['address'] ?? ''); ?>" />
                                     <input type="hidden" name="address" id="projectAddressInput" value="<?php echo htmlspecialchars($project['address'] ?? $project['location'] ?? ''); ?>" />
+<<<<<<< HEAD
                                     <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+=======
+                                    <div class="mb-4">
+                                        <label for="projectMapInput" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Location / Google Maps</label>
+                                        <input
+                                            id="projectMapInput"
+                                            name="map_link"
+                                            value="<?php echo htmlspecialchars($projectMapInputValue); ?>"
+                                            class="w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"
+                                            placeholder="Paste address, place name, coordinates, or Google Maps link" type="text" />
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Use one field for both: search text and map links.</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm">
+>>>>>>> 9a0aad42c1550899fdbd615d891529874d0b8388
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="min-w-0">
                                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Address</p>
@@ -797,7 +920,7 @@ if ($pdo instanceof PDO) {
                                         <div class="bg-slate-100 rounded-lg aspect-video relative overflow-hidden border border-slate-200">
                                             <iframe
                                                 id="projectMapIframe"
-                                                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d579.8316079220815!2d70.76881815290493!3d22.305545972075898!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1775195173048!5m2!1sen!2sin"
+                                                src="<?php echo htmlspecialchars($projectMapEmbedSrc !== '' ? $projectMapEmbedSrc : 'https://www.google.com/maps?q=Rajkot&output=embed'); ?>"
                                                 width="100%"
                                                 height="100%"
                                                 style="border:0; position:absolute; inset:0;"
@@ -808,6 +931,7 @@ if ($pdo instanceof PDO) {
                                             </iframe>
                                         </div>
                                     </div>
+<<<<<<< HEAD
                                     <div class="mt-4 flex flex-col sm:flex-row gap-3">
                                         <input
                                             id="geocodeSearchInput"
@@ -817,6 +941,9 @@ if ($pdo instanceof PDO) {
                                             id="geocodeSearchBtn"
                                             class="px-6 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 shadow-md" <?php echo $isClientReadOnly ? 'disabled' : ''; ?>>Geocode</button>
                                     </div>
+=======
+                                    <div class="mt-4 text-xs text-slate-500 dark:text-slate-400">Map preview updates when you press Enter or leave the location field.</div>
+>>>>>>> 9a0aad42c1550899fdbd615d891529874d0b8388
                                 </div>
                             </div>
                             <?php if (!$isClientReadOnly): ?>
@@ -1013,7 +1140,12 @@ if ($pdo instanceof PDO) {
                 <?php foreach ($project['files'] as $file): 
                   $fileDisplay = getFileIcon($file['type']);
                                     $fileUrl = project_file_url($file['file_path'] ?? '');
-                                                                        $fileViewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=file&id=' . (int)($file['id'] ?? 0);
+                                                                        $fileViewUrl = file_viewer_url([
+                                                                            'kind' => 'file',
+                                                                            'id' => (int)($file['id'] ?? 0),
+                                                                            'project_id' => (int)$projectId,
+                                                                            'ext' => strtolower((string)($file['type'] ?? '')),
+                                                                        ]);
                 ?>
                 <div
                     class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
@@ -1140,7 +1272,12 @@ if ($pdo instanceof PDO) {
                 <?php foreach ($project['drawings'] as $drawing): 
                   $statusClass = $statusColors[$drawing['status']] ?? '';
                                     $drawingUrl = project_file_url($drawing['file_path'] ?? '');
-                                    $drawingViewUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . (int)($drawing['id'] ?? 0);
+                                    $drawingViewUrl = file_viewer_url([
+                                        'kind' => 'drawing',
+                                        'id' => (int)($drawing['id'] ?? 0),
+                                        'project_id' => (int)$projectId,
+                                        'ext' => strtolower((string)pathinfo((string)($drawing['name'] ?? ''), PATHINFO_EXTENSION)),
+                                    ]);
                 ?>
                 <div
                     class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
@@ -1488,8 +1625,7 @@ if ($pdo instanceof PDO) {
         const locationAddressDisplay = document.getElementById('locationAddressDisplay');
         const projectLocationInput = document.getElementById('projectLocationInput');
         const projectAddressInput = document.getElementById('projectAddressInput');
-        const geocodeSearchInput = document.getElementById('geocodeSearchInput');
-        const geocodeSearchBtn = document.getElementById('geocodeSearchBtn');
+        const projectMapInput = document.getElementById('projectMapInput');
         const projectMapIframe = document.getElementById('projectMapIframe');
 
         function renderAddressSentence(address) {
@@ -1520,28 +1656,113 @@ if ($pdo instanceof PDO) {
                 const lng = coordinateMatch[2];
                 return 'https://www.google.com/maps?q=' + encodeURIComponent(lat + ',' + lng) + '&z=17&output=embed';
             }
+
+            try {
+                const parsed = new URL(input);
+                const path = decodeURIComponent(parsed.pathname || '');
+
+                const atMatch = path.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+                if (atMatch) {
+                    return 'https://www.google.com/maps?q=' + encodeURIComponent(atMatch[1] + ',' + atMatch[2]) + '&z=17&output=embed';
+                }
+
+                const placeMatch = path.match(/\/place\/([^/]+)/);
+                if (placeMatch && placeMatch[1]) {
+                    const placeName = placeMatch[1].replace(/\+/g, ' ').trim();
+                    if (placeName) {
+                        return 'https://www.google.com/maps?q=' + encodeURIComponent(placeName) + '&output=embed';
+                    }
+                }
+
+                const searchMatch = path.match(/\/maps\/search\/([^/?]+)/);
+                if (searchMatch && searchMatch[1]) {
+                    const searchText = searchMatch[1].replace(/\+/g, ' ').trim();
+                    if (searchText) {
+                        return 'https://www.google.com/maps?q=' + encodeURIComponent(searchText) + '&output=embed';
+                    }
+                }
+
+                const q = (parsed.searchParams.get('q') || '').trim();
+                const queryParam = (parsed.searchParams.get('query') || '').trim();
+                const destination = (parsed.searchParams.get('destination') || '').trim();
+                const daddr = (parsed.searchParams.get('daddr') || '').trim();
+                const candidate = q || queryParam || destination || daddr;
+                if (candidate && !/^https?:\/\//i.test(candidate)) {
+                    return 'https://www.google.com/maps?q=' + encodeURIComponent(candidate) + '&output=embed';
+                }
+            } catch (e) {
+                // Not a URL; treat as plain address text.
+            }
+
             return 'https://www.google.com/maps?q=' + encodeURIComponent(input) + '&output=embed';
         }
 
-        function applyGeocodeSearch() {
-            if (!geocodeSearchInput || !projectMapIframe) {
-                return;
-            }
-            const query = (geocodeSearchInput.value || '').trim();
-            if (query === '') {
-                if (typeof showNotification === 'function') {
-                    showNotification('Enter an address or coordinates (lat,lng).', 'error');
-                }
-                return;
+        function deriveAddressFromMapInput(query) {
+            const input = (query || '').trim();
+            if (input === '') {
+                return '';
             }
 
-            projectMapIframe.src = buildMapEmbedUrl(query);
-            if (projectLocationInput && projectAddressInput) {
-                projectLocationInput.value = query;
-                projectAddressInput.value = query;
+            const coordinateMatch = input.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+            if (coordinateMatch) {
+                return '';
             }
+
+            try {
+                const parsed = new URL(input);
+                const path = decodeURIComponent(parsed.pathname || '');
+
+                const placeMatch = path.match(/\/place\/([^/]+)/);
+                if (placeMatch && placeMatch[1]) {
+                    const placeName = placeMatch[1].replace(/\+/g, ' ').trim();
+                    if (placeName) {
+                        return placeName;
+                    }
+                }
+
+                const searchMatch = path.match(/\/maps\/search\/([^/?]+)/);
+                if (searchMatch && searchMatch[1]) {
+                    const searchText = searchMatch[1].replace(/\+/g, ' ').trim();
+                    if (searchText) {
+                        return searchText;
+                    }
+                }
+
+                const q = (parsed.searchParams.get('q') || '').trim();
+                const queryParam = (parsed.searchParams.get('query') || '').trim();
+                const destination = (parsed.searchParams.get('destination') || '').trim();
+                const daddr = (parsed.searchParams.get('daddr') || '').trim();
+                const candidate = q || queryParam || destination || daddr;
+                if (candidate && !/^https?:\/\//i.test(candidate)) {
+                    return candidate;
+                }
+
+                return '';
+            } catch (e) {
+                return input;
+            }
+        }
+
+        function applyMapInputPreview() {
+            if (!projectMapInput || !projectMapIframe) {
+                return;
+            }
+            const value = (projectMapInput.value || '').trim();
+            if (value === '') {
+                return;
+            }
+            projectMapIframe.src = buildMapEmbedUrl(value);
             if (locationAddressDisplay) {
-                locationAddressDisplay.textContent = renderAddressSentence(query);
+                const derivedAddress = deriveAddressFromMapInput(value);
+                if (derivedAddress !== '') {
+                    locationAddressDisplay.textContent = renderAddressSentence(derivedAddress);
+                    if (projectLocationInput) {
+                        projectLocationInput.value = derivedAddress;
+                    }
+                    if (projectAddressInput) {
+                        projectAddressInput.value = derivedAddress;
+                    }
+                }
             }
             if (locationMapPreview && locationMapPreview.classList.contains('hidden')) {
                 locationMapPreview.classList.remove('hidden');
@@ -1551,16 +1772,18 @@ if ($pdo instanceof PDO) {
             }
         }
 
-        if (geocodeSearchBtn) {
-            geocodeSearchBtn.addEventListener('click', applyGeocodeSearch);
-        }
-        if (geocodeSearchInput) {
-            geocodeSearchInput.addEventListener('keydown', function (event) {
+        if (projectMapInput) {
+            projectMapInput.addEventListener('blur', applyMapInputPreview);
+            projectMapInput.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    applyGeocodeSearch();
+                    applyMapInputPreview();
                 }
             });
+
+            if ((projectMapInput.value || '').trim() !== '') {
+                applyMapInputPreview();
+            }
         }
 
         if (locationAddressDisplay && projectLocationInput && projectAddressInput) {
@@ -1906,6 +2129,7 @@ if ($pdo instanceof PDO) {
             const params = new URLSearchParams();
             params.append('action', 'add_team_member');
             params.append('project_id', projectId);
+            params.append('worker_user_id', String(worker.id || ''));
             params.append('worker_name', worker.full_name || '');
             params.append('worker_role', worker.role || 'Worker');
             params.append('worker_contact', worker.contact || '');

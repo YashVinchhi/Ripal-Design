@@ -75,4 +75,30 @@ CREATE TABLE IF NOT EXISTS project_drawings (
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS worker_name VARCHAR(255) DEFAULT NULL;
+SET @db_name = DATABASE();
+
+SET @has_worker_name = (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = @db_name AND TABLE_NAME = 'projects' AND COLUMN_NAME = 'worker_name'
+);
+SET @sql = IF(@has_worker_name = 0,
+    'ALTER TABLE projects ADD COLUMN worker_name VARCHAR(255) DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @has_map_link = (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = @db_name AND TABLE_NAME = 'projects' AND COLUMN_NAME = 'map_link'
+);
+SET @sql = IF(@has_map_link = 0,
+    'ALTER TABLE projects ADD COLUMN map_link TEXT DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

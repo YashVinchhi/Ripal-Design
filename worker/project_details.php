@@ -31,6 +31,35 @@ $project['budget'] = isset($project['budget']) ? ('₹ ' . number_format((float)
 $project['lat'] = $project['latitude'] ?? null;
 $project['lng'] = $project['longitude'] ?? null;
 
+$projectAddress = trim((string)($project['address'] ?? ''));
+if ($projectAddress === '') {
+    $projectAddress = trim((string)($project['location'] ?? ''));
+}
+if ($projectAddress === '') {
+    $projectAddress = 'Address not available';
+}
+
+$projectMapQuery = '';
+if (!empty($project['lat']) && !empty($project['lng'])) {
+    $projectMapQuery = (string)$project['lat'] . ',' . (string)$project['lng'];
+} elseif ($projectAddress !== 'Address not available') {
+    $projectMapQuery = $projectAddress;
+}
+
+$projectMapLink = trim((string)($project['map_link'] ?? ''));
+$projectMapEmbedSrc = build_google_maps_embed_src($projectMapLink !== '' ? $projectMapLink : $projectMapQuery);
+$projectDirectionHref = build_google_maps_direction_href($projectMapLink, $projectMapQuery);
+
+$projectLocationFromMapLink = '';
+if ($projectMapLink !== '') {
+    $projectLocationFromMapLink = trim((string)normalize_google_maps_embed_query($projectMapLink));
+}
+$mapLinkLooksLikeCoordinates = (bool)preg_match('/^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/', $projectLocationFromMapLink);
+$projectLocationSentenceValue = ($projectAddress !== 'Address not available' ? $projectAddress : '');
+if ($projectLocationFromMapLink !== '' && !$mapLinkLooksLikeCoordinates) {
+    $projectLocationSentenceValue = $projectLocationFromMapLink;
+}
+
 $project['workers'] = array_map(function($w) {
     return [
         'role' => $w['worker_role'] ?? 'Worker',
@@ -99,6 +128,25 @@ function worker_file_url($path) {
             db_query('INSERT INTO review_requests (project_id, submitted_by, subject, description, urgency, status) VALUES (?, ?, ?, ?, ?, "pending")', [
                 (int)$project['id'], $submittedBy, $subject, $details, $urgency,
             ]);
+
+            $participants = notifications_get_project_participants((int)$project['id']);
+            $recipientIds = [];
+            if (!empty($participants['created_by'])) {
+                $recipientIds[] = (int)$participants['created_by'];
+            }
+            $recipientIds = array_merge($recipientIds, notifications_get_user_ids_by_roles(['admin', 'employee']));
+            notifications_insert_bulk(
+                $recipientIds,
+                'review',
+                'New Review Request Submitted',
+                'A review request was submitted for ' . (string)($project['name'] ?? ('Project #' . (int)$project['id'])) . '.',
+                [
+                    'actor_user_id' => current_user_id(),
+                    'project_id' => (int)$project['id'],
+                    'action_key' => 'review.submitted',
+                    'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/review_requests.php',
+                ]
+            );
         }
         $request_sent = true;
     }
@@ -139,7 +187,7 @@ function worker_file_url($path) {
             <h1 class="text-2xl font-serif font-bold"><?php echo htmlspecialchars($project['name']); ?></h1>
             <p class="text-gray-400 text-sm mt-1 flex items-center gap-1">
                 <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust"></i> 
-                <?php echo htmlspecialchars($project['address']); ?>
+                <?php echo htmlspecialchars($projectAddress); ?>
             </p>
         </div>
     </header>
@@ -209,6 +257,44 @@ function worker_file_url($path) {
                 </div>
             </div>
 
+            <div class="space-y-4">
+                <h2 class="text-sm font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust text-opacity-50"></i>
+                    Location Mapping
+                </h2>
+                <div class="bg-white p-4 shadow-premium border border-gray-100">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Address</p>
+                    <p class="text-sm text-slate-700 leading-relaxed break-words mb-3">
+                        <?php if ($projectLocationSentenceValue !== ''): ?>
+                            This project is located at <?php echo htmlspecialchars($projectLocationSentenceValue); ?>.
+                        <?php else: ?>
+                            Address is not available yet.
+                        <?php endif; ?>
+                    </p>
+                    <?php if ($projectMapEmbedSrc !== ''): ?>
+                        <div class="mb-3">
+                            <?php if ($projectDirectionHref !== ''): ?>
+                                <a
+                                    href="<?php echo htmlspecialchars($projectDirectionHref); ?>"
+                                    target="_blank"
+                                    class="inline-flex items-center justify-center bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all no-underline">
+                                    Get Direction
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                        <div class="border border-gray-200 overflow-hidden rounded-sm">
+                            <iframe
+                                title="Project location map"
+                                class="w-full"
+                                style="aspect-ratio: 1 / 1;"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                src="<?php echo htmlspecialchars($projectMapEmbedSrc); ?>"></iframe>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
             <!-- Materials Summary -->
             <div class="space-y-4">
                 <h2 class="text-sm font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
@@ -249,7 +335,7 @@ function worker_file_url($path) {
             <div class="grid grid-cols-1 gap-3">
                 <?php foreach($project['drawings'] as $d): ?>
                 <?php $drawingUrl = worker_file_url($d['file_path'] ?? ''); ?>
-                <?php $drawingViewUrl = !empty($d['id']) ? (rtrim((string)BASE_PATH, '/') . '/dashboard/file_stream.php?kind=drawing&id=' . (int)$d['id']) : ($drawingUrl !== '' ? $drawingUrl : ('../admin/file_viewer.php?file=' . urlencode($d['title']) . '&project=' . urlencode($project['name']))); ?>
+                <?php $drawingViewUrl = !empty($d['id']) ? file_viewer_url(['kind' => 'drawing', 'id' => (int)$d['id'], 'project_id' => (int)$projectId]) : ($drawingUrl !== '' ? file_viewer_url(['file' => $drawingUrl, 'project_id' => (int)$projectId]) : file_viewer_url(['file' => (string)$d['title'], 'project_id' => (int)$projectId])); ?>
                 <div class="bg-white p-4 shadow-premium border border-gray-100 flex items-center gap-4 group hover:border-rajkot-rust transition-colors cursor-pointer" onclick="window.open('<?php echo htmlspecialchars($drawingViewUrl, ENT_QUOTES, 'UTF-8'); ?>', '_blank')">
                     <div class="w-12 h-12 bg-foundation-grey group-hover:bg-rajkot-rust transition-colors flex items-center justify-center text-white shrink-0">
                         <i data-lucide="<?php echo $d['type'] == 'pdf' ? 'file-text' : 'image'; ?>" class="w-6 h-6"></i>
