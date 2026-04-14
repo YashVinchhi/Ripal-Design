@@ -100,7 +100,7 @@ if (!($db instanceof PDO)) {
                                     <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
                                 </button>
                             </div>
-                            <span id="confirPassword_error" class="text-danger"></span>
+                            <span id="confirmPassword_error" class="text-danger"></span>
                         </div>
 
                         <button type="submit" class="btn-1"><?php echo esc($ct('button_reset', 'Reset Password')); ?></button>
