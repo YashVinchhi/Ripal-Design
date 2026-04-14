@@ -166,7 +166,7 @@
 
   .btn-alt {
       padding: 10px 14px;
-      border-radius: 8px;
+      /* border-radius: 8px; */
       font-weight: 600;
       border: 2px solid rgba(255, 255, 255, 0.12);
   }

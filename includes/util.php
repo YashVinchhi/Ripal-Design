@@ -802,6 +802,89 @@ if (!function_exists('get_project_full_data')) {
 
         return $project;
     }
+
+    if (!function_exists('recalculate_project_progress')) {
+        /**
+         * Recalculate project progress using business rules and persist it.
+         * Rules implemented:
+         *  - Basic info (name + location/address/map_link): +2
+         *  - Team members: >=5 and <=8 => +15, >8 => +20, partial for 1-4 (proportional)
+         *  - Project files present: +13
+         *  - Owner assigned: +1
+         *  - Activity entry is created when progress changes
+         *
+         * @param int $projectId
+         * @return int New progress value
+         */
+        function recalculate_project_progress($projectId) {
+            $projectId = (int)$projectId;
+            if ($projectId <= 0) return 0;
+
+            if (!db_connected() || !db_table_exists('projects')) {
+                return 0;
+            }
+
+            $proj = db_fetch('SELECT name, location, address, map_link, owner_name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            if (!$proj) return 0;
+
+            $progress = 0;
+
+            // Basic information
+            $name = trim((string)($proj['name'] ?? ''));
+            $location = trim((string)($proj['location'] ?? ''));
+            $address = trim((string)($proj['address'] ?? ''));
+            $mapLink = trim((string)($proj['map_link'] ?? ''));
+            if ($name !== '' && ($location !== '' || $address !== '' || $mapLink !== '')) {
+                $progress += 2;
+            }
+
+            // Team members
+            if (db_table_exists('project_workers')) {
+                $r = db_fetch('SELECT COUNT(*) AS c FROM project_workers WHERE project_id = ?', [$projectId]);
+                $count = (int)($r['c'] ?? 0);
+                if ($count >= 5 && $count <= 8) {
+                    $progress += 15;
+                } elseif ($count > 8) {
+                    $progress += 20;
+                } elseif ($count > 0) {
+                    // small proportional credit for 1-4 members
+                    $partial = (int)floor(($count / 5) * 15);
+                    $progress += min(15, $partial);
+                }
+            }
+
+            // Project files
+            if (db_table_exists('project_files')) {
+                $f = db_fetch('SELECT COUNT(*) AS c FROM project_files WHERE project_id = ?', [$projectId]);
+                $filesCount = (int)($f['c'] ?? 0);
+                if ($filesCount > 0) {
+                    $progress += 13;
+                }
+            }
+
+            // Owner assignment
+            $owner = trim((string)($proj['owner_name'] ?? ''));
+            if ($owner !== '') {
+                $progress += 1;
+            }
+
+            $progress = max(0, min(100, (int)$progress));
+
+            // Persist only if changed
+            $cur = db_fetch('SELECT COALESCE(progress,0) AS progress FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $curVal = (int)($cur['progress'] ?? 0);
+            if ($curVal !== $progress) {
+                db_query('UPDATE projects SET progress = ? WHERE id = ?', [$progress, $projectId]);
+
+                // Log activity
+                if (session_status() === PHP_SESSION_NONE) @session_start();
+                $actor = $_SESSION['user']['name'] ?? $_SESSION['user']['username'] ?? 'System';
+                db_query('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())', [$projectId, $actor, 'progress updated', 'Auto-calculated to ' . $progress . '%']);
+            }
+
+            return $progress;
+        }
+    }
 }
 
 if (!function_exists('get_leave_dashboard_data')) {
