@@ -1,0 +1,25 @@
+# Exclude local uploads, logs, and development artifacts from Vercel deployments
+# Keep production public/ and api/ files
+uploads/
+logs/
+node_modules/
+tools/archived/
+docs/archived/
+stubs/
+.vscode/
+.DS_Store
+docker/
+docker-compose*.yml
+*.sql
+*.zip
+*.bak
+*.log
+.cache/
+tests/
+vendor/
+.env
+.env.*
+
+# Ignore any large backup or temp folders
+backups/
+tmp/
