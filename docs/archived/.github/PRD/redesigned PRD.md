@@ -27,7 +27,6 @@ Implement a strict design system based on the cultural heritage of Saurashtra sa
 * *Headings:* **Playfair Display** (Serif) – strictly for "Guest" pages to signal heritage/luxury.
 * *UI/Body:* **Inter** (Sans-Serif) – for high legibility on dashboards/tables.
 
-
 * **Iconography:** Use 1.5px stroke outline icons (CAD style). On hover, fill with `#94180C`.
 
 ---
@@ -60,7 +59,7 @@ Create a database schema and PHP session logic for 5 distinct roles:
 * **Design Studio:** A file approval table. Clients must click "Approve" (Green) or "Request Revision" (Red). This must digitally lock the row in the MySQL database.
 * **Change Orders:** A form where clients accept cost/time impacts of changes.
 
-#### **C. The Worker App (Mobile-First)**
+#### **C. The Worker App (Mobile-First)**n
 
 * **UI Constraints:** Large touch targets (min 48px height). High contrast.
 * **Drawing Access:** Only show files tagged `status='construction_issued'` in the DB. Hide superseded drawings to prevent errors.
@@ -84,12 +83,6 @@ Create a database schema and PHP session logic for 5 distinct roles:
 
 * **3D Objects (.obj):** Integrate **Three.js**. Create a canvas on the Client Dashboard to load `.obj` files from the `/uploads/` directory. Allow OrbitControls (Zoom/Rotate).
 * **2D Plans (.dwg):** Do not try to parse DWG directly. Implement a workflow where uploading a `.dwg` requires a companion `.pdf`. Use **PDF.js** to render the plan in a zoomable canvas.
-
-#### **Security Protocols (Government Standard)**
-
-* **Database:** Use `PDO` with Prepared Statements for *all* queries to prevent SQL Injection.
-* **File Uploads:** Rename all uploads to randomized hashes (e.g., `5f3a2c.pdf`) to prevent directory traversal. Store outside the public web root if possible, or protect via `.htaccess`.
-* **CSRF:** Inject a unique token into every `<form>` and validate it in the PHP Controller.
 
 ---
 

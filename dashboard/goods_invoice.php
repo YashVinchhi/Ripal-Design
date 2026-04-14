@@ -110,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($userMessage) $body .= "Message from sender:\n" . $userMessage . "\n\n";
         $body .= "Regards,\nRipal Design";
 
-        // Default from values (can be overridden by env). Fallback to the configured sender.
-        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'yashhvinchhi@gmail.com');
+        // Default from values (can be overridden by env). Fallback to a no-reply sender.
+        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.in');
         $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
 
         $sent = false;
@@ -146,26 +146,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $mail->CharSet = 'UTF-8';
                             $mail->Encoding = 'base64';
 
-                                // Prefer environment SMTP config when present; otherwise fallback to known credentials from public/mailer.php
-                                $envHost = getenv('MAIL_HOST') ?: getenv('SMTP_HOST');
-                                if ($envHost) {
-                                        $mail->isSMTP();
-                                        $mail->Host = $envHost;
-                                        $mail->SMTPAuth = true;
-                                        $mail->Username = getenv('MAIL_USERNAME') ?: getenv('SMTP_USER');
-                                        $mail->Password = getenv('MAIL_PASSWORD') ?: getenv('SMTP_PASS');
-                                        $mail->SMTPSecure = getenv('MAIL_ENCRYPTION') ?: PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-                                        $mail->Port = getenv('MAIL_PORT') ?: 587;
-                                } else {
-                                        // Use credentials present in public/mailer.php as fallback
-                                        $mail->isSMTP();
-                                        $mail->Host = 'smtp.gmail.com';
-                                        $mail->SMTPAuth = true;
-                                        $mail->Username = 'yashhvinchhi@gmail.com';
-                                        $mail->Password = 'odoc sctf jtuf ejvv';
-                                        $mail->SMTPSecure = 'tls';
-                                        $mail->Port = 587;
-                                }
+                                // Configure PHPMailer transport from environment in a centralized helper
+                                require_once __DIR__ . '/../includes/mail_helper.php';
+                                @configure_mailer($mail);
 
                                 $mail->setFrom($fromEmail, $fromName);
                                 $mail->addAddress($to);

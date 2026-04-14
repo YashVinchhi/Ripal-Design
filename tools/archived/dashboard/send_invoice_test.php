@@ -2,15 +2,15 @@
 // dashboard/send_invoice_test.php
 // Usage (from workspace root): php dashboard/send_invoice_test.php recipient@example.com
 $to = $argv[1] ?? 'behappywithyash@gmail.com';
-chdir(__DIR__ . '/../'); // ensure relative includes work from repo root
+chdir(__DIR__ . '/../../'); // ensure relative includes work from repo root
 
 // Load Composer autoload if present
-$composer = __DIR__ . '/../vendor/autoload.php';
+$composer = __DIR__ . '/../../vendor/autoload.php';
 if (file_exists($composer)) require_once $composer;
 
 // If PHPMailer not available via Composer, load bundled src files in dependency order
 if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
-    $localSrc = __DIR__ . '/../src';
+    $localSrc = __DIR__ . '/../../src';
     $parts = ['Exception.php','OAuthTokenProvider.php','OAuth.php','POP3.php','SMTP.php','PHPMailer.php','DSNConfigurator.php'];
     foreach ($parts as $p) {
         $f = $localSrc . '/' . $p;
@@ -20,35 +20,23 @@ if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
 
 // Try to get a pre-configured PHPMailer from public/mailer.php if present
 $mail = null;
-$pub = __DIR__ . '/../public/mailer.php';
+$pub = __DIR__ . '/../../public/mailer.php';
 if (file_exists($pub)) {
     // public/mailer.php returns a PHPMailer instance
     $mail = require $pub;
 }
 
-if (!($mail instanceof PHPMailer\PHPMailer\PHPMailer)) {
-    // Build a minimal PHPMailer instance
-    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-    // Try environment SMTP or fallback to gmail credentials seen in public/mailer.php
-    $envHost = getenv('MAIL_HOST') ?: getenv('SMTP_HOST');
-    if ($envHost) {
-        $mail->isSMTP();
-        $mail->Host = $envHost;
-        $mail->SMTPAuth = true;
-        $mail->Username = getenv('MAIL_USERNAME') ?: getenv('SMTP_USER');
-        $mail->Password = getenv('MAIL_PASSWORD') ?: getenv('SMTP_PASS');
-        $mail->SMTPSecure = getenv('MAIL_ENCRYPTION') ?: PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = getenv('MAIL_PORT') ?: 587;
-    } else {
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'yashhvinchhi@gmail.com';
-        $mail->Password = 'odoc sctf jtuf ejvv';
-        $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
+if (!($mail instanceof PHPMailer\\PHPMailer\\PHPMailer)) {
+    // Build a minimal PHPMailer instance and configure SMTP from environment
+    $mail = new PHPMailer\\PHPMailer\\PHPMailer(true);
+    require_once __DIR__ . '/../../includes/mail_helper.php';
+    if (!@configure_mailer($mail)) {
+        fwrite(STDERR, "No SMTP configuration found. Set MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD in environment or .env\n");
+        exit(1);
     }
-    $mail->setFrom('yashhvinchhi@gmail.com', 'Ripal Design (Test)');
+    $from = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.in');
+    $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design (Test)';
+    $mail->setFrom($from, $fromName);
 }
 
 // Prepare debug output

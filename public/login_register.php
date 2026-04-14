@@ -172,9 +172,9 @@ if (isset($_POST['signup'])) {
             if (is_readable(__DIR__ . '/mailer.php')) {
                 $mail = require __DIR__ . '/mailer.php';
             }
-            if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
+                if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
                 $mail->clearAddresses();
-                $from = getenv('MAIL_FROM') ?: 'yashhvinchhi@gmail.com';
+                $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.in';
                 $fromName = $ct('signup_welcome_from_name', 'Ripal Design');
                 $mail->setFrom($from, $fromName);
                 $mail->addAddress($email, $fullName);

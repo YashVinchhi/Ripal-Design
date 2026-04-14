@@ -362,16 +362,9 @@ if (!function_exists('billing_send_invoice_email')) {
                 $mail->CharSet = 'UTF-8';
                 $mail->isHTML(true);
 
-                $smtpHost = getenv('MAIL_HOST') ?: getenv('SMTP_HOST');
-                if ($smtpHost) {
-                    $mail->isSMTP();
-                    $mail->Host = $smtpHost;
-                    $mail->SMTPAuth = true;
-                    $mail->Username = getenv('MAIL_USERNAME') ?: getenv('SMTP_USER');
-                    $mail->Password = getenv('MAIL_PASSWORD') ?: getenv('SMTP_PASS');
-                    $mail->SMTPSecure = getenv('MAIL_ENCRYPTION') ?: 'tls';
-                    $mail->Port = (int)(getenv('MAIL_PORT') ?: 587);
-                }
+                require_once __DIR__ . '/mail_helper.php';
+                // Centralized SMTP configuration (reads from env). Returns false when no SMTP host is configured.
+                @configure_mailer($mail);
 
                 $mail->setFrom($fromEmail, $fromName);
                 $mail->addAddress($target);
@@ -635,16 +628,8 @@ if (!function_exists('billing_send_invoice_email')) {
                 $mail->CharSet = 'UTF-8';
                 $mail->isHTML(true);
 
-                $smtpHost = getenv('MAIL_HOST') ?: getenv('SMTP_HOST');
-                if ($smtpHost) {
-                    $mail->isSMTP();
-                    $mail->Host = $smtpHost;
-                    $mail->SMTPAuth = true;
-                    $mail->Username = getenv('MAIL_USERNAME') ?: getenv('SMTP_USER');
-                    $mail->Password = getenv('MAIL_PASSWORD') ?: getenv('SMTP_PASS');
-                    $mail->SMTPSecure = getenv('MAIL_ENCRYPTION') ?: 'tls';
-                    $mail->Port = (int)(getenv('MAIL_PORT') ?: 587);
-                }
+                    require_once __DIR__ . '/mail_helper.php';
+                    @configure_mailer($mail);
 
                 $mail->setFrom($fromEmail, $fromName);
                 $mail->addAddress($target);

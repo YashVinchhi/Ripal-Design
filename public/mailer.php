@@ -47,13 +47,12 @@ $mail->AltBody = $renderTemplate(
 	$ct('reset_body_text', 'Reset link: {{reset_link}}'),
 	['{{reset_link}}' => $link]
 );
-$mail->Host = 'smtp.gmail.com';
-$mail->SMTPAuth = true;
-$mail->Username ='dudhaiyarachit45@gmail.com';
-$mail->Password = 'mvwy brdi luvt wecd';
-$mail->SMTPSecure = 'tls';
-$mail->Port = 587;
-$mail->setFrom('dudhaiyarachit45@gmail.com', $ct('reset_from_name', 'Reset Password'));
+$mail->CharSet = 'UTF-8';
+require_once __DIR__ . '/../includes/mail_helper.php';
+// configure_mailer will apply SMTP settings when MAIL_HOST is provided in env;
+// otherwise PHPMailer will use the default mail() transport.
+@configure_mailer($mail);
+$mail->setFrom(getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.in', $ct('reset_from_name', 'Reset Password'));
 if (!empty($email)) {
 	$mail->addAddress($email);
 }
