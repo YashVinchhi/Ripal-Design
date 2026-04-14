@@ -81,14 +81,26 @@ if (!($db instanceof PDO)) {
                         <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
 
                         <div class="field">
-                            <label for="password"><?php echo esc($ct('label_new_password', 'New Password')); ?></label>
-                            <div class="input-with-icon max">
-                                <input type="password" id="password" name="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_new_password', 'Enter your new password')); ?>" data-validation="required strongPassword" autocomplete="new-password">
+                            <label for="confirmPassword_confirm"><?php echo esc($ct('label_new_password', 'New Password')); ?></label>
+                            <div class="input-with-icon">
+                                <input id="confirmPassword_confirm" name="password" type="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_new_password', 'Enter your new password')); ?>" data-validation="required strongPassword" autocomplete="new-password">
                                 <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>" aria-pressed="false">
                                     <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
                                 </button>
                             </div>
+                            <small class="field-help"><?php echo esc($ct('password_help', 'Use at least 8 characters and 1 number.')); ?></small>
                             <span id="password_error" class="text-danger"></span>
+                        </div>
+
+                        <div class="field">
+                            <label for="Password"><?php echo esc($ct('label_confirm_password', 'Confirm Password')); ?></label>
+                            <div class="input-with-icon">
+                                <input id="Password" name="confirmPassword" type="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_confirm_password', 'Confirm your password')); ?>" data-validation="required confirmPassword" autocomplete="new-password">
+                                <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>" aria-pressed="false">
+                                    <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
+                                </button>
+                            </div>
+                            <span id="confirmPassword_error" class="text-danger"></span>
                         </div>
 
                         <button type="submit" class="btn-1"><?php echo esc($ct('button_reset', 'Reset Password')); ?></button>
@@ -103,32 +115,29 @@ if (!($db instanceof PDO)) {
 </body>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const input = document.getElementById('password');
-        const toggleBtn = document.querySelector('.toggle-password-btn');
-        const icon = document.querySelector('.toggle-password');
-        if (!input || !icon || !toggleBtn) return;
-
+        const toggleButtons = document.querySelectorAll('.toggle-password-btn');
+        if (!toggleButtons || toggleButtons.length === 0) return;
         const openSrc = './css/eye/eye_open.svg';
         const closeSrc = './css/eye/eye_close.svg';
         const showLabel = <?php echo json_encode($ct('toggle_show_alt', 'Show password')); ?>;
         const hideLabel = <?php echo json_encode($ct('toggle_hide_alt', 'Hide password')); ?>;
 
-        function updateToggleState() {
-            const isVisible = input.type === 'text';
-            icon.src = isVisible ? openSrc : closeSrc;
-            icon.alt = isVisible ? hideLabel : showLabel;
-            toggleBtn.setAttribute('aria-label', isVisible ? hideLabel : showLabel);
-            toggleBtn.setAttribute('aria-pressed', isVisible ? 'true' : 'false');
-        }
+        toggleButtons.forEach(function(toggleBtn){
+            const toggle = toggleBtn.querySelector('.toggle-password');
+            const container = toggleBtn.closest('.input-with-icon');
+            const input = container ? container.querySelector('input') : null;
+            if (!input || !toggle) return;
 
-        function togglePassword() {
-            input.type = input.type === 'password' ? 'text' : 'password';
-            updateToggleState();
-        }
+            function doToggle(){
+                const showing = input.type === 'text';
+                input.type = showing ? 'password' : 'text';
+                toggle.src = showing ? closeSrc : openSrc;
+                toggle.alt = showing ? showLabel : hideLabel;
+                toggleBtn.setAttribute('aria-pressed', showing ? 'false' : 'true');
+            }
 
-        toggleBtn.addEventListener('click', togglePassword);
-
-        updateToggleState();
+            toggleBtn.addEventListener('click', doToggle);
+        });
     });
 </script>
 
