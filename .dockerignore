@@ -1,0 +1,14 @@
+vendor/
+node_modules/
+.git/
+.github/
+.env
+.env.*
+/.idea
+/.vscode
+/docs/
+/tools/
+/tests/
+composer.phar
+docker-compose.override.yml
+README.md
