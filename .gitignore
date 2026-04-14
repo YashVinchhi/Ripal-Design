@@ -1,3 +1,21 @@
+# Environment secrets
+.env
+.env.local
+
+# Logs and temp
+logs/*.log
+logs/*.tmp
+*.log
+
+# User-generated uploads
+uploads/avatars/*
+uploads/projects/*
+!uploads/avatars/.gitkeep
+!uploads/projects/.gitkeep
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
 Guidelines/Implementation.md
 Guidelines/PRD.md
 Guidelines/Implementation Page List.md

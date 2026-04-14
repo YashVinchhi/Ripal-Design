@@ -104,6 +104,19 @@ if ($isJson) {
 $action = (string)($body['action'] ?? $_POST['action'] ?? '');
 $projectId = (int)($body['project_id'] ?? $_POST['project_id'] ?? 0);
 
+if (defined('SECURITY_REQUIRE_CSRF_FOR_API') && SECURITY_REQUIRE_CSRF_FOR_API) {
+    $csrfToken = '';
+    if ($isJson) {
+        $csrfToken = (string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($body['csrf_token'] ?? ''));
+    } else {
+        $csrfToken = (string)($_POST['csrf_token'] ?? '');
+    }
+
+    if (!function_exists('csrf_validate') || !csrf_validate($csrfToken)) {
+        api_json(['success' => false, 'message' => 'Invalid CSRF token.'], 419);
+    }
+}
+
 $sessionRole = strtolower(trim((string)($_SESSION['user']['role'] ?? '')));
 $clientBlockedActions = [
     'upload_file',
@@ -287,10 +300,31 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
     $safeBaseName = preg_replace('/[^A-Za-z0-9._-]+/', '_', pathinfo($originalName, PATHINFO_FILENAME));
     $safeBaseName = $safeBaseName !== '' ? $safeBaseName : 'file';
 
+    if (!is_uploaded_file($tmpPath)) {
+        api_json(['success' => false, 'message' => 'Invalid uploaded file source.'], 400);
+    }
+
+    // Always deny clearly executable/script-like extensions.
+    $blockedExecutableExts = [
+        'php', 'phtml', 'php3', 'php4', 'php5', 'phar', 'cgi', 'pl', 'py',
+        'sh', 'exe', 'com', 'bat', 'cmd', 'msi', 'jsp', 'asp', 'aspx'
+    ];
+    if ($ext !== '' && in_array($ext, $blockedExecutableExts, true)) {
+        api_json(['success' => false, 'message' => 'Executable/script uploads are not allowed.'], 400);
+    }
+
     if ($action === 'upload_drawing') {
         $allowed = ['pdf', 'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'webp'];
         if ($ext !== '' && !in_array($ext, $allowed, true)) {
             api_json(['success' => false, 'message' => 'Unsupported drawing file type.'], 400);
+        }
+    }
+
+    if ($action === 'upload_file' && defined('SECURITY_ENFORCE_UPLOAD_ALLOWLIST') && SECURITY_ENFORCE_UPLOAD_ALLOWLIST) {
+        $allowedCsv = (string)(defined('SECURITY_ALLOWED_UPLOAD_EXTS') ? SECURITY_ALLOWED_UPLOAD_EXTS : '');
+        $allowed = array_values(array_filter(array_map('trim', explode(',', strtolower($allowedCsv)))));
+        if ($ext === '' || empty($allowed) || !in_array($ext, $allowed, true)) {
+            api_json(['success' => false, 'message' => 'Unsupported file type by security policy.'], 400);
         }
     }
 

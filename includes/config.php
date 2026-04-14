@@ -71,6 +71,40 @@ function load_project_env_file() {
 
 load_project_env_file();
 
+if (!function_exists('env_bool')) {
+    /**
+     * Read boolean-like environment values safely.
+     */
+    function env_bool(string $key, bool $default = false): bool {
+        $raw = getenv($key);
+        if ($raw === false || $raw === null || $raw === '') {
+            return $default;
+        }
+        $value = strtolower(trim((string)$raw));
+        return in_array($value, ['1', 'true', 'yes', 'on'], true);
+    }
+}
+
+if (!function_exists('app_is_https')) {
+    /**
+     * Best-effort HTTPS detection including reverse-proxy headers.
+     */
+    function app_is_https(): bool {
+        if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
+            return true;
+        }
+        if ((string)($_SERVER['SERVER_PORT'] ?? '') === '443') {
+            return true;
+        }
+        $forwardedProto = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        if ($forwardedProto === 'https') {
+            return true;
+        }
+        $forwardedSsl = strtolower((string)($_SERVER['HTTP_X_FORWARDED_SSL'] ?? ''));
+        return $forwardedSsl === 'on';
+    }
+}
+
 /**
  * Detect and return the base URL for the application
  * 
@@ -193,7 +227,29 @@ if (!defined('PUBLIC_PATH_PREFIX')) {
 // Application environment (development, staging, production)
 // Set this via environment variable or web server config
 if (!defined('APP_ENV')) {
-    define('APP_ENV', getenv('APP_ENV') ?: 'production');
+    define('APP_ENV', strtolower((string)(getenv('APP_ENV') ?: 'production')));
+}
+
+// Security feature flags (non-destructive defaults)
+if (!defined('APP_STRICT_SECURITY')) {
+    define('APP_STRICT_SECURITY', env_bool('APP_STRICT_SECURITY', false));
+}
+
+if (!defined('SECURITY_REQUIRE_CSRF_FOR_API')) {
+    define('SECURITY_REQUIRE_CSRF_FOR_API', env_bool('SECURITY_REQUIRE_CSRF_FOR_API', APP_STRICT_SECURITY));
+}
+
+if (!defined('SECURITY_ENFORCE_UPLOAD_ALLOWLIST')) {
+    define('SECURITY_ENFORCE_UPLOAD_ALLOWLIST', env_bool('SECURITY_ENFORCE_UPLOAD_ALLOWLIST', APP_STRICT_SECURITY));
+}
+
+if (!defined('SECURITY_ALLOWED_UPLOAD_EXTS')) {
+    $defaultAllowed = 'pdf,dwg,dxf,jpg,jpeg,png,webp,gif,txt,csv,doc,docx,xls,xlsx,ppt,pptx,zip,rar';
+    define('SECURITY_ALLOWED_UPLOAD_EXTS', strtolower((string)(getenv('SECURITY_ALLOWED_UPLOAD_EXTS') ?: $defaultAllowed)));
+}
+
+if (!defined('SECURITY_ENABLE_HSTS')) {
+    define('SECURITY_ENABLE_HSTS', env_bool('SECURITY_ENABLE_HSTS', false));
 }
 
 // Enable error display in development mode only

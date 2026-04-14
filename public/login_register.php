@@ -165,6 +165,7 @@ if (isset($_POST['signup'])) {
             'name' => $fullName !== '' ? $fullName : $username,
         ];
         $_SESSION['user_id'] = $user_id;
+        @session_regenerate_id(true);
 
         // Attempt to send a notification email to the user about pending status
         try {
@@ -262,6 +263,7 @@ if (isset($_POST['login'])) {
                     'name' => $displayName,
                 ];
                 $_SESSION['user_id'] = (int)($user['id'] ?? 0);
+                @session_regenerate_id(true);
                 // If user asked to be remembered, create persistent remember token/cookie
                 if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
                     auth_set_remember_token((int)$_SESSION['user_id']);
@@ -301,6 +303,7 @@ if (isset($_POST['login'])) {
                     'name' => trim(($legacyUser['first_name'] ?? '') . ' ' . ($legacyUser['last_name'] ?? '')) ?: $email,
                 ];
                 $_SESSION['user_id'] = (int)($legacyUser['s_id'] ?? $legacyUser['id'] ?? 0);
+                @session_regenerate_id(true);
                 // If user asked to be remembered, create persistent remember token/cookie
                 if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
                     auth_set_remember_token((int)$_SESSION['user_id']);

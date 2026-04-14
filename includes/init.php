@@ -27,6 +27,26 @@ if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/config.php';
 }
 
+if (!function_exists('apply_security_headers')) {
+    /**
+     * Apply low-risk HTTP security headers globally.
+     */
+    function apply_security_headers(): void {
+        if (headers_sent()) {
+            return;
+        }
+
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: SAMEORIGIN');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+        header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+
+        if (function_exists('app_is_https') && app_is_https() && defined('SECURITY_ENABLE_HSTS') && SECURITY_ENABLE_HSTS) {
+            header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+        }
+    }
+}
+
 // Load database connection
 require_once __DIR__ . '/db.php';
 
@@ -61,12 +81,25 @@ if (file_exists(__DIR__ . '/public_content.php')) {
 // Start session if not already started
 // Use @ to suppress warnings if session already started
 if (session_status() === PHP_SESSION_NONE) {
+    @ini_set('session.use_strict_mode', '1');
+    @ini_set('session.cookie_httponly', '1');
+
+    $secureCookie = function_exists('app_is_https') ? app_is_https() : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+
     // Ensure cookie is available across the site root so pages in different
     // folders share the same session (helps when app is served from a subpath).
     // Keep this minimal to avoid interfering with user's environment.
-    @session_set_cookie_params(0, '/');
+    @session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => $secureCookie,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     @session_start();
 }
+
+apply_security_headers();
 
 // Attempt auto-login from remember-me cookie if session empty
 if (function_exists('auth_try_auto_login')) {
