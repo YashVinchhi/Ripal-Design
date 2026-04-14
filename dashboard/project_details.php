@@ -435,10 +435,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                     } catch (PDOException $e) {
                         error_log('Failed to log owner change activity: ' . $e->getMessage());
                     }
+                        // Recalculate project progress after owner assignment
+                        try {
+                            if (function_exists('recalculate_project_progress')) {
+                                recalculate_project_progress($projectId);
+                            }
+                        } catch (Throwable $e) {
+                            error_log('Progress recalculation failed (owner assign): ' . $e->getMessage());
+                        }
 
-                    $_SESSION['project_success'] = 'Project owner updated successfully!';
-                    header('Location: project_details.php?id=' . (int)$projectId);
-                    exit();
+                        $_SESSION['project_success'] = 'Project owner updated successfully!';
+                        header('Location: project_details.php?id=' . (int)$projectId);
+                        exit();
                 }
             } catch (Exception $e) {
                 error_log('Assign owner failed: ' . $e->getMessage());
@@ -530,6 +538,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                         'item' => 'Project details'
                     ]);
 
+                    // Recalculate project progress after update
+                    try {
+                        if (function_exists('recalculate_project_progress')) {
+                            recalculate_project_progress($projectId);
+                        }
+                    } catch (Throwable $e) {
+                        error_log('Progress recalculation failed (project update): ' . $e->getMessage());
+                    }
+
                     if ($previousStatus !== 'completed' && strtolower((string)$status) === 'completed') {
                         notifications_notify_admins(
                             'project',
@@ -590,6 +607,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                             'deep_link' => rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)$projectId,
                         ]
                     );
+
+                    // Recalculate progress for newly created project
+                    try {
+                        if (function_exists('recalculate_project_progress')) {
+                            recalculate_project_progress($projectId);
+                        }
+                    } catch (Throwable $e) {
+                        error_log('Progress recalculation failed (project create): ' . $e->getMessage());
+                    }
 
                     $_SESSION['project_success'] = 'Project created successfully!';
                     header('Location: dashboard.php');
@@ -1209,9 +1235,9 @@ if ($pdo instanceof PDO) {
                             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Progress</p>
                             <div class="flex items-center gap-3">
                                 <div class="flex-grow bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-primary h-full" style="width: <?php echo intval($project['progress']); ?>%;"></div>
+                                    <div id="project-progress-bar" class="bg-primary h-full" style="width: <?php echo intval($project['progress']); ?>%;"></div>
                                 </div>
-                                <span class="text-sm font-semibold"><?php echo intval($project['progress']); ?>%</span>
+                                <span id="project-progress-text" class="text-sm font-semibold"><?php echo intval($project['progress']); ?>%</span>
                             </div>
                         </div>
                     </div>
@@ -1964,7 +1990,7 @@ if ($pdo instanceof PDO) {
         const csrfToken = <?php echo json_encode(csrf_token()); ?>;
         // Client-side upload guard: 450 MB limit (450 * 1024 * 1024 bytes)
         const MAX_UPLOAD_BYTES = 450 * 1024 * 1024;
-
+        
         // Tab switching functionality
         document.querySelectorAll('.tab-link').forEach(tab => {
             tab.addEventListener('click', function(e) {
@@ -2467,6 +2493,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('File uploaded successfully!', 'success');
                     logActivity('uploaded file', file.name);
+                        if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                            updateProgress(result.progress);
+                        }
                     // Do not auto-open preview tab; instead insert the new file card into the list
                     if (result.id) insertFileCard(result);
                 } else {
@@ -2519,6 +2548,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('Revision uploaded successfully!', 'success');
                     logActivity('uploaded file revision', file.name);
+                        if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                            updateProgress(result.progress);
+                        }
                     window.location.hash = 'files';
                     window.location.reload();
                 } else {
@@ -2565,6 +2597,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('Drawing uploaded successfully!', 'success');
                     logActivity('uploaded drawing', file.name);
+                        if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                            updateProgress(result.progress);
+                        }
                     if (result.id) insertDrawingCard(result);
                 } else {
                     showNotification(result.message || 'Upload failed', 'error');
@@ -2601,6 +2636,9 @@ if ($pdo instanceof PDO) {
                     // Remove the file card from DOM instead of reloading
                     const el = document.getElementById('file-card-' + fileId);
                     if (el && el.parentNode) el.parentNode.removeChild(el);
+                    if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                        updateProgress(result.progress);
+                    }
                 } else {
                     showNotification(result.message || 'Delete failed', 'error');
                 }
@@ -2633,6 +2671,9 @@ if ($pdo instanceof PDO) {
                     logActivity('deleted drawing', '');
                     const el = document.getElementById('drawing-card-' + drawingId);
                     if (el && el.parentNode) el.parentNode.removeChild(el);
+                    if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                        updateProgress(result.progress);
+                    }
                 } else {
                     showNotification(result.message || 'Delete failed', 'error');
                 }
@@ -2668,6 +2709,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('Team member removed.', 'success');
                     logActivity('removed team member', '');
+                    if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                        updateProgress(result.progress);
+                    }
                     setTimeout(() => window.location.reload(), 900);
                 } else {
                     showNotification(result.message || 'Failed to remove member', 'error');
@@ -2731,10 +2775,10 @@ if ($pdo instanceof PDO) {
             console.warn('Notification display skipped:', e);
         }
 
-        // Real-time progress bar update
+        // Real-time progress bar update (targets explicit IDs)
         function updateProgress(percentage) {
-            const progressBar = document.querySelector('[style*="width:"]');
-            const progressText = document.querySelector('.text-sm.font-semibold');
+            const progressBar = document.getElementById('project-progress-bar');
+            const progressText = document.getElementById('project-progress-text');
 
             if (progressBar) {
                 progressBar.style.width = `${percentage}%`;
@@ -2825,6 +2869,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification(result.message || 'Worker assigned.', 'success');
                     logActivity('added team member', worker.full_name || '');
+                    if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                        updateProgress(result.progress);
+                    }
                     try {
                         if (history.replaceState) history.replaceState(null, '', '#team');
                         else location.hash = 'team';
@@ -2864,6 +2911,9 @@ if ($pdo instanceof PDO) {
                     if (result.success) {
                         showNotification('Team member added successfully!', 'success');
                         logActivity('added team member', formData.get('worker_name'));
+                        if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                            updateProgress(result.progress);
+                        }
                         closeAddTeamMemberModal();
                         try {
                             if (history.replaceState) history.replaceState(null, '', '#team');

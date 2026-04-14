@@ -181,6 +181,16 @@ if ($action === 'add_team_member') {
         $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
         $act->execute([$projectId, $currentUser, 'added team member', $name]);
 
+        // Recalculate and return updated progress
+        $newProgress = null;
+        try {
+            if (function_exists('recalculate_project_progress')) {
+                $newProgress = recalculate_project_progress($projectId);
+            }
+        } catch (Throwable $e) {
+            // ignore failures to avoid breaking API response
+        }
+
         if ($assignmentInserted) {
             $actorId = current_user_id();
             $project = db_fetch('SELECT name, client_id FROM projects WHERE id = ? LIMIT 1', [$projectId]);
@@ -216,7 +226,7 @@ if ($action === 'add_team_member') {
             }
         }
 
-        api_json(['success' => true, 'message' => 'Team member added successfully.']);
+        api_json(['success' => true, 'message' => 'Team member added successfully.', 'progress' => $newProgress]);
     } catch (Exception $e) {
         api_json(['success' => false, 'message' => 'Failed to add team member.'], 500);
     }
@@ -243,7 +253,16 @@ if ($action === 'remove_team_member') {
         $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
         $act->execute([$projectId, $currentUser, 'removed team member', $item]);
 
-        api_json(['success' => true, 'message' => 'Team member removed successfully.']);
+        // Recalculate progress after removal
+        $newProgress = null;
+        try {
+            if (function_exists('recalculate_project_progress')) {
+                $newProgress = recalculate_project_progress($projectId);
+            }
+        } catch (Throwable $e) {
+        }
+
+        api_json(['success' => true, 'message' => 'Team member removed successfully.', 'progress' => $newProgress]);
     } catch (Exception $e) {
         api_json(['success' => false, 'message' => 'Failed to remove team member.'], 500);
     }
@@ -306,7 +325,8 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
     }
 
     $folderType = $action === 'upload_drawing' ? 'drawings' : 'files';
-    $relativeDir = 'uploads/projects/' . $projectId . '/' . $folderType;
+    // Use singular 'project' folder name per project storage convention
+    $relativeDir = 'uploads/project/' . $projectId . '/' . $folderType;
     $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
 
     if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
@@ -484,6 +504,17 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
 
         // Provide enough metadata for client-side in-place rendering
         $typeLabel = isset($typeLabel) ? $typeLabel : ($ext !== '' ? strtoupper($ext) : 'FILE');
+
+        // Recalculate progress after upload
+        $newProgress = null;
+        try {
+            if (function_exists('recalculate_project_progress')) {
+                $newProgress = recalculate_project_progress($projectId);
+            }
+        } catch (Throwable $e) {
+            // ignore
+        }
+
         api_json([
             'success' => true,
             'message' => 'Upload successful.',
@@ -493,7 +524,8 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
             'size_label' => $sizeLabel,
             'file_path' => $publicPath,
             'view_url' => $viewUrl,
-            'revision_no' => isset($revisionNo) ? (int)$revisionNo : 1
+            'revision_no' => isset($revisionNo) ? (int)$revisionNo : 1,
+            'progress' => $newProgress
         ]);
     } catch (Exception $e) {
         @unlink($absolutePath);
@@ -522,7 +554,16 @@ if ($action === 'delete_file') {
         $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
         $act->execute([$projectId, $currentUser, 'deleted file', $item]);
 
-        api_json(['success' => true, 'message' => 'File deleted successfully.']);
+        // Recalculate progress after deletion
+        $newProgress = null;
+        try {
+            if (function_exists('recalculate_project_progress')) {
+                $newProgress = recalculate_project_progress($projectId);
+            }
+        } catch (Throwable $e) {
+        }
+
+        api_json(['success' => true, 'message' => 'File deleted successfully.', 'progress' => $newProgress]);
     } catch (Exception $e) {
         api_json(['success' => false, 'message' => 'Failed to delete file.'], 500);
     }
@@ -549,7 +590,16 @@ if ($action === 'delete_drawing') {
         $act = $db->prepare('INSERT INTO project_activity (project_id, user, action, item, created_at) VALUES (?, ?, ?, ?, NOW())');
         $act->execute([$projectId, $currentUser, 'deleted drawing', $item]);
 
-        api_json(['success' => true, 'message' => 'Drawing deleted successfully.']);
+        // Recalculate progress after deletion
+        $newProgress = null;
+        try {
+            if (function_exists('recalculate_project_progress')) {
+                $newProgress = recalculate_project_progress($projectId);
+            }
+        } catch (Throwable $e) {
+        }
+
+        api_json(['success' => true, 'message' => 'Drawing deleted successfully.', 'progress' => $newProgress]);
     } catch (Exception $e) {
         api_json(['success' => false, 'message' => 'Failed to delete drawing.'], 500);
     }
