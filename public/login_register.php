@@ -262,6 +262,10 @@ if (isset($_POST['login'])) {
                     'name' => $displayName,
                 ];
                 $_SESSION['user_id'] = (int)($user['id'] ?? 0);
+                // If user asked to be remembered, create persistent remember token/cookie
+                if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
+                    auth_set_remember_token((int)$_SESSION['user_id']);
+                }
                 header('Location: ' . post_login_redirect_url($_SESSION['user']));
                 exit();
             }
@@ -297,6 +301,10 @@ if (isset($_POST['login'])) {
                     'name' => trim(($legacyUser['first_name'] ?? '') . ' ' . ($legacyUser['last_name'] ?? '')) ?: $email,
                 ];
                 $_SESSION['user_id'] = (int)($legacyUser['s_id'] ?? $legacyUser['id'] ?? 0);
+                // If user asked to be remembered, create persistent remember token/cookie
+                if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
+                    auth_set_remember_token((int)$_SESSION['user_id']);
+                }
                 header('Location: ' . post_login_redirect_url($_SESSION['user']));
                 exit();
             }

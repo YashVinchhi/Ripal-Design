@@ -45,6 +45,24 @@ $dashboardProfileUrl = function_exists('base_path')
     ? base_path('dashboard/profile.php')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
 
+// Compute logo target: send logged-in users to their dashboard landing
+$logoHref = rtrim((string)BASE_PATH, '/') . '/public/index.php';
+if (function_exists('current_user')) {
+    $cu = current_user();
+    $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
+    if ($role === 'client') {
+        $logoHref = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
+    } elseif ($role === 'worker') {
+        $logoHref = rtrim((string)BASE_PATH, '/') . '/worker/dashboard.php';
+    } elseif ($role === 'admin') {
+        $logoHref = rtrim((string)BASE_PATH, '/') . '/admin/dashboard.php';
+    } elseif (function_exists('auth_dashboard_url')) {
+        $logoHref = auth_dashboard_url();
+    }
+} elseif (function_exists('is_logged_in') && is_logged_in() && function_exists('auth_dashboard_url')) {
+    $logoHref = auth_dashboard_url();
+}
+
 // Find and include the main stylesheet
 $stylesheetCandidates = [
     '/public/css/index.css',
@@ -122,8 +140,8 @@ foreach ($stylesheetCandidates as $candidate) {
 <?php endif; ?>
 <nav class="alt-header">
     <div class="alt-logo">
-        <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php" class="flex items-center gap-3 no-underline">
-            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10">
+        <a href="<?php echo esc_attr($logoHref); ?>" class="flex items-center gap-3 no-underline">
+            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
             <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo esc($headerText('brand_name', 'Ripal Design')); ?></span>
         </a>
     </div>
@@ -158,17 +176,24 @@ foreach ($stylesheetCandidates as $candidate) {
                         }
                     }
 
+
                     $sessionRole = '';
                     if (function_exists('current_user')) {
                         $sessionUser = current_user();
                         $sessionRole = is_array($sessionUser) ? strtolower((string)($sessionUser['role'] ?? '')) : '';
                     }
 
+                    // Role-aware dashboard link: clients should land on client dashboard
+                    $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php';
+                    if ($sessionRole === 'client') {
+                        $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
+                    }
+
                     $menuSections = [
                         'dashboard' => [
                             'title' => $headerText('dashboard_section_title', 'Dashboard'),
                             'links' => [
-                                ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('dashboard_link_home', 'Dashboard Home')],
+                                ['href' => $roleDashboardLink, 'label' => $headerText('dashboard_link_home', 'Dashboard Home')],
                                 ['href' => BASE_PATH . '/worker/project_details.php', 'label' => $headerText('dashboard_link_project_details', 'Project Details')],
                                 ['href' => $dashboardProfileUrl, 'label' => $headerText('dashboard_link_profile', 'Profile Settings')],
                                 ['href' => BASE_PATH . '/dashboard/review_requests.php', 'label' => $headerText('dashboard_link_reviews', 'Review Requests')],
@@ -221,8 +246,22 @@ foreach ($stylesheetCandidates as $candidate) {
         <div class="panel-footer">
             <?php if (is_logged_in()): ?>
                 <?php if ($headerMode !== 'dashboard'): ?>
-                    <a href="<?php echo esc_attr(BASE_PATH); ?>/dashboard/dashboard.php" class="btn-alt btn-login"><?php echo esc($headerText('btn_dashboard', 'Dashboard')); ?></a>
+                    <a href="<?php echo esc_attr($roleDashboardLink); ?>" class="btn-alt btn-login"><?php echo esc($headerText('btn_dashboard', 'Dashboard')); ?></a>
                 <?php endif; ?>
+                <!-- Global override: enforce sharp (square) corners across the site -->
+                <style>
+                    /* Remove rounded corners globally; use !important to override framework defaults */
+                    *, *::before, *::after {
+                        border-radius: 0 !important;
+                    }
+
+                    /* Ensure common Bootstrap/Tailwind rounded utility classes are neutralized */
+                    .rounded, .rounded-top, .rounded-bottom, .rounded-start, .rounded-end,
+                    .btn, .badge, .card, .modal-content, .dropdown-menu, .nav-pills .nav-link,
+                    .alt-hamburger span {
+                        border-radius: 0 !important;
+                    }
+                </style>
                 <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo esc($headerText('btn_logout', 'Logout')); ?></a>
             <?php else: ?>
                 <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login"><?php echo esc($headerText('btn_login', 'Login')); ?></a>

@@ -4,6 +4,8 @@ require_once __DIR__ . '/../includes/init.php';
 require_login();
 require_role('admin');
 
+$newProjectUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php';
+
 $storeProjectImage = static function (int $projectId, array $uploadedFile): bool {
     if ($projectId <= 0) {
         return false;
@@ -100,86 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_project_cover'
                 $storeProjectImage($projectId, $photoFiles);
             }
         }
-    }
-
-    header('Location: ' . $_SERVER['PHP_SELF']);
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['project_name'])) {
-    require_csrf();
-
-    $name = trim((string)($_POST['project_name'] ?? ''));
-    $projectType = trim((string)($_POST['project_type'] ?? 'Residential'));
-    $budget = (float)preg_replace('/[^0-9.]/', '', (string)($_POST['project_budget'] ?? '0'));
-    $location = trim((string)($_POST['project_location'] ?? ''));
-    $mapLink = trim((string)($_POST['project_map_link'] ?? ''));
-    $ownerName = trim((string)($_POST['client_name'] ?? ''));
-    $ownerContact = trim((string)($_POST['client_contact'] ?? ''));
-    $ownerEmail = trim((string)($_POST['client_email'] ?? ''));
-
-    if ($mapLink !== '' && !is_valid_google_maps_url($mapLink)) {
-        set_flash('Please enter a valid Google Maps link.', 'error');
-        header('Location: ' . $_SERVER['PHP_SELF']);
-        exit;
-    }
-
-    if ($mapLink !== '') {
-        $mapLink = canonicalize_google_maps_url($mapLink);
-    }
-
-    if ($name !== '' && db_connected()) {
-        // Backward compatibility for databases that do not yet have projects.map_link.
-        $hasMapLinkColumn = db_column_exists('projects', 'map_link');
-        if (!$hasMapLinkColumn) {
-            try {
-                db_query('ALTER TABLE projects ADD COLUMN map_link TEXT DEFAULT NULL');
-            } catch (Throwable $e) {
-                // Ignore if ALTER is not allowed or column already exists in race conditions.
-            }
-            $hasMapLinkColumn = db_column_exists('projects', 'map_link');
-        }
-
-        // Insert project and capture new ID so we can attach an uploaded photo.
-        try {
-            if ($hasMapLinkColumn) {
-                $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, map_link, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)', [
-                    $name, $budget, $location, $mapLink, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
-                ]);
-            } else {
-                $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
-                    $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Final fallback to legacy INSERT for old schemas.
-            $stmt = db_query('INSERT INTO projects (name, status, budget, progress, location, address, owner_name, owner_contact, owner_email, project_type, created_by) VALUES (?, "planning", ?, 0, ?, ?, ?, ?, ?, ?, ?)', [
-                $name, $budget, $location, $location, $ownerName, $ownerContact, $ownerEmail, $projectType, $_SESSION['user']['id'] ?? null,
-            ]);
-        }
-
-        $projectId = 0;
-        $pdo = get_db();
-        if ($pdo instanceof PDO) {
-            $projectId = (int)$pdo->lastInsertId();
-        }
-
-        // Handle optional cover photo upload
-        if ($projectId > 0 && isset($_FILES['project_photo']) && is_array($_FILES['project_photo']) && (int)($_FILES['project_photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-            $storeProjectImage($projectId, $_FILES['project_photo']);
-        }
-
-        notifications_notify_admins(
-            'project',
-            'New Project Created',
-            'A new project was created: ' . $name . '.',
-            [
-                'actor_user_id' => current_user_id(),
-                'project_id' => $projectId,
-                'action_key' => 'project.created',
-                'deep_link' => rtrim((string)BASE_PATH, '/') . '/admin/project_management.php',
-            ]
-        );
     }
 
     header('Location: ' . $_SERVER['PHP_SELF']);
@@ -416,7 +338,7 @@ $resolveRegion = static function (string $location): string {
                 <button id="exportProjectsBtn" type="button" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i> Export Report
                 </button>
-                <button id="newProjectBtn" type="button" class="w-full sm:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
+                <button id="newProjectBtn" type="button" class="w-full sm:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95" data-create-url="<?php echo esc_attr($newProjectUrl); ?>">
                     <i data-lucide="plus" class="w-4 h-4"></i> New Project
                 </button>
             </div>
@@ -515,131 +437,20 @@ $resolveRegion = static function (string $location): string {
             <?php endforeach; ?>
 
             <!-- Add Project Card -->
-            <div class="border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center group hover:border-rajkot-rust transition-colors cursor-pointer min-h-[300px] md:min-h-[400px]" onclick="openVentureModal()">
+            <a href="<?php echo esc_attr($newProjectUrl); ?>" class="border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center group hover:border-rajkot-rust transition-colors cursor-pointer min-h-[300px] md:min-h-[400px] no-underline">
                 <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-rajkot-rust transition-colors">
                     <i data-lucide="plus" class="w-10 h-10 text-gray-300 group-hover:text-white transition-colors"></i>
                 </div>
                 <h4 class="font-serif font-bold text-xl text-gray-400 group-hover:text-foundation-grey">Initialize Venture</h4>
                 <p class="text-sm text-gray-400 mt-2 max-w-[200px]">Start a new architectural record for standard or government infrastructure.</p>
-            </div>
+            </a>
         </div>
     </main>
 
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 
-    <!-- Initialize Venture Modal -->
-    <div id="ventureModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden items-center justify-center p-4">
-        <div class="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-b-4 border-rajkot-rust">
-            <div class="venture-modal-header px-10 py-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <div>
-                    <h2 class="text-2xl font-serif font-bold text-foundation-grey">Initialize New Venture</h2>
-                    <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Registry Entry • Part II-B (Standard)</p>
-                </div>
-                <button onclick="closeVentureModal()" class="text-gray-400 hover:text-rajkot-rust transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <form method="post" class="p-10 space-y-8" id="ventureForm" onsubmit="handleVentureSubmit(event)">
-                <?php echo csrf_token_field(); ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Client Details -->
-                    <div class="space-y-4">
-                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-rajkot-rust border-b border-rajkot-rust/20 pb-2">I. Client Identity</h3>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Legal Full Name</label>
-                            <input type="text" name="client_name" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Contact Primary (Mobile / Official)</label>
-                            <input type="tel" name="client_contact" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Email Address</label>
-                            <input type="email" name="client_email" required class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
-                        </div>
-                    </div>
-
-                    <!-- Project Details -->
-                    <div class="space-y-4">
-                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-rajkot-rust border-b border-rajkot-rust/20 pb-2">II. Project Scope</h3>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Project Designation (Name)</label>
-                            <input type="text" name="project_name" required placeholder="e.g. Skyline Apartments — Tower A" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Type</label>
-                                <select name="project_type" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
-                                    <option>Residential</option>
-                                    <option>Commercial</option>
-                                    <option>Industrial</option>
-                                    <option>Infrastructure</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Estimated Budget</label>
-                                <input type="text" name="project_budget" placeholder="₹" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Site Location (Rajkot/Gujarat)</label>
-                            <textarea name="project_location" rows="2" class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Google Maps Link (Optional)</label>
-                            <input type="url" name="project_map_link" placeholder="https://maps.app.goo.gl/..." class="w-full bg-gray-50 border border-gray-200 p-3 outline-none focus:border-rajkot-rust text-sm">
-                            <p class="text-[10px] text-gray-400 mt-2 uppercase tracking-tight">Only Google Maps links are accepted.</p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-tighter">Project Cover Photo (optional)</label>
-                            <input type="file" name="project_photo" accept="image/*" class="w-full bg-gray-50 border border-gray-200 p-2 outline-none focus:border-rajkot-rust text-sm">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pt-6 flex flex-col md:flex-row justify-end gap-4 border-t border-gray-100">
-                    <button type="button" onclick="closeVentureModal()" class="w-full md:w-auto px-8 py-4 md:py-3 text-gray-400 font-bold uppercase tracking-widest text-[10px] hover:text-foundation-grey transition-colors border border-gray-100 md:border-0">Abort Initialization</button>
-                    <button type="submit" class="w-full md:w-auto bg-rajkot-rust text-white px-10 py-4 md:py-3 font-bold uppercase tracking-widest text-[10px] shadow-premium hover:bg-foundation-grey transition-all">Initialize Construction Record</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         $(document).ready(function() {
-            // jQuery Validation for the Venture Form
-            $("#ventureForm").validate({
-                rules: {
-                    client_name: "required",
-                    client_contact: {
-                        required: true,
-                        minlength: 10
-                    },
-                    client_email: {
-                        required: true,
-                        email: true
-                    },
-                    project_name: "required",
-                    project_budget: "required",
-                    project_location: "required",
-                    project_map_link: {
-                        url: true
-                    }
-                },
-                messages: {
-                    client_name: "Please enter the legal name",
-                    client_contact: "Valid contact number required",
-                    client_email: "Valid registry email required",
-                    project_name: "Project designation is mandatory",
-                    project_budget: "Estimated budget required",
-                    project_location: "Site location must be specified",
-                    project_map_link: "Please enter a valid URL"
-                },
-                submitHandler: function(form) {
-                    form.submit();
-                }
-            });
         });
 
         let dashboardState = {
@@ -739,27 +550,11 @@ $resolveRegion = static function (string $location): string {
             });
         })();
 
-        function openVentureModal() {
-            const modal = document.getElementById('ventureModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeVentureModal() {
-            const modal = document.getElementById('ventureModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.style.overflow = 'auto';
-        }
-
-        function handleVentureSubmit(e) {
-            // Handled by jQuery Validation's submitHandler
-            return false;
-        }
-
         document.getElementById('newProjectBtn').addEventListener('click', function () {
-            openVentureModal();
+            const createUrl = this.getAttribute('data-create-url');
+            if (createUrl) {
+                window.location.href = createUrl;
+            }
         });
 
         document.getElementById('exportProjectsBtn').addEventListener('click', function () {
@@ -782,11 +577,6 @@ $resolveRegion = static function (string $location): string {
             a.download = 'projects_report.csv';
             a.click();
             URL.revokeObjectURL(url);
-        });
-
-        // Close on backdrop click
-        document.getElementById('ventureModal').addEventListener('click', function(e) {
-            if (e.target === this) closeVentureModal();
         });
 
         // Auto-rotate project cover images every 7 seconds.
