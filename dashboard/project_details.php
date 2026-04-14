@@ -1062,33 +1062,13 @@ if ($pdo instanceof PDO) {
             *::after {
                 border-radius: 0 !important;
             }
-        }
-        /* Status dropdown padding in Project Details form */
-        .status-select {
-            padding: 0.6rem !important;
-        }
-        /* Project owner card background (light mode) */
-        .project-owner-card {
-            background: rgba(168, 169, 171, .20);
-        }
-        /* Ensure dark-mode owner/background variants use the requested translucent grey */
-        @media (prefers-color-scheme: dark) {
-            .dark\:bg-slate-800,
-            .dark\:bg-slate-900,
-            .dark .bg-slate-800,
-            .dark .bg-slate-900,
-            body.dark .project-owner-card {
-                --tw-bg-opacity: 1;
-                background-color: rgb(168 169 171 / 20%) !important;
-            }
-        }
     </style>
 </head>
 
 <body
-    class="bg-white text-slate-800 min-h-screen flex flex-col transition-colors duration-300">
-    
-    <?php 
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
+
+    <?php
     $HEADER_MODE = 'dashboard';
     require_once __DIR__ . '/../Common/header.php';
     ?>
@@ -1189,14 +1169,14 @@ if ($pdo instanceof PDO) {
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
 
         <!-- Tab Navigation -->
-        <div class="flex border-b border-slate-200 mb-8 overflow-x-auto">
+        <div class="flex border-b border-slate-200 dark:border-slate-800 mb-8 overflow-x-auto">
             <a class="tab-link px-6 py-3 border-b-2 border-primary text-primary font-medium text-sm whitespace-nowrap cursor-pointer active"
                 data-tab="overview">Overview</a>
-            <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
+            <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
                 data-tab="team">Team</a>
-            <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
+            <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
                 data-tab="files">Files</a>
-            <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
+            <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
                 data-tab="activity">Activity</a>
             <?php if (!empty($SHOW_DRAWINGS_TAB)): ?>
                 <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
@@ -1240,9 +1220,9 @@ if ($pdo instanceof PDO) {
 
                     <!-- Project Details Form -->
                     <div
-                        class="bg-white rounded-lg border border-slate-200 shadow-sm">
-                        <div class="p-6 border-b border-slate-200">
-                            <h2 class="text-xl font-serif text-slate-800">Project Details</h2>
+                        class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+                            <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
                         </div>
                         <form id="projectDetailsForm" method="post">
                             <?php echo csrf_token_field(); ?>
@@ -1251,14 +1231,14 @@ if ($pdo instanceof PDO) {
                                     <div class="space-y-1">
                                         <label class="text-xs font-semibold text-slate-500 uppercase">Project Name</label>
                                         <input
-                                            class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                            type="text" name="name" value="<?php echo htmlspecialchars($project['name']); ?>" required <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
+                                            class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"
+                                            type="text" name="name" value="<?php echo htmlspecialchars($project['name']); ?>" required />
                                     </div>
                                     <div class="space-y-1">
                                         <label class="text-xs font-semibold text-slate-500 uppercase">Status</label>
                                         <select
-                                            class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary status-select"
-                                            name="status" <?php echo $isClientReadOnly ? 'disabled' : ''; ?>>
+                                            class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"
+                                            name="status">
                                             <option value="ongoing" <?php echo $project['status'] == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
                                             <option value="planning" <?php echo $project['status'] == 'planning' ? 'selected' : ''; ?>>Planning</option>
                                             <option value="paused" <?php echo $project['status'] == 'paused' ? 'selected' : ''; ?>>On Hold</option>
@@ -1269,50 +1249,23 @@ if ($pdo instanceof PDO) {
                                         <label class="text-xs font-semibold text-slate-500 uppercase">Due Date</label>
                                         <div class="relative">
                                             <input
-                                                class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                                type="date" name="due" value="<?php echo htmlspecialchars($project['due'] ?? date('Y-m-d')); ?>" <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
+                                                class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"
+                                                type="date" name="due" value="<?php echo htmlspecialchars($project['due'] ?? date('Y-m-d')); ?>" />
                                         </div>
                                     </div>
                                     <div class="space-y-1">
                                         <label class="text-xs font-semibold text-slate-500 uppercase">Progress (%)</label>
                                         <input
-                                            class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                            type="number" name="progress" min="0" max="100" value="<?php echo intval($project['progress'] ?? 0); ?>" <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="text-xs font-semibold text-slate-500 uppercase">Budget</label>
-                                        <input
-                                            class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                            type="number" name="budget" min="0" step="0.01" value="<?php echo htmlspecialchars((string)($project['budget'] ?? 0)); ?>" <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="text-xs font-semibold text-slate-500 uppercase">Owner Name</label>
-                                        <input
-                                            class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                            type="text" name="owner_name" value="<?php echo htmlspecialchars($project['owner']['name'] ?? ''); ?>" <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="text-xs font-semibold text-slate-500 uppercase">Owner Contact</label>
-                                        <input
-                                            class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                            type="text" name="owner_contact" value="<?php echo htmlspecialchars($project['owner']['contact'] ?? ''); ?>" <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="text-xs font-semibold text-slate-500 uppercase">Owner Email</label>
-                                        <input
-                                            class="w-full bg-slate-50 border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                            type="email" name="owner_email" value="<?php echo htmlspecialchars($project['owner']['email'] ?? ''); ?>" <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
+                                            class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"
+                                            type="number" name="progress" min="0" max="100" value="<?php echo intval($project['progress'] ?? 0); ?>" />
                                     </div>
                                 </div>
-                                <div class="pt-4 border-t border-slate-100">
+                                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
                                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Location Mapping
                                     </h3>
                                     <?php $displayAddress = $projectLocationSentenceValue; ?>
                                     <input type="hidden" name="location" id="projectLocationInput" value="<?php echo htmlspecialchars($project['location'] ?? $project['address'] ?? ''); ?>" />
                                     <input type="hidden" name="address" id="projectAddressInput" value="<?php echo htmlspecialchars($project['address'] ?? $project['location'] ?? ''); ?>" />
-<<<<<<< HEAD
-                                    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-=======
                                     <div class="mb-4">
                                         <label for="projectMapInput" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Location / Google Maps</label>
                                         <input
@@ -1324,23 +1277,22 @@ if ($pdo instanceof PDO) {
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Use one field for both: search text and map links.</p>
                                     </div>
                                     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm">
->>>>>>> 9a0aad42c1550899fdbd615d891529874d0b8388
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="min-w-0">
                                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Address</p>
-                                                <p id="locationAddressDisplay" class="text-sm text-slate-700 leading-relaxed break-words cursor-text" title="Double-click to edit address">
+                                                <p id="locationAddressDisplay" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed break-words cursor-text" title="Double-click to edit address">
                                                     <?php if ($displayAddress !== ''): ?>
                                                         This project is located at <?php echo htmlspecialchars($displayAddress); ?>.
                                                     <?php else: ?>
                                                         Address is not available yet. Add the location above to enable map preview.
                                                     <?php endif; ?>
                                                 </p>
-                                                <p class="text-xs text-slate-500 mt-2">Click the info button to reveal map preview.</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Click the info button to reveal map preview.</p>
                                             </div>
                                             <button
                                                 type="button"
                                                 id="locationInfoToggle"
-                                                class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                                                class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                                 title="Toggle map preview"
                                                 aria-label="Toggle map preview"
                                                 aria-expanded="false"
@@ -1350,7 +1302,7 @@ if ($pdo instanceof PDO) {
                                         </div>
                                     </div>
                                     <div id="locationMapPreview" class="hidden mt-4">
-                                        <div class="bg-slate-100 rounded-lg aspect-video relative overflow-hidden border border-slate-200">
+                                        <div class="bg-slate-100 dark:bg-slate-800 rounded-lg aspect-video relative overflow-hidden border border-slate-200 dark:border-slate-700">
                                             <iframe
                                                 id="projectMapIframe"
                                                 src="<?php echo htmlspecialchars($projectMapEmbedSrc !== '' ? $projectMapEmbedSrc : 'https://www.google.com/maps?q=Rajkot&output=embed'); ?>"
@@ -1364,19 +1316,7 @@ if ($pdo instanceof PDO) {
                                             </iframe>
                                         </div>
                                     </div>
-<<<<<<< HEAD
-                                    <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                                        <input
-                                            id="geocodeSearchInput"
-                                            class="flex-grow bg-white border-slate-200 rounded text-sm focus:ring-primary focus:border-primary"
-                                            placeholder="Search address to geocode..." type="text" <?php echo $isClientReadOnly ? 'readonly' : ''; ?> />
-                                        <button type="button"
-                                            id="geocodeSearchBtn"
-                                            class="px-6 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 shadow-md" <?php echo $isClientReadOnly ? 'disabled' : ''; ?>>Geocode</button>
-                                    </div>
-=======
                                     <div class="mt-4 text-xs text-slate-500 dark:text-slate-400">Map preview updates when you press Enter or leave the location field.</div>
->>>>>>> 9a0aad42c1550899fdbd615d891529874d0b8388
                                 </div>
                             </div>
                             <?php if (!$isClientReadOnly): ?>
@@ -1401,7 +1341,7 @@ if ($pdo instanceof PDO) {
                 <div class="space-y-6">
                     <!-- Project Owner Card -->
                     <div
-                        class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm project-owner-card">
+                        class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Project Owner</h3>
                         <?php if (!empty($project['owner']['name'])): ?>
                             <div class="flex items-center gap-4 mb-4">
