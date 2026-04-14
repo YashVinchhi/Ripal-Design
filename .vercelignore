@@ -1,5 +1,8 @@
 # Exclude local uploads, logs, and development artifacts from Vercel deployments
 # Keep production public/ and api/ files
+# Exclude Git metadata which can bloat serverless bundles
+.git
+.git/**
 uploads/
 logs/
 node_modules/
