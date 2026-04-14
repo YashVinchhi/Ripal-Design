@@ -11,6 +11,8 @@
     }
   },
   "routes": [
+    { "src": "\\/(.*\\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|map|pdf|txt|zip|json|xml))$", "dest": "/public/$1" },
+    { "src": "\\/(assets|uploads|images|css|js)\\/(.*)", "dest": "/public/$1/$2" },
     { "src": "\\/(.*)", "dest": "/api/index.php" }
   ]
 }
