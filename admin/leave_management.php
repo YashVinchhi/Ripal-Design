@@ -4,15 +4,19 @@ require_once __DIR__ . '/../includes/init.php';
 require_login();
 require_role('admin');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['leave_id'], $_POST['status'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   require_csrf();
-  $leaveId = (int)$_POST['leave_id'];
-  $status = (string)$_POST['status'];
-  if ($leaveId > 0 && in_array($status, ['approved', 'rejected', 'on_leave'], true) && db_connected()) {
-    db_query('UPDATE leave_requests SET status = ?, approved_by = NULL WHERE id = ?', [$status, $leaveId]);
+
+  if (isset($_POST['leave_id'], $_POST['status'])) {
+    $leaveId = (int)$_POST['leave_id'];
+    $status = (string)$_POST['status'];
+    $approverId = current_user_id();
+    if ($leaveId > 0 && in_array($status, ['approved', 'rejected', 'on_leave'], true) && db_connected()) {
+      db_query('UPDATE leave_requests SET status = ?, approved_by = ? WHERE id = ?', [$status, $approverId > 0 ? $approverId : null, $leaveId]);
+    }
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
   }
-  header('Location: ' . $_SERVER['PHP_SELF']);
-  exit;
 }
 
 $leaveData = get_leave_dashboard_data();
@@ -91,6 +95,9 @@ if ($viewMode === 'archive') {
       <div>
         <h1 class="text-3xl font-serif font-bold text-rajkot-rust">Leave Management</h1>
         <p class="text-gray-500 mt-1">Review and manage time-off requests from the team.</p>
+      </div>
+      <div class="mt-4 md:mt-0">
+        <a href="<?php echo BASE_PATH . PUBLIC_PATH_PREFIX; ?>/request_leave.php" class="inline-flex items-center h-10 px-5 rounded bg-rajkot-rust text-white text-sm font-semibold hover:bg-red-800 transition">Request Leave</a>
       </div>
     </div>
 
