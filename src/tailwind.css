@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Add project-specific component overrides or small utilities here.
+  The build will output compiled CSS to ./assets/css/tailwind.css
+*/
