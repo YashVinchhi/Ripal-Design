@@ -78,6 +78,22 @@ $stylesheetCandidates = [
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
+<!-- Phantom-UI: SSR pre-hydration CSS + CDN bundle -->
+<style>
+    /* Prevent content flash before Phantom-UI hydrates */
+    phantom-ui[loading] * {
+        -webkit-text-fill-color: transparent !important;
+        pointer-events: none;
+        user-select: none;
+    }
+    phantom-ui[loading] img, phantom-ui[loading] svg,
+    phantom-ui[loading] video, phantom-ui[loading] canvas,
+    phantom-ui[loading] button, phantom-ui[loading] [role="button"] {
+        opacity: 0 !important;
+    }
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@aejkatappaja/phantom-ui/dist/phantom-ui.cdn.js"></script>
+
 <!-- Bootstrap CSS and Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"> 
@@ -276,6 +292,8 @@ foreach ($stylesheetCandidates as $candidate) {
 </div>
 
 <!-- Header Navigation Script -->
+    <!-- Phantom root: wraps main page content. Closed in Common/footer.php -->
+    <phantom-ui loading id="phantom-ui-root">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
 <script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/gsap-core-init.js" defer></script>

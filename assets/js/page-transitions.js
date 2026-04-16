@@ -10,7 +10,6 @@
   if (!window || !document) return;
 
   var curtain = document.getElementById('transition-curtain');
-  var curtainGhost = document.getElementById('transition-curtain-ghost');
   var orb = document.getElementById('transition-orb');
   var hasGSAP = typeof window.gsap !== 'undefined';
   var isNavigating = false;
@@ -177,23 +176,6 @@
     });
   }
 
-  function resetGhostStyles() {
-    if (!curtainGhost) return;
-
-    if (!hasGSAP) {
-      curtainGhost.style.opacity = '0';
-      curtainGhost.style.transform = 'scale(1)';
-      curtainGhost.style.pointerEvents = 'none';
-      return;
-    }
-
-    window.gsap.set(curtainGhost, {
-      autoAlpha: 0,
-      scale: 1,
-      pointerEvents: 'none'
-    });
-  }
-
   function playDashboardOutTransition(origin, onDone) {
     if (reduceMotionEnabled() || !hasGSAP || !orb) {
       onDone();
@@ -248,45 +230,23 @@
       curtain.style.transform = 'translateY(-100%)';
       curtain.style.opacity = '1';
       curtain.style.pointerEvents = 'none';
-      resetGhostStyles();
       resetOrbStyles();
       return;
     }
 
     window.gsap.killTweensOf(curtain);
     resetOrbStyles();
-    if (curtainGhost) {
-      window.gsap.killTweensOf(curtainGhost);
-    }
     window.gsap.set(curtain, {
       yPercent: 0,
       autoAlpha: 1,
       pointerEvents: 'none'
     });
 
-    if (curtainGhost) {
-      window.gsap.set(curtainGhost, {
-        autoAlpha: 0,
-        scale: 0.985,
-        pointerEvents: 'none'
-      });
-
-      window.gsap.to(curtainGhost, {
-        autoAlpha: 1,
-        scale: 1,
-        duration: 0.22,
-        ease: 'power2.out'
-      });
-    }
-
     window.gsap.to(curtain, {
       yPercent: -100,
       duration: 0.6,
       ease: 'power3.out',
-      delay: 0.08,
-      onComplete: function () {
-        resetGhostStyles();
-      }
+      delay: 0.08
     });
   }
 
@@ -298,7 +258,6 @@
         autoAlpha: 1,
         pointerEvents: 'none'
       });
-      resetGhostStyles();
       resetOrbStyles();
       return;
     }
@@ -306,11 +265,6 @@
     curtain.style.transform = 'translateY(-100%)';
     curtain.style.opacity = '1';
     curtain.style.pointerEvents = 'none';
-    if (curtainGhost) {
-      curtainGhost.style.opacity = '0';
-      curtainGhost.style.transform = 'scale(1)';
-      curtainGhost.style.pointerEvents = 'none';
-    }
     if (orb) {
       orb.style.opacity = '0';
       orb.style.transform = 'translate(-50%, -50%) scale(0.001)';

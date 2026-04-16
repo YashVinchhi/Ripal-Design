@@ -1,4 +1,5 @@
 <!-- Footer / CTA -->
+</phantom-ui>
 <?php
 /**
  * Common Footer Component
@@ -109,7 +110,6 @@ $currentYear = date('Y');
 </footer>
 
 <div id="transition-curtain" aria-hidden="true"></div>
-<div id="transition-curtain-ghost" aria-hidden="true"></div>
 <div id="transition-orb" aria-hidden="true"></div>
 
 <script>
@@ -159,3 +159,21 @@ if (function_exists('render_footer_scripts')) {
     render_footer_scripts();
 }
 ?>
+<script>
+    (function(){
+        function getRoot(){ return document.getElementById('phantom-ui-root') || document.querySelector('phantom-ui[loading]'); }
+        function reveal(){
+            var el = getRoot();
+            if (!el) return;
+            try { if (el.hasAttribute && el.hasAttribute('loading')) el.removeAttribute('loading'); } catch(e) {}
+        }
+        if (document.readyState === 'complete') {
+            // page already loaded
+            requestAnimationFrame(function(){ setTimeout(reveal, 50); });
+        } else {
+            window.addEventListener('load', function(){ setTimeout(reveal, 50); });
+        }
+        // Ensure we always reveal after a short timeout as a fallback
+        setTimeout(reveal, 3000);
+    })();
+</script>
