@@ -31,6 +31,13 @@ if (file_exists(__DIR__ . '/../Support/logger.php')) {
     require_once __DIR__ . '/../Support/logger.php';
 }
 
+if (file_exists(__DIR__ . '/../Http/routes.php')) {
+    require_once __DIR__ . '/../Http/routes.php';
+    if (function_exists('app_routes_bootstrap')) {
+        app_routes_bootstrap();
+    }
+}
+
 if (!function_exists('apply_security_headers')) {
     /**
      * Apply low-risk HTTP security headers globally.

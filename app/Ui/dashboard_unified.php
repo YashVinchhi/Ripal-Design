@@ -139,7 +139,7 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
       <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
           <h1 class="text-3xl md:text-4xl font-serif font-bold">Admin Control Centre</h1>
-          <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Full access • <?php echo esc($displayName); ?></p>
+          <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Full access &bull; <?php echo esc($displayName); ?></p>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <a href="<?php echo esc_attr(base_path('admin/project_management.php')); ?>" class="w-full md:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center justify-center gap-3 active:scale-95 no-underline">
