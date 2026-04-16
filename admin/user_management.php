@@ -301,13 +301,13 @@ if ($db instanceof PDO) {
                                 <?php $totalRatings = (int)($u['total_ratings'] ?? 0); ?>
                                 <?php if ($totalRatings > 0): ?>
                                     <span class="text-[11px] font-bold text-approval-green"><?php echo number_format($avgRating, 1); ?>/5</span>
-                                    <p class="text-[10px] text-gray-400 mt-1"><?php echo $totalRatings; ?> entries</p>
+                                    <p class="text-[10px] text-gray-400 mt-1"><?php echo (int)$totalRatings; ?> entries</p>
                                 <?php else: ?>
                                     <span class="text-[11px] font-bold text-gray-400">No ratings</span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-6 md:px-8 py-4 md:py-6 block md:table-cell" data-label="Signal">
-                                <span class="flex items-center gap-2 <?php echo $statusClass; ?> text-[9px] font-bold uppercase tracking-widest">
+                                <span class="flex items-center gap-2 <?php echo htmlspecialchars($statusClass); ?> text-[9px] font-bold uppercase tracking-widest">
                                     <span class="w-2 h-2 rounded-full bg-current"></span> <?php echo htmlspecialchars($status); ?>
                                 </span>
                             </td>
@@ -325,7 +325,7 @@ if ($db instanceof PDO) {
                                         <input type="hidden" name="action" value="update_status">
                                         <input type="hidden" name="user_id" value="<?php echo (int)$u['id']; ?>">
                                         <input type="hidden" name="new_status" value="<?php echo $status === 'active' ? 'suspended' : 'active'; ?>">
-                                        <button type="submit" class="h-11 px-3 bg-gray-50 md:bg-transparent text-[9px] font-bold uppercase tracking-widest <?php echo $status === 'active' ? 'text-red-600 hover:text-red-700' : 'text-approval-green hover:text-approval-green/80'; ?> transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded" title="<?php echo $status === 'active' ? 'Deactivate User' : 'Activate User'; ?>">
+                                        <button type="submit" class="h-11 px-3 bg-gray-50 md:bg-transparent text-[9px] font-bold uppercase tracking-widest <?php echo htmlspecialchars($status === 'active' ? 'text-red-600 hover:text-red-700' : 'text-approval-green hover:text-approval-green/80'); ?> transition-colors flex items-center justify-center border border-gray-100 md:border-0 rounded" title="<?php echo $status === 'active' ? 'Deactivate User' : 'Activate User'; ?>">
                                             <?php echo $status === 'active' ? 'Deactivate' : 'Activate'; ?>
                                         </button>
                                     </form>

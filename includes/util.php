@@ -225,7 +225,9 @@ if (!function_exists('db_query')) {
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
-            error_log('Database query error: ' . $e->getMessage());
+            if (function_exists('app_log')) {
+                app_log('warning', 'Database query error', ['exception' => $e->getMessage()]);
+            }
             return false;
         }
     }

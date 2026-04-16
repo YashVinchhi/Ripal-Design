@@ -27,7 +27,9 @@ if (db_connected()) {
         ");
         $requests = $stmt->fetchAll();
     } catch (Exception $e) {
-        error_log('Review Requests Error: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Review requests query failed', ['exception' => $e->getMessage()]);
+        }
     }
 }
 
@@ -101,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                 <div class="flex gap-4">
                     <div class="bg-white/5 border border-white/10 px-6 py-4 rounded-sm text-center">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Unresolved</span>
-                        <span class="text-2xl font-bold text-rajkot-rust"><?php echo $counts['pending']; ?></span>
+                        <span class="text-2xl font-bold text-rajkot-rust"><?php echo (int)$counts['pending']; ?></span>
                     </div>
                 </div>
             </div>
@@ -113,19 +115,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                 <div class="bg-white p-6 shadow-premium border border-gray-100 border-b-4 border-b-rajkot-rust">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Awaiting Review</span>
-                    <span class="text-2xl font-bold"><?php echo $counts['pending']; ?></span>
+                    <span class="text-2xl font-bold"><?php echo (int)$counts['pending']; ?></span>
                 </div>
                 <div class="bg-white p-6 shadow-premium border border-gray-100 border-b-4 border-b-approval-green">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Approved</span>
-                    <span class="text-2xl font-bold"><?php echo $counts['approved']; ?></span>
+                    <span class="text-2xl font-bold"><?php echo (int)$counts['approved']; ?></span>
                 </div>
                 <div class="bg-white p-6 shadow-premium border border-gray-100 border-b-4 border-b-pending-amber">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Revisions</span>
-                    <span class="text-2xl font-bold"><?php echo $counts['changes_requested']; ?></span>
+                    <span class="text-2xl font-bold"><?php echo (int)$counts['changes_requested']; ?></span>
                 </div>
                 <div class="bg-white p-6 shadow-premium border border-gray-100 border-b-4 border-b-slate-accent">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Closed/Rejected</span>
-                    <span class="text-2xl font-bold"><?php echo $counts['rejected']; ?></span>
+                    <span class="text-2xl font-bold"><?php echo (int)$counts['rejected']; ?></span>
                 </div>
             </div>
 
@@ -198,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                             <form method="POST" class="flex gap-2">
                                                 <?php echo csrf_token_field(); ?>
                                                 <input type="hidden" name="update_status" value="1">
-                                                <input type="hidden" name="request_id" value="<?php echo $r['id']; ?>">
+                                                <input type="hidden" name="request_id" value="<?php echo (int)$r['id']; ?>">
                                                 <button name="status" value="approved" class="p-3 bg-approval-green/10 hover:bg-approval-green text-approval-green hover:text-white transition-all shadow-sm">
                                                     <i data-lucide="check" class="w-5 h-5"></i>
                                                 </button>

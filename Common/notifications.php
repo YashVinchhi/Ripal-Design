@@ -71,10 +71,10 @@ $notifCsrf = function_exists('csrf_token') ? csrf_token() : '';
                         class="notif-item<?php echo $isRead ? '' : ' unread'; ?>"
                         role="button"
                         tabindex="0"
-                        data-id="<?php echo $id; ?>"
+                        data-id="<?php echo (int)$id; ?>"
                         data-deep-link="<?php echo htmlspecialchars($deepLink, ENT_QUOTES, 'UTF-8'); ?>"
                         data-action-key="<?php echo htmlspecialchars($actionKey, ENT_QUOTES, 'UTF-8'); ?>"
-                        data-project-id="<?php echo $projectId; ?>"
+                        data-project-id="<?php echo (int)$projectId; ?>"
                         style="padding:14px 16px; background:rgba(0,0,0,0.15); border-bottom:1px solid rgba(0,0,0,0.1); cursor:pointer; transition:background 0.2s ease;"
                     >
                         <div class="notif-main" style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">

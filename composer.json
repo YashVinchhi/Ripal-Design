@@ -1,10 +1,23 @@
 {
     "require": {
-        "dompdf/dompdf": "^3.1"
+        "dompdf/dompdf": "^3.1",
+        "monolog/monolog": "^3.7"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.66",
+        "phpstan/phpstan": "^1.12",
+        "phpunit/phpunit": "^10.5"
     },
     "autoload": {
         "files": [
-            "stubs/imagick.php"
+            "stubs/imagick.php",
+            "stubs/dev_test_stubs.php"
         ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PHPMailer\\PHPMailer\\": "src/",
+            "Tests\\": "tests/"
+        }
     }
 }

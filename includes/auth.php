@@ -296,6 +296,81 @@ function require_role($role, $redirect_to = null) {
     }
 }
 
+if (!function_exists('auth_user_can_access_project')) {
+    /**
+     * Verify whether a user can access a project.
+     *
+     * @param int $projectId
+     * @param int $userId
+     * @param string|null $userRole
+     * @return bool
+     */
+    function auth_user_can_access_project($projectId, $userId = 0, $userRole = null) {
+        $pid = (int)$projectId;
+        if ($pid <= 0) {
+            return false;
+        }
+
+        $uid = (int)$userId;
+        if ($uid <= 0) {
+            $uid = current_user_id();
+        }
+        if ($uid <= 0) {
+            return false;
+        }
+
+        $role = strtolower(trim((string)$userRole));
+        if ($role === '') {
+            $u = current_user();
+            $role = strtolower(trim((string)($u['role'] ?? '')));
+        }
+
+        if ($role === 'admin') {
+            return true;
+        }
+
+        if (!function_exists('db_fetch')) {
+            return false;
+        }
+
+        $project = db_fetch('SELECT id, client_id, owner_email, owner_name, created_by FROM projects WHERE id = ? LIMIT 1', [$pid]);
+        if (!$project) {
+            return false;
+        }
+
+        if ((int)($project['created_by'] ?? 0) === $uid) {
+            return true;
+        }
+
+        if ((int)($project['client_id'] ?? 0) === $uid) {
+            return true;
+        }
+
+        if (db_table_exists('project_assignments')) {
+            $assignment = db_fetch('SELECT id FROM project_assignments WHERE project_id = ? AND worker_id = ? LIMIT 1', [$pid, $uid]);
+            if ($assignment) {
+                return true;
+            }
+        }
+
+        $user = current_user();
+        $email = strtolower(trim((string)($user['email'] ?? '')));
+        $username = strtolower(trim((string)($user['username'] ?? '')));
+        $fullName = strtolower(trim((string)($user['full_name'] ?? ($user['name'] ?? ''))));
+
+        if ($email !== '' && strtolower(trim((string)($project['owner_email'] ?? ''))) === $email) {
+            return true;
+        }
+        $ownerName = strtolower(trim((string)($project['owner_name'] ?? '')));
+        if ($ownerName !== '' && ($ownerName === $username || $ownerName === $fullName)) {
+            return true;
+        }
+
+        // Keep legacy dashboard roles functional while strict checks roll out.
+        return !in_array($role, ['client', 'worker'], true);
+    }
+}
+
 /**
  * True when current request is a write request.
  *
@@ -432,7 +507,9 @@ function auth_sync_user_role_links($userId, $role, $assignedBy = null) {
 
         return true;
     } catch (Exception $e) {
-        error_log('auth_sync_user_role_links failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'auth_sync_user_role_links failed', ['exception' => $e->getMessage(), 'user_id' => (int)$userId]);
+        }
         return false;
     }
 }
@@ -791,11 +868,21 @@ function auth_set_remember_token($userId, $days = 365)
         ];
         $setOk = @setcookie('remember_me', $token, $cookieOptions);
         // Log for debugging persistent login issues (do not log token value)
-        error_log('auth_set_remember_token: user=' . (int)$userId . ' days=' . (int)$days . ' expires=' . $expiresAt . ' secure=' . ($secure ? '1' : '0') . ' setcookie_ok=' . ($setOk ? '1' : '0'));
+        if (function_exists('app_log')) {
+            app_log('debug', 'auth_set_remember_token', [
+                'user' => (int)$userId,
+                'days' => (int)$days,
+                'expires' => $expiresAt,
+                'secure' => $secure ? 1 : 0,
+                'setcookie_ok' => $setOk ? 1 : 0,
+            ]);
+        }
 
         return true;
     } catch (Exception $e) {
-        error_log('auth_set_remember_token failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'auth_set_remember_token failed', ['exception' => $e->getMessage(), 'user_id' => (int)$userId]);
+        }
         return false;
     }
 }
@@ -819,21 +906,29 @@ function auth_try_auto_login()
 
     // Debug: log whether remember cookie is present
     if (empty($_COOKIE['remember_me'])) {
-        error_log('auth_try_auto_login: no remember_me cookie present');
+        if (function_exists('app_log')) {
+            app_log('debug', 'auth_try_auto_login: no remember_me cookie present');
+        }
         return false;
     }
 
     $token = (string) $_COOKIE['remember_me'];
     if ($token === '') {
-        error_log('auth_try_auto_login: remember_me cookie empty string');
+        if (function_exists('app_log')) {
+            app_log('debug', 'auth_try_auto_login: remember_me cookie empty string');
+        }
         return false;
     }
     // Avoid logging raw token value
-    error_log('auth_try_auto_login: remember_me cookie length=' . strlen($token));
+    if (function_exists('app_log')) {
+        app_log('debug', 'auth_try_auto_login: remember_me cookie length', ['length' => strlen($token)]);
+    }
     $tokenHash = hash('sha256', $token);
     $db = get_db();
     if (!($db instanceof PDO)) {
-        error_log('auth_try_auto_login: DB unavailable');
+        if (function_exists('app_log')) {
+            app_log('debug', 'auth_try_auto_login: DB unavailable');
+        }
         return false;
     }
 
@@ -843,7 +938,9 @@ function auth_try_auto_login()
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) {
             // invalid token — clear cookie and log
-            error_log('auth_try_auto_login: token not found or expired in DB');
+            if (function_exists('app_log')) {
+                app_log('debug', 'auth_try_auto_login: token not found or expired in DB');
+            }
             auth_clear_remember_cookie();
             return false;
         }
@@ -883,7 +980,9 @@ function auth_try_auto_login()
 
         return true;
     } catch (Exception $e) {
-        error_log('auth_try_auto_login failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'auth_try_auto_login failed', ['exception' => $e->getMessage()]);
+        }
         return false;
     }
 }
@@ -906,7 +1005,9 @@ function auth_clear_remember_tokens_for_user($userId)
         $del = $db->prepare('DELETE FROM auth_tokens WHERE user_id = ? AND token_type = ?');
         $del->execute([(int)$userId, 'remember']);
     } catch (Exception $e) {
-        error_log('auth_clear_remember_tokens_for_user failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'auth_clear_remember_tokens_for_user failed', ['exception' => $e->getMessage(), 'user_id' => (int)$userId]);
+        }
     }
 }
 

@@ -51,11 +51,11 @@ foreach ($projects as $p) {
         <div class="flex gap-6">
           <div class="text-center">
             <p class="text-[10px] uppercase tracking-widest text-gray-400">Assigned</p>
-            <p class="text-2xl font-bold text-approval-green"><?php echo $assignedCount; ?></p>
+            <p class="text-2xl font-bold text-approval-green"><?php echo (int)$assignedCount; ?></p>
           </div>
           <div class="text-center">
             <p class="text-[10px] uppercase tracking-widest text-gray-400">Overdue</p>
-            <p class="text-2xl font-bold text-rajkot-rust"><?php echo $overdueCount; ?></p>
+            <p class="text-2xl font-bold text-rajkot-rust"><?php echo (int)$overdueCount; ?></p>
           </div>
         </div>
       </div>

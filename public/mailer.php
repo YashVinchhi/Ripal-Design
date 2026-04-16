@@ -3,21 +3,6 @@ $mailToken = isset($token) ? (string)$token : '';
 $link = 'https://localhost/ripal-design/public/reset_password.php?token=' . urlencode($mailToken);
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// If Composer autoloader doesn't provide PHPMailer, fall back to the bundled src/ files.
-// This keeps compatibility when vendor/ doesn't include phpmailer/phpmailer.
-if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
-	$src = realpath(__DIR__ . '/../src');
-	if ($src && is_dir($src)) {
-		@require_once $src . '/Exception.php';
-		@require_once $src . '/PHPMailer.php';
-		@require_once $src . '/SMTP.php';
-		@require_once $src . '/POP3.php';
-		@require_once $src . '/OAuthTokenProvider.php';
-		@require_once $src . '/OAuth.php';
-		@require_once $src . '/DSNConfigurator.php';
-	}
-}
-
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;

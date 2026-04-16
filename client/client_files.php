@@ -181,17 +181,17 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                     <div>
                                         <p class="font-serif font-bold text-lg text-foundation-grey group-hover:text-rajkot-rust transition-colors mb-1"><?php echo htmlspecialchars($d['title']); ?></p>
                                         <div class="flex items-center gap-3">
-                                            <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70"><?php echo $d['file']; ?></p>
-                                            <span class="text-[8px] bg-gray-50 text-gray-400 px-2 py-0.5 font-bold border border-gray-100"><?php echo $d['size']; ?></span>
+                                            <p class="text-[10px] text-gray-400 font-mono tracking-tighter uppercase opacity-70"><?php echo htmlspecialchars((string)$d['file']); ?></p>
+                                            <span class="text-[8px] bg-gray-50 text-gray-400 px-2 py-0.5 font-bold border border-gray-100"><?php echo htmlspecialchars((string)$d['size']); ?></span>
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-8 py-8">
-                                <span class="text-xs font-mono font-bold text-foundation-grey bg-gray-50 px-2 py-1"><?php echo $d['version']; ?></span>
+                                <span class="text-xs font-mono font-bold text-foundation-grey bg-gray-50 px-2 py-1"><?php echo htmlspecialchars((string)$d['version']); ?></span>
                             </td>
                             <td class="px-8 py-8">
-                                <span class="text-[11px] font-medium text-gray-400 italic"><?php echo $d['date']; ?></span>
+                                <span class="text-[11px] font-medium text-gray-400 italic"><?php echo htmlspecialchars((string)$d['date']); ?></span>
                             </td>
                             <td class="px-8 py-8">
                                 <?php if($d['status'] === 'approved'): ?>
@@ -313,12 +313,25 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
             });
         })();
 
-        function handleDownload(fileName) {
-            if (!fileName) {
+        function handleDownload(fileRef, kind = 'file') {
+            if (!fileRef) {
                 return;
             }
-            const path = '../uploads/' + encodeURIComponent(fileName);
-            window.open(path, '_blank');
+
+            const normalized = String(fileRef).trim();
+            if (/^https?:\/\//i.test(normalized) || normalized.startsWith('/')) {
+                window.open(normalized, '_blank');
+                return;
+            }
+
+            const id = parseInt(normalized, 10);
+            if (!Number.isNaN(id) && id > 0) {
+                const streamUrl = '../dashboard/file_stream.php?kind=' + encodeURIComponent(kind) + '&id=' + id;
+                window.open(streamUrl, '_blank');
+                return;
+            }
+
+            window.open(normalized, '_blank');
         }
     </script>
 

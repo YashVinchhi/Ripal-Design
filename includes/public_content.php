@@ -782,7 +782,17 @@ if (!function_exists('public_content_store_uploaded_image')) {
             return $result;
         }
 
-        $detectedMime = function_exists('mime_content_type') ? (string)@mime_content_type($tmpPath) : '';
+        $detectedMime = '';
+        if (function_exists('finfo_open') && function_exists('finfo_file')) {
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo !== false) {
+                $detectedMime = (string)@finfo_file($finfo, $tmpPath);
+                @finfo_close($finfo);
+            }
+        }
+        if ($detectedMime === '' && function_exists('mime_content_type')) {
+            $detectedMime = (string)@mime_content_type($tmpPath);
+        }
         if ($detectedMime !== '' && !in_array($detectedMime, array_values($allowedMimes), true)) {
             $result['error'] = 'Uploaded file is not a valid image type.';
             return $result;

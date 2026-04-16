@@ -166,7 +166,9 @@ if ($projectId && isset($pdo) && $pdo instanceof PDO) {
             ];
         }
     } catch (PDOException $e) {
-        error_log('Project details load error: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Project details load error', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+        }
         $error = 'Unable to load project details right now.';
     }
 }
@@ -284,7 +286,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_milestone']) && 
                     'item' => 'milestone id ' . $mId
                 ]);
             } catch (PDOException $e) {
-                error_log('Failed to log milestone deletion (AJAX): ' . $e->getMessage());
+                if (function_exists('app_log')) {
+                    app_log('warning', 'Failed to log milestone deletion (AJAX)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                }
             }
 
             $response = ['success' => true, 'deleted' => $mId];
@@ -292,7 +296,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_milestone']) && 
             echo json_encode($response);
             exit();
         } catch (PDOException $e) {
-            error_log('AJAX milestone deletion failed: ' . $e->getMessage());
+            if (function_exists('app_log')) {
+                app_log('warning', 'AJAX milestone deletion failed', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+            }
             $response['message'] = 'Unable to delete milestone.';
             header('Content-Type: application/json');
             echo json_encode($response);
@@ -332,7 +338,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_milestone']) && 
                         'item' => $mTitle
                     ]);
                 } catch (PDOException $e) {
-                    error_log('Failed to log milestone update activity (AJAX): ' . $e->getMessage());
+                    if (function_exists('app_log')) {
+                        app_log('warning', 'Failed to log milestone update activity (AJAX)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                    }
                 }
 
                 $response = ['success' => true, 'milestone' => ['id' => $mId, 'title' => $mTitle, 'target_date' => $mTarget, 'status' => 'pending']];
@@ -360,7 +368,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_milestone']) && 
                         'item' => $mTitle
                     ]);
                 } catch (PDOException $e) {
-                    error_log('Failed to log milestone activity (AJAX): ' . $e->getMessage());
+                    if (function_exists('app_log')) {
+                        app_log('warning', 'Failed to log milestone activity (AJAX)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                    }
                 }
 
                 $response = ['success' => true, 'milestone' => ['id' => $newId, 'title' => $mTitle, 'target_date' => $mTarget, 'status' => 'pending']];
@@ -375,7 +385,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_milestone']) && 
             exit();
         }
     } catch (PDOException $e) {
-        error_log('AJAX milestone insert/update failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'AJAX milestone insert/update failed', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+        }
         $response['message'] = 'Database error';
         header('Content-Type: application/json');
         echo json_encode($response);
@@ -433,7 +445,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                             'item' => $item
                         ]);
                     } catch (PDOException $e) {
-                        error_log('Failed to log owner change activity: ' . $e->getMessage());
+                        if (function_exists('app_log')) {
+                            app_log('warning', 'Failed to log owner change activity', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                        }
                     }
                         // Recalculate project progress after owner assignment
                         try {
@@ -441,7 +455,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                                 recalculate_project_progress($projectId);
                             }
                         } catch (Throwable $e) {
-                            error_log('Progress recalculation failed (owner assign): ' . $e->getMessage());
+                            if (function_exists('app_log')) {
+                                app_log('warning', 'Progress recalculation failed (owner assign)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                            }
                         }
 
                         $_SESSION['project_success'] = 'Project owner updated successfully!';
@@ -449,7 +465,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                         exit();
                 }
             } catch (Exception $e) {
-                error_log('Assign owner failed: ' . $e->getMessage());
+                if (function_exists('app_log')) {
+                    app_log('warning', 'Assign owner failed', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId, 'assign_owner_id' => (int)$assignId]);
+                }
                 $error = 'Unable to assign project owner.';
             }
         }
@@ -544,7 +562,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                             recalculate_project_progress($projectId);
                         }
                     } catch (Throwable $e) {
-                        error_log('Progress recalculation failed (project update): ' . $e->getMessage());
+                        if (function_exists('app_log')) {
+                            app_log('warning', 'Progress recalculation failed (project update)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                        }
                     }
 
                     if ($previousStatus !== 'completed' && strtolower((string)$status) === 'completed') {
@@ -614,7 +634,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                             recalculate_project_progress($projectId);
                         }
                     } catch (Throwable $e) {
-                        error_log('Progress recalculation failed (project create): ' . $e->getMessage());
+                        if (function_exists('app_log')) {
+                            app_log('warning', 'Progress recalculation failed (project create)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                        }
                     }
 
                     $_SESSION['project_success'] = 'Project created successfully!';
@@ -793,7 +815,9 @@ if ($pdo instanceof PDO) {
             $workerUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     } catch (PDOException $e) {
-        error_log('Failed to load worker users: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Failed to load worker users', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+        }
         $workerUsers = [];
     }
     // Load possible owner candidates (clients, employees, admins) for quick assignment
@@ -806,7 +830,9 @@ if ($pdo instanceof PDO) {
             $ownerCandidates = $ownersStmt->fetchAll(PDO::FETCH_ASSOC);
         }
     } catch (PDOException $e) {
-        error_log('Failed to load owner candidates: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Failed to load owner candidates', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+        }
         $ownerCandidates = [];
     }
 }
@@ -1166,9 +1192,9 @@ if ($pdo instanceof PDO) {
                     <p class="text-gray-400 mt-2 flex items-center gap-1">
                         <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust"></i>
                         <?php if ($projectDirectionHref !== ''): ?>
-                            <a href="<?php echo htmlspecialchars($projectDirectionHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo $projectLocationText; ?></a>
+                            <a href="<?php echo htmlspecialchars($projectDirectionHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo htmlspecialchars($projectLocationText); ?></a>
                         <?php else: ?>
-                            <?php echo $projectLocationText; ?>
+                            <?php echo htmlspecialchars($projectLocationText); ?>
                         <?php endif; ?>
                     </p>
                 </div>
@@ -1219,13 +1245,13 @@ if ($pdo instanceof PDO) {
                         <div
                             class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
                             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Budget</p>
-                            <p class="text-2xl font-serif text-primary"><?php echo $budgetFormatted; ?></p>
+                            <p class="text-2xl font-serif text-primary"><?php echo htmlspecialchars((string)$budgetFormatted); ?></p>
                         </div>
                         <div
                             class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
                             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Status</p>
                             <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 <?php echo $statusClass; ?> rounded text-xs font-bold uppercase">
+                                <span class="px-2 py-0.5 <?php echo htmlspecialchars($statusClass); ?> rounded text-xs font-bold uppercase">
                                     <?php echo htmlspecialchars($project['status']); ?>
                                 </span>
                             </div>
@@ -1381,7 +1407,7 @@ if ($pdo instanceof PDO) {
                                     } else {
                                         $initials = strtoupper(substr($project['owner']['name'], 0, 2));
                                     }
-                                    echo $initials;
+                                    echo htmlspecialchars($initials);
                                     ?>
                                 </div>
                                 <div>
@@ -1439,7 +1465,7 @@ if ($pdo instanceof PDO) {
                                     <div class="flex gap-3 cursor-pointer p-2 rounded hover:bg-slate-50" role="button" tabindex="0"
                                         data-milestone='<?php echo htmlspecialchars(json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES); ?>'
                                         onclick='openMilestoneModal(<?php echo json_encode($milestone, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
-                                        <div class="mt-1 w-2 h-2 rounded-full <?php echo $dotColor; ?> shrink-0"></div>
+                                        <div class="mt-1 w-2 h-2 rounded-full <?php echo htmlspecialchars($dotColor); ?> shrink-0"></div>
                                         <div>
                                             <p class="text-sm font-medium"><?php echo htmlspecialchars($milestone['title']); ?></p>
                                             <p class="text-xs text-slate-500"><?php echo formatDate($milestone['target_date']); ?></p>
@@ -1492,7 +1518,7 @@ if ($pdo instanceof PDO) {
                             <div class="flex items-start gap-3 mb-3">
                                 <div
                                     class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold shrink-0">
-                                    <?php echo $initials; ?>
+                                    <?php echo htmlspecialchars($initials); ?>
                                 </div>
                                 <div class="flex-grow min-w-0">
                                     <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($member['worker_name']); ?></p>
@@ -1504,7 +1530,7 @@ if ($pdo instanceof PDO) {
                                 <span><?php echo htmlspecialchars($member['worker_contact']); ?></span>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="viewMemberProfile(<?php echo (int)($member['id'] ?? 0); ?>, '<?php echo addslashes($member['worker_name']); ?>', '<?php echo addslashes($member['worker_role']); ?>')"
+                                <button onclick="viewMemberProfile(<?php echo (int)($member['id'] ?? 0); ?>, <?php echo json_encode((string)($member['worker_name'] ?? ''), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>, <?php echo json_encode((string)($member['worker_role'] ?? ''), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>)"
                                     class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                     View Profile
                                 </button>
@@ -1568,8 +1594,8 @@ if ($pdo instanceof PDO) {
                     ?>
                         <div id="file-card-<?php echo (int)$file['id']; ?>"
                             class="project-file-card flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-shadow">
-                            <div class="<?php echo $fileDisplay['color']; ?> w-12 h-12 flex items-center justify-center shrink-0">
-                                <span class="material-icons text-3xl"><?php echo $fileDisplay['icon']; ?></span>
+                            <div class="<?php echo htmlspecialchars((string)$fileDisplay['color']); ?> w-12 h-12 flex items-center justify-center shrink-0">
+                                <span class="material-icons text-3xl"><?php echo htmlspecialchars((string)$fileDisplay['icon']); ?></span>
                             </div>
                             <div class="flex-grow min-w-0">
                                 <p class="font-medium text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($file['name']); ?></p>
@@ -1593,7 +1619,7 @@ if ($pdo instanceof PDO) {
                                         Download
                                     </a>
                                 <?php endif; ?>
-                                <button onclick="deleteFile(<?php echo $file['id']; ?>)"
+                                <button onclick="deleteFile(<?php echo (int)$file['id']; ?>)"
                                     class="w-full sm:w-auto px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
                                     <span class="material-icons text-sm">delete</span>
                                 </button>
@@ -1652,8 +1678,8 @@ if ($pdo instanceof PDO) {
                     ?>
                         <div
                             class="flex gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-                            <div class="<?php echo $activityDisplay['color']; ?> shrink-0">
-                                <span class="material-icons"><?php echo $activityDisplay['icon']; ?></span>
+                            <div class="<?php echo htmlspecialchars((string)$activityDisplay['color']); ?> shrink-0">
+                                <span class="material-icons"><?php echo htmlspecialchars((string)$activityDisplay['icon']); ?></span>
                             </div>
                             <div class="flex-grow">
                                 <p class="text-slate-800 dark:text-slate-100">
@@ -1716,7 +1742,7 @@ if ($pdo instanceof PDO) {
                                 <div class="p-4">
                                     <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-1"><?php echo htmlspecialchars($drawing['name']); ?></h3>
                                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-2"><?php echo htmlspecialchars($drawing['version']); ?> • <?php echo formatDate($drawing['uploaded_at']); ?><?php if (!empty($drawing['uploaded_by'])): ?> • Uploaded by <?php echo htmlspecialchars($drawing['uploaded_by']); ?><?php endif; ?></p>
-                                    <span class="inline-block px-2 py-0.5 <?php echo $statusClass; ?> rounded text-xs font-medium mb-3">
+                                    <span class="inline-block px-2 py-0.5 <?php echo htmlspecialchars($statusClass); ?> rounded text-xs font-medium mb-3">
                                         <?php echo htmlspecialchars($drawing['status']); ?>
                                     </span>
                                     <div class="flex gap-2">
@@ -1731,7 +1757,7 @@ if ($pdo instanceof PDO) {
                                                 View
                                             </button>
                                         <?php endif; ?>
-                                        <button onclick="deleteDrawing(<?php echo $drawing['id']; ?>)"
+                                        <button onclick="deleteDrawing(<?php echo (int)$drawing['id']; ?>)"
                                             class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
                                             <span class="material-icons text-sm">delete</span>
                                         </button>
@@ -1779,7 +1805,7 @@ if ($pdo instanceof PDO) {
                                     <p class="text-sm text-slate-500 truncate"><?php echo htmlspecialchars($oc['contact'] ?? ''); ?> • <?php echo htmlspecialchars($oc['role'] ?? ''); ?></p>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <button type="button" onclick="selectOwner(<?php echo $ocId; ?>, '<?php echo addslashes($ocName); ?>')" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
+                                    <button type="button" onclick="selectOwner(<?php echo (int)$ocId; ?>, <?php echo json_encode((string)$ocName, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>)" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
                                 </div>
                             </div>
                         <?php endforeach; ?>

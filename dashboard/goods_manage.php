@@ -80,7 +80,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
         <div class="col-md-2" style="margin-top:8px"><input name="unit_price" type="number" step="0.01" min="0" value="0" class="form-control"></div>
         <div class="col-md-12" style="margin-top:8px">
           <button class="btn btn-primary">Add Item</button>
-          <a class="btn outline" href="goods_invoice.php?project_id=<?php echo $project_id; ?>">View Invoice</a>
+          <a class="btn outline" href="goods_invoice.php?project_id=<?php echo (int)$project_id; ?>">View Invoice</a>
           <a class="btn" href="dashboard.php">Back</a>
         </div>
       </form>

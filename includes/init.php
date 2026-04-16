@@ -27,6 +27,10 @@ if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/config.php';
 }
 
+if (file_exists(__DIR__ . '/logger.php')) {
+    require_once __DIR__ . '/logger.php';
+}
+
 if (!function_exists('apply_security_headers')) {
     /**
      * Apply low-risk HTTP security headers globally.
@@ -40,6 +44,10 @@ if (!function_exists('apply_security_headers')) {
         header('X-Frame-Options: SAMEORIGIN');
         header('Referrer-Policy: strict-origin-when-cross-origin');
         header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+
+        if (defined('SECURITY_ENABLE_CSP') && SECURITY_ENABLE_CSP && defined('SECURITY_CSP_POLICY') && SECURITY_CSP_POLICY !== '') {
+            header('Content-Security-Policy: ' . SECURITY_CSP_POLICY);
+        }
 
         if (function_exists('app_is_https') && app_is_https() && defined('SECURITY_ENABLE_HSTS') && SECURITY_ENABLE_HSTS) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains');

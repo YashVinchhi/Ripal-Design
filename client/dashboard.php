@@ -131,8 +131,8 @@ if (function_exists('db_connected') && db_connected()) {
         }
         $fsql .= " FROM projects WHERE (" . implode(' OR ', $fallbackWhere) . ") ORDER BY id DESC";
         $projects = db_fetch_all($fsql, $fallbackParams) ?: [];
-        if (!empty($projects)) {
-          error_log('Client dashboard: fallback match succeeded for user id ' . $uid);
+        if (!empty($projects) && function_exists('app_log')) {
+          app_log('debug', 'Client dashboard fallback match succeeded', ['user_id' => (int)$uid]);
         }
       }
     }
@@ -166,8 +166,8 @@ if (function_exists('db_connected') && db_connected()) {
         }
         $fsql .= " FROM projects WHERE (" . implode(' OR ', $fallbackWhere) . ") ORDER BY id DESC";
         $projects = db_fetch_all($fsql, $fallbackParams) ?: [];
-        if (!empty($projects)) {
-          error_log('Client dashboard: fallback match succeeded for user id ' . $uid);
+        if (!empty($projects) && function_exists('app_log')) {
+          app_log('debug', 'Client dashboard fallback match succeeded', ['user_id' => (int)$uid]);
         }
         // If still empty after fallback, log diagnostics for debugging on localhost
         if (empty($projects)) {
@@ -180,8 +180,8 @@ if (function_exists('db_connected') && db_connected()) {
             'fallback_sql' => $fsql ?? null,
             'fallback_params' => $fallbackParams,
           ];
-          if (in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false)) {
-            error_log('Client dashboard diagnostics: ' . json_encode($dbg));
+          if ((in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false)) && function_exists('app_log')) {
+            app_log('debug', 'Client dashboard diagnostics', $dbg);
           }
           // Show on-page diagnostic when explicitly requested via ?diag=1 from localhost
           if (!empty($_GET['diag']) && (in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false))) {

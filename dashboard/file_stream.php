@@ -26,7 +26,17 @@ if (!function_exists('file_stream_resolve_mime')) {
         if (isset($map[$ext])) {
             return $map[$ext];
         }
-        $detected = function_exists('mime_content_type') ? (string)mime_content_type($absolutePath) : '';
+        $detected = '';
+        if (function_exists('finfo_open') && function_exists('finfo_file')) {
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo !== false) {
+                $detected = (string)@finfo_file($finfo, $absolutePath);
+                @finfo_close($finfo);
+            }
+        }
+        if ($detected === '' && function_exists('mime_content_type')) {
+            $detected = (string)mime_content_type($absolutePath);
+        }
         return $detected !== '' ? $detected : 'application/octet-stream';
     }
 }
@@ -49,12 +59,12 @@ if (!($db instanceof PDO)) {
 
 try {
     if ($kind === 'drawing') {
-        $stmt = $db->prepare('SELECT name, file_path FROM project_drawings WHERE id = ? LIMIT 1');
+        $stmt = $db->prepare('SELECT project_id, name, file_path FROM project_drawings WHERE id = ? LIMIT 1');
     } else {
         if (function_exists('db_column_exists') && db_column_exists('project_files', 'storage_path')) {
-            $stmt = $db->prepare('SELECT name, COALESCE(NULLIF(storage_path,\'\'), file_path) AS file_path FROM project_files WHERE id = ? LIMIT 1');
+            $stmt = $db->prepare('SELECT project_id, name, COALESCE(NULLIF(storage_path,\'\'), file_path) AS file_path FROM project_files WHERE id = ? LIMIT 1');
         } else {
-            $stmt = $db->prepare('SELECT name, file_path FROM project_files WHERE id = ? LIMIT 1');
+            $stmt = $db->prepare('SELECT project_id, name, file_path FROM project_files WHERE id = ? LIMIT 1');
         }
     }
     $stmt->execute([$id]);
@@ -71,6 +81,13 @@ if (!$row) {
     exit;
 }
 
+$projectId = (int)($row['project_id'] ?? 0);
+if ($projectId <= 0 || !function_exists('auth_user_can_access_project') || !auth_user_can_access_project($projectId, current_user_id(), (string)(current_user()['role'] ?? ''))) {
+    http_response_code(403);
+    echo 'Access denied.';
+    exit;
+}
+
 $storedPath = trim((string)($row['file_path'] ?? ''));
 if ($storedPath === '') {
     http_response_code(404);
@@ -79,20 +96,19 @@ if ($storedPath === '') {
 }
 
 $normalized = str_replace('\\', '/', $storedPath);
-$uploadsPos = strpos($normalized, '/uploads/');
-if ($uploadsPos === false && strpos($normalized, 'uploads/') === 0) {
-    $uploadsPos = 0;
+$relative = ltrim($normalized, '/');
+if (strpos($relative, 'uploads/') === 0) {
+    $relative = substr($relative, strlen('uploads/'));
 }
 
-if ($uploadsPos === false) {
-    http_response_code(404);
-    echo 'Unsupported stored path.';
-    exit;
+$absolute = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+if (!is_file($absolute) || !is_readable($absolute)) {
+    $legacyRelative = ltrim($normalized, '/');
+    $legacyAbsolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $legacyRelative);
+    if (is_file($legacyAbsolute) && is_readable($legacyAbsolute)) {
+        $absolute = $legacyAbsolute;
+    }
 }
-
-$relative = $uploadsPos === 0 ? $normalized : substr($normalized, $uploadsPos + 1);
-$relative = ltrim($relative, '/');
-$absolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
 
 if (!is_file($absolute) || !is_readable($absolute)) {
     http_response_code(404);

@@ -6,6 +6,10 @@
 logs/*.log
 logs/*.tmp
 *.log
+*.pdf
+tmp_home*.html
+.phpstan/
+.phpunit.cache/
 
 # User-generated uploads
 uploads/avatars/*
@@ -35,10 +39,10 @@ dashboard/PROJECT_DETAILS_README.md
 Common/MAP_EMBED_README.md
 temp/project_assign.html
 DATABASE_SCHEMA_EXPLANATION.md
-.gitignore
 DATABASE.erd
 Database.md
 sql/database.sql
+storage/private_uploads/
 
 issues.md
 

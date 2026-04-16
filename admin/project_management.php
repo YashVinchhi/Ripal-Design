@@ -20,11 +20,28 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
         return false;
     }
 
+    if (!is_uploaded_file($tmpPath)) {
+        return false;
+    }
+
+    $detectedMime = '';
+    if (function_exists('finfo_open') && function_exists('finfo_file')) {
+        $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo !== false) {
+            $detectedMime = (string)@finfo_file($finfo, $tmpPath);
+            @finfo_close($finfo);
+        }
+    }
+    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    if ($detectedMime !== '' && !in_array(strtolower($detectedMime), $allowedMimes, true)) {
+        return false;
+    }
+
     $safeBaseName = preg_replace('/[^A-Za-z0-9._-]+/', '_', pathinfo($originalName, PATHINFO_FILENAME));
     $safeBaseName = $safeBaseName !== '' ? $safeBaseName : 'photo';
 
-    $relativeDir = 'uploads/projects/' . $projectId . '/files';
-    $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+    $relativeDir = 'project/' . $projectId . '/files';
+    $absoluteDir = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
 
     if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
         return false;
@@ -38,7 +55,7 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
         return false;
     }
 
-    $publicPath = rtrim((string)BASE_PATH, '/') . '/' . $relativeDir . '/' . $storedName;
+    $storagePath = 'uploads/' . $relativeDir . '/' . $storedName;
     $sizeBytes = (int)($uploadedFile['size'] ?? 0);
     if ($sizeBytes < 1024) {
         $sizeLabel = $sizeBytes . ' B';
@@ -54,8 +71,8 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
             $originalName,
             strtoupper($ext),
             $sizeLabel,
-            $publicPath,
-            $publicPath,
+            $storagePath,
+            $storagePath,
             $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System'),
         ]);
     } else {
@@ -64,7 +81,7 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
             $originalName,
             strtoupper($ext),
             $sizeLabel,
-            $publicPath,
+            $storagePath,
             $_SESSION['user']['username'] ?? ($_SESSION['user']['name'] ?? 'System'),
         ]);
     }

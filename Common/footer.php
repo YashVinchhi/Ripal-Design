@@ -66,7 +66,7 @@ $currentYear = date('Y');
                 <p class="text-gray-400 mb-8 max-w-lg">
                     <?php echo esc($footerText('cta_description', "Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.")); ?>
                 </p>
-                     <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php" 
+                     <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" 
                          class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
                    role="button">
                     <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
@@ -123,15 +123,17 @@ echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstra
 // Include main application script if it exists
 if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {
     $scriptCandidates = [
-        '/scripts.js',
         '/public/scripts.js',
+        '/scripts.js',
         '/assets/js/scripts.js'
     ];
 
     foreach ($scriptCandidates as $script) {
         $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $script);
         if (file_exists($filePath)) {
-            echo '<script defer src="' . esc_attr(BASE_PATH . $script) . '"></script>' . "\n";
+            $publicRemoved = preg_replace('~^/public~i', '', $script);
+            $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
+            echo '<script defer src="' . esc_attr($href) . '"></script>' . "\n";
             break;
         }
     }

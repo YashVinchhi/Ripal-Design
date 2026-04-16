@@ -46,7 +46,9 @@ if (isset($_POST['submit'])) {
         $_SESSION['contact_form_success'] = true;
         unset($_SESSION['contact_form_old']);
     } catch (Throwable $e) {
-        error_log('Contact form submission failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Contact form submission failed', ['exception' => $e->getMessage(), 'email' => $email]);
+        }
         $_SESSION['contact_form_error'] = $ct('error_message', 'Failed to send message. Please try again.');
     }
 

@@ -102,7 +102,9 @@ if ($isEdit && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             $form['role'] = (string)($user['role'] ?? 'client');
         }
     } catch (PDOException $e) {
-        error_log('Load user for edit failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Load user for edit failed', ['exception' => $e->getMessage()]);
+        }
         set_flash('Unable to load user for editing right now.', 'error');
         header('Location: user_management.php');
         exit;
@@ -173,7 +175,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 if (!auth_sync_user_role_links($editId, $role, $actorId > 0 ? $actorId : null)) {
                                     // Keep core user update successful; RBAC sync issues are logged for follow-up.
-                                    error_log('Role sync warning for updated user id ' . (string)$editId);
+                                    if (function_exists('app_log')) {
+                                        app_log('warning', 'Role sync warning for updated user', ['user_id' => (int)$editId]);
+                                    }
                                 }
 
                                 $db->commit();
@@ -210,7 +214,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if ($newUserId > 0) {
                                 if (!auth_sync_user_role_links($newUserId, $role, $actorId > 0 ? $actorId : null)) {
                                     // Keep user creation successful; RBAC sync issues are logged for follow-up.
-                                    error_log('Role sync warning for new user id ' . (string)$newUserId);
+                                    if (function_exists('app_log')) {
+                                        app_log('warning', 'Role sync warning for new user', ['user_id' => (int)$newUserId]);
+                                    }
                                 }
                             }
 
@@ -234,7 +240,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } catch (Throwable $e) {
-            error_log('Add user failed: ' . $e->getMessage());
+            if (function_exists('app_log')) {
+                app_log('error', 'Add user failed', ['exception' => $e->getMessage()]);
+            }
             $error = $isEdit
                 ? 'Unable to update user right now. Please try again.'
                 : 'Unable to create user right now. Please try again.';

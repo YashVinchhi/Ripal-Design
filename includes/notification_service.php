@@ -95,7 +95,9 @@ if (!function_exists('notifications_insert')) {
             $stmt = $db->prepare($sql);
             return $stmt->execute($values);
         } catch (Exception $e) {
-            error_log('notifications_insert failed: ' . $e->getMessage());
+            if (function_exists('app_log')) {
+                app_log('warning', 'notifications_insert failed', ['exception' => $e->getMessage(), 'user_id' => (int)$userId]);
+            }
             return false;
         }
     }

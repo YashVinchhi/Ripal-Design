@@ -30,7 +30,8 @@ echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/boots
 foreach ($candidates as $c) {
     $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $c);
     if (file_exists($filePath)) {
-        echo '<link rel="stylesheet" href="' . htmlspecialchars(BASE_PATH . $c, ENT_QUOTES) . '">' . "\n";
+        $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $c;
+        echo '<link rel="stylesheet" href="' . htmlspecialchars($href, ENT_QUOTES) . '">' . "\n";
         break; // Only include the first match
     }
 }
@@ -46,7 +47,7 @@ foreach ($candidates as $c) {
 <nav class="alt-header">
     <div class="alt-logo">
         <?php
-            $logoHref = rtrim((string)BASE_PATH, '/') . '/public/index.php';
+            $logoHref = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php';
             if (function_exists('current_user')) {
                 $cu = current_user();
                 $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
@@ -162,7 +163,7 @@ foreach ($candidates as $c) {
         </nav>
 
         <div class="panel-footer">
-            <a href="<?php echo BASE_PATH; ?>/public/logout.php" class="btn-alt btn-login w-full text-center">Logout</a>
+            <a href="<?php echo rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/logout.php'; ?>" class="btn-alt btn-login w-full text-center">Logout</a>
         </div>
     </div>
 </div>

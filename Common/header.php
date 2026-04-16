@@ -46,7 +46,7 @@ $dashboardProfileUrl = function_exists('base_path')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
 
 // Compute logo target: send logged-in users to their dashboard landing
-$logoHref = rtrim((string)BASE_PATH, '/') . '/public/index.php';
+$logoHref = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php';
 if (function_exists('current_user')) {
     $cu = current_user();
     $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
@@ -117,11 +117,15 @@ echo '<script>
   }
 </script>' . "\n";
 
-// Include main stylesheet
+// Include main stylesheet. Use PUBLIC_PATH_PREFIX when rendering href so we
+// don't accidentally emit "/public/..." URLs when Apache serves the
+// /public directory as the document root.
 foreach ($stylesheetCandidates as $candidate) {
     $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
     if (file_exists($filePath)) {
-        echo '<link rel="stylesheet" href="' . esc_attr(BASE_PATH . $candidate) . '">' . "\n";
+        $publicRemoved = preg_replace('~^/public~i', '', $candidate);
+        $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
+        echo '<link rel="stylesheet" href="' . esc_attr($href) . '">' . "\n";
         break;
     }
 }
@@ -233,11 +237,11 @@ foreach ($stylesheetCandidates as $candidate) {
                     <a href="<?php echo esc_attr((string)($link['href'] ?? '')); ?>"><?php echo esc((string)($link['label'] ?? '')); ?></a>
                 <?php endforeach; ?>
             <?php else: ?>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/index.php"><?php echo esc($headerText('menu_home', 'Home')); ?></a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/services.php"><?php echo esc($headerText('menu_services', 'Services')); ?></a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/project_view.php"><?php echo esc($headerText('menu_projects', 'Projects')); ?></a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/about_us.php"><?php echo esc($headerText('menu_about', 'About')); ?></a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/contact_us.php"><?php echo esc($headerText('menu_contact', 'Contact')); ?></a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>"><?php echo esc($headerText('menu_home', 'Home')); ?></a>
+                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>"><?php echo esc($headerText('menu_services', 'Services')); ?></a>
+                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><?php echo esc($headerText('menu_projects', 'Projects')); ?></a>
+                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>"><?php echo esc($headerText('menu_about', 'About')); ?></a>
+                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><?php echo esc($headerText('menu_contact', 'Contact')); ?></a>
             <?php endif; ?>
         </nav>
   
@@ -262,7 +266,7 @@ foreach ($stylesheetCandidates as $candidate) {
                         border-radius: 0 !important;
                     }
                 </style>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/public/logout.php" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo esc($headerText('btn_logout', 'Logout')); ?></a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/logout.php'); ?>" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo esc($headerText('btn_logout', 'Logout')); ?></a>
             <?php else: ?>
                 <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login"><?php echo esc($headerText('btn_login', 'Login')); ?></a>
                 <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/signup.php" class="btn-alt btn-signup"><?php echo esc($headerText('btn_signup', 'Sign Up')); ?></a>

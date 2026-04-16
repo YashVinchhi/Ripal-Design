@@ -46,7 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $submitted = true;
             } catch (Exception $e) {
-                error_log('Invoice edit request failed: ' . $e->getMessage());
+                if (function_exists('app_log')) {
+                    app_log('warning', 'Invoice edit request failed', ['exception' => $e->getMessage(), 'project_id' => (int)$project_id]);
+                }
             }
         }
 

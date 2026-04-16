@@ -31,15 +31,45 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
 
       - name: Install Composer dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+        run: composer install --prefer-dist --no-interaction --optimize-autoloader
+
+      - name: Run PHPStan
+        run: |
+          if [ -f phpstan.neon ] || [ -f phpstan.neon.dist ]; then
+            vendor/bin/phpstan analyse --no-progress
+          else
+            echo "No PHPStan config found, skipping."
+          fi
+
+      - name: Run PHPUnit
+        run: |
+          if [ -f phpunit.xml ]; then
+            vendor/bin/phpunit --configuration phpunit.xml
+          elif [ -f phpunit.xml.dist ]; then
+            vendor/bin/phpunit --configuration phpunit.xml.dist
+          else
+            echo "No PHPUnit config found, skipping."
+          fi
+
+      - name: Run PHP-CS-Fixer (PSR-12)
+        run: |
+          if [ -f .php-cs-fixer.php ] || [ -f .php-cs-fixer.dist.php ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+          else
+            echo "No PHP-CS-Fixer config found, skipping."
+          fi
 
       - name: Run PHP syntax check
         run: |
           find . -name '*.php' -not -path './vendor/*' -not -path './docs/*' -not -path './tools/*' -print0 | xargs -0 -n1 php -l
 
       - name: Compute lowercase repo name
+        id: repo_meta
         run: |
-          echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          echo "repo_lower=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Install production Composer dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
       - name: Login to GHCR
         uses: docker/login-action@v2
@@ -56,5 +86,5 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/${{ env.REPO_LOWER }}:latest
-            ghcr.io/${{ env.REPO_LOWER }}:${{ github.sha }}
+            ghcr.io/${{ steps.repo_meta.outputs.repo_lower }}:latest
+            ghcr.io/${{ steps.repo_meta.outputs.repo_lower }}:${{ github.sha }}

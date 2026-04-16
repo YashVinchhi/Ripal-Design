@@ -11,6 +11,10 @@
  * @subpackage Database
  */
 
+if (file_exists(__DIR__ . '/logger.php')) {
+    require_once __DIR__ . '/logger.php';
+}
+
 // Load database credentials from environment or sql/config.php, with sensible defaults
 $envHost = getenv('DB_HOST');
 $DB_HOST = $envHost ?: 'localhost';
@@ -63,7 +67,7 @@ try {
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
 } catch (PDOException $e) {
     // Log the error securely (don't expose credentials in logs)
-    error_log('Database connection failed: ' . $e->getMessage());
+    app_log('error', 'Database connection failed', ['exception' => $e->getMessage()]);
 
     // In development, you might want to see the error
     if (getenv('APP_ENV') === 'development') {

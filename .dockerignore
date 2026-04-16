@@ -1,4 +1,14 @@
 vendor/
+.git
+node_modules/
+logs/
+.env
+/.vscode
+/.github
+docker-compose.override.yml
+.DS_Store
+*.md
+vendor/
 node_modules/
 .git/
 .github/

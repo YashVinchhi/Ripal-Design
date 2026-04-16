@@ -215,17 +215,23 @@ HTML;
                 try {
                     $mail->send();
                 } catch (Exception $em) {
-                    error_log('Welcome email failed: ' . $mail->ErrorInfo . ' / ' . $em->getMessage());
+                    if (function_exists('app_log')) {
+                        app_log('warning', 'Welcome email failed', ['mailer_error' => $mail->ErrorInfo, 'exception' => $em->getMessage()]);
+                    }
                 }
             }
         } catch (\Throwable $e) {
-            error_log('Welcome email skipped/failed: ' . $e->getMessage());
+            if (function_exists('app_log')) {
+                app_log('warning', 'Welcome email skipped/failed', ['exception' => $e->getMessage()]);
+            }
         }
 
         header('Location: ' . post_login_redirect_url($_SESSION['user']));
         exit();
     } catch (Exception $e) {
-        error_log('Signup failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('error', 'Signup failed', ['exception' => $e->getMessage()]);
+        }
         signup_error_and_redirect($ct('signup_failed', 'Failed to create account. Please try again.'));
     }
 }
@@ -273,7 +279,9 @@ if (isset($_POST['login'])) {
             }
         }
     } catch (Exception $e) {
-        error_log('Login failed (PDO): ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Login failed (PDO)', ['exception' => $e->getMessage()]);
+        }
     }
 
     // Legacy fallback: check signup table via mysqli
@@ -313,7 +321,9 @@ if (isset($_POST['login'])) {
             }
         }
     } catch (Exception $e) {
-        error_log('Legacy login failed: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Legacy login failed', ['exception' => $e->getMessage()]);
+        }
     }
 
     login_error_and_redirect($ct('login_invalid_credentials', 'Invalid email or password.'));

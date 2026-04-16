@@ -22,6 +22,33 @@ function readable_size(int $bytes): string
     return round($bytes / (1024 * 1024), 1) . ' MB';
 }
 
+function api_stream_url(string $kind, int $id): string
+{
+    $base = rtrim((string)BASE_PATH, '/');
+    return $base . '/dashboard/file_stream.php?kind=' . rawurlencode($kind) . '&id=' . $id;
+}
+
+function api_detect_mime(string $tmpPath): string
+{
+    if ($tmpPath === '') {
+        return '';
+    }
+
+    if (function_exists('finfo_open') && function_exists('finfo_file')) {
+        $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo !== false) {
+            $mime = (string)@finfo_file($finfo, $tmpPath);
+            @finfo_close($finfo);
+            if ($mime !== '') {
+                return strtolower($mime);
+            }
+        }
+    }
+
+    $fallback = function_exists('mime_content_type') ? (string)@mime_content_type($tmpPath) : '';
+    return strtolower($fallback);
+}
+
 function ensure_project_files_revision_columns(PDO $db): array
 {
     $hasRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
@@ -347,6 +374,37 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
         }
     }
 
+    $maxUploadBytes = 25 * 1024 * 1024;
+    $sizeBytes = (int)($uploaded['size'] ?? 0);
+    if ($sizeBytes <= 0 || $sizeBytes > $maxUploadBytes) {
+        api_json(['success' => false, 'message' => 'File must be between 1 byte and 25 MB.'], 400);
+    }
+
+    $detectedMime = api_detect_mime($tmpPath);
+    $allowedMimeByExt = [
+        'pdf' => ['application/pdf'],
+        'jpg' => ['image/jpeg'],
+        'jpeg' => ['image/jpeg'],
+        'png' => ['image/png'],
+        'webp' => ['image/webp'],
+        'gif' => ['image/gif'],
+        'txt' => ['text/plain', 'application/octet-stream'],
+        'csv' => ['text/csv', 'text/plain', 'application/vnd.ms-excel'],
+        'zip' => ['application/zip', 'application/x-zip-compressed'],
+        'rar' => ['application/vnd.rar', 'application/x-rar-compressed', 'application/octet-stream'],
+        'doc' => ['application/msword'],
+        'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        'xls' => ['application/vnd.ms-excel'],
+        'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        'ppt' => ['application/vnd.ms-powerpoint'],
+        'pptx' => ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+        'dwg' => ['application/acad', 'application/x-acad', 'application/autocad', 'image/vnd.dwg', 'application/octet-stream'],
+        'dxf' => ['image/vnd.dxf', 'application/dxf', 'application/octet-stream', 'text/plain'],
+    ];
+    if ($ext !== '' && isset($allowedMimeByExt[$ext]) && $detectedMime !== '' && !in_array($detectedMime, $allowedMimeByExt[$ext], true)) {
+        api_json(['success' => false, 'message' => 'Uploaded file content does not match its extension.'], 400);
+    }
+
     $baseFileId = (int)($_POST['base_file_id'] ?? $body['base_file_id'] ?? 0);
     if ($action === 'upload_file_revision') {
         $allowedRevisionTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
@@ -359,9 +417,8 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
     }
 
     $folderType = $action === 'upload_drawing' ? 'drawings' : 'files';
-    // Use singular 'project' folder name per project storage convention
-    $relativeDir = 'uploads/project/' . $projectId . '/' . $folderType;
-    $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+    $relativeDir = 'project/' . $projectId . '/' . $folderType;
+    $absoluteDir = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
 
     if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
         api_json(['success' => false, 'message' => 'Unable to create upload directory.'], 500);
@@ -377,8 +434,8 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
         api_json(['success' => false, 'message' => 'Unable to save uploaded file.'], 500);
     }
 
-    $publicPath = rtrim((string)BASE_PATH, '/') . '/' . $relativeDir . '/' . $storedName;
-    $sizeLabel = readable_size((int)($uploaded['size'] ?? 0));
+    $storageKey = 'uploads/' . $relativeDir . '/' . $storedName;
+    $sizeLabel = readable_size($sizeBytes);
     $hasProjectFilesStoragePath = function_exists('db_column_exists') ? db_column_exists('project_files', 'storage_path') : false;
 
     try {
@@ -399,10 +456,10 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
 
             if ($hasUploadedBy) {
                 $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $originalName, 'v1.0', 'Under Review', $publicPath, $uploaderLabel]);
+                $stmt->execute([$projectId, $originalName, 'v1.0', 'Under Review', $storageKey, $uploaderLabel]);
             } else {
                 $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $originalName, 'v1.0', 'Under Review', $publicPath]);
+                $stmt->execute([$projectId, $originalName, 'v1.0', 'Under Review', $storageKey]);
             }
             $newId = (int)$db->lastInsertId();
 
@@ -486,19 +543,19 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
             $typeLabel = $ext !== '' ? strtoupper($ext) : 'FILE';
             if ($hasProjectFilesStoragePath && $hasRevisionGroup && $hasRevisionNo) {
                 $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, revision_group, revision_no, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser, $revisionGroup !== '' ? $revisionGroup : null, $revisionNo]);
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $storageKey, $storageKey, $currentUser, $revisionGroup !== '' ? $revisionGroup : null, $revisionNo]);
             } elseif ($hasProjectFilesStoragePath && $hasRevisionGroup) {
                 $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, revision_group, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser, $revisionGroup !== '' ? $revisionGroup : null]);
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $storageKey, $storageKey, $currentUser, $revisionGroup !== '' ? $revisionGroup : null]);
             } elseif ($hasProjectFilesStoragePath && $hasRevisionNo) {
                 $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, revision_no, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser, $revisionNo]);
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $storageKey, $storageKey, $currentUser, $revisionNo]);
             } elseif ($hasProjectFilesStoragePath) {
                 $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, storage_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $publicPath, $currentUser]);
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $storageKey, $storageKey, $currentUser]);
             } else {
                 $stmt = $db->prepare('INSERT INTO project_files (project_id, name, type, size, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
-                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $publicPath, $currentUser]);
+                $stmt->execute([$projectId, $displayName, $typeLabel, $sizeLabel, $storageKey, $currentUser]);
             }
             $newId = (int)$db->lastInsertId();
 
@@ -556,7 +613,7 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
             'name' => isset($displayName) ? $displayName : $originalName,
             'type' => $typeLabel,
             'size_label' => $sizeLabel,
-            'file_path' => $publicPath,
+            'file_path' => api_stream_url($action === 'upload_drawing' ? 'drawing' : 'file', (int)$newId),
             'view_url' => $viewUrl,
             'revision_no' => isset($revisionNo) ? (int)$revisionNo : 1,
             'progress' => $newProgress

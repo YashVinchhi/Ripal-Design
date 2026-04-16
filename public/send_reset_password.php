@@ -79,7 +79,9 @@ if ($needsAdd) {
 		if ($db->inTransaction()) {
 			$db->rollBack();
 		}
-		error_log('Failed to add reset columns: ' . $e->getMessage() . "\n", 3, __DIR__ . '/mail_errors.log');
+		if (function_exists('app_log')) {
+			app_log('error', 'Failed to add reset columns', ['exception' => $e->getMessage()]);
+		}
 		redirect_with_message($ct('db_migration_error', 'Password reset is temporarily unavailable. Please contact support.'));
 	}
 }
@@ -247,7 +249,9 @@ HTML;
 		$mail->send();
 		redirect_with_flash_cookie($ct('flash_sent_success', 'Reset link sent. Please check your email.'), 'success');
 	} catch (\Throwable $e) {
-		error_log("PHPMailer error: {$mail->ErrorInfo} - {$e->getMessage()}\n", 3, __DIR__ . '/mail_errors.log');
+		if (function_exists('app_log')) {
+			app_log('error', 'PHPMailer reset email send failed', ['mailer_error' => $mail->ErrorInfo, 'exception' => $e->getMessage(), 'email' => $email]);
+		}
 		redirect_with_flash_cookie($ct('flash_sent_failed', 'Failed to send reset link.'), 'error');
 	}
 } else {

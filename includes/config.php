@@ -236,7 +236,8 @@ if (!defined('APP_STRICT_SECURITY')) {
 }
 
 if (!defined('SECURITY_REQUIRE_CSRF_FOR_API')) {
-    define('SECURITY_REQUIRE_CSRF_FOR_API', env_bool('SECURITY_REQUIRE_CSRF_FOR_API', APP_STRICT_SECURITY));
+    $csrfDefault = APP_STRICT_SECURITY || APP_ENV !== 'development';
+    define('SECURITY_REQUIRE_CSRF_FOR_API', env_bool('SECURITY_REQUIRE_CSRF_FOR_API', $csrfDefault));
 }
 
 if (!defined('SECURITY_ENFORCE_UPLOAD_ALLOWLIST')) {
@@ -250,6 +251,24 @@ if (!defined('SECURITY_ALLOWED_UPLOAD_EXTS')) {
 
 if (!defined('SECURITY_ENABLE_HSTS')) {
     define('SECURITY_ENABLE_HSTS', env_bool('SECURITY_ENABLE_HSTS', false));
+}
+
+if (!defined('SECURITY_ENABLE_CSP')) {
+    define('SECURITY_ENABLE_CSP', env_bool('SECURITY_ENABLE_CSP', true));
+}
+
+if (!defined('SECURITY_CSP_POLICY')) {
+    $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self'; form-action 'self'";
+    define('SECURITY_CSP_POLICY', (string)(getenv('SECURITY_CSP_POLICY') ?: $defaultCsp));
+}
+
+if (!defined('UPLOAD_STORAGE_ROOT')) {
+    $configuredUploadRoot = trim((string)(getenv('UPLOAD_STORAGE_ROOT') ?: ''));
+    if ($configuredUploadRoot !== '') {
+        define('UPLOAD_STORAGE_ROOT', $configuredUploadRoot);
+    } else {
+        define('UPLOAD_STORAGE_ROOT', rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'private_uploads');
+    }
 }
 
 // Enable error display in development mode only

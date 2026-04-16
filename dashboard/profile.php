@@ -86,7 +86,9 @@ if (db_connected()) {
             $user_data = array_merge($user_data, $db_user);
         }
     } catch (Exception $e) {
-        error_log('Profile Load Error: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Profile load error', ['exception' => $e->getMessage()]);
+        }
     }
 }
 
@@ -166,7 +168,9 @@ if (db_connected() && $user_id > 0) {
         $recentStmt->execute([':user_id' => (int)$user_id]);
         $recentRatings = $recentStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     } catch (Exception $e) {
-        error_log('Profile dynamic stats error: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Profile dynamic stats error', ['exception' => $e->getMessage()]);
+        }
     }
 }
 
@@ -213,7 +217,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_client_rating'
                 exit;
             }
         } catch (Exception $e) {
-            error_log('Client rating submit failed: ' . $e->getMessage());
+            if (function_exists('app_log')) {
+                app_log('warning', 'Client rating submit failed', ['exception' => $e->getMessage(), 'member_id' => (int)$member_id]);
+            }
             $message = 'Unable to save rating now. Please try again.';
             $message_type = 'danger';
         }
@@ -302,7 +308,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                                         $_SESSION['user']['avatar'] = $publicPath;
                                     }
                                 } catch (Exception $e) {
-                                    error_log('Failed to save avatar path: ' . $e->getMessage());
+                                    if (function_exists('app_log')) {
+                                        app_log('warning', 'Failed to save avatar path', ['exception' => $e->getMessage(), 'user_id' => (int)$user_id]);
+                                    }
                                 }
                             }
                         }
@@ -340,7 +348,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                     $message_type = $avatar_updated ? 'success' : 'danger';
                 }
             } catch (Exception $e) {
-                error_log('Profile update failed: ' . $e->getMessage());
+                if (function_exists('app_log')) {
+                    app_log('error', 'Profile update failed', ['exception' => $e->getMessage(), 'user_id' => (int)$user_id]);
+                }
                 $message = 'Unable to update profile right now. Please try again.';
                 $message_type = 'danger';
             }
@@ -372,7 +382,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 $message = 'Password changed successfully!';
                 $message_type = 'success';
             } catch (Exception $e) {
-                error_log('Password update failed: ' . $e->getMessage());
+                if (function_exists('app_log')) {
+                    app_log('error', 'Password update failed', ['exception' => $e->getMessage(), 'user_id' => (int)$user_id]);
+                }
                 $message = 'Unable to change password right now. Please try again.';
                 $message_type = 'danger';
             }
@@ -421,7 +433,7 @@ if ($avatar_initials === '') {
                 </div>
                 <div class="bg-rajkot-rust px-4 py-2 rounded-sm shadow-lg">
                     <span class="text-[10px] font-black uppercase tracking-widest text-white/80">Membership Identity</span>
-                    <p class="text-xs font-bold text-white"><?php echo strtoupper($user_data['role']); ?> (<?php echo date('Y', strtotime($user_data['joined_date'])); ?>)</p>
+                    <p class="text-xs font-bold text-white"><?php echo htmlspecialchars(strtoupper((string)$user_data['role'])); ?> (<?php echo date('Y', strtotime($user_data['joined_date'])); ?>)</p>
                 </div>
             </div>
         </header>
@@ -429,7 +441,8 @@ if ($avatar_initials === '') {
         <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
             
             <?php if ($message): ?>
-                <div class="alert alert-<?php echo $message_type; ?> shadow-premium mb-10 border-0 rounded-0 p-4 font-bold text-sm">
+                <?php $safeMessageType = in_array($message_type, ['success', 'danger', 'warning', 'info'], true) ? $message_type : 'info'; ?>
+                <div class="alert alert-<?php echo esc_attr($safeMessageType); ?> shadow-premium mb-10 border-0 rounded-0 p-4 font-bold text-sm">
                     <?php echo htmlspecialchars($message); ?>
                 </div>
             <?php endif; ?>

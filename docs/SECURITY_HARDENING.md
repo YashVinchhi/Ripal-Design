@@ -19,6 +19,8 @@ SECURITY_REQUIRE_CSRF_FOR_API=true
 SECURITY_ENFORCE_UPLOAD_ALLOWLIST=true
 SECURITY_ALLOWED_UPLOAD_EXTS=pdf,dwg,dxf,jpg,jpeg,png,webp,gif,txt,csv,doc,docx,xls,xlsx,ppt,pptx,zip,rar
 SECURITY_ENABLE_HSTS=true
+SECURITY_ENABLE_CSP=true
+UPLOAD_STORAGE_ROOT=/var/www/thefinal/storage/private_uploads
 ```
 
 Behavior:
@@ -28,6 +30,8 @@ Behavior:
 - `SECURITY_ENFORCE_UPLOAD_ALLOWLIST` constrains general uploads to allowlist.
 - `SECURITY_ALLOWED_UPLOAD_EXTS` controls allowed extensions.
 - `SECURITY_ENABLE_HSTS` sends HSTS header when HTTPS is detected.
+- `SECURITY_ENABLE_CSP` enables a conservative default Content-Security-Policy header.
+- `UPLOAD_STORAGE_ROOT` stores uploaded files outside webroot and serves them via authenticated streaming.
 
 ## 3) Safe Rollout Order
 

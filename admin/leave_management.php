@@ -181,7 +181,7 @@ if ($viewMode === 'archive') {
                 <p class="text-xs text-gray-500 max-w-xs truncate md:max-w-none md:whitespace-normal"><?php echo htmlspecialchars((string)($lr['reason'] ?? '')); ?></p>
               </td>
               <td class="px-6 py-4 block md:table-cell" data-label="Status">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase <?php echo $statusClass; ?>">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase <?php echo htmlspecialchars($statusClass); ?>">
                   <?php echo htmlspecialchars($status); ?>
                 </span>
               </td>

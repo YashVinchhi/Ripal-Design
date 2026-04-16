@@ -358,11 +358,11 @@ if (in_array($workerExt, ['glb', 'gltf'], true)) {
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-white p-4 shadow-premium border border-gray-100">
                     <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Area</span>
-                    <span class="block text-lg font-bold mt-1"><?php echo $project['area']; ?></span>
+                    <span class="block text-lg font-bold mt-1"><?php echo htmlspecialchars((string)$project['area']); ?></span>
                 </div>
                 <div class="bg-white p-4 shadow-premium border border-gray-100">
                     <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Budget</span>
-                    <span class="block text-lg font-bold mt-1 text-rajkot-rust"><?php echo $project['budget']; ?></span>
+                    <span class="block text-lg font-bold mt-1 text-rajkot-rust"><?php echo htmlspecialchars((string)$project['budget']); ?></span>
                 </div>
             </div>
 
@@ -379,7 +379,7 @@ if (in_array($workerExt, ['glb', 'gltf'], true)) {
                             <span class="text-xs text-gray-400 font-bold uppercase tracking-widest block mb-1">Owner</span>
                             <span class="font-bold"><?php echo htmlspecialchars($project['owner']['name']); ?></span>
                         </div>
-                        <a href="tel:<?php echo $project['owner']['contact']; ?>" class="w-10 h-10 bg-green-50 text-green-700 rounded-full flex items-center justify-center">
+                        <a href="tel:<?php echo htmlspecialchars((string)$project['owner']['contact']); ?>" class="w-10 h-10 bg-green-50 text-green-700 rounded-full flex items-center justify-center">
                             <i data-lucide="phone" class="w-5 h-5"></i>
                         </a>
                     </div>
@@ -390,7 +390,7 @@ if (in_array($workerExt, ['glb', 'gltf'], true)) {
                             <span class="text-xs text-gray-400 font-bold uppercase tracking-widest block mb-1"><?php echo htmlspecialchars($w['role']); ?></span>
                             <span class="font-bold"><?php echo htmlspecialchars($w['name']); ?></span>
                         </div>
-                        <a href="tel:<?php echo $w['contact']; ?>" class="w-10 h-10 bg-slate-accent/10 text-slate-accent rounded-full flex items-center justify-center">
+                        <a href="tel:<?php echo htmlspecialchars((string)$w['contact']); ?>" class="w-10 h-10 bg-slate-accent/10 text-slate-accent rounded-full flex items-center justify-center">
                             <i data-lucide="phone-call" class="w-5 h-5"></i>
                         </a>
                     </div>

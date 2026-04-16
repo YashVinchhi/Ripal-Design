@@ -47,7 +47,9 @@ if (db_connected()) {
             $allRatings = $ratingsStmt->fetchAll();
         }
     } catch (Exception $e) {
-        error_log('Worker Rating Load Error: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Worker rating load error', ['exception' => $e->getMessage()]);
+        }
     }
 }
 
@@ -129,11 +131,11 @@ function render_stars($rating)
 
                         <div class="flex items-start justify-between mb-10">
                             <div class="w-16 h-16 bg-foundation-grey text-white font-serif text-2xl font-bold flex items-center justify-center border-b-2 border-rajkot-rust shadow-sm">
-                                <?php echo strtoupper(substr($w['username'], 0, 1)); ?>
+                                <?php echo htmlspecialchars(strtoupper(substr((string)$w['username'], 0, 1))); ?>
                             </div>
                             <div class="text-right">
                                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-300 block mb-1">Identity Code</span>
-                                <span class="text-xs font-mono font-bold text-foundation-grey">#RD-W<?php echo str_pad($w['id'], 4, '0', STR_PAD_LEFT); ?></span>
+                                <span class="text-xs font-mono font-bold text-foundation-grey">#RD-W<?php echo str_pad((string)(int)$w['id'], 4, '0', STR_PAD_LEFT); ?></span>
                             </div>
                         </div>
 
@@ -150,14 +152,14 @@ function render_stars($rating)
                                     </div>
                                     <span class="text-base font-bold text-foundation-grey"><?php echo number_format($w['avg_rating'], 1); ?></span>
                                 </div>
-                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.1em]">Based on <?php echo $w['total_ratings']; ?> verification audits</p>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.1em]">Based on <?php echo (int)$w['total_ratings']; ?> verification audits</p>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-8 border-t border-gray-50 pt-10 mb-10">
                             <div>
                                 <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest block mb-1">Deployments</span>
-                                <span class="text-2xl font-serif font-bold text-foundation-grey"><?php echo $w['projects_count']; ?></span>
+                                <span class="text-2xl font-serif font-bold text-foundation-grey"><?php echo (int)$w['projects_count']; ?></span>
                             </div>
                             <div>
                                 <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest block mb-1">Validation</span>
@@ -169,7 +171,7 @@ function render_stars($rating)
                             <div class="flex items-center gap-3 text-[11px] font-medium text-gray-400">
                                 <i data-lucide="phone" class="w-3.5 h-3.5 opacity-50"></i> <?php echo htmlspecialchars($w['phone']); ?>
                             </div>
-                            <button onclick="document.getElementById('ratingModal_<?php echo $w['id']; ?>').classList.remove('hidden')"
+                            <button onclick="document.getElementById('ratingModal_<?php echo (int)$w['id']; ?>').classList.remove('hidden')"
                                 class="w-full py-5 bg-foundation-grey hover:bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-premium active:scale-[0.98] flex items-center justify-center gap-3">
                                 <i data-lucide="clipboard-check" class="w-4 h-4"></i> Create Audit Entry
                             </button>
@@ -177,26 +179,26 @@ function render_stars($rating)
                     </div>
 
                     <!-- Simplified In-file Modal for each worker -->
-                    <div id="ratingModal_<?php echo $w['id']; ?>" class="fixed inset-0 bg-foundation-grey/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+                    <div id="ratingModal_<?php echo (int)$w['id']; ?>" class="fixed inset-0 bg-foundation-grey/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
                         <div class="bg-white w-full max-w-md shadow-premium border border-gray-100 overflow-hidden transform-gpu">
                             <div class="bg-foundation-grey p-8 text-white flex justify-between items-center">
                                 <h4 class="text-xl font-serif font-bold">Standard Performance Entry</h4>
-                                <button onclick="document.getElementById('ratingModal_<?php echo $w['id']; ?>').classList.add('hidden')" class="text-gray-400 hover:text-white transition-colors">
+                                <button onclick="document.getElementById('ratingModal_<?php echo (int)$w['id']; ?>').classList.add('hidden')" class="text-gray-400 hover:text-white transition-colors">
                                     <i data-lucide="x" class="w-6 h-6"></i>
                                 </button>
                             </div>
                             <form method="POST" class="p-10 space-y-10" data-rating-form>
                                 <input type="hidden" name="submit_rating" value="1">
-                                <input type="hidden" name="worker_id" value="<?php echo $w['id']; ?>">
+                                <input type="hidden" name="worker_id" value="<?php echo (int)$w['id']; ?>">
                                 <input type="hidden" name="rating" value="" data-rating-input>
 
                                 <div class="space-y-6 text-center">
                                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] block">Evaluation Score (1-5 Star Audit)</label>
                                     <div class="flex justify-center gap-6" data-rating-stars>
                                         <?php for ($i = 1; $i <= 5; $i++): ?>
-                                            <button type="button" class="group relative" data-rating-value="<?php echo $i; ?>" aria-label="Rate <?php echo $i; ?> stars">
+                                            <button type="button" class="group relative" data-rating-value="<?php echo (int)$i; ?>" aria-label="Rate <?php echo (int)$i; ?> stars">
                                                 <i data-lucide="star" class="w-10 h-10 text-gray-100 transition-all" data-rating-star></i>
-                                                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-300 transition-colors"><?php echo $i; ?></span>
+                                                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-300 transition-colors"><?php echo (int)$i; ?></span>
                                             </button>
                                         <?php endfor; ?>
                                     </div>

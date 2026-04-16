@@ -49,7 +49,9 @@ if ($db instanceof PDO) {
         $stmt = $db->query('SELECT id, first_name, last_name, email, subject, message, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 1000');
         $messages = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     } catch (Exception $e) {
-        error_log('Failed to load contact messages: ' . $e->getMessage());
+        if (function_exists('app_log')) {
+            app_log('warning', 'Failed to load contact messages', ['exception' => $e->getMessage()]);
+        }
         set_flash('Unable to load contact messages at this time.', 'danger');
     }
 }
@@ -122,7 +124,7 @@ $HEADER_MODE = 'dashboard';
                                 $messageFull = (string)($m['message'] ?? '');
                                 $excerpt = mb_strimwidth(strip_tags($messageFull), 0, 160, '...');
                             ?>
-                                <tr class="border-b hover:bg-gray-50" data-id="<?php echo $id; ?>">
+                                <tr class="border-b hover:bg-gray-50" data-id="<?php echo (int)$id; ?>">
                                     <td class="py-3 px-3 align-top"><?php echo esc($id); ?></td>
                                     <td class="py-3 px-3 align-top"><?php echo esc($name); ?></td>
                                     <td class="py-3 px-3 align-top"><a class="text-rajkot-rust no-underline" href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc($email); ?></a></td>
@@ -131,7 +133,7 @@ $HEADER_MODE = 'dashboard';
                                     <td class="py-3 px-3 align-top"><?php echo esc($m['created_at']); ?></td>
                                     <td class="py-3 px-3 align-top">
                                         <div class="flex gap-2 items-center">
-                                            <button type="button" class="view-btn inline-flex items-center justify-center h-10 w-10 rounded-none bg-foundation-grey text-white shadow-sm hover:shadow-premium transition-colors" data-id="<?php echo $id; ?>" title="View message" aria-label="View message">
+                                            <button type="button" class="view-btn inline-flex items-center justify-center h-10 w-10 rounded-none bg-foundation-grey text-white shadow-sm hover:shadow-premium transition-colors" data-id="<?php echo (int)$id; ?>" title="View message" aria-label="View message">
                                                 <i data-lucide="eye" class="w-4 h-4"></i>
                                             </button>
 
@@ -141,7 +143,7 @@ $HEADER_MODE = 'dashboard';
 
                                             <form method="post" onsubmit="return confirm('Delete this message permanently?');" style="display:inline">
                                                 <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="id" value="<?php echo $id; ?>">
+                                                <input type="hidden" name="id" value="<?php echo (int)$id; ?>">
                                                 <button type="submit" class="inline-flex items-center justify-center h-10 w-10 rounded-none bg-pending-amber text-white shadow-sm hover:shadow-premium transition-colors" title="Delete message" aria-label="Delete message">
                                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
