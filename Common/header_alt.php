@@ -41,6 +41,7 @@ foreach ($candidates as $c) {
 <link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico">
 <!-- Immersive Navigation Header -->
 <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/Common/header.css">
+<?php if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } ?>
 <?php if (isset($HEADER_MODE) && $HEADER_MODE === 'dashboard'): ?>
     <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/Common/admin-responsive.css">
 <?php endif; ?>

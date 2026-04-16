@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /api/
+Allow: /.well-known/
+
+# Keep existing public pages crawlable.
+Allow: /
+
+# TODO: add private/admin disallow rules if your SEO policy requires it.

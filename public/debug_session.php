@@ -26,7 +26,11 @@ if ($uid > 0 && function_exists('db_connected') && db_connected() && function_ex
 }
 
 header('Content-Type: text/html; charset=utf-8');
-echo '<!doctype html><html><head><meta charset="utf-8"><title>' . htmlspecialchars($ct('page_title', 'Debug Session'), ENT_QUOTES, 'UTF-8') . '</title></head><body style="font-family:Arial,Helvetica,sans-serif;padding:20px">';
+echo '<!doctype html><html><head><meta charset="utf-8"><title>' . htmlspecialchars($ct('page_title', 'Debug Session'), ENT_QUOTES, 'UTF-8') . '</title>';
+if (function_exists('webmcp_discovery_markup') && function_exists('webmcp_is_enabled') && webmcp_is_enabled()) {
+    echo webmcp_discovery_markup();
+}
+echo '</head><body style="font-family:Arial,Helvetica,sans-serif;padding:20px">';
 echo '<h1>' . htmlspecialchars($ct('heading', 'Development Debug Session'), ENT_QUOTES, 'UTF-8') . '</h1>';
 echo '<p><strong>' . htmlspecialchars($ct('label_session_user_id', 'Session user id:'), ENT_QUOTES, 'UTF-8') . '</strong> ' . (int)$uid . '</p>';
 echo '<p><strong>' . htmlspecialchars($ct('label_session_username', 'Session username:'), ENT_QUOTES, 'UTF-8') . '</strong> ' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . '</p>';

@@ -109,6 +109,66 @@ if (!function_exists('app_is_https')) {
     }
 }
 
+if (!function_exists('webmcp_is_enabled')) {
+    /**
+     * Determine if WebMCP discovery should be exposed for this request.
+     */
+    function webmcp_is_enabled(): bool
+    {
+        return function_exists('app_is_https') ? app_is_https() : (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off');
+    }
+}
+
+if (!function_exists('webmcp_manifest_url')) {
+    /**
+     * Absolute-in-site URL to the WebMCP manifest.
+     */
+    function webmcp_manifest_url(): string
+    {
+        return rtrim((string)BASE_PATH, '/') . '/.well-known/webmcp.json';
+    }
+}
+
+if (!function_exists('webmcp_script_url')) {
+    /**
+     * Absolute-in-site URL to the WebMCP tool registration script.
+     */
+    function webmcp_script_url(): string
+    {
+        return rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/js/webmcp-tools.js';
+    }
+}
+
+if (!function_exists('webmcp_discovery_markup')) {
+    /**
+     * Discovery meta + script tags used by WebMCP-aware clients.
+     */
+    function webmcp_discovery_markup(): string
+    {
+        $manifest = json_encode(webmcp_manifest_url(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $scriptUrl = htmlspecialchars(webmcp_script_url(), ENT_QUOTES, 'UTF-8');
+
+        return '<script>(function(){if(!document.head){return;}if(!document.head.querySelector("meta[name=\'webmcp-manifest\']")){var m1=document.createElement("meta");m1.setAttribute("name","webmcp-manifest");m1.setAttribute("content",' . $manifest . ');document.head.appendChild(m1);}if(!document.head.querySelector("meta[name=\'mcp-compatible\']")){var m2=document.createElement("meta");m2.setAttribute("name","mcp-compatible");m2.setAttribute("content","true");document.head.appendChild(m2);}})();</script>'
+            . "\n"
+            . '<script src="' . $scriptUrl . '" defer></script>';
+    }
+}
+
+if (!function_exists('webmcp_render_bootstrap_once')) {
+    /**
+     * Emit WebMCP discovery tags once per request.
+     */
+    function webmcp_render_bootstrap_once(): void
+    {
+        if (!webmcp_is_enabled() || !empty($GLOBALS['webmcp_script_rendered'])) {
+            return;
+        }
+
+        echo webmcp_discovery_markup();
+        $GLOBALS['webmcp_script_rendered'] = true;
+    }
+}
+
 /**
  * Detect and return the base URL for the application
  * 

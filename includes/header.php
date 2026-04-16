@@ -15,6 +15,10 @@
 // Ensure application is bootstrapped
 require_once __DIR__ . '/init.php';
 
+if (function_exists('webmcp_render_bootstrap_once')) {
+	webmcp_render_bootstrap_once();
+}
+
 // Include the canonical header component
 require_once __DIR__ . '/../Common/header.php';
 ?>

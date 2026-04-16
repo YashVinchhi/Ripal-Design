@@ -155,6 +155,7 @@ foreach ($stylesheetCandidates as $candidate) {
 
 <!-- Header Navigation (Always loaded) -->
 <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header.css">
+<?php if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } ?>
 <?php if ($headerMode === 'dashboard'): ?>
     <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/admin-responsive.css">
 <?php endif; ?>
