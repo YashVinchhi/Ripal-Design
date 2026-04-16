@@ -9,6 +9,11 @@ $ct = static function ($key, $default = '') use ($contactContent) {
 $contactPageUrl = BASE_PATH . PUBLIC_PATH_PREFIX . '/contact_us.php';
 
 if (isset($_POST['submit'])) {
+    if (!csrf_validate((string)($_POST['csrf_token'] ?? ''))) {
+        $_SESSION['contact_form_error'] = $ct('csrf_invalid', 'Invalid request token. Please refresh and try again.');
+        header('Location: ' . $contactPageUrl);
+        exit();
+    }
     
 
     $first_name = trim((string)($_POST['first_name'] ?? ''));
@@ -154,6 +159,7 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
         <div class="w-full md:w-1/2 p-8 md:p-20 bg-[#050505] flex flex-col justify-center">
             <h1 class="text-3xl md:text-4xl font-bold text-white text-align-start mb-8"><?php echo esc($ct('form_heading', 'Send us a message')); ?></h1>
             <form class="max-w-lg w-full mx-0 space-y-8" action="<?php echo htmlspecialchars($contactPageUrl, ENT_QUOTES, 'UTF-8'); ?>" method="POST" id="contactForm" >
+               <?php echo csrf_token_field(); ?>
                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="group">

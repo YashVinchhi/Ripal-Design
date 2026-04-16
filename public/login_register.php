@@ -244,6 +244,22 @@ if (isset($_POST['login'])) {
         login_error_and_redirect($ct('login_missing_credentials', 'Please enter email and password.'));
     }
 
+    $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $emailKey = strtolower($email);
+    $loginIpBucket = 'login:ip:' . $clientIp;
+    $loginUserBucket = 'login:user:' . $emailKey;
+
+    $ipLimit = function_exists('auth_rate_limit_consume')
+        ? auth_rate_limit_consume($loginIpBucket, 30, 900, 900)
+        : ['allowed' => true, 'retry_after' => 0];
+    $userLimit = function_exists('auth_rate_limit_consume')
+        ? auth_rate_limit_consume($loginUserBucket, 8, 900, 900)
+        : ['allowed' => true, 'retry_after' => 0];
+
+    if (empty($ipLimit['allowed']) || empty($userLimit['allowed'])) {
+        login_error_and_redirect($ct('login_rate_limited', 'Too many login attempts. Please try again later.'));
+    }
+
     // Try primary users table via PDO
     try {
         if ($db instanceof PDO) {
@@ -273,6 +289,10 @@ if (isset($_POST['login'])) {
                 // If user asked to be remembered, create persistent remember token/cookie
                 if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
                     auth_set_remember_token((int)$_SESSION['user_id']);
+                }
+                if (function_exists('auth_rate_limit_reset')) {
+                    auth_rate_limit_reset($loginIpBucket);
+                    auth_rate_limit_reset($loginUserBucket);
                 }
                 header('Location: ' . post_login_redirect_url($_SESSION['user']));
                 exit();
@@ -315,6 +335,10 @@ if (isset($_POST['login'])) {
                 // If user asked to be remembered, create persistent remember token/cookie
                 if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
                     auth_set_remember_token((int)$_SESSION['user_id']);
+                }
+                if (function_exists('auth_rate_limit_reset')) {
+                    auth_rate_limit_reset($loginIpBucket);
+                    auth_rate_limit_reset($loginUserBucket);
                 }
                 header('Location: ' . post_login_redirect_url($_SESSION['user']));
                 exit();

@@ -55,6 +55,7 @@ if (db_connected()) {
 
 // Handle rating submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_rating'])) {
+    require_csrf();
     $worker_id = intval($_POST['worker_id'] ?? 0);
     $rating = intval($_POST['rating'] ?? 0);
     $comment = trim($_POST['comment'] ?? '');
@@ -188,6 +189,7 @@ function render_stars($rating)
                                 </button>
                             </div>
                             <form method="POST" class="p-10 space-y-10" data-rating-form>
+                                <?php echo csrf_token_field(); ?>
                                 <input type="hidden" name="submit_rating" value="1">
                                 <input type="hidden" name="worker_id" value="<?php echo (int)$w['id']; ?>">
                                 <input type="hidden" name="rating" value="" data-rating-input>

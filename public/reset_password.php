@@ -78,6 +78,7 @@ if (!($db instanceof PDO)) {
 
                 <?php if ($showForm): ?>
                     <form method="post" action="./update_password.php" class="auth-form" novalidate>
+                        <?php echo csrf_token_field(); ?>
                         <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
 
                         <div class="field">
@@ -88,7 +89,7 @@ if (!($db instanceof PDO)) {
                                     <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
                                 </button>
                             </div>
-                            <small class="field-help"><?php echo esc($ct('password_help', 'Use at least 8 characters and 1 number.')); ?></small>
+                            <small class="field-help"><?php echo esc($ct('password_help', 'Use at least 8 characters with 1 uppercase, 1 lowercase, and 1 number.')); ?></small>
                             <span id="password_error" class="text-danger"></span>
                         </div>
 

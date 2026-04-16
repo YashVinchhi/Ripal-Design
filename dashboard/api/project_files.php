@@ -54,24 +54,6 @@ function ensure_project_files_revision_columns(PDO $db): array
     $hasRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
     $hasRevisionNo = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_no') : false;
 
-    if (!$hasRevisionGroup) {
-        try {
-            $db->exec("ALTER TABLE project_files ADD COLUMN revision_group VARCHAR(120) DEFAULT NULL");
-            $hasRevisionGroup = true;
-        } catch (Throwable $e) {
-            $hasRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
-        }
-    }
-
-    if (!$hasRevisionNo) {
-        try {
-            $db->exec("ALTER TABLE project_files ADD COLUMN revision_no INT DEFAULT 1");
-            $hasRevisionNo = true;
-        } catch (Throwable $e) {
-            $hasRevisionNo = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_no') : false;
-        }
-    }
-
     return [
         'has_revision_group' => $hasRevisionGroup,
         'has_revision_no' => $hasRevisionNo,
@@ -440,19 +422,7 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
 
     try {
         if ($action === 'upload_drawing') {
-            // Backfill-safe: add uploaded_by column once for environments with older schema.
-            $hasUploadedBy = false;
-            try {
-                $colStmt = $db->prepare("SHOW COLUMNS FROM project_drawings LIKE 'uploaded_by'");
-                $colStmt->execute();
-                $hasUploadedBy = (bool)$colStmt->fetch(PDO::FETCH_ASSOC);
-                if (!$hasUploadedBy) {
-                    $db->exec("ALTER TABLE project_drawings ADD COLUMN uploaded_by VARCHAR(255) DEFAULT NULL");
-                    $hasUploadedBy = true;
-                }
-            } catch (Exception $e) {
-                $hasUploadedBy = false;
-            }
+            $hasUploadedBy = function_exists('db_column_exists') ? db_column_exists('project_drawings', 'uploaded_by') : false;
 
             if ($hasUploadedBy) {
                 $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');

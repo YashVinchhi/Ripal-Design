@@ -52,38 +52,31 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 	redirect_with_message($ct('invalid_email', 'Please enter a valid email address.'));
 }
 
+$clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+$resetIpLimit = function_exists('auth_rate_limit_consume')
+	? auth_rate_limit_consume('reset:ip:' . $clientIp, 10, 3600, 1800)
+	: ['allowed' => true, 'retry_after' => 0];
+$resetEmailLimit = function_exists('auth_rate_limit_consume')
+	? auth_rate_limit_consume('reset:email:' . strtolower($email), 5, 3600, 1800)
+	: ['allowed' => true, 'retry_after' => 0];
+
+if (empty($resetIpLimit['allowed']) || empty($resetEmailLimit['allowed'])) {
+	redirect_with_message($ct('rate_limited', 'Too many reset requests. Please try again later.'));
+}
+
 $token = bin2hex(random_bytes(16));
 
 $token_hash = hash("sha256", $token);
 $expiry = date("Y-m-d H:i:s", time() + 60 * 30);
 
-// Ensure the users table has the expected reset columns. If missing, attempt to add them.
-$needsAdd = false;
-try {
-	$colCheck = $db->prepare("SHOW COLUMNS FROM users LIKE 'token_reset'");
-	$colCheck->execute();
-	$needsAdd = ($colCheck->fetch(PDO::FETCH_ASSOC) === false);
-} catch (\Throwable $e) {
-	// If we can't run SHOW COLUMNS, avoid altering DB and continue to attempt the update (will fail later)
-	$needsAdd = false;
-}
-
-if ($needsAdd) {
-	try {
-		// Add the token and expiry columns and an index for the token
-		$db->beginTransaction();
-		$db->exec("ALTER TABLE users ADD COLUMN token_reset CHAR(64) DEFAULT NULL, ADD COLUMN reset_token_expires DATETIME DEFAULT NULL");
-		$db->exec("CREATE INDEX idx_users_reset_token ON users(token_reset)");
-		$db->commit();
-	} catch (\Throwable $e) {
-		if ($db->inTransaction()) {
-			$db->rollBack();
-		}
-		if (function_exists('app_log')) {
-			app_log('error', 'Failed to add reset columns', ['exception' => $e->getMessage()]);
-		}
-		redirect_with_message($ct('db_migration_error', 'Password reset is temporarily unavailable. Please contact support.'));
+// Runtime schema migration is intentionally disabled; schema must be provisioned via migration scripts.
+$hasTokenReset = function_exists('db_column_exists') ? db_column_exists('users', 'token_reset') : true;
+$hasTokenExpiry = function_exists('db_column_exists') ? db_column_exists('users', 'reset_token_expires') : true;
+if (!$hasTokenReset || !$hasTokenExpiry) {
+	if (function_exists('app_log')) {
+		app_log('error', 'Reset password schema missing required columns', ['token_reset' => $hasTokenReset ? 1 : 0, 'reset_token_expires' => $hasTokenExpiry ? 1 : 0]);
 	}
+	redirect_with_message($ct('db_migration_error', 'Password reset is temporarily unavailable. Please contact support.'));
 }
 
 $sql = 'UPDATE users SET token_reset = ?, reset_token_expires = ? WHERE email = ? LIMIT 1';

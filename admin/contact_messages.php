@@ -7,6 +7,7 @@ $db = get_db();
 
 // Handle POST actions (delete)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
     $action = $_POST['action'] ?? '';
     if ($action === 'delete' && !empty($_POST['id']) && $db instanceof PDO) {
         $id = (int)$_POST['id'];
@@ -142,6 +143,7 @@ $HEADER_MODE = 'dashboard';
                                             </a>
 
                                             <form method="post" onsubmit="return confirm('Delete this message permanently?');" style="display:inline">
+                                                <?php echo csrf_token_field(); ?>
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="id" value="<?php echo (int)$id; ?>">
                                                 <button type="submit" class="inline-flex items-center justify-center h-10 w-10 rounded-none bg-pending-amber text-white shadow-sm hover:shadow-premium transition-colors" title="Delete message" aria-label="Delete message">

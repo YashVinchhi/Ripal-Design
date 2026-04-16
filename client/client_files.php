@@ -5,6 +5,7 @@ require_once __DIR__ . '/../includes/init.php';
 $projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST['client_action']) && db_connected()) {
+    require_csrf();
     $drawingId = (int)$_POST['drawing_id'];
     $clientAction = (string)$_POST['client_action'];
     if ($drawingId > 0 && in_array($clientAction, ['authorize', 'redline'], true)) {
@@ -216,6 +217,7 @@ if (empty($drawings) && $projectId > 0 && db_connected()) {
                                 <?php if(in_array($d['status'], ['pending', 'under_review'], true)): ?>
                                     <div class="flex justify-end gap-3">
                                         <form method="post" class="flex gap-3">
+                                            <?php echo csrf_token_field(); ?>
                                             <input type="hidden" name="drawing_id" value="<?php echo (int)$d['id']; ?>">
                                             <button type="submit" name="client_action" value="authorize" class="bg-approval-green hover:bg-green-700 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all active:scale-[0.98]">
                                                 Authorize

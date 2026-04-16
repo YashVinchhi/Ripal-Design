@@ -1,6 +1,9 @@
 <?php
 
 require_once __DIR__ . '/../includes/init.php';
+if (file_exists(__DIR__ . '/../includes/validation.php')) {
+    require_once __DIR__ . '/../includes/validation.php';
+}
 $ct = static function ($key, $default = '') {
     if (function_exists('public_content_get')) {
         return public_content_get('update_password', $key, $default);
@@ -8,6 +11,10 @@ $ct = static function ($key, $default = '') {
     return (string)$default;
 };
 $token = $_POST['token'] ?? '';
+
+if (!csrf_validate((string)($_POST['csrf_token'] ?? ''))) {
+    reset_redirect($ct('csrf_invalid', 'Invalid request token. Please refresh and try again.'), 'error', (string)$token);
+}
 
 function reset_redirect($message, $type = 'error', $token = '') {
     $location = './reset_password.php?type=' . urlencode($type) . '&message=' . urlencode($message);
@@ -39,12 +46,17 @@ if (strtotime($user['reset_token_expires']) <= time()) {
     reset_redirect($ct('token_expired', 'Token has expired.'), 'error', $token);
 }
 $plainPassword = $_POST['password'] ?? '';
+$confirmPassword = $_POST['confirmPassword'] ?? '';
 if ($plainPassword === '') {
     reset_redirect($ct('password_required', 'Password is required.'), 'error', $token);
 }
 
-if (strlen($plainPassword) < 8) {
-    reset_redirect($ct('password_min_length', 'Password must be at least 8 characters.'), 'error', $token);
+if ($confirmPassword !== '' && $plainPassword !== $confirmPassword) {
+    reset_redirect($ct('password_mismatch', 'Password and confirm password do not match.'), 'error', $token);
+}
+
+if (!function_exists('validate_password_strength') || !validate_password_strength((string)$plainPassword)) {
+    reset_redirect($ct('password_strength', 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number.'), 'error', $token);
 }
 
 $password = password_hash($plainPassword, PASSWORD_DEFAULT);

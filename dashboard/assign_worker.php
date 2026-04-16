@@ -15,8 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
     $method = $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN';
-    $raw = @file_get_contents('php://input');
-    echo json_encode(['success'=>false, 'message'=>'Invalid method', 'method'=>$method, 'raw'=>$raw]);
+    echo json_encode(['success'=>false, 'message'=>'Invalid method', 'method'=>$method]);
     exit;
 }
 

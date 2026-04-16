@@ -73,6 +73,123 @@ if (!function_exists('require_csrf')) {
     }
 }
 
+if (!function_exists('auth_request_ip')) {
+    /**
+     * Resolve client IP with basic proxy header awareness.
+     *
+     * @return string
+     */
+    function auth_request_ip(): string {
+        $forwarded = (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+        if ($forwarded !== '') {
+            $parts = explode(',', $forwarded);
+            $candidate = trim((string)($parts[0] ?? ''));
+            if ($candidate !== '' && filter_var($candidate, FILTER_VALIDATE_IP)) {
+                return $candidate;
+            }
+        }
+
+        $remote = trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+        if ($remote !== '' && filter_var($remote, FILTER_VALIDATE_IP)) {
+            return $remote;
+        }
+
+        return '0.0.0.0';
+    }
+}
+
+if (!function_exists('auth_rate_limit_consume')) {
+    /**
+     * Consume one rate-limit attempt for a bucket.
+     *
+     * @param string $bucket
+     * @param int $maxAttempts
+     * @param int $windowSeconds
+     * @param int $blockSeconds
+     * @return array{allowed:bool,retry_after:int,remaining:int}
+     */
+    function auth_rate_limit_consume(string $bucket, int $maxAttempts, int $windowSeconds, int $blockSeconds = 0): array {
+        $maxAttempts = max(1, $maxAttempts);
+        $windowSeconds = max(1, $windowSeconds);
+        $blockSeconds = max(0, $blockSeconds);
+        $now = time();
+
+        $root = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : rtrim((string)dirname(__DIR__), '/\\');
+        $dir = $root . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'rate_limits';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+
+        $key = hash('sha256', strtolower(trim($bucket)));
+        $file = $dir . DIRECTORY_SEPARATOR . $key . '.json';
+
+        $handle = @fopen($file, 'c+');
+        if ($handle === false) {
+            return ['allowed' => true, 'retry_after' => 0, 'remaining' => $maxAttempts];
+        }
+
+        $result = ['allowed' => true, 'retry_after' => 0, 'remaining' => $maxAttempts];
+        if (@flock($handle, LOCK_EX)) {
+            $raw = stream_get_contents($handle);
+            $state = is_string($raw) && $raw !== '' ? json_decode($raw, true) : [];
+            if (!is_array($state)) {
+                $state = [];
+            }
+
+            $attempts = [];
+            foreach ((array)($state['attempts'] ?? []) as $ts) {
+                $t = (int)$ts;
+                if ($t > 0 && $t >= ($now - $windowSeconds)) {
+                    $attempts[] = $t;
+                }
+            }
+
+            $blockedUntil = (int)($state['blocked_until'] ?? 0);
+            if ($blockedUntil > $now) {
+                $result = ['allowed' => false, 'retry_after' => $blockedUntil - $now, 'remaining' => 0];
+            } else {
+                $blockedUntil = 0;
+                if (count($attempts) >= $maxAttempts) {
+                    $retry = $blockSeconds > 0 ? $blockSeconds : $windowSeconds;
+                    $blockedUntil = $now + $retry;
+                    $result = ['allowed' => false, 'retry_after' => $retry, 'remaining' => 0];
+                } else {
+                    $attempts[] = $now;
+                    $result = ['allowed' => true, 'retry_after' => 0, 'remaining' => max(0, $maxAttempts - count($attempts))];
+                }
+            }
+
+            $newState = ['attempts' => $attempts, 'blocked_until' => $blockedUntil, 'updated_at' => $now];
+            @ftruncate($handle, 0);
+            @rewind($handle);
+            @fwrite($handle, (string)json_encode($newState));
+            @fflush($handle);
+            @flock($handle, LOCK_UN);
+        }
+
+        @fclose($handle);
+        return $result;
+    }
+}
+
+if (!function_exists('auth_rate_limit_reset')) {
+    /**
+     * Clear a rate-limit bucket after successful authentication.
+     *
+     * @param string $bucket
+     * @return void
+     */
+    function auth_rate_limit_reset(string $bucket): void {
+        $root = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : rtrim((string)dirname(__DIR__), '/\\');
+        $dir = $root . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'rate_limits';
+        $key = hash('sha256', strtolower(trim($bucket)));
+        $file = $dir . DIRECTORY_SEPARATOR . $key . '.json';
+        if (is_file($file)) {
+            @unlink($file);
+        }
+    }
+}
+
 /**
  * Ensure user is logged in, redirect to login page if not
  * 
