@@ -84,6 +84,51 @@ if (!class_exists('PhpCsFixer\\Config')) {
     }
 }
 
+if (!class_exists('Redis')) {
+    class Redis
+    {
+        public function connect(string $host, int $port = 6379, float $timeout = 0): bool
+        {
+            return false;
+        }
+
+        public function auth(string $password): bool
+        {
+            return false;
+        }
+
+        public function select(int $db): bool
+        {
+            return true;
+        }
+
+        public function ttl(string $key): int
+        {
+            return -1;
+        }
+
+        public function incr(string $key): int
+        {
+            return 0;
+        }
+
+        public function expire(string $key, int $seconds): bool
+        {
+            return true;
+        }
+
+        public function setex(string $key, int $seconds, string $value): bool
+        {
+            return true;
+        }
+
+        public function del(string ...$keys): int
+        {
+            return 0;
+        }
+    }
+}
+
 namespace PHPUnit\Framework;
 
 if (!class_exists('PHPUnit\\Framework\\TestCase')) {

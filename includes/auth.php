@@ -100,7 +100,62 @@ if (!function_exists('auth_request_ip')) {
 
 if (!function_exists('auth_rate_limit_consume')) {
     /**
-     * Consume one rate-limit attempt for a bucket.
+     * Resolve configured rate-limit backend.
+     *
+     * Supported values: redis, file
+     *
+     * @return string
+     */
+    function auth_rate_limit_backend(): string {
+        $backend = strtolower(trim((string)(getenv('RATE_LIMIT_BACKEND') ?: 'file')));
+        return in_array($backend, ['redis', 'file'], true) ? $backend : 'file';
+    }
+
+    /**
+     * Get Redis client for distributed rate limiting.
+     *
+        * @return object|null
+     */
+    function auth_rate_limit_redis_client() {
+        if (!class_exists('Redis')) {
+            return null;
+        }
+
+        static $client = null;
+        static $attempted = false;
+        if ($attempted) {
+            return $client;
+        }
+        $attempted = true;
+
+        $host = (string)(getenv('REDIS_HOST') ?: '127.0.0.1');
+        $port = (int)(getenv('REDIS_PORT') ?: 6379);
+        $timeout = (float)(getenv('REDIS_TIMEOUT') ?: 1.5);
+        $password = (string)(getenv('REDIS_PASSWORD') ?: '');
+        $db = (int)(getenv('REDIS_DB') ?: 0);
+
+        try {
+            $redisClass = 'Redis';
+            $redis = new $redisClass();
+            $connected = @$redis->connect($host, $port, $timeout);
+            if (!$connected) {
+                return null;
+            }
+            if ($password !== '') {
+                @ $redis->auth($password);
+            }
+            if ($db > 0) {
+                @ $redis->select($db);
+            }
+            $client = $redis;
+            return $client;
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Consume an attempt using Redis-backed distributed buckets.
      *
      * @param string $bucket
      * @param int $maxAttempts
@@ -108,7 +163,53 @@ if (!function_exists('auth_rate_limit_consume')) {
      * @param int $blockSeconds
      * @return array{allowed:bool,retry_after:int,remaining:int}
      */
-    function auth_rate_limit_consume(string $bucket, int $maxAttempts, int $windowSeconds, int $blockSeconds = 0): array {
+    function auth_rate_limit_consume_redis(string $bucket, int $maxAttempts, int $windowSeconds, int $blockSeconds = 0): array {
+        $redis = auth_rate_limit_redis_client();
+        if ($redis === null) {
+            return ['allowed' => true, 'retry_after' => 0, 'remaining' => $maxAttempts];
+        }
+
+        $maxAttempts = max(1, $maxAttempts);
+        $windowSeconds = max(1, $windowSeconds);
+        $blockSeconds = max(0, $blockSeconds);
+
+        $keyHash = hash('sha256', strtolower(trim($bucket)));
+        $countKey = 'rate_limit:count:' . $keyHash;
+        $blockKey = 'rate_limit:block:' . $keyHash;
+
+        try {
+            $blockedTtl = (int)$redis->ttl($blockKey);
+            if ($blockedTtl > 0) {
+                return ['allowed' => false, 'retry_after' => $blockedTtl, 'remaining' => 0];
+            }
+
+            $count = (int)$redis->incr($countKey);
+            if ($count === 1) {
+                @ $redis->expire($countKey, $windowSeconds);
+            }
+
+            if ($count > $maxAttempts) {
+                $retry = $blockSeconds > 0 ? $blockSeconds : $windowSeconds;
+                @ $redis->setex($blockKey, $retry, '1');
+                return ['allowed' => false, 'retry_after' => $retry, 'remaining' => 0];
+            }
+
+            return ['allowed' => true, 'retry_after' => 0, 'remaining' => max(0, $maxAttempts - $count)];
+        } catch (Throwable $e) {
+            return ['allowed' => true, 'retry_after' => 0, 'remaining' => $maxAttempts];
+        }
+    }
+
+    /**
+     * Consume an attempt using local file-backed buckets.
+     *
+     * @param string $bucket
+     * @param int $maxAttempts
+     * @param int $windowSeconds
+     * @param int $blockSeconds
+     * @return array{allowed:bool,retry_after:int,remaining:int}
+     */
+    function auth_rate_limit_consume_file(string $bucket, int $maxAttempts, int $windowSeconds, int $blockSeconds = 0): array {
         $maxAttempts = max(1, $maxAttempts);
         $windowSeconds = max(1, $windowSeconds);
         $blockSeconds = max(0, $blockSeconds);
@@ -170,6 +271,22 @@ if (!function_exists('auth_rate_limit_consume')) {
         @fclose($handle);
         return $result;
     }
+
+    /**
+     * Consume one rate-limit attempt for a bucket.
+     *
+     * @param string $bucket
+     * @param int $maxAttempts
+     * @param int $windowSeconds
+     * @param int $blockSeconds
+     * @return array{allowed:bool,retry_after:int,remaining:int}
+     */
+    function auth_rate_limit_consume(string $bucket, int $maxAttempts, int $windowSeconds, int $blockSeconds = 0): array {
+        if (auth_rate_limit_backend() === 'redis') {
+            return auth_rate_limit_consume_redis($bucket, $maxAttempts, $windowSeconds, $blockSeconds);
+        }
+        return auth_rate_limit_consume_file($bucket, $maxAttempts, $windowSeconds, $blockSeconds);
+    }
 }
 
 if (!function_exists('auth_rate_limit_reset')) {
@@ -180,9 +297,20 @@ if (!function_exists('auth_rate_limit_reset')) {
      * @return void
      */
     function auth_rate_limit_reset(string $bucket): void {
+        $key = hash('sha256', strtolower(trim($bucket)));
+        if (auth_rate_limit_backend() === 'redis') {
+            $redis = auth_rate_limit_redis_client();
+            if ($redis !== null) {
+                try {
+                    @ $redis->del('rate_limit:count:' . $key, 'rate_limit:block:' . $key);
+                } catch (Throwable $e) {
+                }
+            }
+            return;
+        }
+
         $root = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : rtrim((string)dirname(__DIR__), '/\\');
         $dir = $root . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'rate_limits';
-        $key = hash('sha256', strtolower(trim($bucket)));
         $file = $dir . DIRECTORY_SEPARATOR . $key . '.json';
         if (is_file($file)) {
             @unlink($file);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Application Configuration
  * 
@@ -20,7 +21,8 @@
  *
  * @return void
  */
-function load_project_env_file() {
+function load_project_env_file()
+{
     static $loaded = false;
     if ($loaded) {
         return;
@@ -75,7 +77,8 @@ if (!function_exists('env_bool')) {
     /**
      * Read boolean-like environment values safely.
      */
-    function env_bool(string $key, bool $default = false): bool {
+    function env_bool(string $key, bool $default = false): bool
+    {
         $raw = getenv($key);
         if ($raw === false || $raw === null || $raw === '') {
             return $default;
@@ -89,7 +92,8 @@ if (!function_exists('app_is_https')) {
     /**
      * Best-effort HTTPS detection including reverse-proxy headers.
      */
-    function app_is_https(): bool {
+    function app_is_https(): bool
+    {
         if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
             return true;
         }
@@ -113,9 +117,10 @@ if (!function_exists('app_is_https')) {
  * 
  * @return string Base URL with scheme and host
  */
-function getBaseUrl() {
+function getBaseUrl()
+{
     static $baseUrl = null;
-    
+
     // Return cached value if already computed
     if ($baseUrl !== null) {
         return $baseUrl;
@@ -126,22 +131,22 @@ function getBaseUrl() {
         $baseUrl = rtrim($configuredBaseUrl, '/');
         return $baseUrl;
     }
-    
+
     // Detect scheme (http or https)
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
     if (!preg_match('/^[a-z0-9.-]+(?::[0-9]{1,5})?$/i', $host)) {
         $host = 'localhost';
     }
-    
+
     // Get the directory of the current script
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
     $scriptPath = dirname($scriptName);
-    
+
     // Normalize path separators to forward slashes
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
-    
+
     // Detect if we're in a subdirectory (public/dashboard/admin/client/worker/api)
     // Remove trailing app folders to get the application root path.
     if (!empty($scriptPath)) {
@@ -160,7 +165,7 @@ function getBaseUrl() {
     } else {
         $appPath = '';
     }
-    
+
     $baseUrl = $scheme . '://' . $host . $appPath;
     return $baseUrl;
 }
@@ -172,22 +177,23 @@ function getBaseUrl() {
  * 
  * @return string Base path (may be empty for root installation)
  */
-function getBasePath() {
+function getBasePath()
+{
     static $basePath = null;
-    
+
     // Return cached value if already computed
     if ($basePath !== null) {
         return $basePath;
     }
-    
+
     // Get the directory of the current script
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
     $scriptPath = dirname($scriptName);
-    
+
     // Normalize path separators to forward slashes
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
-    
+
     // Detect if we're in a subdirectory and remove trailing app folders
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
@@ -205,7 +211,7 @@ function getBasePath() {
     } else {
         $basePath = '';
     }
-    
+
     return $basePath;
 }
 
@@ -258,7 +264,7 @@ if (!defined('SECURITY_ENABLE_CSP')) {
 }
 
 if (!defined('SECURITY_CSP_POLICY')) {
-    $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self'; form-action 'self'";
+    $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com https://code.jquery.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' https://cdn.jsdelivr.net; form-action 'self'";
     define('SECURITY_CSP_POLICY', (string)(getenv('SECURITY_CSP_POLICY') ?: $defaultCsp));
 }
 
@@ -280,4 +286,3 @@ if (APP_ENV === 'development') {
     ini_set('display_errors', 0);
     error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
 }
-?>
