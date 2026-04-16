@@ -338,7 +338,20 @@ if (!function_exists('render_head_assets')) {
         
         foreach ($GLOBALS['__asset_queue_css'] as $item) {
             $css = $item['path'];
-            $href = (strpos($css, 'http') === 0) ? $css : base_path($css);
+            if (strpos($css, 'http') === 0) {
+                $href = $css;
+            } else {
+                $normalized = '/' . ltrim((string)$css, '/');
+                $prefix = defined('PUBLIC_PATH_PREFIX') ? (string)PUBLIC_PATH_PREFIX : '';
+
+                if ($prefix === '/public' && stripos($normalized, '/public/') !== 0) {
+                    $normalized = '/public' . $normalized;
+                } elseif ($prefix === '' && stripos($normalized, '/public/') === 0) {
+                    $normalized = substr($normalized, 7);
+                }
+
+                $href = base_path($normalized);
+            }
             echo '<link rel="stylesheet" href="' . esc_attr($href) . '">' . "\n";
         }
     }
@@ -362,8 +375,21 @@ if (!function_exists('render_footer_scripts')) {
             $src = $entry['path'];
             $defer = !empty($entry['defer']);
             $async = !empty($entry['async']);
-            
-            $srcUrl = (strpos($src, 'http') === 0) ? $src : base_path($src);
+
+            if (strpos($src, 'http') === 0) {
+                $srcUrl = $src;
+            } else {
+                $normalized = '/' . ltrim((string)$src, '/');
+                $prefix = defined('PUBLIC_PATH_PREFIX') ? (string)PUBLIC_PATH_PREFIX : '';
+
+                if ($prefix === '/public' && stripos($normalized, '/public/') !== 0) {
+                    $normalized = '/public' . $normalized;
+                } elseif ($prefix === '' && stripos($normalized, '/public/') === 0) {
+                    $normalized = substr($normalized, 7);
+                }
+
+                $srcUrl = base_path($normalized);
+            }
             
             $attrs = [];
             if ($defer) $attrs[] = 'defer';

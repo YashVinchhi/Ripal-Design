@@ -108,6 +108,10 @@ $currentYear = date('Y');
     </div>
 </footer>
 
+<div id="transition-curtain" aria-hidden="true"></div>
+<div id="transition-curtain-ghost" aria-hidden="true"></div>
+<div id="transition-orb" aria-hidden="true"></div>
+
 <script>
     // Initialize Lucide icons
     if (typeof lucide !== 'undefined') {
@@ -143,6 +147,11 @@ if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {
 $persistPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'persist-tabs.js';
 if (file_exists($persistPath)) {
     echo '<script defer src="' . esc_attr(rtrim(BASE_PATH, '/') . '/assets/js/persist-tabs.js') . '"></script>' . "\n";
+}
+
+$pageTransitionPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'page-transitions.js';
+if (file_exists($pageTransitionPath)) {
+    echo '<script defer src="' . esc_attr(rtrim(BASE_PATH, '/') . '/assets/js/page-transitions.js') . '"></script>' . "\n";
 }
 
 // Render any enqueued scripts from util.php

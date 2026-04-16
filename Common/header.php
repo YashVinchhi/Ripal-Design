@@ -84,7 +84,7 @@ $stylesheetCandidates = [
 <!-- <link rel="stylesheet" href="css/bootstrap.min.css"> -->
 
 <!-- Lucide Icons (CAD style) -->
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 
 <?php if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS): ?>
 <?php
@@ -276,6 +276,10 @@ foreach ($stylesheetCandidates as $candidate) {
 </div>
 
 <!-- Header Navigation Script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/gsap-core-init.js" defer></script>
+<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/gsap-motion-presets.js" defer></script>
 <script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/header-nav.js" defer></script>
 <script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/auto-hide-alerts.js" defer></script>
 <script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/ajax-forms.js" defer></script>

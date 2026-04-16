@@ -19,6 +19,10 @@
     var btn = document.getElementById('altMenuBtn');
     var overlay = document.getElementById('altOverlay');
     var panel = overlay ? overlay.querySelector('.alt-panel') : null;
+    var panelNavLinks = overlay ? overlay.querySelectorAll('.alt-panel nav a') : [];
+    var hasGSAP = typeof window.gsap !== 'undefined';
+    var menuTimeline = null;
+    var menuCloseDurationMs = 280;
     
     // Return early if elements don't exist
     if (!btn || !overlay) return;
@@ -37,6 +41,22 @@
         
         // Prevent body scroll when menu is open
         document.body.style.overflow = 'hidden';
+
+        if (hasGSAP && panelNavLinks.length) {
+            if (menuTimeline) {
+                menuTimeline.kill();
+            }
+
+            window.gsap.set(panelNavLinks, { clearProps: 'all' });
+            menuTimeline = window.gsap.timeline({ defaults: { overwrite: 'auto' } });
+            menuTimeline.from(panelNavLinks, {
+                y: 12,
+                autoAlpha: 0,
+                duration: 0.22,
+                stagger: 0.04,
+                ease: 'power2.out'
+            });
+        }
     }
     
     /**
@@ -44,6 +64,15 @@
      */
     function closeMenu() {
         overlay.classList.remove('open');
+
+        if (hasGSAP && panelNavLinks.length) {
+            if (menuTimeline) {
+                menuTimeline.kill();
+            }
+
+            window.gsap.set(panelNavLinks, { clearProps: 'all' });
+        }
+
         btn.setAttribute('aria-expanded', 'false');
         
         var hamburger = btn.querySelector('.alt-hamburger');
@@ -95,26 +124,14 @@
             e.preventDefault();
             closeMenu();
 
-            // Wait for overlay opacity transition to finish before navigating
+            // Wait for close animation to finish before navigating
             var navigated = false;
             function doNavigate() {
                 if (navigated) return; navigated = true;
                 window.location.href = href;
             }
 
-            // Listen for transitionend on the overlay (opacity transition)
-            function onTransition(e) {
-                // ensure we react to the overlay opacity/transform completing
-                if (e.target === overlay) {
-                    overlay.removeEventListener('transitionend', onTransition);
-                    doNavigate();
-                }
-            }
-
-            overlay.addEventListener('transitionend', onTransition);
-
-            // Fallback: navigate after 400ms if transitionend doesn't fire
-            setTimeout(doNavigate, 400);
+            setTimeout(doNavigate, menuCloseDurationMs + 120);
         });
     });
     

@@ -31,7 +31,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php echo esc($ct('page_title', 'Home | Ripal Design')); ?></title>
-    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/index.css'); ?>">
 </head>
 
 <body>
@@ -45,9 +45,9 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
         <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
             <div class="hero-overlay"></div>
             <div class="position-relative z-2 text-center container px-4">
-                <span class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
-                <h1 class="display-1 mb-4"><?php echo esc($ct('hero_heading', "The Architect's Vision")); ?></h1>
-                <p class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
+                <span data-stagger-entry class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
+                <h1 data-stagger-entry class="display-1 mb-4"><?php echo esc($ct('hero_heading', "The Architect's Vision")); ?></h1>
+                <p data-stagger-entry class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
                     <?php echo esc($ct('hero_subheading', 'Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.')); ?>
                 </p>
                 <div class="mt-5 pt-4">
@@ -75,7 +75,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
         </section>
 
         <!-- Our Story -->
-        <section class="py-5 py-lg-9">
+        <section class="py-5 py-lg-9" data-anim="reveal">
             <div class="container py-5">
                 <div class="row gx-lg-5 align-items-center">
                     <div class="col-lg-5 mb-5 mb-lg-0">
@@ -96,7 +96,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
         </section>
 
         <!-- Featured Projects Section -->
-        <section class="featured-projects-section bg-black">
+        <section class="featured-projects-section bg-black" data-anim="reveal">
             <!-- Project 1 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
@@ -271,23 +271,24 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
 
     <?php
     // enqueue page scripts so Common/footer.php can render them in the footer
-    asset_enqueue_js('https://code.jquery.com/jquery-3.7.1.min.js');
-    asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js');
-    asset_enqueue_js('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js');
-    asset_enqueue_js('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js');
     asset_enqueue_js('/js/index.js');
     ?>
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+        <script>
+            (function () {
+                if (!window.RDAnimations || !window.RDMotionPresets || typeof window.RDAnimations.initPageAnimations !== 'function') {
+                    return;
+                }
 
-    <!-- Dependencies -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./js/index.js"></script>
-    <script>
-
-    </script>
+                window.RDAnimations.initPageAnimations('public-index-hero', document, function () {
+                    var presets = window.RDMotionPresets;
+                    var heroNodes = document.querySelectorAll('.hero-section [data-stagger-entry]');
+                    if (heroNodes.length && typeof presets.staggeredEntry === 'function') {
+                        presets.staggeredEntry(heroNodes, { distance: 22, duration: 0.48, stagger: 0.1 });
+                    }
+                });
+            })();
+        </script>
 </body>
 
 </html>

@@ -74,6 +74,11 @@
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
       try { window.lucide.createIcons(); } catch(e){}
     }
+
+    // Re-initialize motion hooks for newly inserted DOM.
+    if (window.RDAnimations && typeof window.RDAnimations.refreshAfterDomSwap === 'function') {
+      try { window.RDAnimations.refreshAfterDomSwap(document); } catch(e){}
+    }
   }
 
   function attachAjaxToForm(form){

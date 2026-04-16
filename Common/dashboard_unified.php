@@ -300,13 +300,13 @@ if ($useWorkerProjectView) {
     </header>
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-      <div class="<?php echo $statGridClasses; ?>">
+      <div class="<?php echo $statGridClasses; ?>" data-stats-group>
         <?php foreach ($statCards as $card): ?>
-          <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden">
+          <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden" data-stat-card>
             <div class="flex items-start justify-between gap-4">
               <div>
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2"><?php echo esc($card['label']); ?></span>
-                <span class="text-2xl md:text-3xl font-serif font-bold text-foundation-grey"><?php echo esc((string)$card['value']); ?></span>
+                <span class="text-2xl md:text-3xl font-serif font-bold text-foundation-grey" data-countup data-countup-target="<?php echo esc_attr((string)$card['value']); ?>"><?php echo esc((string)$card['value']); ?></span>
               </div>
               <i data-lucide="<?php echo esc_attr($card['icon']); ?>" class="w-5 h-5 text-rajkot-rust"></i>
             </div>
@@ -314,11 +314,11 @@ if ($useWorkerProjectView) {
         <?php endforeach; ?>
       </div>
 
-      <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8 mb-8">
+      <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8 mb-8" data-quick-actions>
         <h2 class="text-xl md:text-2xl font-serif font-bold mb-5">Quick Actions</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <?php foreach ($actionCards as $card): ?>
-            <a href="<?php echo esc_attr($card['href']); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white">
+            <a href="<?php echo esc_attr($card['href']); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic data-quick-action>
               <div class="flex items-center justify-between">
                 <div class="font-bold text-foundation-grey"><?php echo esc($card['label']); ?></div>
                 <i data-lucide="<?php echo esc_attr($card['icon']); ?>" class="w-5 h-5 text-rajkot-rust"></i>
@@ -336,9 +336,9 @@ if ($useWorkerProjectView) {
           <?php endif; ?>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-project-grid>
           <?php foreach ($projects as $p): ?>
-            <div class="group bg-white border border-gray-200 shadow-premium hover:shadow-premium-hover transition-all duration-300 flex flex-col">
+            <div class="group bg-white border border-gray-200 shadow-premium hover:shadow-premium-hover transition-all duration-300 flex flex-col" data-project-card>
               <div class="p-6">
                 <div class="flex justify-between items-start mb-3">
                   <span class="px-3 py-1 bg-approval-green/10 text-approval-green text-xs font-bold uppercase tracking-widest border border-approval-green/20">
@@ -397,6 +397,40 @@ if ($useWorkerProjectView) {
     if (window.lucide) {
       window.lucide.createIcons();
     }
+
+    (function () {
+      if (!window.RDAnimations || !window.RDMotionPresets || typeof window.RDAnimations.initPageAnimations !== 'function') {
+        return;
+      }
+
+      window.RDAnimations.initPageAnimations('dashboard-unified', document, function () {
+        var presets = window.RDMotionPresets;
+        var stats = document.querySelectorAll('[data-stat-card]');
+        var actions = document.querySelectorAll('[data-quick-action]');
+        var projects = document.querySelectorAll('[data-project-card]');
+        var counters = document.querySelectorAll('[data-countup]');
+
+        if (stats.length && typeof presets.staggeredEntry === 'function') {
+          presets.staggeredEntry(stats, { distance: 18, duration: 0.42, stagger: 0.08 });
+        }
+
+        if (counters.length && typeof presets.countUp === 'function') {
+          presets.countUp(counters, { duration: 0.72 });
+        }
+
+        if (actions.length && typeof presets.staggeredEntry === 'function') {
+          presets.staggeredEntry(actions, { distance: 14, duration: 0.34, stagger: 0.06 });
+        }
+
+        if (actions.length && typeof presets.magneticButtons === 'function') {
+          presets.magneticButtons('[data-quick-action]', { strength: 0.2, maxShift: 10 });
+        }
+
+        if (projects.length && typeof presets.staggeredEntry === 'function') {
+          presets.staggeredEntry(projects, { distance: 16, duration: 0.36, stagger: 0.05 });
+        }
+      });
+    })();
   </script>
 </body>
 
