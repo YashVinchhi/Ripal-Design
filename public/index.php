@@ -271,7 +271,8 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
 
     <?php
     // enqueue page scripts so Common/footer.php can render them in the footer
-    asset_enqueue_js('/js/index.js');
+    // index.js uses ES module imports; load as a module
+    asset_enqueue_js('/js/index.js', ['type' => 'module']);
     ?>
     <?php require_once __DIR__ . '/../Common/footer.php'; ?>
         <script>

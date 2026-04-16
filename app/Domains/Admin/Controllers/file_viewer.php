@@ -2,6 +2,37 @@
 if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php'; }
 require_login();
 
+// model-viewer uses WebAssembly and optional network requests to unpkg.
+// Keep default CSP strict globally, but relax only on this page.
+if (defined('SECURITY_ENABLE_CSP') && SECURITY_ENABLE_CSP && defined('SECURITY_CSP_POLICY') && !headers_sent()) {
+  $viewerCsp = (string)SECURITY_CSP_POLICY;
+
+  $appendCspSources = static function ($policy, $directive, array $sources) {
+    $pattern = '/(^|;\\s*)' . preg_quote($directive, '/') . '\\s+([^;]*)/i';
+    if (preg_match($pattern, $policy, $m)) {
+      $existing = preg_split('/\\s+/', trim((string)$m[2])) ?: [];
+      foreach ($sources as $src) {
+        if (!in_array($src, $existing, true)) {
+          $existing[] = $src;
+        }
+      }
+      $replacement = (trim((string)$m[1]) !== '' ? '; ' : '') . $directive . ' ' . implode(' ', array_filter($existing));
+      return preg_replace($pattern, $replacement, $policy, 1);
+    }
+    $suffix = rtrim($policy);
+    if ($suffix !== '' && substr($suffix, -1) !== ';') {
+      $suffix .= ';';
+    }
+    return $suffix . ' ' . $directive . ' ' . implode(' ', $sources);
+  };
+
+  $viewerCsp = $appendCspSources($viewerCsp, 'script-src', ["'unsafe-eval'", "'wasm-unsafe-eval'", 'https://www.gstatic.com']);
+  $viewerCsp = $appendCspSources($viewerCsp, 'connect-src', ['https://unpkg.com', 'https://www.gstatic.com', 'blob:']);
+  $viewerCsp = $appendCspSources($viewerCsp, 'worker-src', ["'self'", 'blob:']);
+  $viewerCsp = $appendCspSources($viewerCsp, 'child-src', ["'self'", 'blob:']);
+  header('Content-Security-Policy: ' . $viewerCsp);
+}
+
 $notice = '';
 $noticeType = 'info';
 
@@ -1417,9 +1448,12 @@ if (in_array($ext, ['dwg', 'skp'], true)) {
   $viewerMode = 'cad';
 }
 
-// For GLB/GLTF, prefer extension-preserving direct file URL over stream endpoint.
-if ($viewerMode === '3d' && $previewDirectUrl !== '' && $previewAbsolutePath !== '') {
-  $previewUrl = $previewDirectUrl;
+// For DB-backed GLB/GLTF resources, use stream endpoint so private-storage
+// files load reliably instead of relying on direct public upload paths.
+if ($viewerMode === '3d' && $resourceStreamUrl !== '') {
+  $previewUrl = $resourceStreamUrl;
+  $previewAbsoluteUrl = file_viewer_absolute_url($resourceStreamUrl);
+  $previewDirectUrl = '';
 }
 
 // For database-backed resources, prefer the stream endpoint for non-3D previews
@@ -1478,7 +1512,7 @@ $vrSettings = file_viewer_load_vr_settings();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
   <?php endif; ?>
   <?php if (($viewerMode === '3d' && $previewUrl !== '') || ($viewerMode === 'cad' && $cadPreviewUrl !== '')): ?>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@4.2.0/dist/model-viewer.min.js" crossorigin="anonymous"></script>
   <?php endif; ?>
   <?php if ($viewerMode === '360' && $previewUrl !== ''): ?>
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>

@@ -772,7 +772,7 @@ if (!$project) {
 }
 
 // Format budget for display
-$budgetFormatted = 'â‚¹ ' . number_format($project['budget'] ?? 0, 0, '.', ',');
+$budgetFormatted = ' ₹ ' . number_format($project['budget'] ?? 0, 0, '.', ',');
 
 $projectMapLink = trim((string)($project['map_link'] ?? ''));
 $projectAddressForMap = trim((string)($project['address'] ?? $project['location'] ?? ''));
@@ -848,6 +848,7 @@ if ($pdo instanceof PDO) {
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <?php if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
         tailwind.config = {
@@ -881,6 +882,7 @@ if ($pdo instanceof PDO) {
             },
         };
     </script>
+    <?php endif; ?>
     <style>
         :root {
             --bg-dark: #050505;

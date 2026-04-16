@@ -307,6 +307,8 @@ if (!function_exists('asset_enqueue_js')) {
         if (!isset($opts['defer'])) $opts['defer'] = false;
         if (!isset($opts['async'])) $opts['async'] = false;
         if (!isset($opts['priority'])) $opts['priority'] = 10;
+        // Optional script type (e.g. 'module')
+        if (!isset($opts['type'])) $opts['type'] = '';
         
         // Check if already enqueued
         foreach ($GLOBALS['__asset_queue_js'] as $item) {
@@ -317,7 +319,8 @@ if (!function_exists('asset_enqueue_js')) {
             'path' => $key,
             'defer' => (bool)$opts['defer'],
             'async' => (bool)$opts['async'],
-            'priority' => $opts['priority']
+            'priority' => $opts['priority'],
+            'type' => is_string($opts['type']) ? trim($opts['type']) : ''
         ];
     }
 }
@@ -394,7 +397,13 @@ if (!function_exists('render_footer_scripts')) {
             $attrs = [];
             if ($defer) $attrs[] = 'defer';
             if ($async) $attrs[] = 'async';
-            
+            if (!empty($entry['type'])) {
+                $type = trim((string)$entry['type']);
+                if ($type !== '') {
+                    $attrs[] = 'type="' . esc_attr($type) . '"';
+                }
+            }
+
             $attrStr = !empty($attrs) ? ' ' . implode(' ', $attrs) : '';
             echo '<script' . $attrStr . ' src="' . esc_attr($srcUrl) . '"></script>' . "\n";
         }

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (!defined('PROJECT_ROOT')) {
   require_once __DIR__ . '/../Core/Bootstrap/init.php';
 }

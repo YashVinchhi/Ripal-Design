@@ -104,46 +104,49 @@ $stylesheetCandidates = [
 
 <?php if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS): ?>
 <?php
-// Include TailwindCSS globally for consistent design system
-echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
-echo '<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          "rajkot-rust": "#94180C",
-          "canvas-white": "#F9FAFB",
-          "foundation-grey": "#2D2D2D",
-          "slate-accent": "#334155",
-          "approval-green": "#15803D",
-          "pending-amber": "#B45309",
-          primary: "#94180C",
-          background: "#F9FAFB",
-        },
-        fontFamily: {
-          sans: ["Inter", "sans-serif"],
-          serif: ["Playfair Display", "serif"],
-        },
-        boxShadow: {
-            "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
-            "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
+// Include TailwindCSS CDN only in development. Production should use
+// precompiled CSS (e.g. tailwind built into /assets/css/tailwind.css)
+if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0') {
+        echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
+        echo '<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    "rajkot-rust": "#94180C",
+                    "canvas-white": "#F9FAFB",
+                    "foundation-grey": "#2D2D2D",
+                    "slate-accent": "#334155",
+                    "approval-green": "#15803D",
+                    "pending-amber": "#B45309",
+                    primary: "#94180C",
+                    background: "#F9FAFB",
+                },
+                fontFamily: {
+                    sans: ["Inter", "sans-serif"],
+                    serif: ["Playfair Display", "serif"],
+                },
+                boxShadow: {
+                        "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
+                        "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
+                }
+            }
         }
-      }
     }
-  }
 </script>' . "\n";
+}
 
 // Include main stylesheet. Use PUBLIC_PATH_PREFIX when rendering href so we
 // don't accidentally emit "/public/..." URLs when Apache serves the
 // /public directory as the document root.
 foreach ($stylesheetCandidates as $candidate) {
-    $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
-    if (file_exists($filePath)) {
-        $publicRemoved = preg_replace('~^/public~i', '', $candidate);
-        $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
-        echo '<link rel="stylesheet" href="' . esc_attr($href) . '">' . "\n";
-        break;
-    }
+        $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
+        if (file_exists($filePath)) {
+                $publicRemoved = preg_replace('~^/public~i', '', $candidate);
+                $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
+                echo '<link rel="stylesheet" href="' . esc_attr($href) . '">' . "\n";
+                break;
+        }
 }
 ?>
 <?php endif; ?>

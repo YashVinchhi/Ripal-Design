@@ -35,7 +35,6 @@ if ($viewMode === 'archive') {
   <title>Leave Management | Ripal Design</title>
   <link rel="icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
   <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
-  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     function handleLeaveAction(employeeName, action, btn) {
         const verb = action === 'approved' ? 'Authorize' : 'Decline';
@@ -66,6 +65,8 @@ if ($viewMode === 'archive') {
         }
     }
   </script>
+  <?php if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -83,6 +84,7 @@ if ($viewMode === 'archive') {
       }
     }
   </script>
+  <?php endif; ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header_alt.php'; ?>

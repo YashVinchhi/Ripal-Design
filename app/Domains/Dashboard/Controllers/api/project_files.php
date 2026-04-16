@@ -60,6 +60,68 @@ function ensure_project_files_revision_columns(PDO $db): array
     ];
 }
 
+// Enable robust API-side error handling and logging to aid debugging of 500s.
+// This installs an exception handler, converts PHP warnings/notices to exceptions,
+// and captures fatal shutdown errors. In development mode we include error details
+// in the JSON response; in production we log details and return a generic message.
+$debugMode = (defined('APP_ENV') && APP_ENV === 'development') || (defined('SECURITY_DEBUG_API') && constant('SECURITY_DEBUG_API'));
+
+function api_log_error(Throwable $e): void
+{
+    $logDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'logs';
+    $logFile = $logDir . DIRECTORY_SEPARATOR . 'api_errors.log';
+    $req = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'N/A';
+    $msg = '[' . date('c') . '] ' . $req . ' ' . get_class($e) . ': ' . $e->getMessage() . " in " . $e->getFile() . ':' . $e->getLine() . PHP_EOL . $e->getTraceAsString() . PHP_EOL . PHP_EOL;
+    if (!is_dir($logDir)) {
+        @mkdir($logDir, 0775, true);
+    }
+    @file_put_contents($logFile, $msg, FILE_APPEND | LOCK_EX);
+    @error_log($msg);
+}
+
+set_exception_handler(function (Throwable $e) use ($debugMode) {
+    try {
+        api_log_error($e);
+    } catch (Throwable $_) {
+        // best-effort logging only
+    }
+    $payload = ['success' => false, 'message' => 'Internal server error.'];
+    if ($debugMode) {
+        $payload['error'] = $e->getMessage();
+        $payload['trace'] = explode("\n", $e->getTraceAsString());
+    }
+    // attempt to respond as JSON
+    if (!headers_sent()) header('Content-Type: application/json; charset=utf-8');
+    http_response_code(500);
+    echo json_encode($payload);
+    exit;
+});
+
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    // Convert PHP errors into exceptions so they can be handled centrally.
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
+
+register_shutdown_function(function () use ($debugMode) {
+    $err = error_get_last();
+    if ($err && in_array($err['type'] ?? 0, [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        $msg = '[' . date('c') . '] Shutdown fatal: ' . ($err['message'] ?? 'unknown') . ' in ' . ($err['file'] ?? 'n/a') . ':' . ($err['line'] ?? 0) . PHP_EOL;
+        $logDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'logs';
+        $logFile = $logDir . DIRECTORY_SEPARATOR . 'api_errors.log';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0775, true);
+        }
+        @file_put_contents($logFile, $msg, FILE_APPEND | LOCK_EX);
+        @error_log($msg);
+        if (!headers_sent()) header('Content-Type: application/json; charset=utf-8');
+        http_response_code(500);
+        $out = ['success' => false, 'message' => 'Internal server error.'];
+        if ($debugMode) $out['error'] = $err['message'] ?? 'fatal';
+        echo json_encode($out);
+        exit;
+    }
+});
+
 $db = get_db();
 if (!($db instanceof PDO)) {
     api_json(['success' => false, 'message' => 'Database connection unavailable.'], 500);
@@ -356,10 +418,14 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
         }
     }
 
-    $maxUploadBytes = 25 * 1024 * 1024;
+    $configuredMaxUploadMb = (int)(getenv('PROJECT_FILE_MAX_UPLOAD_MB') ?: 250);
+    if ($configuredMaxUploadMb <= 0) {
+        $configuredMaxUploadMb = 250;
+    }
+    $maxUploadBytes = $configuredMaxUploadMb * 1024 * 1024;
     $sizeBytes = (int)($uploaded['size'] ?? 0);
     if ($sizeBytes <= 0 || $sizeBytes > $maxUploadBytes) {
-        api_json(['success' => false, 'message' => 'File must be between 1 byte and 25 MB.'], 400);
+        api_json(['success' => false, 'message' => 'File must be between 1 byte and ' . $configuredMaxUploadMb . ' MB.'], 400);
     }
 
     $detectedMime = api_detect_mime($tmpPath);
