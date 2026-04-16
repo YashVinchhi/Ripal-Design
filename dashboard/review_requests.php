@@ -6,7 +6,7 @@
  * Fixes header errors and adopts the premium Rajkot Rust design.
  */
 
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 
 $user = $_SESSION['user'] ?? 'employee01';

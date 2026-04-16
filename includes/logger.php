@@ -1,5 +1,8 @@
 <?php
 
+require_once dirname(__DIR__) . '/app/Core/Support/logger.php';
+return;
+
 if (!function_exists('app_logger')) {
     /**
      * Get shared application logger instance.

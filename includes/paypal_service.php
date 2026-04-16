@@ -1,5 +1,8 @@
 <?php
 
+require_once dirname(__DIR__) . '/app/Domains/Billing/Services/paypal_service.php';
+return;
+
 if (!function_exists('paypal_mode')) {
     function paypal_mode(): string
     {

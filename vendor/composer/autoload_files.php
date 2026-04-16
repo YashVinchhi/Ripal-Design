@@ -88,4 +88,6 @@ return array(
     '356736db98a6834f0a886b8d509b0ecd' => $vendorDir . '/thecodingmachine/safe/generated/zlib.php',
     '0174385c3be07e86008907d06ee66531' => $vendorDir . '/sabberworm/php-css-parser/src/Rule/Rule.php',
     '98aea6e41b9cb79b379b10f37ba1f0b7' => $vendorDir . '/sabberworm/php-css-parser/src/RuleSet/RuleContainer.php',
+    '4d6a8a8d9fe8002cc32d3f99919b9481' => $baseDir . '/stubs/imagick.php',
+    'f9bafc998533e3cffd18010fc53959d1' => $baseDir . '/stubs/dev_test_stubs.php',
 );

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 $ct = static function ($key, $default = '') {
     if (function_exists('public_content_get')) {

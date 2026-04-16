@@ -5,8 +5,8 @@
 
 require_once __DIR__ . '/_webmcp_common.php';
 
-if (file_exists(__DIR__ . '/../includes/public_content.php')) {
-    require_once __DIR__ . '/../includes/public_content.php';
+if (file_exists(__DIR__ . '/../app/Domains/Content/Services/public_content.php')) {
+    require_once __DIR__ . '/../app/Domains/Content/Services/public_content.php';
 }
 
 wmcp_require_https();

@@ -1,6 +1,6 @@
 <?php
 // dashboard/goods_invoice.php - redesigned invoice layout (printable + responsive)
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 if (!$project_id) { header('Location: dashboard.php'); exit; }
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $mail->Encoding = 'base64';
 
                                 // Configure PHPMailer transport from environment in a centralized helper
-                                require_once __DIR__ . '/../includes/mail_helper.php';
+                                require_once __DIR__ . '/../app/Shared/Mail/mail_helper.php';
                                 @configure_mailer($mail);
 
                                 $mail->setFrom($fromEmail, $fromName);

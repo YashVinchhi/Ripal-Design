@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 $sessionUser = $_SESSION['user'] ?? null;
 $sessionRole = is_array($sessionUser) ? (string)($sessionUser['role'] ?? '') : '';

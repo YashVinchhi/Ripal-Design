@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 $contactContent = function_exists('public_content_page_values') ? public_content_page_values('contact_us') : [];
 $ct = static function ($key, $default = '') use ($contactContent) {
@@ -86,7 +86,7 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
 <body class="bg-[#050505] text-white overflow-x-hidden">
     <?php 
     $HEADER_MODE = 'public';
-    require_once __DIR__ . '/../includes/header.php'; 
+    require_once __DIR__ . '/../app/Ui/header.php'; 
     ?>
         <?php if ($form_error): ?>
             <div class="fixed top-24 right-6 z-[100] bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">

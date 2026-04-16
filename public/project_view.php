@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 $projectViewContent = function_exists('public_content_page_values') ? public_content_page_values('project_view') : [];
 $ct = static function ($key, $default = '') use ($projectViewContent) {
     return (string)($projectViewContent[$key] ?? $default);
@@ -31,7 +31,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
     </style>
 </head>
 <body class="bg-[#050505] text-white overflow-x-hidden">
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
     <main class="min-h-screen pt-32 pb-20">
         <div class="container mx-auto px-6">

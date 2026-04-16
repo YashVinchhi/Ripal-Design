@@ -1,4 +1,7 @@
 <?php
+
+require_once dirname(__DIR__) . '/app/Core/Bootstrap/init.php';
+return;
 /**
  * Application Bootstrap/Initialization
  * 
@@ -15,7 +18,7 @@
  * Also initializes session management.
  * 
  * Usage:
- * require_once __DIR__ . '/../includes/init.php';
+ * require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
  * 
  * @package RipalDesign
  * @subpackage Core

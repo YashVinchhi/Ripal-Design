@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../includes/init.php';
+require_once __DIR__ . '/../../app/Core/Bootstrap/init.php';
 require_login();
 
 header('Content-Type: application/json; charset=utf-8');

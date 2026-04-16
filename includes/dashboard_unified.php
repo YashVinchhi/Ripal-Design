@@ -1,4 +1,7 @@
 <?php
+
+require_once dirname(__DIR__) . '/app/Ui/dashboard_unified.php';
+return;
 if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/init.php';
 }

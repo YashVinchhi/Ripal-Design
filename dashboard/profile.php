@@ -6,7 +6,7 @@
  * Fixes header errors and adheres to the Rajkot Rust immersive design.
  */
 
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 // Get current user info from session (support multiple session shapes)
 $session_user = $_SESSION['user'] ?? null;

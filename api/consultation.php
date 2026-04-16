@@ -7,8 +7,8 @@
 
 require_once __DIR__ . '/_webmcp_common.php';
 
-if (file_exists(__DIR__ . '/../includes/mail_helper.php')) {
-    require_once __DIR__ . '/../includes/mail_helper.php';
+if (file_exists(__DIR__ . '/../app/Shared/Mail/mail_helper.php')) {
+    require_once __DIR__ . '/../app/Shared/Mail/mail_helper.php';
 }
 
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {

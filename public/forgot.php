@@ -1,6 +1,6 @@
 
 <?php
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 $message = '';
 $type = '';
@@ -39,7 +39,7 @@ $ct = static function ($key, $default = '') use ($forgotContent) {
 
 <body class="auth-page">
     <div class="grain"></div>
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
     <main class="auth-main auth-main-public">
         <section class="auth-card-wrap" aria-labelledby="forgotTitle">

@@ -1,6 +1,6 @@
 <?php
 // Upload Drawings (Redesigned UI)
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 
 $projectOptions = db_connected() ? db_fetch_all('SELECT id, name FROM projects ORDER BY id DESC LIMIT 200') : [];

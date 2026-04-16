@@ -1,6 +1,6 @@
 <?php
 // Project Management (Redesigned UI)
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 require_role('admin');
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<?php require_once __DIR__ . '/../includes/init.php'; ?>
+<?php require_once __DIR__ . '/../app/Core/Bootstrap/init.php'; ?>
 <?php
 $aboutContent = function_exists('public_content_page_values') ? public_content_page_values('about_us') : [];
 $ct = static function ($key, $default = '') use ($aboutContent) {
@@ -29,7 +29,7 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
 <body>
     <div class="grain"></div>
 
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
     <main>
         <!-- Hero Section -->

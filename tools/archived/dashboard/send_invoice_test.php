@@ -26,10 +26,10 @@ if (file_exists($pub)) {
     $mail = require $pub;
 }
 
-if (!($mail instanceof PHPMailer\\PHPMailer\\PHPMailer)) {
+if (!($mail instanceof PHPMailer\PHPMailer\PHPMailer)) {
     // Build a minimal PHPMailer instance and configure SMTP from environment
-    $mail = new PHPMailer\\PHPMailer\\PHPMailer(true);
-    require_once __DIR__ . '/../../includes/mail_helper.php';
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    require_once __DIR__ . '/../../app/Shared/Mail/mail_helper.php';
     if (!@configure_mailer($mail)) {
         fwrite(STDERR, "No SMTP configuration found. Set MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD in environment or .env\n");
         exit(1);

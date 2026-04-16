@@ -1,5 +1,8 @@
 <?php
 
+require_once dirname(__DIR__) . '/app/Domains/Notifications/Services/notification_service.php';
+return;
+
 if (!function_exists('notifications_db')) {
     function notifications_db() {
         return function_exists('get_db') ? get_db() : null;

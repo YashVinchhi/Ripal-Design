@@ -1,4 +1,7 @@
 <?php
+
+require_once dirname(__DIR__) . '/app/Ui/header.php';
+return;
 /**
  * Header Include Wrapper
  * 
@@ -6,7 +9,7 @@
  * This provides a consistent include path for all pages.
  * 
  * Usage:
- * <?php require_once __DIR__ . '/../includes/header.php'; ?>
+ * <?php require_once __DIR__ . '/../app/Ui/header.php'; ?>
  * 
  * @package RipalDesign
  * @subpackage Core

@@ -1,7 +1,7 @@
 <?php
 // Client Files (Redesigned UI)
 session_start();
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 $projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST['client_action']) && db_connected()) {

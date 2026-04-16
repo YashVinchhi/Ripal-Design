@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 $servicesContent = function_exists('public_content_page_values') ? public_content_page_values('services') : [];
 $ct = static function ($key, $default = '') use ($servicesContent) {
   return (string)($servicesContent[$key] ?? $default);
@@ -36,7 +36,7 @@ $ctImage = static function ($key, $default = '') use ($servicesContent) {
 <body class="bg-[#050505] text-white overflow-x-hidden">
   <div class="grain"></div>
 
-  <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+  <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
   <main class="relative min-h-screen pb-20">
     <!-- Hero Section -->

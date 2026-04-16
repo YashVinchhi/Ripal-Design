@@ -1,5 +1,5 @@
 <!doctype html>
-<?php require_once __DIR__ . '/../includes/init.php'; ?>
+<?php require_once __DIR__ . '/../app/Core/Bootstrap/init.php'; ?>
 <?php
 if (function_exists('redirect_authenticated_user_to_dashboard')) {
     redirect_authenticated_user_to_dashboard();
@@ -38,7 +38,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
     <div class="grain"></div>
 
     <?php $HEADER_MODE = 'public';
-    require_once __DIR__ . '/../includes/header.php'; ?>
+    require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
     <main>
         <!-- Hero Section -->

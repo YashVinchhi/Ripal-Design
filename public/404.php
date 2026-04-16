@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 http_response_code(404);
 
 $errorContent = function_exists('public_content_page_values') ? public_content_page_values('error_404') : [];
@@ -15,7 +15,7 @@ $ct = static function ($key, $default = '') use ($errorContent) {
   <title><?php echo esc($ct('page_title', 'Lost in Space | Ripal Design')); ?></title>
 </head>
 <body class="bg-foundation-grey font-sans text-white min-h-screen overflow-hidden relative">
-  <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+  <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
   <main class="relative z-10 min-h-[70vh] flex items-center justify-center px-4 py-16">
     <div class="max-w-2xl w-full text-center border border-white/10 bg-black/40 backdrop-blur-sm p-8 md:p-12 shadow-premium">

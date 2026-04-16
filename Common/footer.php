@@ -16,7 +16,7 @@
 
 // Ensure configuration is loaded
 if (!defined('BASE_PATH')) {
-    require_once __DIR__ . '/../includes/config.php';
+    require_once __DIR__ . '/../app/Core/Config/config.php';
 }
 
 $footerContent = function_exists('public_content_page_values') ? public_content_page_values('common_footer') : [];

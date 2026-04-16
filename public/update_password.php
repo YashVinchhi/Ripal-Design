@@ -1,8 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../includes/init.php';
-if (file_exists(__DIR__ . '/../includes/validation.php')) {
-    require_once __DIR__ . '/../includes/validation.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
+if (file_exists(__DIR__ . '/../app/Shared/Validation/validation.php')) {
+    require_once __DIR__ . '/../app/Shared/Validation/validation.php';
 }
 $ct = static function ($key, $default = '') {
     if (function_exists('public_content_get')) {

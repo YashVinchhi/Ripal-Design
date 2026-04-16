@@ -9,6 +9,9 @@
         "phpunit/phpunit": "^10.5"
     },
     "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
         "files": [
             "stubs/imagick.php",
             "stubs/dev_test_stubs.php"

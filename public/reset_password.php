@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 $resetContent = function_exists('public_content_page_values') ? public_content_page_values('reset_password') : [];
 $ct = static function ($key, $default = '') use ($resetContent) {
     return (string)($resetContent[$key] ?? $default);
@@ -59,7 +59,7 @@ if (!($db instanceof PDO)) {
 
 <body class="auth-page">
     <div class="grain"></div>
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
     <main class="auth-main auth-main-public">
         <section class="auth-card-wrap" aria-labelledby="resetTitle">

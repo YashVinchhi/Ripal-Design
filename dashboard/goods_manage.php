@@ -1,6 +1,6 @@
 <?php
 // dashboard/goods_manage.php - admin page to add goods with SKU/description/unit
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 require_role('admin');
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;

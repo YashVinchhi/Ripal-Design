@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 // Only allow clients
 require_role('client');

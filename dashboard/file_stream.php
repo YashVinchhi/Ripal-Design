@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 
 @ini_set('display_errors', '0');

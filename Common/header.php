@@ -14,7 +14,7 @@
 
 // Ensure configuration is loaded
 if (!defined('BASE_PATH')) {
-    require_once __DIR__ . '/../includes/config.php';
+    require_once __DIR__ . '/../app/Core/Config/config.php';
 }
 
 // Ensure session is started

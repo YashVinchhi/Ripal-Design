@@ -89,13 +89,23 @@ class ComposerStaticInit396d5d8e53397183490951a621883fe9
         '356736db98a6834f0a886b8d509b0ecd' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/zlib.php',
         '0174385c3be07e86008907d06ee66531' => __DIR__ . '/..' . '/sabberworm/php-css-parser/src/Rule/Rule.php',
         '98aea6e41b9cb79b379b10f37ba1f0b7' => __DIR__ . '/..' . '/sabberworm/php-css-parser/src/RuleSet/RuleContainer.php',
+        '4d6a8a8d9fe8002cc32d3f99919b9481' => __DIR__ . '/../..' . '/stubs/imagick.php',
+        'f9bafc998533e3cffd18010fc53959d1' => __DIR__ . '/../..' . '/stubs/dev_test_stubs.php',
     );
 
     public static $prefixLengthsPsr4 = array (
+        'T' =>
+        array (
+            'Tests\\' => 6,
+        ),
         'S' =>
         array (
             'Svg\\' => 4,
             'Sabberworm\\CSS\\' => 15,
+        ),
+        'P' =>
+        array (
+            'PHPMailer\\PHPMailer\\' => 20,
         ),
         'M' =>
         array (
@@ -109,9 +119,17 @@ class ComposerStaticInit396d5d8e53397183490951a621883fe9
         array (
             'Dompdf\\' => 7,
         ),
+        'A' =>
+        array (
+            'App\\' => 4,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
+        'Tests\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/tests',
+        ),
         'Svg\\' =>
         array (
             0 => __DIR__ . '/..' . '/dompdf/php-svg-lib/src/Svg',
@@ -119,6 +137,10 @@ class ComposerStaticInit396d5d8e53397183490951a621883fe9
         'Sabberworm\\CSS\\' =>
         array (
             0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/src',
+        ),
+        'PHPMailer\\PHPMailer\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/src',
         ),
         'Masterminds\\' =>
         array (
@@ -131,6 +153,10 @@ class ComposerStaticInit396d5d8e53397183490951a621883fe9
         'Dompdf\\' =>
         array (
             0 => __DIR__ . '/..' . '/dompdf/dompdf/src',
+        ),
+        'App\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/app',
         ),
     );
 

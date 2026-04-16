@@ -7,7 +7,7 @@
  * Fixes header errors and adopts the Rajkot Rust premium design system.
  */
 
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 require_login();
 

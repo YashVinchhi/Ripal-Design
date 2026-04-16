@@ -5,7 +5,7 @@
  * Displays comprehensive project information with tabs for Overview, Team, Files, Activity, and Drawings
  */
 
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_login();
 
 $sessionUser = $_SESSION['user'] ?? [];

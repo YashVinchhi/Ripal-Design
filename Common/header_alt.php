@@ -1,7 +1,7 @@
 <?php
 // header.php - include this at the top of pages to get shared nav
 // Load common stylesheet fallbacks so header always appears styled during testing.
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../app/Core/Config/config.php';
 
 // Ensure session available so header can show user-specific nav
 if (session_status() === PHP_SESSION_NONE) {

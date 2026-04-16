@@ -1,5 +1,8 @@
 <?php
 
+require_once dirname(__DIR__) . '/app/Domains/Billing/Services/billing_service.php';
+return;
+
 if (!function_exists('billing_ensure_tables')) {
     function billing_ensure_tables(): bool
     {

@@ -1,7 +1,7 @@
 <?php
 if (!defined('PROJECT_ROOT')) {
-  require_once __DIR__ . '/../includes/init.php';
-  require_once __DIR__ . '/../includes/auth.php';
+  require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
+  require_once __DIR__ . '/../app/Core/Security/auth.php';
 }
 require_login();
 

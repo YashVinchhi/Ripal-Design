@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 session_start();
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 

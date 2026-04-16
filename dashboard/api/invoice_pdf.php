@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../includes/init.php';
+require_once __DIR__ . '/../../app/Core/Bootstrap/init.php';
 require_login();
 
 $invoiceId = isset($_GET['invoice_id']) ? (int)$_GET['invoice_id'] : 0;

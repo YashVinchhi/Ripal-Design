@@ -6,9 +6,9 @@
  * standardized error payloads, and safe input handling.
  */
 
-require_once __DIR__ . '/../includes/config.php';
-require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/util.php';
+require_once __DIR__ . '/../app/Core/Config/config.php';
+require_once __DIR__ . '/../app/Core/Database/db.php';
+require_once __DIR__ . '/../app/Core/Support/util.php';
 
 if (!function_exists('wmcp_set_json_headers')) {
     function wmcp_set_json_headers($readOnly = true, $allowMethods = 'GET, OPTIONS')

@@ -1,6 +1,6 @@
 <?php
 // One-off script to insert or update an admin user (safe to run multiple times)
-require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 
 $targetEmail = 'yashhvinchhi@gmail.com';
 $username = 'yashhvinchhi';
