@@ -13,7 +13,9 @@ module.exports = {
         'foundation-grey': '#2D2D2D',
         'slate-accent': '#334155',
         'approval-green': '#15803D',
-        'pending-amber': '#B45309'
+        'pending-amber': '#B45309',
+        'background-light': '#F9FAFB',
+        'background-dark': '#121212'
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

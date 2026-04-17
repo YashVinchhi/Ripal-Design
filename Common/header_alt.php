@@ -30,15 +30,20 @@ echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/boots
 foreach ($candidates as $c) {
     $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $c);
     if (file_exists($filePath)) {
-        $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $c;
+        // Handle pathing based on whether it is in public/ or not
+        if (strpos($c, '/public/') === 0) {
+            $publicRemoved = preg_replace('~^/public~i', '', $c);
+            $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
+        } else {
+            $href = rtrim((string)BASE_PATH, '/') . $c;
+        }
         echo '<link rel="stylesheet" href="' . htmlspecialchars($href, ENT_QUOTES) . '">' . "\n";
-        break; // Only include the first match
     }
 }
 ?>
-<link rel="icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
-<link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
-<link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico">
+<link rel="icon" href="<?php echo BASE_PATH; ?>/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/favicon.ico">
 <!-- Immersive Navigation Header -->
 <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/Common/header.css">
 <?php if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } ?>

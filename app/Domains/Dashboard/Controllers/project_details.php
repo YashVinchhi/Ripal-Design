@@ -1,5 +1,7 @@
 <?php
-if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php'; }
+if (!defined('PROJECT_ROOT')) {
+    require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php';
+}
 /**
  * Project Details Page
  * Displays comprehensive project information with tabs for Overview, Team, Files, Activity, and Drawings
@@ -449,20 +451,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                             app_log('warning', 'Failed to log owner change activity', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
                         }
                     }
-                        // Recalculate project progress after owner assignment
-                        try {
-                            if (function_exists('recalculate_project_progress')) {
-                                recalculate_project_progress($projectId);
-                            }
-                        } catch (Throwable $e) {
-                            if (function_exists('app_log')) {
-                                app_log('warning', 'Progress recalculation failed (owner assign)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
-                            }
+                    // Recalculate project progress after owner assignment
+                    try {
+                        if (function_exists('recalculate_project_progress')) {
+                            recalculate_project_progress($projectId);
                         }
+                    } catch (Throwable $e) {
+                        if (function_exists('app_log')) {
+                            app_log('warning', 'Progress recalculation failed (owner assign)', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+                        }
+                    }
 
-                        $_SESSION['project_success'] = 'Project owner updated successfully!';
-                        header('Location: project_details.php?id=' . (int)$projectId);
-                        exit();
+                    $_SESSION['project_success'] = 'Project owner updated successfully!';
+                    header('Location: project_details.php?id=' . (int)$projectId);
+                    exit();
                 }
             } catch (Exception $e) {
                 if (function_exists('app_log')) {
@@ -696,79 +698,13 @@ if ($projectId && $pdo instanceof PDO) {
     }
 }
 
-// Sample data fallback
-if (!$project && !$projectId) {
-    $project = [
-        'id' => null,
-        'name' => '',
-        'status' => 'ongoing',
-        'budget' => 0,
-        'progress' => 0,
-        'due' => date('Y-m-d', strtotime('+30 days')),
-        'location' => '',
-        'map_link' => '',
-        'address' => '',
-        'owner' => [
-            'name' => '',
-            'contact' => '',
-            'email' => ''
-        ],
-        'workers' => [],
-        'milestones' => [],
-        'files' => [],
-        'activities' => [],
-        'drawings' => []
-    ];
-}
-
 if (!$project) {
-    $project = [
-        'id' => $projectId ?? 1,
-        'name' => 'Shanti Sadan',
-        'status' => 'ongoing',
-        'budget' => 4500000,
-        'progress' => 45,
-        'due' => date('Y-m-d', strtotime('+30 days')),
-        'location' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-        'map_link' => '',
-        'address' => 'Jasal Complex, Nanavati Chowk, Rajkot',
-        'owner' => [
-            'name' => 'Amitbhai Patel',
-            'contact' => '+91 98765 43210',
-            'email' => 'amit.patel@example.com'
-        ],
-        'workers' => [
-            ['worker_name' => 'Rameshbhai Patel', 'worker_role' => 'Plumber', 'worker_contact' => '+91 98765 11111'],
-            ['worker_name' => 'Sureshbhai', 'worker_role' => 'Electrician', 'worker_contact' => '+91 98765 22222'],
-            ['worker_name' => 'Mohanbhai Ahir', 'worker_role' => 'Mason', 'worker_contact' => '+91 98765 33333'],
-            ['worker_name' => 'Vijaybhai Shah', 'worker_role' => 'Site Engineer', 'worker_contact' => '+91 98765 44444'],
-            ['worker_name' => 'Kiranbhai Patel', 'worker_role' => 'Carpenter', 'worker_contact' => '+91 98765 55555'],
-            ['worker_name' => 'Anilbhai Sharma', 'worker_role' => 'Painter', 'worker_contact' => '+91 98765 66666']
-        ],
-        'milestones' => [
-            ['title' => 'Foundation Completion', 'target_date' => '2026-02-28', 'status' => 'active'],
-            ['title' => 'Material Procurement', 'target_date' => '2026-03-15', 'status' => 'pending'],
-            ['title' => 'Electrical Rough-in', 'target_date' => '2026-04-05', 'status' => 'pending']
-        ],
-        'files' => [
-            ['id' => 1, 'name' => 'Site Plan.pdf', 'type' => 'PDF', 'size' => '2.4 MB', 'uploaded_at' => '2026-02-10 14:30:00', 'uploaded_by' => 'Admin', 'file_path' => '#'],
-            ['id' => 2, 'name' => 'Budget Estimate.xlsx', 'type' => 'Excel', 'size' => '856 KB', 'uploaded_at' => '2026-02-08 10:15:00', 'uploaded_by' => 'Amit Patel', 'file_path' => '#'],
-            ['id' => 3, 'name' => 'Design Mockup.jpg', 'type' => 'Image', 'size' => '4.2 MB', 'uploaded_at' => '2026-02-05 16:45:00', 'uploaded_by' => 'Architect', 'file_path' => '#'],
-            ['id' => 4, 'name' => 'Contract Agreement.pdf', 'type' => 'PDF', 'size' => '1.8 MB', 'uploaded_at' => '2026-01-28 09:00:00', 'uploaded_by' => 'Legal Team', 'file_path' => '#']
-        ],
-        'activities' => [
-            ['id' => 1, 'user' => 'Rameshbhai Patel', 'action' => 'completed task', 'item' => 'Plumbing Installation', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
-            ['id' => 2, 'user' => 'Admin', 'action' => 'uploaded file', 'item' => 'Progress Photos.zip', 'created_at' => date('Y-m-d H:i:s', strtotime('-4 hours'))],
-            ['id' => 3, 'user' => 'Sureshbhai', 'action' => 'updated status', 'item' => 'Electrical Rough-in', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))],
-            ['id' => 4, 'user' => 'Vijaybhai Shah', 'action' => 'added comment', 'item' => 'Foundation inspection passed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))]
-        ],
-        'drawings' => [
-            ['id' => 1, 'name' => 'Floor Plan - Ground Floor', 'version' => 'v2.3', 'uploaded_at' => '2026-02-10 12:00:00', 'status' => 'Approved', 'file_path' => '#'],
-            ['id' => 2, 'name' => 'Elevation - Front View', 'version' => 'v1.8', 'uploaded_at' => '2026-02-08 11:30:00', 'status' => 'Under Review', 'file_path' => '#'],
-            ['id' => 3, 'name' => 'Electrical Layout', 'version' => 'v3.1', 'uploaded_at' => '2026-02-05 14:20:00', 'status' => 'Approved', 'file_path' => '#'],
-            ['id' => 4, 'name' => 'Plumbing Schematic', 'version' => 'v2.0', 'uploaded_at' => '2026-01-30 09:45:00', 'status' => 'Approved', 'file_path' => '#']
-        ]
-    ];
+    if (function_exists('show_404')) {
+        show_404();
+    }
+    http_response_code(404);
+    echo "404 Project Not Found";
+    exit;
 }
 
 // Format budget for display
@@ -848,40 +784,47 @@ if ($pdo instanceof PDO) {
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <?php if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "rajkot-rust": "#94180C",
-                        "foundation-grey": "#2D2D2D",
-                        "canvas-white": "#F9FAFB",
-                        primary: "#94180C",
-                        secondary: "#F9FAFB",
-                        "background-light": "#F9FAFB",
-                        "background-dark": "#121212",
-                        "slate-accent": "#334155",
-                        "approval-green": "#15803D",
-                        "pending-amber": "#B45309",
-                    },
-                    fontFamily: {
-                        serif: ["Playfair Display", "serif"],
-                        sans: ["Inter", "sans-serif"],
-                    },
-                    boxShadow: {
-                        "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
-                        "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
-                    },
-                    borderRadius: {
-                        DEFAULT: "4px",
+    <?php
+    $tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
+    $hasLocalTailwind = file_exists($tailwindBuiltPath);
+    if ($hasLocalTailwind):
+        $tailwindHref = rtrim((string)BASE_PATH, '/') . '/assets/css/tailwind.css';
+    ?>
+        <link rel="stylesheet" href="<?php echo esc_attr($tailwindHref); ?>">
+    <?php elseif (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+        <script>
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "rajkot-rust": "#94180C",
+                            "foundation-grey": "#2D2D2D",
+                            "canvas-white": "#F9FAFB",
+                            primary: "#94180C",
+                            secondary: "#F9FAFB",
+                            "background-light": "#F9FAFB",
+                            "background-dark": "#121212",
+                            "slate-accent": "#334155",
+                            "approval-green": "#15803D",
+                            "pending-amber": "#B45309",
+                        },
+                        fontFamily: {
+                            serif: ["Playfair Display", "serif"],
+                            sans: ["Inter", "sans-serif"],
+                        },
+                        boxShadow: {
+                            "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
+                            "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
+                        },
+                        borderRadius: {
+                            DEFAULT: "4px",
+                        },
                     },
                 },
-            },
-        };
-    </script>
+            };
+        </script>
     <?php endif; ?>
     <style>
         :root {
@@ -1015,7 +958,7 @@ if ($pdo instanceof PDO) {
 
             /* for project overview */
             .dark\:bg-slate-800\/50 {
-                background-color: rgb(255 212 212 / 25%) !important;
+                background-color: rgb(255 212 212) !important;
             }
 
             .dark\:text-slate-100 {
@@ -1030,12 +973,12 @@ if ($pdo instanceof PDO) {
 
             .dark\:hover\:bg-slate-800:hover {
                 --tw-bg-opacity: 1;
-                background-color: rgb(197 170 170 / 23%) !important;
+                background-color: rgb(197 170 170) !important;
             }
 
             .dark\:bg-slate-800 {
                 --tw-bg-opacity: 1;
-                background-color: rgb(218 218 218 / 35%) !important;
+                background-color: rgb(218 218 218) !important;
             }
 
             /* for files */
@@ -1120,7 +1063,7 @@ if ($pdo instanceof PDO) {
 </head>
 
 <body
-    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
+    class="bg-canvas-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
 
     <?php
     $HEADER_MODE = 'dashboard';
@@ -1532,7 +1475,7 @@ if ($pdo instanceof PDO) {
                                 <span><?php echo htmlspecialchars($member['worker_contact']); ?></span>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="viewMemberProfile(<?php echo (int)($member['id'] ?? 0); ?>, <?php echo json_encode((string)($member['worker_name'] ?? ''), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>, <?php echo json_encode((string)($member['worker_role'] ?? ''), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>)"
+                                <button onclick="viewMemberProfile(<?php echo (int)($member['id'] ?? 0); ?>, <?php echo json_encode((string)($member['worker_name'] ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>, <?php echo json_encode((string)($member['worker_role'] ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>)"
                                     class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                     View Profile
                                 </button>
@@ -1582,7 +1525,7 @@ if ($pdo instanceof PDO) {
             }
             ?>
 
-                <?php if (!empty($project['files'])): ?>
+            <?php if (!empty($project['files'])): ?>
                 <div class="space-y-2">
                     <?php foreach ($project['files'] as $file):
                         $fileDisplay = getFileIcon($file['type']);
@@ -1807,7 +1750,7 @@ if ($pdo instanceof PDO) {
                                     <p class="text-sm text-slate-500 truncate"><?php echo htmlspecialchars($oc['contact'] ?? ''); ?> &bull; <?php echo htmlspecialchars($oc['role'] ?? ''); ?></p>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <button type="button" onclick="selectOwner(<?php echo (int)$ocId; ?>, <?php echo json_encode((string)$ocName, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>)" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
+                                    <button type="button" onclick="selectOwner(<?php echo (int)$ocId; ?>, <?php echo json_encode((string)$ocName, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>)" class="px-3 py-1.5 bg-primary text-white rounded text-xs">Assign</button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -2018,7 +1961,7 @@ if ($pdo instanceof PDO) {
         const csrfToken = <?php echo json_encode(csrf_token()); ?>;
         // Client-side upload guard: 450 MB limit (450 * 1024 * 1024 bytes)
         const MAX_UPLOAD_BYTES = 450 * 1024 * 1024;
-        
+
         // Tab switching functionality
         document.querySelectorAll('.tab-link').forEach(tab => {
             tab.addEventListener('click', function(e) {
@@ -2382,8 +2325,14 @@ if ($pdo instanceof PDO) {
 
         // Helper: basic HTML escape for inserted text
         function escapeHtml(s) {
-            return String(s).replace(/[&<>\"']/g, function (m) {
-                return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+            return String(s).replace(/[&<>\"']/g, function(m) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[m];
             });
         }
 
@@ -2480,7 +2429,9 @@ if ($pdo instanceof PDO) {
         }
 
         // Basic attribute escape (uses same escaping as escapeHtml for safety)
-        function escapeAttr(s) { return escapeHtml(s); }
+        function escapeAttr(s) {
+            return escapeHtml(s);
+        }
 
         function openRevisionUpload(fileId) {
             const revisionInput = document.getElementById('fileRevisionUploadInput');
@@ -2521,9 +2472,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('File uploaded successfully!', 'success');
                     logActivity('uploaded file', file.name);
-                        if (typeof result.progress !== 'undefined' && result.progress !== null) {
-                            updateProgress(result.progress);
-                        }
+                    if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                        updateProgress(result.progress);
+                    }
                     // Do not auto-open preview tab; instead insert the new file card into the list
                     if (result.id) insertFileCard(result);
                 } else {
@@ -2576,9 +2527,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('Revision uploaded successfully!', 'success');
                     logActivity('uploaded file revision', file.name);
-                        if (typeof result.progress !== 'undefined' && result.progress !== null) {
-                            updateProgress(result.progress);
-                        }
+                    if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                        updateProgress(result.progress);
+                    }
                     window.location.hash = 'files';
                     window.location.reload();
                 } else {
@@ -2625,9 +2576,9 @@ if ($pdo instanceof PDO) {
                 if (result.success) {
                     showNotification('Drawing uploaded successfully!', 'success');
                     logActivity('uploaded drawing', file.name);
-                        if (typeof result.progress !== 'undefined' && result.progress !== null) {
-                            updateProgress(result.progress);
-                        }
+                    if (typeof result.progress !== 'undefined' && result.progress !== null) {
+                        updateProgress(result.progress);
+                    }
                     if (result.id) insertDrawingCard(result);
                 } else {
                     showNotification(result.message || 'Upload failed', 'error');

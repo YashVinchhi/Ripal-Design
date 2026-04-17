@@ -10,19 +10,12 @@ $projectId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $project = get_project_full_data($projectId);
 
 if (!$project) {
+    if (function_exists('show_404')) {
+        show_404();
+    }
     http_response_code(404);
-    $project = [
-        'id' => 0,
-        'name' => 'Project Not Found',
-        'status' => 'unknown',
-        'address' => 'N/A',
-        'area' => 'N/A',
-        'budget' => 'â‚¹ 0',
-        'owner' => ['name' => 'N/A', 'contact' => ''],
-        'workers' => [],
-        'goods' => [],
-        'drawings' => [],
-    ];
+    echo '404 Project Not Found';
+    exit;
 }
 
 // Normalize DB rows to template keys.

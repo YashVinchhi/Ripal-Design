@@ -13,6 +13,7 @@ $ct = static function ($key, $default = '') use ($errorContent) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title><?php echo esc($ct('page_title', 'Lost in Space | Ripal Design')); ?></title>
+  <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
 </head>
 <body class="bg-foundation-grey font-sans text-white min-h-screen overflow-hidden relative">
   <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>

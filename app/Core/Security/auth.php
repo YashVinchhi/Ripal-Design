@@ -535,6 +535,10 @@ function require_role($role, $redirect_to = null) {
     require_login();
     
     if (!has_role($role)) {
+        if (function_exists('show_404')) {
+            show_404();
+        }
+        
         $redirect_to = $redirect_to ?? (defined('BASE_PATH') ? rtrim(BASE_PATH, '/') . '/public/index.php' : '/public/index.php');
         header('Location: ' . $redirect_to);
         exit;

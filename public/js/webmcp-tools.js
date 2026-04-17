@@ -101,7 +101,7 @@
           }
         }
       },
-      handler: async function (params) {
+      execute: async function (params) {
         var category = params && params.category ? params.category : "all";
         return fetchJson(buildApiUrl("/api/projects.php", { category: category }));
       }
@@ -117,7 +117,7 @@
         },
         required: ["project_id"]
       },
-      handler: async function (params) {
+      execute: async function (params) {
         var projectId = params && params.project_id ? params.project_id : "";
         return fetchJson(buildApiUrl("/api/projects.php", { id: projectId }));
       }
@@ -133,7 +133,7 @@
         },
         required: ["project_id"]
       },
-      handler: async function (params) {
+      execute: async function (params) {
         var projectId = params && params.project_id ? params.project_id : "";
         return fetchJson(buildApiUrl("/api/project-team.php", { id: projectId }));
       }
@@ -146,7 +146,7 @@
         type: "object",
         properties: {}
       },
-      handler: async function () {
+      execute: async function () {
         return fetchJson(buildApiUrl("/api/role-actions.php"));
       }
     });
@@ -163,7 +163,7 @@
         },
         required: ["action_key"]
       },
-      handler: async function (params) {
+      execute: async function (params) {
         var actionKey = params && params.action_key ? String(params.action_key) : "";
         var requestParams = params && params.params && typeof params.params === "object" ? params.params : {};
 
@@ -193,7 +193,7 @@
         type: "object",
         properties: {}
       },
-      handler: async function () {
+      execute: async function () {
         return fetchJson(buildApiUrl("/api/firm.php"));
       }
     });
@@ -211,7 +211,7 @@
           type: { type: "string" }
         }
       },
-      handler: async function (params) {
+      execute: async function (params) {
         var requestParams = {
           q: params && params.query ? params.query : "",
           location: params && params.location ? params.location : "",
@@ -239,7 +239,7 @@
         },
         required: ["name", "email", "project_type", "message"]
       },
-      handler: async function (params) {
+      execute: async function (params) {
         await navigator.modelContext.requestUserInteraction?.({
           reason: "Confirm sending consultation request to Ripal Design"
         });
@@ -264,7 +264,7 @@
           month: { type: "string" }
         }
       },
-      handler: async function (params) {
+      execute: async function (params) {
         var month = params && params.month ? params.month : "";
         return fetchJson(buildApiUrl("/api/slots.php", { month: month }));
       }
@@ -274,7 +274,9 @@
   // Polyfill for browsers without native WebMCP support
   if (!("modelContext" in navigator)) {
     var script = document.createElement("script");
-    script.src = "https://unpkg.com/@mcp-b/webmcp-polyfill/dist/index.js";
+    script.src = "https://unpkg.com/@mcp-b/webmcp-polyfill/dist/index.js?module";
+    // The polyfill is distributed as an ES module; ensure module semantics.
+    script.type = "module";
     script.onload = function () {
       registerTools();
     };

@@ -25,6 +25,7 @@ sort($files, SORT_NATURAL|SORT_FLAG_CASE);
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Test Sitemap — Ripal Design</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <style>
     body{font-family:Arial,Helvetica,sans-serif;margin:16px}
     .wrap{display:flex;gap:16px}

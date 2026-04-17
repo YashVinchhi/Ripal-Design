@@ -14,4 +14,21 @@
     php_value max_input_time 600
 </IfModule>
 
-# If using PHP-FPM with Apache + mod_proxy_fcgi, use .user.ini instead (already present)
+# Custom 404 Error Page
+# Note: The leading slash ensures it's absolute to the domain root or handled via rewrite
+ErrorDocument 404 /public/404.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # If project is in a subfolder, you might need RewriteBase /Thefinal/
+    
+    # Prevent direct access to includes, app, sql, etc.
+    RewriteRule ^(app|sql|Common|includes|scripts|logs|storage|stubs|tests|vendor)/ - [F,L]
+    
+    # If the requested filename does not exist, and it's not a directory
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # Then route to 404 page
+    RewriteRule . /public/404.php [L]
+</IfModule>

@@ -40,7 +40,7 @@ $headerImage = static function ($key, $default = '') use ($headerContent) {
     return (string)$value;
 };
 $brandLogoImage = $headerImage('brand_logo_image', '/assets/Content/Logo.png');
-$faviconImage = $headerImage('favicon_image', '/assets/Content/Vector.ico');
+$faviconImage = $headerImage('favicon_image', '/favicon.ico');
 $dashboardProfileUrl = function_exists('base_path')
     ? base_path('dashboard/profile.php')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
@@ -62,14 +62,6 @@ if (function_exists('current_user')) {
 } elseif (function_exists('is_logged_in') && is_logged_in() && function_exists('auth_dashboard_url')) {
     $logoHref = auth_dashboard_url();
 }
-
-// Find and include the main stylesheet
-$stylesheetCandidates = [
-    '/public/css/index.css',
-    '/assets/css/styles.css',
-    '/assets/css/tailwind.css',
-    '/assets/styles.css'
-];
 
 // Render common HTML head assets
 ?>
@@ -97,56 +89,74 @@ $stylesheetCandidates = [
 <!-- Bootstrap CSS and Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"> 
-<!-- <link rel="stylesheet" href="css/bootstrap.min.css"> -->
 
 <!-- Lucide Icons (CAD style) -->
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 
 <?php if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS): ?>
 <?php
-// Include TailwindCSS CDN only in development. Production should use
-// precompiled CSS (e.g. tailwind built into /assets/css/tailwind.css)
-if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0') {
-        echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
-        echo '<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    "rajkot-rust": "#94180C",
-                    "canvas-white": "#F9FAFB",
-                    "foundation-grey": "#2D2D2D",
-                    "slate-accent": "#334155",
-                    "approval-green": "#15803D",
-                    "pending-amber": "#B45309",
-                    primary: "#94180C",
-                    background: "#F9FAFB",
-                },
-                fontFamily: {
-                    sans: ["Inter", "sans-serif"],
-                    serif: ["Playfair Display", "serif"],
-                },
-                boxShadow: {
+// Track if we've included a Tailwind-providing stylesheet
+$tailwindLoaded = false;
+
+// Check for local Tailwind CSS build first
+$tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
+if (file_exists($tailwindBuiltPath)) {
+    // Generate URL based on BASE_PATH. We avoid PUBLIC_PATH_PREFIX for assets/ as it is at the project root.
+    $tailwindHref = rtrim((string)BASE_PATH, '/') . '/assets/css/tailwind.css';
+    echo '<link rel="stylesheet" href="' . esc_attr($tailwindHref) . '">' . "\n";
+    $tailwindLoaded = true;
+}
+
+// Include TailwindCSS CDN only in development as a fallback if local build is missing.
+if (!$tailwindLoaded && defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0') {
+    echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
+    echo '<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "rajkot-rust": "#94180C",
+                        "canvas-white": "#F9FAFB",
+                        "foundation-grey": "#2D2D2D",
+                        "slate-accent": "#334155",
+                        "approval-green": "#15803D",
+                        "pending-amber": "#B45309",
+                        primary: "#94180C",
+                        background: "#F9FAFB",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        serif: ["Playfair Display", "serif"],
+                    },
+                    boxShadow: {
                         "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
                         "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
+                    }
                 }
             }
         }
-    }
-</script>' . "\n";
+    </script>' . "\n";
 }
 
-// Include main stylesheet. Use PUBLIC_PATH_PREFIX when rendering href so we
-// don't accidentally emit "/public/..." URLs when Apache serves the
-// /public directory as the document root.
+// Include other stylesheet candidates
+$stylesheetCandidates = [
+    '/public/css/index.css',
+    '/assets/css/styles.css',
+    '/assets/styles.css'
+];
+
 foreach ($stylesheetCandidates as $candidate) {
-        $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
-        if (file_exists($filePath)) {
-                $publicRemoved = preg_replace('~^/public~i', '', $candidate);
-                $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
-                echo '<link rel="stylesheet" href="' . esc_attr($href) . '">' . "\n";
-                break;
+    $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
+    if (file_exists($filePath)) {
+        // Handle pathing based on whether it is in public/ or not
+        if (strpos($candidate, '/public/') === 0) {
+            $publicRemoved = preg_replace('~^/public~i', '', $candidate);
+            $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
+        } else {
+            $href = rtrim((string)BASE_PATH, '/') . $candidate;
         }
+        echo '<link rel="stylesheet" href="' . esc_attr($href) . '">' . "\n";
+    }
 }
 ?>
 <?php endif; ?>
@@ -166,7 +176,7 @@ foreach ($stylesheetCandidates as $candidate) {
     <div class="alt-logo">
         <a href="<?php echo esc_attr($logoHref); ?>" class="flex items-center gap-3 no-underline">
             <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
-            <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo esc($headerText('brand_name', 'Ripal Design')); ?></span>
+            <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo htmlspecialchars($headerText('brand_name', 'Ripal Design')); ?></span>
         </a>
     </div>
     
@@ -251,26 +261,26 @@ foreach ($stylesheetCandidates as $candidate) {
                     $activeSection = $menuSections[$navRole] ?? $menuSections['dashboard'];
                 ?>
                 <?php if (!empty($activeSection['title'])): ?>
-                    <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo esc((string)$activeSection['title']); ?></strong>
+                    <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo htmlspecialchars((string)$activeSection['title']); ?></strong>
                 <?php endif; ?>
                 <?php foreach (($activeSection['links'] ?? []) as $link): ?>
-                    <a href="<?php echo esc_attr((string)($link['href'] ?? '')); ?>"><?php echo esc((string)($link['label'] ?? '')); ?></a>
+                    <a href="<?php echo htmlspecialchars((string)($link['href'] ?? '')); ?>"><?php echo htmlspecialchars((string)($link['label'] ?? '')); ?></a>
                 <?php endforeach; ?>
             <?php else: ?>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>"><?php echo esc($headerText('menu_home', 'Home')); ?></a>
-                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>"><?php echo esc($headerText('menu_services', 'Services')); ?></a>
-                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><?php echo esc($headerText('menu_projects', 'Projects')); ?></a>
-                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>"><?php echo esc($headerText('menu_about', 'About')); ?></a>
-                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><?php echo esc($headerText('menu_contact', 'Contact')); ?></a>
+                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>"><?php echo htmlspecialchars($headerText('menu_home', 'Home')); ?></a>
+                    <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>"><?php echo htmlspecialchars($headerText('menu_services', 'Services')); ?></a>
+                    <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><?php echo htmlspecialchars($headerText('menu_projects', 'Projects')); ?></a>
+                    <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>"><?php echo htmlspecialchars($headerText('menu_about', 'About')); ?></a>
+                    <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><?php echo htmlspecialchars($headerText('menu_contact', 'Contact')); ?></a>
             <?php endif; ?>
         </nav>
   
 
         
         <div class="panel-footer">
-            <?php if (is_logged_in()): ?>
+            <?php if (function_exists('is_logged_in') && is_logged_in()): ?>
                 <?php if ($headerMode !== 'dashboard'): ?>
-                    <a href="<?php echo esc_attr($roleDashboardLink); ?>" class="btn-alt btn-login"><?php echo esc($headerText('btn_dashboard', 'Dashboard')); ?></a>
+                    <a href="<?php echo htmlspecialchars($roleDashboardLink); ?>" class="btn-alt btn-login"><?php echo htmlspecialchars($headerText('btn_dashboard', 'Dashboard')); ?></a>
                 <?php endif; ?>
                 <!-- Global override: enforce sharp (square) corners across the site -->
                 <style>
@@ -286,10 +296,10 @@ foreach ($stylesheetCandidates as $candidate) {
                         border-radius: 0 !important;
                     }
                 </style>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/logout.php'); ?>" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo esc($headerText('btn_logout', 'Logout')); ?></a>
+                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/logout.php'); ?>" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo htmlspecialchars($headerText('btn_logout', 'Logout')); ?></a>
             <?php else: ?>
-                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login"><?php echo esc($headerText('btn_login', 'Login')); ?></a>
-                <a href="<?php echo esc_attr(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/signup.php" class="btn-alt btn-signup"><?php echo esc($headerText('btn_signup', 'Sign Up')); ?></a>
+                <a href="<?php echo htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login"><?php echo htmlspecialchars($headerText('btn_login', 'Login')); ?></a>
+                <a href="<?php echo htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/signup.php" class="btn-alt btn-signup"><?php echo htmlspecialchars($headerText('btn_signup', 'Sign Up')); ?></a>
             <?php endif; ?>
         </div>
     </div>
@@ -300,8 +310,8 @@ foreach ($stylesheetCandidates as $candidate) {
     <phantom-ui loading id="phantom-ui-root">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
-<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/gsap-core-init.js" defer></script>
-<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/gsap-motion-presets.js" defer></script>
-<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/header-nav.js" defer></script>
-<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/auto-hide-alerts.js" defer></script>
-<script src="<?php echo esc_attr(BASE_PATH); ?>/assets/js/ajax-forms.js" defer></script>
+<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/gsap-core-init.js" defer></script>
+<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/gsap-motion-presets.js" defer></script>
+<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/header-nav.js" defer></script>
+<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/auto-hide-alerts.js" defer></script>
+<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/ajax-forms.js" defer></script>

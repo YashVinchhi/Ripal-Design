@@ -27,6 +27,7 @@ if ($uid > 0 && function_exists('db_connected') && db_connected() && function_ex
 
 header('Content-Type: text/html; charset=utf-8');
 echo '<!doctype html><html><head><meta charset="utf-8"><title>' . htmlspecialchars($ct('page_title', 'Debug Session'), ENT_QUOTES, 'UTF-8') . '</title>';
+echo '<link rel="icon" href="' . htmlspecialchars(BASE_PATH, ENT_QUOTES, 'UTF-8') . '/favicon.ico" type="image/x-icon">';
 if (function_exists('webmcp_discovery_markup') && function_exists('webmcp_is_enabled') && webmcp_is_enabled()) {
     echo webmcp_discovery_markup();
 }

@@ -31,6 +31,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php echo esc($ct('page_title', 'Home | Ripal Design')); ?></title>
+    <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/index.css'); ?>">
 </head>
 

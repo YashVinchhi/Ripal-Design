@@ -17,13 +17,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Upload Drawings | Ripal Design</title>
-  <?php if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
+  <?php
+  $tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
+  $hasLocalTailwind = file_exists($tailwindBuiltPath);
+  if ($hasLocalTailwind): 
+      $tailwindHref = rtrim((string)BASE_PATH, '/') . '/assets/css/tailwind.css';
+  ?>
+  <link rel="stylesheet" href="<?php echo esc_attr($tailwindHref); ?>">
+  <?php elseif (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
   <script src="https://cdn.tailwindcss.com"></script>
-  <?php endif; ?>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="../public/js/validation.js"></script>
-
-  <?php if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
   <script>
     tailwind.config = {
       theme: {
@@ -39,10 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           }
         }
       }
-    }
+    };
   </script>
   <?php endif; ?>
-</head>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header_alt.php'; ?>
   

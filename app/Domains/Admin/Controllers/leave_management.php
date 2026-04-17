@@ -33,8 +33,8 @@ if ($viewMode === 'archive') {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Leave Management | Ripal Design</title>
-  <link rel="icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
-  <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/Content/Vector.ico" type="image/x-icon">
+  <link rel="icon" href="<?php echo BASE_PATH; ?>/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/favicon.ico" type="image/x-icon">
   <script>
     function handleLeaveAction(employeeName, action, btn) {
         const verb = action === 'approved' ? 'Authorize' : 'Decline';
@@ -65,7 +65,14 @@ if ($viewMode === 'archive') {
         }
     }
   </script>
-  <?php if (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
+  <?php
+  $tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
+  $hasLocalTailwind = file_exists($tailwindBuiltPath);
+  if ($hasLocalTailwind): 
+      $tailwindHref = rtrim((string)BASE_PATH, '/') . '/assets/css/tailwind.css';
+  ?>
+  <link rel="stylesheet" href="<?php echo esc_attr($tailwindHref); ?>">
+  <?php elseif (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {

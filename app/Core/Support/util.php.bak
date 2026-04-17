@@ -96,30 +96,6 @@ if (!function_exists('base_path')) {
     }
 }
 
-if (!function_exists('show_404')) {
-    /**
-     * Terminate request with a 404 response and show the custom 404 page.
-     *
-     * @return void
-     */
-    function show_404() {
-        if (!headers_sent()) {
-            http_response_code(404);
-        }
-        
-        $root = defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3);
-        $notFound = $root . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . '404.php';
-        
-        if (file_exists($notFound)) {
-            require $notFound;
-        } else {
-            header('Content-Type: text/plain; charset=utf-8');
-            echo '404 Not Found';
-        }
-        exit;
-    }
-}
-
 if (!function_exists('asset_url')) {
     /**
      * Generate URL for static asset
@@ -212,8 +188,8 @@ if (!function_exists('render_flash')) {
         
         if (!empty($_SESSION['flash'])) {
             $flash = $_SESSION['flash'];
-            $message = h($flash['message'] ?? '');
-            $type = h($flash['type'] ?? 'info');
+            $message = esc($flash['message'] ?? '');
+            $type = esc($flash['type'] ?? 'info');
             
             // Map types to Bootstrap alert classes
             $alertClass = 'alert-' . $type;

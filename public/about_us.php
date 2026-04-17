@@ -22,7 +22,7 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php echo esc($ct('page_title', 'About Us | Ripal Design')); ?></title>
-
+    <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/about_us.css">
 </head>
 

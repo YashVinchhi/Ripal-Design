@@ -32,8 +32,7 @@ if (!function_exists('public_content_registry')) {
                 'fields' => [
                     'brand_name' => ['label' => 'Brand Name', 'format' => 'plain', 'default' => 'Ripal Design'],
                     'brand_logo_image' => ['label' => 'Brand Logo Image', 'format' => 'image', 'default' => '/assets/Content/Logo.png'],
-                    'favicon_image' => ['label' => 'Favicon Image', 'format' => 'image', 'default' => '/assets/Content/Vector.ico'],
-                    'menu_home' => ['label' => 'Menu: Home', 'format' => 'plain', 'default' => 'Home'],
+                    'favicon_image' => ['label' => 'Favicon Image', 'format' => 'image', 'default' => '/favicon.ico'],                    'menu_home' => ['label' => 'Menu: Home', 'format' => 'plain', 'default' => 'Home'],
                     'menu_services' => ['label' => 'Menu: Services', 'format' => 'plain', 'default' => 'Services'],
                     'menu_projects' => ['label' => 'Menu: Projects', 'format' => 'plain', 'default' => 'Projects'],
                     'menu_about' => ['label' => 'Menu: About', 'format' => 'plain', 'default' => 'About'],
