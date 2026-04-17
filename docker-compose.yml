@@ -1,33 +1,46 @@
-version: '3.8'
 services:
   app:
-    build: .
-    image: ripal-design-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ripal-design-app:local
+    restart: unless-stopped
     ports:
       - "8080:80"
     environment:
       APP_ENV: development
       DB_HOST: db
-      DB_NAME: "Ripal-Design"
-      DB_USER: root
-      DB_PASS: example
       DB_PORT: 3306
-    volumes:
-      - ./:/var/www/html
+      DB_NAME: ${DB_NAME:-Ripal-Design}
+      DB_USER: ${DB_USER:-app}
+      DB_PASS: ${DB_PASS:-app_password}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/var/www/html/uploads
 
   db:
-    image: mysql:8.0
+    build:
+      context: .
+      dockerfile: docker/mysql/Dockerfile
+    image: ripal-design-mysql:seeded
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_DATABASE: ripal_design
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${DB_NAME:-Ripal-Design}
+      MYSQL_USER: ${DB_USER:-app}
+      MYSQL_PASSWORD: ${DB_PASS:-app_password}
+    ports:
+      - "${DB_HOST_PORT:-3307}:3306"
     volumes:
       - db_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   db_data:
+  uploads_data:

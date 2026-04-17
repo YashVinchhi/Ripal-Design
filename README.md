@@ -50,20 +50,20 @@ git clone <your-repo-url> thefinal
 cd thefinal
 ```
 
-2. Copy environment template and update values
+1. Copy environment template and update values
 
 ```bash
 cp .env.example .env
 # Edit .env and set DB_HOST, DB_USER, DB_PASS, DB_NAME, MAIL_* and APP_BASE_URL
 ```
 
-3. Install PHP dependencies
+1. Install PHP dependencies
 
 ```bash
 composer install --no-dev --optimize-autoloader
 ```
 
-4. Create the database and import schema
+1. Create the database and import schema
 
 ```bash
 # Example using local MySQL
@@ -73,7 +73,7 @@ mysql -u root -p < sql/database.sql
 mysql -u root -p your_db_name < sql/dummy_data.sql
 ```
 
-5. Serve locally (quick test)
+1. Serve locally (quick test)
 
 ```bash
 php -S localhost:8000 -t public
@@ -86,21 +86,40 @@ Notes:
 
 ## Docker & CI (build / run)
 
-The repository includes a production-oriented `Dockerfile` and `docker-compose.prod.yml` used by CI and the deploy process.
+The repository now ships with two deployable container images:
 
-Build locally:
+- App image: Apache + PHP 8.2 + required extensions
+- Seeded MySQL image: imports `sql/database.sql`, `sql/migrations/*.sql`, and `sql/dummy_data.sql` on first boot
 
-```bash
-docker build -t thefinal:local .
-```
-
-Run with compose (uses `IMAGE_NAME` when you want to override the remote image name):
+Quick local run (full site + MySQL sample data):
 
 ```bash
-IMAGE_NAME=thefinal:local docker compose -f docker-compose.prod.yml up -d
+cp .env.example .env
+docker compose up -d --build
 ```
 
-See `docs/DEPLOYMENT.md` for full CI/CD and deployed server setup details.
+Open:
+
+- App: `http://localhost:8080`
+- MySQL: `localhost:3306`
+
+Important seed note:
+
+- MySQL initialization scripts run only when the DB volume is empty.
+- To re-seed sample data, run: `docker compose down -v` then `docker compose up -d --build`.
+
+Production compose uses prebuilt images from GHCR:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env up -d
+```
+
+On push to `main` / `Prod` / `ripal-design`, GitHub Actions builds and publishes both images:
+
+- `ghcr.io/<owner>/<repo>:latest`
+- `ghcr.io/<owner>/<repo>-mysql:latest`
+
+See `docs/DEPLOYMENT.md` for full deployment guidance.
 
 ## Configuration
 
@@ -121,7 +140,7 @@ Importing the schema creates tables for users, projects, files, invoices, RBAC (
 - `includes/` — core bootstrap, config, DB, auth, utilities, mail helper
 - `admin/`, `client/`, `worker/`, `dashboard/` — role-specific UI pages and APIs
 - `sql/` — database schema and helper SQL
-- `docker/` — nginx configuration used by production compose
+- `docker/` — container artifacts (including the seeded MySQL Dockerfile)
 - `src/` and `stubs/` — bundled libraries and PHPMailer shims
 - `Common/` — shared header/footer and UI partials
 
@@ -138,7 +157,6 @@ If you'd like me to help with additional cleanup, automated tests, or CI steps, 
 - Add PHPUnit tests and a `phpunit.xml` configuration
 - Add linting or static analysis (PHPMD, PHPStan)
 - Add a lightweight health-check endpoint for container orchestration
-
 ## Where to find more details
 
 - Deployment and CI/CD: `docs/DEPLOYMENT.md`
@@ -147,7 +165,8 @@ If you'd like me to help with additional cleanup, automated tests, or CI steps, 
 
 ---
 
-Updated: 2026-04-14
+Updated: 2026-04-17
 
 If you want, I can commit additional tidy-ups (remove legacy archives, add quick dev docker-compose, or a short CONTRIBUTING.md). Tell me which next step you prefer.
+
 

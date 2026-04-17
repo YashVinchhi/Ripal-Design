@@ -22,3 +22,14 @@ node_modules/
 composer.phar
 docker-compose.override.yml
 README.md
+
+# Public symlink targets are re-created by docker-entrypoint.sh.
+# Exclude these paths to avoid build-context symlink traversal errors.
+public/Common
+public/assets
+public/uploads
+public/dashboard
+public/admin
+public/client
+public/worker
+public/api
