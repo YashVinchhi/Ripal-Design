@@ -30,6 +30,18 @@ jobs:
           path: ~/.composer/cache
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
 
+      - name: Update composer.lock if needed
+        run: |
+          set -e
+          composer --version || echo "composer not available"
+          echo "Checking composer.lock compatibility..."
+          if composer install --dry-run --no-interaction --prefer-dist --optimize-autoloader; then
+            echo "composer.lock is compatible"
+          else
+            echo "composer.lock needs update; running composer update --lock"
+            composer update --lock --no-interaction
+          fi
+
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --optimize-autoloader
 
