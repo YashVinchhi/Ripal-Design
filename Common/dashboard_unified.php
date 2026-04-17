@@ -299,14 +299,14 @@ if ($useWorkerProjectView) {
       </div>
     </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+    <main class="flex-grow px-4 sm:px-6 lg:px-8 pb-10" style="width:80%; margin-left:10%; margin-right:10%;">
       <div class="<?php echo $statGridClasses; ?>" data-stats-group>
         <?php foreach ($statCards as $card): ?>
           <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden" data-stat-card>
             <div class="flex items-start justify-between gap-4">
               <div>
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2"><?php echo esc($card['label']); ?></span>
-                <span class="text-2xl md:text-3xl font-serif font-bold text-foundation-grey" data-countup data-countup-target="<?php echo esc_attr((string)$card['value']); ?>"><?php echo esc((string)$card['value']); ?></span>
+                <span class="text-2xl md:text-3xl font-serif font-black stat-number text-foundation-grey" data-countup data-countup-target="<?php echo esc_attr((string)$card['value']); ?>"><?php echo esc((string)$card['value']); ?></span>
               </div>
               <i data-lucide="<?php echo esc_attr($card['icon']); ?>" class="w-5 h-5 text-rajkot-rust"></i>
             </div>
@@ -346,7 +346,7 @@ if ($useWorkerProjectView) {
                   </span>
                   <span class="text-xs text-gray-400 font-mono">#PRJ-<?php echo (int)($p['id'] ?? 0); ?></span>
                 </div>
-                <h3 class="text-lg font-serif font-bold group-hover:text-rajkot-rust transition-colors mb-2"><?php echo esc($p['name'] ?? 'Untitled'); ?></h3>
+                <h3 class="text-lg project-title font-serif font-black group-hover:text-rajkot-rust transition-colors mb-2"><?php echo esc($p['name'] ?? 'Untitled'); ?></h3>
                 <?php
                   $projectAddress = (string)(($p['address'] ?? '') !== '' ? $p['address'] : (($p['location'] ?? '') ?: 'Location not set'));
                   $mapQuery = '';
@@ -356,8 +356,8 @@ if ($useWorkerProjectView) {
                     $mapQuery = $projectAddress;
                   }
                 ?>
-                <div class="space-y-2 text-sm text-gray-500">
-                  <div class="flex items-center"><i data-lucide="map-pin" class="w-4 h-4 mr-2"></i><?php echo esc($projectAddress); ?></div>
+                <div class="space-y-2 text-sm text-gray-600 font-semibold">
+                  <div class="flex items-center project-location"><i data-lucide="map-pin" class="w-4 h-4 mr-2"></i><?php echo esc($projectAddress); ?></div>
                   <div class="flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-2"></i>Due: <?php echo !empty($p['due']) && $p['due'] !== '1970-01-01' ? esc((string)$p['due']) : 'N/A'; ?></div>
                 </div>
                 <?php if ($useWorkerProjectView && $mapQuery !== ''): ?>

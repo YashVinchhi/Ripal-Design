@@ -68,7 +68,7 @@ if (function_exists('current_user')) {
 <!-- Common Stylesheets and Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <!-- Phantom-UI: SSR pre-hydration CSS + CDN bundle -->
 <style>
@@ -294,6 +294,25 @@ foreach ($stylesheetCandidates as $candidate) {
                     .btn, .badge, .card, .modal-content, .dropdown-menu, .nav-pills .nav-link,
                     .alt-hamburger span {
                         border-radius: 0 !important;
+                    }
+
+                    /* Dashboard-specific: use Cormorant Garamond (bold) for project title/location and stat numbers */
+                    [data-stats-group] [data-countup], .stat-number {
+                        font-family: 'Cormorant Garamond', 'Playfair Display', serif !important;
+                        font-weight: 700 !important;
+                        letter-spacing: -0.01em;
+                    }
+
+                    .project-title {
+                        font-family: 'Cormorant Garamond', 'Playfair Display', serif !important;
+                        font-weight: 700 !important;
+                        line-height: 1.05 !important;
+                    }
+
+                    .project-location {
+                        font-family: 'Cormorant Garamond', 'Playfair Display', serif !important;
+                        font-weight: 600 !important;
+                        color: #374151 !important;
                     }
                 </style>
                 <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/logout.php'); ?>" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo htmlspecialchars($headerText('btn_logout', 'Logout')); ?></a>
