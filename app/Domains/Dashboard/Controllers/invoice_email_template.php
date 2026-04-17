@@ -93,7 +93,7 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                             <tr>
                                                 <td style="padding: 20px;" valign="top">
                                                     <p style="margin: 0 0 15px 0; font-size: 10px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
-                                                        <span style="color: #b91c1c; margin-right: 5px;">ðŸ‘¤</span> Bill To
+                                                        Bill To
                                                     </p>
                                                     <p style="margin: 0 0 4px 0; font-size: 15px; color: #111827; font-weight: 600;">
                                                         <?php echo htmlspecialchars($project['owner_name'] ?? 'Client'); ?>
@@ -114,7 +114,7 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                             <tr>
                                                 <td style="padding: 20px;" valign="top">
                                                     <p style="margin: 0 0 15px 0; font-size: 10px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
-                                                        <span style="color: #b91c1c; margin-right: 5px;">ðŸ“‹</span> Project Summary
+                                                        Project Summary
                                                     </p>
                                                     <p style="margin: 0 0 4px 0; font-size: 15px; color: #111827; font-weight: 600;">
                                                         <?php echo htmlspecialchars($project['name'] ?? ''); ?>
@@ -126,7 +126,7 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                                         Estimated Invoice Total
                                                     </p>
                                                     <p style="margin: 0; font-size: 22px; color: #b91c1c; font-weight: 700;">
-                                                        â‚¹ <?php echo number_format($total, 2); ?>
+                                                        ₹ <?php echo number_format($total, 2); ?>
                                                     </p>
                                                 </td>
                                             </tr>
@@ -165,8 +165,8 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                                 <p style="margin: 0; font-size: 13px; color: #111827; font-weight: 600;"><?php echo number_format($g['quantity'] ?? 0); ?></p>
                                                 <p style="margin: 0; font-size: 10px; color: #9ca3af; text-transform: uppercase;"><?php echo htmlspecialchars($g['unit'] ?? 'PCS'); ?></p>
                                             </td>
-                                            <td align="right" valign="middle" style="padding: 20px 5px; border-bottom: 1px solid #f3f4f6; font-size: 13px; color: #4b5563; font-weight: 500;">â‚¹ <?php echo number_format($g['unit_price'] ?? 0,2); ?></td>
-                                            <td align="right" valign="middle" style="padding: 20px 5px; border-bottom: 1px solid #f3f4f6; font-size: 14px; color: #111827; font-weight: 700;">â‚¹ <?php echo number_format($g['total_price'] ?? 0,2); ?></td>
+                                            <td align="right" valign="middle" style="padding: 20px 5px; border-bottom: 1px solid #f3f4f6; font-size: 13px; color: #4b5563; font-weight: 500;">₹ <?php echo number_format($g['unit_price'] ?? 0,2); ?></td>
+                                            <td align="right" valign="middle" style="padding: 20px 5px; border-bottom: 1px solid #f3f4f6; font-size: 14px; color: #111827; font-weight: 700;">₹ <?php echo number_format($g['total_price'] ?? 0,2); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -193,18 +193,18 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
                                                 <td align="left" style="padding: 8px 10px; font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Subtotal</td>
-                                                <td align="right" style="padding: 8px 10px; font-size: 13px; color: #111827; font-weight: 700;">â‚¹ <?php echo number_format($subtotal,2); ?></td>
+                                                <td align="right" style="padding: 8px 10px; font-size: 13px; color: #111827; font-weight: 700;">₹ <?php echo number_format($subtotal,2); ?></td>
                                             </tr>
                                             <tr>
                                                 <td align="left" style="padding: 8px 10px 20px 10px; font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Tax (18% GST)</td>
-                                                <td align="right" style="padding: 8px 10px 20px 10px; font-size: 13px; color: #111827; font-weight: 700;">â‚¹ <?php echo number_format($tax,2); ?></td>
+                                                <td align="right" style="padding: 8px 10px 20px 10px; font-size: 13px; color: #111827; font-weight: 700;">₹ <?php echo number_format($tax,2); ?></td>
                                             </tr>
                                             <tr>
                                                 <td colspan="2" style="padding: 0;">
                                                     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fef2f2; border-top: 2px solid #b91c1c;">
                                                         <tr>
                                                             <td align="left" style="padding: 15px 10px; font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Grand Total</td>
-                                                            <td align="right" style="padding: 15px 10px; font-size: 18px; color: #b91c1c; font-weight: 700;">â‚¹ <?php echo number_format($total,2); ?></td>
+                                                            <td align="right" style="padding: 15px 10px; font-size: 18px; color: #b91c1c; font-weight: 700;">₹ <?php echo number_format($total,2); ?></td>
                                                         </tr>
                                                     </table>
                                                 </td>
@@ -234,7 +234,7 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                         <?php if (!empty($qr_data_uri)): ?>
                                             <div style="margin-top:12px;text-align:center;">
                                                 <img src="<?php echo htmlspecialchars($qr_data_uri); ?>" alt="UPI QR" width="160" height="160" style="display:block;margin:0 auto;border:0;" />
-                                                <div style="font-size:13px;color:#6b7280;margin-top:8px;">Scan to pay â‚¹ <?php echo number_format($total,2); ?> using your UPI app</div>
+                                                <div style="font-size:13px;color:#6b7280;margin-top:8px;">Scan to pay ₹ <?php echo number_format($total,2); ?> using your UPI app</div>
                                             </div>
                                         <?php endif; ?>
                                     </td>
@@ -245,44 +245,11 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
 
                 </table>
 
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #262626; margin-top: 40px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px;">
                     <tr>
-                        <td align="center" style="padding: 40px 20px;">
-                            <table border="0" cellpadding="0" cellspacing="0" width="600" class="email-container">
-                                <tr>
-                                    <td class="mobile-stack" width="50%" valign="top" style="padding-bottom: 20px;">
-                                        <h3 style="margin: 0 0 10px 0; color: #ffffff; font-size: 18px; font-weight: 600;">Ready to build something Iconic?</h3>
-                                        <p style="margin: 0; font-size: 12px; color: #a3a3a3; line-height: 1.6; padding-right: 20px;">
-                                            Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.
-                                        </p>
-                                    </td>
-                                    <td class="mobile-stack" width="50%" valign="top">
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1px solid #404040; padding: 20px;">
-                                            <tr>
-                                                <td>
-                                                    <p style="margin: 0 0 15px 0; font-size: 14px; color: #ffffff; font-weight: 500;">Contact To Us</p>
-                                                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #a3a3a3; line-height: 1.5;">
-                                                        <span style="color: #b91c1c; font-size: 14px; margin-right: 5px;">ðŸ“</span> 
-                                                        Ripal Design Rajkot<br>
-                                                        <span style="padding-left: 20px; display: block;">538 Jasal Complex, Nanavati Chowk,<br>150 ft Ring Road, Rajkot, Gujarat</span>
-                                                    </p>
-                                                    <p style="margin: 0; font-size: 12px; color: #a3a3a3;">
-                                                        <span style="color: #b91c1c; font-size: 14px; margin-right: 5px;">âœ‰ï¸</span> 
-                                                        projects@ripaldesign.in
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2" style="padding-top: 40px; border-top: 1px solid #404040; margin-top: 40px; text-align: left;">
-                                        <p style="margin: 0; font-size: 10px; color: #737373; text-transform: uppercase; letter-spacing: 1px;">
-                                            Â© <?php echo date('Y'); ?> RIPAL DESIGN. ALL RIGHTS RESERVED.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td align="center" style="padding: 20px 20px; font-size: 12px; color: #6b7280;">
+                            <p style="margin: 0;">If you have questions about this invoice, reply to this email or contact <a href="mailto:projects@ripaldesign.in" style="color:#b91c1c;text-decoration:underline;">projects@ripaldesign.in</a>.</p>
+                            <p style="margin: 6px 0 0 0;">&copy; <?php echo date('Y'); ?> Ripal Design. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>

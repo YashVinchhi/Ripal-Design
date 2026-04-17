@@ -3282,3 +3282,9 @@ node_modules/.bin/tailwindcss.cmd
 node_modules/.bin/tailwindcss.ps1
 node_modules/.bin/update-browserslist-db.cmd
 node_modules/.bin/update-browserslist-db.ps1
+public/email_preview/consultation_confirmation.html
+public/email_preview/invoice_email.html
+public/email_preview/password_reset.html
+public/email_preview/welcome_email.html
+logs/rate_limits/5b9e694dc3f3efb98e627da25b789038aa5adac6eac185d798aa886536bdfcbf.json
+logs/rate_limits/019a70da2cd74762cfa63d32c0e8bd9217191519b805c91f82f1808f32bc82c5.json

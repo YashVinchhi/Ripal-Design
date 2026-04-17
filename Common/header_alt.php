@@ -45,10 +45,10 @@ foreach ($candidates as $c) {
 <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/favicon.ico">
 <!-- Immersive Navigation Header -->
-<link rel="stylesheet" href="<?php echo BASE_PATH; ?>/Common/header.css">
+<link rel="stylesheet" href="<?php echo rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX; ?>/css/header.css">
 <?php if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } ?>
 <?php if (isset($HEADER_MODE) && $HEADER_MODE === 'dashboard'): ?>
-    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/Common/admin-responsive.css">
+    <link rel="stylesheet" href="<?php echo rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX; ?>/css/admin-responsive.css">
 <?php endif; ?>
 <nav class="alt-header">
     <div class="alt-logo">

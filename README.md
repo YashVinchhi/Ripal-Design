@@ -1,172 +1,210 @@
-# Ripal Design / Thefinal — PHP web platform for architecture & project workflows
+# Thefinal — Architecture & Project Management Platform for Design Firms
 
-Lightweight, deployable PHP platform used by an architecture & design practice. The repository contains:
+A lightweight, deployable PHP platform tailored for architecture and design practices. "Thefinal" provides project and client workflows, file/drawing revisions, invoices, and admin dashboards — ready for local development and containerized deployment.
 
-- A public marketing site and content system
-- A client portal (`client/`) for file sharing and revisions
-- Admin and worker dashboards (`admin/`, `worker/`, `dashboard/`) with project, invoice, and user management
-- File/drawing upload, project activity, and notification systems
-- Docker + GitHub Actions configs for containerized CI/CD
+<!-- TOC -->
+- [Overview](#overview)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Quick start](#quick-start)
+	- [Requirements](#requirements)
+	- [Local development](#local-development)
+	- [Docker (recommended for full stack)](#docker-recommended-for-full-stack)
+- [Configuration](#configuration)
+- [Database](#database)
+- [Scripts & useful commands](#scripts--useful-commands)
+- [Development & testing](#development--testing)
+- [Deployment](#deployment)
+- [Project structure](#project-structure)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-This README gives a developer-focused quickstart, deployment pointers, and a short overview of the repository layout.
+## Overview
 
----
+This repository contains the codebase and deployment artifacts for Thefinal — an integrated web platform used by an architecture/design practice for managing projects, clients, file revisions, invoices, and internal workflows.
 
-## Quick links
+The project mixes composer-managed PHP backend components, Tailwind-based frontend styles, and Docker artifacts for reproducible deployments.
 
-- `docs/DEPLOYMENT.md` — production deployment & CI/CD guide
-- `docker-compose.prod.yml`, `Dockerfile`, `docker/nginx/` — container setup used in CI/CD
-- `sql/database.sql` — full database schema (import for a fresh instance)
-- `.env.example` — environment variables template (copy to `.env` locally)
+## Features
 
-## Features (high level)
-
-- Role-based users (client, worker, employee/admin) with RBAC extension
-- Project management: projects, assignments, milestones, drawings, files, activity logs
-- Client-facing features: file revisions, dashboards, invoices/ PDF export
-- Notifications system and SMTP mail helper (PHPMailer integration)
-- CSRF protection, session helpers, and utilities for safe operation
-- PDF generation via `dompdf` (installed via Composer)
+- Role-based access: client, worker, admin/employee views and APIs
+- Project and task management with file/drawing uploads and revision history
+- Client portal for file sharing, revisions, and invoices
+- PDF generation (dompdf) and email notifications (PHPMailer-compatible helper)
+- Notification center and activity logs
+- Container-ready: Dockerfiles and docker-compose for local and production setups
 
 ## Tech stack
 
-- PHP 8.x (Dockerfile targets `php:8.2-fpm`)
-- MySQL 8.x (used in `docker-compose.prod.yml`)
-- Composer-managed PHP dependencies (uses `dompdf/dompdf`)
-- Nginx + PHP-FPM in the production Docker setup
+- PHP (recommended 8.1 / 8.2)
+- MySQL / MariaDB
+- Composer for PHP dependencies ([composer.json](composer.json))
+- Tailwind CSS for styling ([package.json](package.json))
+- Nginx / PHP-FPM or Apache (containerized images)
 
-## Quickstart — local development
+## Quick start
 
-Requirements:
+### Requirements
 
-- PHP 8.1/8.2+, Composer
-- MySQL / MariaDB (or use Docker compose below)
-- Optional: Laragon, XAMPP, or Docker for local LAMP-like setups
+- PHP 8.1+ and Composer
+- Node.js (for Tailwind builds) and npm
+- MySQL 8+ (or Docker)
+- Docker & Docker Compose (optional, recommended for full-stack local runs)
 
-1. Clone the repository
+### Local development (quick)
+
+1. Clone the repo:
 
 ```bash
-git clone <your-repo-url> thefinal
+git clone <repo-url> thefinal
 cd thefinal
 ```
 
-1. Copy environment template and update values
+2. Copy env template and configure:
 
 ```bash
 cp .env.example .env
-# Edit .env and set DB_HOST, DB_USER, DB_PASS, DB_NAME, MAIL_* and APP_BASE_URL
+# Edit .env to set DB_*, MAIL_*, APP_BASE_URL, and other values.
 ```
 
-1. Install PHP dependencies
+3. Install PHP dependencies:
 
 ```bash
-composer install --no-dev --optimize-autoloader
+composer install
 ```
 
-1. Create the database and import schema
+4. Install Node deps and build CSS (Tailwind):
 
 ```bash
-# Example using local MySQL
+npm install
+npm run build:css
+```
+
+5. Import database schema:
+
+```bash
 mysql -u root -p < sql/database.sql
-
-# Optionally load dummy data
+# Optionally import sample data:
 mysql -u root -p your_db_name < sql/dummy_data.sql
 ```
 
-1. Serve locally (quick test)
+6. Serve the site (for quick testing using built-in PHP server):
 
 ```bash
 php -S localhost:8000 -t public
-# then open http://localhost:8000/
+# Visit http://localhost:8000
 ```
 
 Notes:
 
-- If your web server's document root points to the project root (not `/public`), `includes/config.php` detects this and sets `PUBLIC_PATH_PREFIX` accordingly so links work from either mode. For production, point your server to the `public/` directory.
+- For development it's fine to use the PHP built-in server. For production, point your webserver to the `public/` directory.
+- The app will also detect a `.env` file and load environment variables via `includes/config.php`.
 
-## Docker & CI (build / run)
+### Docker (recommended for full stack)
 
-The repository now ships with two deployable container images:
-
-- App image: Apache + PHP 8.2 + required extensions
-- Seeded MySQL image: imports `sql/database.sql`, `sql/migrations/*.sql`, and `sql/dummy_data.sql` on first boot
-
-Quick local run (full site + MySQL sample data):
+Run the full application and a seeded MySQL instance locally using Docker Compose:
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
 ```
 
-Open:
+After startup:
 
-- App: `http://localhost:8080`
-- MySQL: `localhost:3306`
+- App: http://localhost:8080 (or port defined in `.env`)
+- Database: localhost:3306
 
-Important seed note:
-
-- MySQL initialization scripts run only when the DB volume is empty.
-- To re-seed sample data, run: `docker compose down -v` then `docker compose up -d --build`.
-
-Production compose uses prebuilt images from GHCR:
+To clean volumes and re-seed sample data:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env up -d
+docker compose down -v
+docker compose up -d --build
 ```
 
-On push to `main` / `Prod` / `ripal-design`, GitHub Actions builds and publishes both images:
-
-- `ghcr.io/<owner>/<repo>:latest`
-- `ghcr.io/<owner>/<repo>-mysql:latest`
-
-See `docs/DEPLOYMENT.md` for full deployment guidance.
+For production compose, see [docker-compose.prod.yml](docker-compose.prod.yml) and the deployment notes in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Configuration
 
-- Copy `.env.example` → `.env` and fill values; do not commit `.env`.
-- Important env keys: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`, `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_PORT`, `APP_BASE_URL`, `APP_ENV`.
-- The app reads environment variables in `includes/config.php` (it will also load a `.env` file if present).
+- Copy `.env.example` → `.env` and fill values. Do not commit `.env`.
+- Typical keys: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`, `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_PORT`, `APP_BASE_URL`, `APP_ENV`.
 
-## Database & seeds
+## Database
 
-- Full schema: `sql/database.sql`
-- Example/dummy content: `sql/dummy_data.sql`
+- Schema: [sql/database.sql](sql/database.sql)
+- Sample/dummy data: [sql/dummy_data.sql](sql/dummy_data.sql)
 
-Importing the schema creates tables for users, projects, files, invoices, RBAC (roles/permissions), notifications, and more.
+Importing the schema creates tables for users, projects, files, invoices, roles/permissions, notifications, and other domain entities.
 
-## Directory overview (important paths)
+## Scripts & useful commands
 
-- `public/` — public-facing site files and docroot assets
-- `includes/` — core bootstrap, config, DB, auth, utilities, mail helper
-- `admin/`, `client/`, `worker/`, `dashboard/` — role-specific UI pages and APIs
-- `sql/` — database schema and helper SQL
-- `docker/` — container artifacts (including the seeded MySQL Dockerfile)
-- `src/` and `stubs/` — bundled libraries and PHPMailer shims
-- `Common/` — shared header/footer and UI partials
+- Build Tailwind CSS: `npm run build:css` (see [package.json](package.json))
+- Watch CSS during development: `npm run watch:css`
+- Run PHPUnit tests: `vendor/bin/phpunit` (after `composer install`)
+- Static analysis: `vendor/bin/phpstan analyse` (if installed)
+- Code style: `vendor/bin/php-cs-fixer fix` (if installed)
 
-## Security & maintenance notes
+## Development & testing
 
-- Do NOT commit any credentials. Use the `.env` file and server environment variables.
-- Rotate credentials if they were ever committed to Git history.
-- Consider removing sensitive historical commits from Git history only after coordinating with your team.
+- Install dev dependencies via Composer to enable test and analysis tools:
+
+```bash
+composer install --dev
+```
+
+- Run tests:
+
+```bash
+vendor/bin/phpunit --testdox
+```
+
+## Deployment
+
+See the production deployment guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+Main production artifacts include `Dockerfile`, [docker-compose.prod.yml](docker-compose.prod.yml), and container configuration in the `docker/` folder.
+
+Automated builds and image publishing are performed via CI (GitHub Actions) in this repository (if configured).
+
+## Project structure (high level)
+
+- `public/` — Document root for the web server
+- `includes/` — Bootstrapping, configuration, DB helpers, auth, mail helper
+- `admin/`, `client/`, `worker/`, `dashboard/` — Role-specific pages and endpoints
+- `sql/` — Database schema & seed scripts
+- `docker/` — Docker artifacts for images and seeded DB
+- `app/`, `src/`, `stubs/` — Application code, libraries, and small shims
+- `assets/` — Compiled CSS/JS and content
+
+## Security
+
+- Never commit secrets. Use `.env` and environment variables in CI/CD.
+- See [SECURITY_REPORT.md](SECURITY_REPORT.md) for known security guidance and reporting.
+
+If sensitive credentials were committed historically, rotate them and remove them from Git history only after coordinating with maintainers.
 
 ## Contributing
 
-If you'd like me to help with additional cleanup, automated tests, or CI steps, I can open PRs and run checks. Suggested starter tasks:
+Contributions are welcome. Suggested first steps:
 
-- Add PHPUnit tests and a `phpunit.xml` configuration
-- Add linting or static analysis (PHPMD, PHPStan)
-- Add a lightweight health-check endpoint for container orchestration
-## Where to find more details
+1. Open an issue describing the bug or feature.
+2. Create a topic branch off `main`.
+3. Add tests where applicable and update documentation.
+4. Open a pull request referencing the issue.
 
-- Deployment and CI/CD: `docs/DEPLOYMENT.md`
-- Environment template: `.env.example`
-- DB schema: `sql/database.sql`
+If you want help setting up tests, CI, or a CONTRIBUTING.md, I can assist.
+
+## License
+
+No `LICENSE` file was detected in the repository. Add a `LICENSE` to make the project license explicit.
+
+## Contact
+
+For support or questions, open an issue in this repository or contact the project owner/maintainers.
 
 ---
 
-Updated: 2026-04-17
-
-If you want, I can commit additional tidy-ups (remove legacy archives, add quick dev docker-compose, or a short CONTRIBUTING.md). Tell me which next step you prefer.
+This README was reorganized to provide a concise developer-focused quickstart and clear sections for configuration, development, and deployment. Update roadmap and contributor guidance as you prefer.
 
 

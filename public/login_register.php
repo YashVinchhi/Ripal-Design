@@ -203,10 +203,28 @@ if (isset($_POST['signup'])) {
 </html>
 HTML;
 
-                $mail->Body = $renderTemplate($defaultWelcomeHtml, [
-                    '{{login_link}}' => htmlspecialchars((BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'), ENT_QUOTES, 'UTF-8'),
-                    '[User Name]' => htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'),
-                ]);
+                // Prefer the shared welcome preview template for outgoing welcome emails.
+                $templatePath = __DIR__ . '/email_preview/welcome_preview.html';
+                if (is_readable($templatePath)) {
+                    $tpl = file_get_contents($templatePath);
+                    $marker = '<!-- Begin rendered email -->';
+                    if (false !== ($pos = strpos($tpl, $marker))) {
+                        $emailHtml = substr($tpl, $pos + strlen($marker));
+                    } else {
+                        $emailHtml = $tpl;
+                    }
+                    $mail->Body = $renderTemplate($emailHtml, [
+                        '{{login_link}}' => htmlspecialchars((BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'), ENT_QUOTES, 'UTF-8'),
+                        '{{first_name}}' => htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8'),
+                        '{{full_name}}' => htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'),
+                    ]);
+                } else {
+                    // Fallback to embedded default if template missing
+                    $mail->Body = $renderTemplate($defaultWelcomeHtml, [
+                        '{{login_link}}' => htmlspecialchars((BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'), ENT_QUOTES, 'UTF-8'),
+                        '[User Name]' => htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'),
+                    ]);
+                }
 
                 $mail->AltBody = $renderTemplate($ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created successfully and is now active.'), [
                     '{{first_name}}' => $first_name,

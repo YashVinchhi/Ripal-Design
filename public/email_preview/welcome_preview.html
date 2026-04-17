@@ -51,7 +51,7 @@
 
                     <tr>
                         <td class="content-padding" style="padding: 10px 40px 30px 40px; color: #4b5563; line-height: 1.6; font-size: 16px;">
-                            <p style="margin-top: 0; margin-bottom: 20px; font-weight: 600; color: #111827;">Hi John Doe,</p>
+                            <p style="margin-top: 0; margin-bottom: 20px; font-weight: 600; color: #111827;">Hi {{first_name}},</p>
                             <p style="margin-top: 0; margin-bottom: 24px;">Thank you for creating an account with Ripal Design! We are thrilled to have you join our community. Your account has been successfully verified and is ready to go.</p>
                             <p style="margin-top: 0; margin-bottom: 24px;">Here are a few things you can do to get started right away:</p>
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 30px;">
@@ -73,8 +73,8 @@
                                     <td align="center" style="padding: 10px 0 30px 0;">
                                         <table border="0" cellpadding="0" cellspacing="0">
                                             <tr>
-                                                <td align="center" style="border-radius: 6px;" bgcolor="#731209">
-                                                    <a href="http://localhost/login.php" target="_blank" style="display: inline-block; padding: 14px 30px; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600;">Log In to Get Started</a>
+                                                    <td align="center" style="border-radius: 6px;" bgcolor="#731209">
+                                                    <a href="{{login_link}}" target="_blank" style="display: inline-block; padding: 14px 30px; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600;">Log In to Get Started</a>
                                                 </td>
                                             </tr>
                                         </table>
@@ -103,6 +103,25 @@
             </td>
         </tr>
     </table>
+<script>
+// Replace placeholders with sample data for local preview only
+(function(){
+    try {
+        var map = {
+            '{{first_name}}': 'John Doe',
+            '{{full_name}}': 'John Doe',
+            '{{login_link}}': 'http://localhost/login.php'
+        };
+        var html = document.body.innerHTML;
+        for (var k in map) {
+            html = html.split(k).join(map[k]);
+        }
+        document.body.innerHTML = html;
+    } catch (e) {
+        // noop
+    }
+})();
+</script>
 </body>
 </html>
 

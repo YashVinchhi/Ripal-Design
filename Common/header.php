@@ -167,10 +167,10 @@ foreach ($stylesheetCandidates as $candidate) {
 <link rel="apple-touch-icon" href="<?php echo esc_attr($faviconImage); ?>">
 
 <!-- Header Navigation (Always loaded) -->
-<link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/header.css">
+<link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/header.css'); ?>">
 <?php if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } ?>
 <?php if ($headerMode === 'dashboard'): ?>
-    <link rel="stylesheet" href="<?php echo esc_attr(BASE_PATH); ?>/Common/admin-responsive.css">
+    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/admin-responsive.css'); ?>">
 <?php endif; ?>
 <nav class="alt-header">
     <div class="alt-logo">
