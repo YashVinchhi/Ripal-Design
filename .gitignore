@@ -1,6 +1,8 @@
 # Environment secrets
 .env
 .env.local
+# Ignore local wiki mirrors
+wikis/
 
 # Logs and temp
 logs/*.log
