@@ -326,7 +326,7 @@ if (!defined('SECURITY_ENABLE_CSP')) {
 
 if (!defined('SECURITY_CSP_POLICY')) {
     $tailwindCdn = (defined('APP_ENV') && APP_ENV === 'development') ? ' https://cdn.tailwindcss.com' : '';
-    $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://www.google.com https://maps.google.com https://www.googleusercontent.com https://maps.gstatic.com; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com" . $tailwindCdn . " https://code.jquery.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com; form-action 'self'";
+        $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://www.google.com https://maps.google.com https://www.googleusercontent.com https://maps.gstatic.com; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com" . $tailwindCdn . " https://code.jquery.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com; form-action 'self'";
     define('SECURITY_CSP_POLICY', (string)(getenv('SECURITY_CSP_POLICY') ?: $defaultCsp));
 }
 

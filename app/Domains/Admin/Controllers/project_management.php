@@ -56,6 +56,22 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
         return false;
     }
 
+    // Create a public copy in PROJECT_ROOT/uploads so admin UI and legacy pages can
+    // reference the file directly via /uploads/... URLs. This maintains a private
+    // canonical copy in UPLOAD_STORAGE_ROOT while providing a web-accessible copy.
+    try {
+        $publicDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+        if (!is_dir($publicDir)) {
+            @mkdir($publicDir, 0775, true);
+        }
+        $publicAbsolute = $publicDir . DIRECTORY_SEPARATOR . $storedName;
+        if (!is_file($publicAbsolute)) {
+            @copy($absolutePath, $publicAbsolute);
+        }
+    } catch (Throwable $_) {
+        // best-effort: ignore filesystem copy errors
+    }
+
     $storagePath = 'uploads/' . $relativeDir . '/' . $storedName;
     $sizeBytes = (int)($uploadedFile['size'] ?? 0);
     if ($sizeBytes < 1024) {
@@ -126,6 +142,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_project_cover'
     exit;
 }
 
+// Publish toggle: AJAX-friendly endpoint for admin to publish/unpublish a project
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_publish'])) {
+    require_csrf();
+    $projectId = (int)($_POST['project_id'] ?? 0);
+    $publish = isset($_POST['is_published']) && in_array((string)$_POST['is_published'], ['1','true','yes'], true) ? 1 : 0;
+    if ($projectId > 0) {
+        if (function_exists('db_column_exists') && db_column_exists('projects', 'is_published')) {
+            if ($publish) {
+                db_query('UPDATE projects SET is_published = 1, published_at = NOW() WHERE id = ?', [$projectId]);
+            } else {
+                db_query('UPDATE projects SET is_published = 0, published_at = NULL WHERE id = ?', [$projectId]);
+            }
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Database migration required: add projects.is_published column']);
+            exit;
+        }
+    }
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'project_id' => $projectId, 'is_published' => (bool)$publish]);
+    exit;
+}
+
 $search = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
 $statusFilter = isset($_GET['status']) ? strtolower(trim((string)$_GET['status'])) : 'all';
 $allowedStatuses = ['all', 'planning', 'ongoing', 'paused', 'completed'];
@@ -136,7 +175,13 @@ if (!in_array($statusFilter, $allowedStatuses, true)) {
 $projects = [];
 $db = get_db();
 if ($db instanceof PDO) {
-    $sql = "SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.budget, COALESCE(p.location,'') AS location, COALESCE(p.owner_name,'') AS owner_name";
+    // Select publish columns only if the DB has them; otherwise provide safe fallbacks.
+    $publishedSelect = "0 AS is_published, NULL AS published_at";
+    if (function_exists('db_column_exists') && db_column_exists('projects', 'is_published')) {
+        $publishedSelect = "COALESCE(p.is_published,0) AS is_published, p.published_at";
+    }
+
+    $sql = "SELECT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, p.budget, COALESCE(p.location,'') AS location, COALESCE(p.owner_name,'') AS owner_name, " . $publishedSelect;
     if (function_exists('db_table_exists') && db_table_exists('project_files')) {
         $sql .= ", (SELECT pf.file_path FROM project_files pf WHERE pf.project_id = p.id AND pf.type IN ('JPG','JPEG','PNG','WEBP') ORDER BY pf.uploaded_at DESC LIMIT 1) AS cover_image";
         $sql .= ", (SELECT GROUP_CONCAT(pf.file_path ORDER BY pf.uploaded_at DESC SEPARATOR '||') FROM project_files pf WHERE pf.project_id = p.id AND pf.type IN ('JPG','JPEG','PNG','WEBP')) AS cover_images";
@@ -402,7 +447,24 @@ $resolveRegion = static function (string $location): string {
                     <?php $coverImages = $p['cover_images_list'] ?? (!empty($p['cover_image']) ? [(string)$p['cover_image']] : []); ?>
                     <?php if (!empty($coverImages)): ?>
                         <?php foreach ($coverImages as $idx => $coverPath): ?>
-                            <img src="<?php echo htmlspecialchars((string)$coverPath); ?>" alt="<?php echo htmlspecialchars((string)$p['name']); ?>" class="project-cover-slide absolute inset-0 w-full h-full object-cover transition-opacity duration-700 <?php echo $idx === 0 ? 'opacity-100' : 'opacity-0'; ?>" data-slide-index="<?php echo (int)$idx; ?>">
+                            <?php
+                                $cp = (string)$coverPath;
+                                $src = $cp;
+                                // If URL is absolute (http, https or protocol-relative), leave as-is.
+                                if (!preg_match('#^(https?:)?//#', $cp)) {
+                                    // If path starts with a slash, treat as root-relative and prefix BASE_PATH
+                                    if (strpos($cp, '/') === 0) {
+                                        $src = rtrim((string)BASE_PATH, '/') . $cp;
+                                    } elseif (strpos($cp, '..') === 0) {
+                                        // keep relative paths like ../assets/Content/...
+                                        $src = $cp;
+                                    } else {
+                                        // most DB-stored paths are like 'uploads/project/..' — prefix BASE_PATH
+                                        $src = rtrim((string)BASE_PATH, '/') . '/' . ltrim($cp, '/');
+                                    }
+                                }
+                            ?>
+                            <img src="<?php echo htmlspecialchars($src); ?>" alt="<?php echo htmlspecialchars((string)$p['name']); ?>" class="project-cover-slide absolute inset-0 w-full h-full object-cover transition-opacity duration-700 <?php echo $idx === 0 ? 'opacity-100' : 'opacity-0'; ?>" data-slide-index="<?php echo (int)$idx; ?>">
                         <?php endforeach; ?>
                     <?php endif; ?>
                     <?php if (!empty($coverImages) && count($coverImages) > 1): ?>
@@ -421,7 +483,7 @@ $resolveRegion = static function (string $location): string {
                        <span class="px-3 py-1 bg-approval-green text-white text-[10px] font-bold uppercase tracking-widest mb-2 w-max shadow-lg"><?php echo htmlspecialchars(strtoupper($pStatus)); ?></span>
                        <h3 class="text-xl font-serif font-bold text-white group-hover:text-rajkot-rust transition-colors"><?php echo htmlspecialchars((string)$p['name']); ?></h3>
                     </div>
-                    <div class="absolute top-3 right-3 z-20">
+                    <div class="absolute top-3 right-3 z-20 flex items-center gap-2">
                         <form method="post" enctype="multipart/form-data" class="cover-edit-form inline-flex items-center gap-2 bg-black/35 backdrop-blur-sm px-2 py-1 rounded" data-project-id="<?php echo (int)$p['id']; ?>">
                             <?php echo csrf_token_field(); ?>
                             <input type="hidden" name="update_project_cover" value="1">
@@ -429,6 +491,16 @@ $resolveRegion = static function (string $location): string {
                             <input type="file" name="project_photo[]" accept="image/*" multiple class="hidden project-cover-input" id="cover-input-<?php echo (int)$p['id']; ?>">
                             <button type="button" class="cover-edit-btn text-white text-[10px] font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-rajkot-rust transition-colors" data-input-id="cover-input-<?php echo (int)$p['id']; ?>" title="Edit cover images">
                                 <i data-lucide="image-plus" class="w-4 h-4"></i> Edit Covers
+                            </button>
+                        </form>
+
+                        <form method="post" class="publish-form inline-flex items-center gap-2 px-2 py-1 rounded bg-black/35 backdrop-blur-sm" data-project-id="<?php echo (int)$p['id']; ?>">
+                            <?php echo csrf_token_field(); ?>
+                            <input type="hidden" name="toggle_publish" value="1">
+                            <input type="hidden" name="project_id" value="<?php echo (int)$p['id']; ?>">
+                            <input type="hidden" name="is_published" value="<?php echo (int)($p['is_published'] ?? 0); ?>">
+                            <button type="button" class="publish-toggle-btn text-[10px] text-white font-bold uppercase tracking-widest hover:text-rajkot-rust transition-colors" data-project-id="<?php echo (int)$p['id']; ?>" data-is-published="<?php echo (int)($p['is_published'] ?? 0); ?>">
+                                <?php echo (isset($p['is_published']) && (int)$p['is_published']) ? 'Unpublish' : 'Publish'; ?>
                             </button>
                         </form>
                     </div>
@@ -469,6 +541,45 @@ $resolveRegion = static function (string $location): string {
 
     <script>
         $(document).ready(function() {
+            // Publish toggle AJAX handler
+            $('.publish-toggle-btn').on('click', function (e) {
+                e.preventDefault();
+                var btn = $(this);
+                var form = btn.closest('.publish-form');
+                if (!form || form.length === 0) return;
+                var isPublishedInput = form.find('input[name="is_published"]');
+                var current = parseInt(isPublishedInput.val() || '0', 10);
+                var newVal = current ? 0 : 1;
+
+                // Build FormData from hidden inputs (including CSRF)
+                var fd = new FormData();
+                form.find('input').each(function () {
+                    var $i = $(this);
+                    if ($i.attr('type') === 'file') return;
+                    var name = $i.attr('name');
+                    if (typeof name !== 'undefined') fd.append(name, $i.val());
+                });
+                fd.set('is_published', newVal);
+                fd.set('toggle_publish', '1');
+
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: fd,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).then(function (resp) { return resp.json(); }).then(function (json) {
+                    if (json && json.success) {
+                        isPublishedInput.val(newVal);
+                        btn.text(newVal ? 'Unpublish' : 'Publish');
+                        btn.attr('data-is-published', newVal);
+                        btn.toggleClass('text-rajkot-rust', !!newVal);
+                    } else {
+                        alert(json.error || 'Failed to update publish state');
+                    }
+                }).catch(function () { alert('Network error'); });
+            });
         });
 
         let dashboardState = {

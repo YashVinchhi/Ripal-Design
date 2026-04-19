@@ -5,4 +5,19 @@ Allow: /.well-known/
 # Keep existing public pages crawlable.
 Allow: /
 
-# TODO: add private/admin disallow rules if your SEO policy requires it.
+# Disallow likely private or admin areas to avoid accidental indexing
+Disallow: /admin/
+Disallow: /app/
+Disallow: /includes/
+Disallow: /vendor/
+Disallow: /storage/
+Disallow: /tests/
+Disallow: /docker/
+Disallow: /sql/
+Disallow: /node_modules/
+
+# Sitemap locations - replace the domain placeholder with your canonical domain
+Sitemap: https://REPLACE_WITH_YOUR_DOMAIN/sitemap.xml
+Sitemap: /sitemap.xml
+
+# TODO: review Disallow rules for any additional private folders on your deployment

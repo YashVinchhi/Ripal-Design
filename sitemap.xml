@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Generated: 2026-04-18 - Replace REPLACE_WITH_YOUR_DOMAIN with your live domain -->
+  <url>
+    <loc>https://REPLACE_WITH_YOUR_DOMAIN/</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <loc>https://REPLACE_WITH_YOUR_DOMAIN/about_us.php</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://REPLACE_WITH_YOUR_DOMAIN/services.php</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://REPLACE_WITH_YOUR_DOMAIN/tour.php</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://REPLACE_WITH_YOUR_DOMAIN/project_view.php</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://REPLACE_WITH_YOUR_DOMAIN/contact_us.php</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.50</priority>
+  </url>
+  <!-- Add more public pages as you publish them. Use absolute URLs and keep lastmod updated. -->
+</urlset>

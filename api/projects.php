@@ -1,4 +1,126 @@
 <?php
+// Public API for projects: list, detail, appreciate toggle
+require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
+header('Content-Type: application/json; charset=utf-8');
+
+$db = get_db();
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+if ($method === 'GET') {
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    if ($id > 0) {
+        $stmt = $db->prepare('SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE id = ? AND is_published = 1 LIMIT 1');
+        $stmt->execute([$id]);
+        $project = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$project) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Project not found or not published']);
+            exit;
+        }
+
+        $filesStmt = $db->prepare('SELECT id, name, type, size, file_path, media_type, meta, sort_order FROM project_files WHERE project_id = ? AND is_public = 1 ORDER BY sort_order ASC, uploaded_at DESC');
+        $filesStmt->execute([$id]);
+        $files = $filesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $likes = 0;
+        if (function_exists('db_table_exists') && db_table_exists('project_likes')) {
+            $likesStmt = $db->prepare('SELECT COUNT(*) FROM project_likes WHERE project_id = ?');
+            $likesStmt->execute([$id]);
+            $likes = (int)$likesStmt->fetchColumn();
+        }
+
+        echo json_encode(['project' => $project, 'files' => $files, 'likes' => $likes]);
+        exit;
+    }
+
+    // list published projects
+    $limit = isset($_GET['limit']) ? min(200, (int)$_GET['limit']) : 50;
+    $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+    $stmt = $db->prepare('SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE is_published = 1 ORDER BY published_at DESC LIMIT ? OFFSET ?');
+    $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($projects as &$p) {
+        $pf = $db->prepare('SELECT id, file_path FROM project_files WHERE project_id = ? AND is_public = 1 AND media_type IN (\'IMAGE\', \'PANORAMA\') ORDER BY sort_order ASC, uploaded_at DESC LIMIT 1');
+        $pf->execute([(int)$p['id']]);
+        $row = $pf->fetch(PDO::FETCH_ASSOC);
+        $cover = $row['file_path'] ?? null;
+        if ($cover !== null) {
+            $normalized = str_replace('\\', '/', (string)$cover);
+            $normalized = ltrim($normalized, '/');
+
+            // If the stored path is under uploads/, ensure a public copy exists
+            if (strpos($normalized, 'uploads/') === 0) {
+                $publicRelative = $normalized; // e.g. uploads/project/12/files/xyz.png
+                $publicAbsolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $publicRelative);
+                if (!is_file($publicAbsolute)) {
+                    $relativeAfterUploads = substr($normalized, strlen('uploads/'));
+                    $privateAbs = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeAfterUploads);
+                    if (is_file($privateAbs)) {
+                        $publicDir = dirname($publicAbsolute);
+                        if (!is_dir($publicDir)) @mkdir($publicDir, 0775, true);
+                        @copy($privateAbs, $publicAbsolute);
+                    }
+                }
+                $p['cover_image'] = rtrim((string)BASE_PATH, '/') . '/' . ltrim($publicRelative, '/');
+            } elseif (preg_match('#^(https?:)?//#', $normalized)) {
+                // absolute URL — use as-is
+                $p['cover_image'] = $cover;
+            } else {
+                // relative or assets path — prefix site base
+                $p['cover_image'] = rtrim((string)BASE_PATH, '/') . '/' . ltrim($normalized, '/');
+            }
+        } else {
+            $p['cover_image'] = null;
+        }
+    }
+
+    echo json_encode(['projects' => $projects]);
+    exit;
+}
+
+if ($method === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'appreciate') {
+        require_login();
+        require_csrf();
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $userId = (int)($_SESSION['user']['id'] ?? 0);
+        if ($projectId <= 0 || $userId <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid request']);
+            exit;
+        }
+        if (!function_exists('db_table_exists') || !db_table_exists('project_likes')) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Feature not available']);
+            exit;
+        }
+
+        $exists = $db->prepare('SELECT id FROM project_likes WHERE project_id = ? AND user_id = ? LIMIT 1');
+        $exists->execute([$projectId, $userId]);
+        $row = $exists->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            $db->prepare('DELETE FROM project_likes WHERE id = ?')->execute([(int)$row['id']]);
+            $actionRes = 'removed';
+        } else {
+            $db->prepare('INSERT INTO project_likes (project_id, user_id) VALUES (?, ?)')->execute([$projectId, $userId]);
+            $actionRes = 'added';
+        }
+
+        $countStmt = $db->prepare('SELECT COUNT(*) FROM project_likes WHERE project_id = ?');
+        $countStmt->execute([$projectId]);
+        $count = (int)$countStmt->fetchColumn();
+
+        echo json_encode(['success' => true, 'action' => $actionRes, 'count' => $count]);
+        exit;
+    }
+}
+
+http_response_code(405);
+echo json_encode(['error' => 'Unsupported method']);
 /**
  * WebMCP projects endpoint.
  *

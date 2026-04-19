@@ -1873,6 +1873,10 @@ $vrSettings = file_viewer_load_vr_settings();
               <button type="button" id="zoomOutBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Zoom -</button>
               <button type="button" id="resetViewBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Reset</button>
               <button type="button" id="fullscreenBtn" class="text-xs bg-foundation-grey text-white px-2 py-1">Fullscreen</button>
+              <select id="tourSceneSelect" class="text-xs bg-white border border-gray-300 text-foundation-grey px-2 py-1 min-w-[220px]">
+                <option value="">Loading tour scenes...</option>
+              </select>
+              <span id="tourViewerStatus" class="text-[10px] text-gray-500"></span>
               
               <button type="button" id="openVrModeBtn" class="vr-phone-only shrink-0 text-xs bg-slate-accent text-white px-2 py-1 items-center gap-1" title="Open VR mode">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2153,53 +2157,273 @@ $vrSettings = file_viewer_load_vr_settings();
         if (!window.pannellum) {
           return;
         }
-        const viewer = pannellum.viewer('panoViewer', {
-          type: 'equirectangular',
-          panorama: <?php echo json_encode($previewUrl); ?>,
-          autoLoad: true,
-          compass: false,
-          showZoomCtrl: true,
-          showFullscreenCtrl: true,
-          mouseZoom: true
-        });
+        const projectId = <?php echo (int)$projectId; ?>;
+        const selectedResourceId = <?php echo (int)$resourceId; ?>;
+        const toursApiUrl = <?php echo json_encode(base_path('api/public_tours.php')); ?>;
+        const fallbackPanorama = <?php echo json_encode($previewUrl); ?>;
+
+        const state = {
+          scenes: [],
+          scenesById: new Map(),
+          currentSceneId: 0,
+          viewer: null,
+          fsViewer: null,
+          fsOpen: false,
+          tour: null,
+        };
+        const sceneListeners = [];
+
+        function notifySceneChange(scene) {
+          sceneListeners.forEach(function(listener) {
+            try {
+              listener(scene || null, state);
+            } catch (e) {
+              // Keep propagation alive if one listener fails.
+            }
+          });
+        }
+
+        window.__fileViewerTourBridge = {
+          hasTour: function() {
+            return state.scenes.length > 0;
+          },
+          getCurrentScene: function() {
+            return state.scenesById.get(Number(state.currentSceneId)) || null;
+          },
+          goToScene: function(sceneId) {
+            const id = Number(sceneId || 0);
+            if (id > 0) {
+              loadScene(id);
+            }
+          },
+          subscribe: function(listener) {
+            if (typeof listener !== 'function') {
+              return function() {};
+            }
+            sceneListeners.push(listener);
+            return function() {
+              const idx = sceneListeners.indexOf(listener);
+              if (idx !== -1) {
+                sceneListeners.splice(idx, 1);
+              }
+            };
+          }
+        };
+
+        function setTourStatus(message, isError) {
+          const statusEl = document.getElementById('tourViewerStatus');
+          if (!statusEl) {
+            return;
+          }
+          statusEl.textContent = message;
+          statusEl.className = isError ? 'text-[10px] text-red-600' : 'text-[10px] text-gray-500';
+        }
+
+        function hotspotTooltip(hotSpotDiv, args) {
+          hotSpotDiv.classList.add('tour-link-hotspot');
+          const label = document.createElement('div');
+          label.className = 'tour-link-hotspot-label';
+          label.textContent = args && args.label ? args.label : 'Open';
+          hotSpotDiv.appendChild(label);
+        }
+
+        function buildHotspots(scene) {
+          const source = Array.isArray(scene.hotspots) ? scene.hotspots : [];
+          return source.map((hotspot) => {
+            const targetSceneId = Number(hotspot.target_scene_id || 0);
+            return {
+              id: 'fv_hotspot_' + String(hotspot.id || Math.random()),
+              pitch: Number(hotspot.pitch || 0),
+              yaw: Number(hotspot.yaw || 0),
+              type: 'info',
+              text: hotspot.title || 'Open',
+              createTooltipFunc: hotspotTooltip,
+              createTooltipArgs: { label: hotspot.title || 'Open' },
+              clickHandlerFunc: function() {
+                if (targetSceneId > 0) {
+                  loadScene(targetSceneId);
+                }
+              }
+            };
+          });
+        }
+
+        function renderSceneSelect() {
+          const selectEl = document.getElementById('tourSceneSelect');
+          if (!selectEl) {
+            return;
+          }
+          selectEl.innerHTML = '';
+
+          if (!state.scenes.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Single panorama mode';
+            selectEl.appendChild(option);
+            return;
+          }
+
+          state.scenes.forEach((scene) => {
+            const option = document.createElement('option');
+            option.value = String(scene.id);
+            option.textContent = scene.name || ('Scene #' + String(scene.id));
+            selectEl.appendChild(option);
+          });
+        }
+
+        function mountViewer(viewerTargetId, scene) {
+          return pannellum.viewer(viewerTargetId, {
+            type: 'equirectangular',
+            panorama: scene.image_url,
+            autoLoad: true,
+            compass: false,
+            showZoomCtrl: true,
+            showFullscreenCtrl: false,
+            mouseZoom: true,
+            pitch: Number(scene.initial_pitch || 0),
+            yaw: Number(scene.initial_yaw || 0),
+            hfov: Number(scene.initial_hfov || 100),
+            hotSpots: buildHotspots(scene),
+          });
+        }
+
+        function loadScene(sceneId) {
+          const scene = state.scenesById.get(Number(sceneId));
+          if (!scene || !scene.image_url) {
+            return;
+          }
+
+          state.currentSceneId = Number(scene.id);
+          const selectEl = document.getElementById('tourSceneSelect');
+          if (selectEl) {
+            selectEl.value = String(scene.id);
+          }
+
+          if (state.viewer && typeof state.viewer.destroy === 'function') {
+            state.viewer.destroy();
+          }
+          state.viewer = mountViewer('panoViewer', scene);
+
+          if (state.fsOpen) {
+            if (state.fsViewer && typeof state.fsViewer.destroy === 'function') {
+              state.fsViewer.destroy();
+            }
+            state.fsViewer = mountViewer('panoFullscreenViewer', scene);
+          }
+
+          setTourStatus('Tour scene: ' + (scene.name || ('#' + String(scene.id))), false);
+          notifySceneChange(scene);
+        }
+
+        function loadFallbackViewer() {
+          state.scenes = [];
+          state.scenesById = new Map();
+          state.currentSceneId = 0;
+
+          if (state.viewer && typeof state.viewer.destroy === 'function') {
+            state.viewer.destroy();
+          }
+
+          state.viewer = pannellum.viewer('panoViewer', {
+            type: 'equirectangular',
+            panorama: fallbackPanorama,
+            autoLoad: true,
+            compass: false,
+            showZoomCtrl: true,
+            showFullscreenCtrl: false,
+            mouseZoom: true
+          });
+
+          renderSceneSelect();
+          setTourStatus('No linked tour found for this project. Showing single panorama.', false);
+          notifySceneChange(null);
+        }
+
+        async function loadProjectTour() {
+          if (projectId <= 0) {
+            loadFallbackViewer();
+            return;
+          }
+          try {
+            const resp = await fetch(toursApiUrl + '?project_id=' + encodeURIComponent(String(projectId)), { credentials: 'same-origin' });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok || !data.success || !Array.isArray(data.scenes) || !data.scenes.length) {
+              loadFallbackViewer();
+              return;
+            }
+
+            state.tour = data.tour || null;
+            state.scenes = data.scenes.filter((scene) => !!scene.image_url);
+            state.scenesById = new Map();
+            state.scenes.forEach((scene) => state.scenesById.set(Number(scene.id), scene));
+
+            if (!state.scenes.length) {
+              loadFallbackViewer();
+              return;
+            }
+
+            renderSceneSelect();
+
+            const sceneByFile = state.scenes.find((scene) => Number(scene.project_file_id || 0) === selectedResourceId);
+            const startSceneId = Number((state.tour && state.tour.start_scene_id) || 0);
+            const firstSceneId = Number((state.scenes[0] && state.scenes[0].id) || 0);
+            const initialSceneId = sceneByFile
+              ? Number(sceneByFile.id)
+              : (startSceneId > 0 && state.scenesById.has(startSceneId) ? startSceneId : firstSceneId);
+
+            loadScene(initialSceneId);
+          } catch (e) {
+            loadFallbackViewer();
+          }
+        }
 
         const zoomInBtn = document.getElementById('zoomInBtn');
         const zoomOutBtn = document.getElementById('zoomOutBtn');
         const resetViewBtn = document.getElementById('resetViewBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const sceneSelect = document.getElementById('tourSceneSelect');
         const panoFsModal = document.getElementById('panoFullscreenModal');
         const panoFsCloseBtn = document.getElementById('panoFsCloseBtn');
         const panoFsResetBtn = document.getElementById('panoFsResetBtn');
 
-        let panoFsViewer = null;
-
         function openPanoFullscreen() {
-          if (!panoFsModal) {
+          if (!panoFsModal || !state.viewer) {
             return;
           }
 
           panoFsModal.classList.add('is-open');
           panoFsModal.setAttribute('aria-hidden', 'false');
           document.body.style.overflow = 'hidden';
+          state.fsOpen = true;
 
-          if (!panoFsViewer) {
-            panoFsViewer = pannellum.viewer('panoFullscreenViewer', {
-              type: 'equirectangular',
-              panorama: <?php echo json_encode($previewUrl); ?>,
-              autoLoad: true,
-              autoRotate: -2,
-              compass: false,
-              showZoomCtrl: true,
-              showFullscreenCtrl: false,
-              mouseZoom: true,
-              hfov: viewer.getHfov(),
-              pitch: viewer.getPitch(),
-              yaw: viewer.getYaw()
-            });
+          if (state.scenes.length && state.currentSceneId > 0 && state.scenesById.has(state.currentSceneId)) {
+            const currentScene = state.scenesById.get(state.currentSceneId);
+            if (state.fsViewer && typeof state.fsViewer.destroy === 'function') {
+              state.fsViewer.destroy();
+            }
+            state.fsViewer = mountViewer('panoFullscreenViewer', currentScene);
+            state.fsViewer.setPitch(state.viewer.getPitch());
+            state.fsViewer.setYaw(state.viewer.getYaw());
+            state.fsViewer.setHfov(state.viewer.getHfov());
           } else {
-            panoFsViewer.setPitch(viewer.getPitch());
-            panoFsViewer.setYaw(viewer.getYaw());
-            panoFsViewer.setHfov(viewer.getHfov());
+            if (!state.fsViewer) {
+              state.fsViewer = pannellum.viewer('panoFullscreenViewer', {
+                type: 'equirectangular',
+                panorama: fallbackPanorama,
+                autoLoad: true,
+                compass: false,
+                showZoomCtrl: true,
+                showFullscreenCtrl: false,
+                mouseZoom: true,
+                hfov: state.viewer.getHfov(),
+                pitch: state.viewer.getPitch(),
+                yaw: state.viewer.getYaw()
+              });
+            } else {
+              state.fsViewer.setPitch(state.viewer.getPitch());
+              state.fsViewer.setYaw(state.viewer.getYaw());
+              state.fsViewer.setHfov(state.viewer.getHfov());
+            }
           }
         }
 
@@ -2210,29 +2434,36 @@ $vrSettings = file_viewer_load_vr_settings();
           panoFsModal.classList.remove('is-open');
           panoFsModal.setAttribute('aria-hidden', 'true');
           document.body.style.overflow = '';
+          state.fsOpen = false;
 
-          if (panoFsViewer) {
-            viewer.setPitch(panoFsViewer.getPitch());
-            viewer.setYaw(panoFsViewer.getYaw());
-            viewer.setHfov(panoFsViewer.getHfov());
+          if (state.fsViewer && state.viewer) {
+            state.viewer.setPitch(state.fsViewer.getPitch());
+            state.viewer.setYaw(state.fsViewer.getYaw());
+            state.viewer.setHfov(state.fsViewer.getHfov());
           }
         }
 
         if (zoomInBtn) {
           zoomInBtn.addEventListener('click', function() {
-            viewer.setHfov(viewer.getHfov() - 10);
+            if (state.viewer) {
+              state.viewer.setHfov(state.viewer.getHfov() - 10);
+            }
           });
         }
         if (zoomOutBtn) {
           zoomOutBtn.addEventListener('click', function() {
-            viewer.setHfov(viewer.getHfov() + 10);
+            if (state.viewer) {
+              state.viewer.setHfov(state.viewer.getHfov() + 10);
+            }
           });
         }
         if (resetViewBtn) {
           resetViewBtn.addEventListener('click', function() {
-            viewer.setPitch(0);
-            viewer.setYaw(0);
-            viewer.setHfov(100);
+            if (state.viewer) {
+              state.viewer.setPitch(0);
+              state.viewer.setYaw(0);
+              state.viewer.setHfov(100);
+            }
           });
         }
         if (fullscreenBtn) {
@@ -2247,12 +2478,21 @@ $vrSettings = file_viewer_load_vr_settings();
 
         if (panoFsResetBtn) {
           panoFsResetBtn.addEventListener('click', function() {
-            if (!panoFsViewer) {
+            if (!state.fsViewer) {
               return;
             }
-            panoFsViewer.setPitch(0);
-            panoFsViewer.setYaw(0);
-            panoFsViewer.setHfov(100);
+            state.fsViewer.setPitch(0);
+            state.fsViewer.setYaw(0);
+            state.fsViewer.setHfov(100);
+          });
+        }
+
+        if (sceneSelect) {
+          sceneSelect.addEventListener('change', function() {
+            const nextSceneId = Number(sceneSelect.value || 0);
+            if (nextSceneId > 0) {
+              loadScene(nextSceneId);
+            }
           });
         }
 
@@ -2269,6 +2509,8 @@ $vrSettings = file_viewer_load_vr_settings();
             closePanoFullscreen();
           }
         });
+
+        loadProjectTour();
       })();
     </script>
   <?php endif; ?>
@@ -2335,6 +2577,7 @@ $vrSettings = file_viewer_load_vr_settings();
         let vrPanoInitialized = false;
         let vrPanoLeftViewer = null;
         let vrPanoRightViewer = null;
+        let vrTourSceneUnsubscribe = null;
         let vrSyncFrame = 0;
         let gyroEnabled = false;
         let gyroHandler = null;
@@ -2434,6 +2677,113 @@ $vrSettings = file_viewer_load_vr_settings();
           target.setPitch(pitch, false);
           target.setYaw(yaw, false);
           target.setHfov(hfov, false);
+        }
+
+        function getTourBridge() {
+          const bridge = window.__fileViewerTourBridge;
+          if (!bridge || typeof bridge !== 'object') {
+            return null;
+          }
+          return bridge;
+        }
+
+        function buildVrHotspots(scene) {
+          const source = scene && Array.isArray(scene.hotspots) ? scene.hotspots : [];
+          return source.map(function(hotspot) {
+            const targetSceneId = Number(hotspot.target_scene_id || 0);
+            return {
+              id: 'vr_hotspot_' + String(hotspot.id || Math.random()),
+              pitch: Number(hotspot.pitch || 0),
+              yaw: Number(hotspot.yaw || 0),
+              type: 'info',
+              text: hotspot.title || 'Open',
+              clickHandlerFunc: function() {
+                const bridge = getTourBridge();
+                if (bridge && typeof bridge.goToScene === 'function' && targetSceneId > 0) {
+                  bridge.goToScene(targetSceneId);
+                }
+              }
+            };
+          });
+        }
+
+        function createVrPanoViewer(elementId, panoramaUrl, scene, pitch, yaw, hfov) {
+          const options = {
+            type: 'equirectangular',
+            panorama: panoramaUrl,
+            autoLoad: true,
+            compass: false,
+            showZoomCtrl: false,
+            showFullscreenCtrl: false,
+            mouseZoom: true,
+            draggable: true,
+            orientationOnByDefault: false,
+            pitch: Number.isFinite(pitch) ? pitch : Number(scene && scene.initial_pitch || 0),
+            yaw: Number.isFinite(yaw) ? yaw : Number(scene && scene.initial_yaw || 0),
+            hfov: Number.isFinite(hfov) ? hfov : Number(scene && scene.initial_hfov || 100)
+          };
+          if (scene && Array.isArray(scene.hotspots) && scene.hotspots.length) {
+            options.hotSpots = buildVrHotspots(scene);
+          }
+          return pannellum.viewer(elementId, options);
+        }
+
+        function rebuildVrPanorama(scene) {
+          if (!window.pannellum) {
+            return;
+          }
+
+          const prevPitch = vrPanoLeftViewer ? vrPanoLeftViewer.getPitch() : null;
+          const prevYaw = vrPanoLeftViewer ? vrPanoLeftViewer.getYaw() : null;
+          const prevHfov = vrPanoLeftViewer ? vrPanoLeftViewer.getHfov() : null;
+
+          if (vrPanoLeftViewer && typeof vrPanoLeftViewer.destroy === 'function') {
+            vrPanoLeftViewer.destroy();
+          }
+          if (vrPanoRightViewer && typeof vrPanoRightViewer.destroy === 'function') {
+            vrPanoRightViewer.destroy();
+          }
+
+          const useTourScene = !!(scene && scene.image_url);
+          const leftPanorama = useTourScene
+            ? String(scene.image_url)
+            : <?php echo json_encode($stereoLeftUrl !== '' ? $stereoLeftUrl : $previewUrl); ?>;
+          const rightPanorama = useTourScene
+            ? String(scene.image_url)
+            : <?php echo json_encode($stereoRightUrl !== '' ? $stereoRightUrl : $previewUrl); ?>;
+
+          vrPanoLeftViewer = createVrPanoViewer('vrPanoLeft', leftPanorama, scene, prevPitch, prevYaw, prevHfov);
+          vrPanoRightViewer = createVrPanoViewer('vrPanoRight', rightPanorama, scene, prevPitch, prevYaw, prevHfov);
+          vrPanoInitialized = true;
+
+          if (vrPanoLeftViewer && vrPanoRightViewer) {
+            const basePitch = vrPanoLeftViewer.getPitch();
+            const baseYaw = vrPanoLeftViewer.getYaw();
+            const baseHfov = vrPanoLeftViewer.getHfov();
+            vrPanoRightViewer.setPitch(basePitch, false);
+            vrPanoRightViewer.setYaw(baseYaw, false);
+            vrPanoRightViewer.setHfov(baseHfov, false);
+          }
+        }
+
+        function ensureVrTourSceneBinding() {
+          const bridge = getTourBridge();
+          if (!bridge || typeof bridge.subscribe !== 'function') {
+            return;
+          }
+
+          if (vrTourSceneUnsubscribe) {
+            return;
+          }
+
+          vrTourSceneUnsubscribe = bridge.subscribe(function(scene) {
+            if (!modal.classList.contains('is-open')) {
+              return;
+            }
+            <?php if ($viewerMode === '360'): ?>
+              rebuildVrPanorama(scene);
+            <?php endif; ?>
+          });
         }
 
         function runVrSyncLoop() {
@@ -2607,47 +2957,15 @@ $vrSettings = file_viewer_load_vr_settings();
           }
 
           <?php if ($viewerMode === '360'): ?>
-            if (!vrPanoInitialized && window.pannellum) {
-              vrPanoLeftViewer = pannellum.viewer('vrPanoLeft', {
-                type: 'equirectangular',
-                panorama: <?php echo json_encode($stereoLeftUrl !== '' ? $stereoLeftUrl : $previewUrl); ?>,
-                autoLoad: true,
-                compass: false,
-                showZoomCtrl: false,
-                showFullscreenCtrl: false,
-                mouseZoom: true,
-                draggable: true,
-                orientationOnByDefault: false,
-                pitch: 0,
-                yaw: 0,
-                hfov: 100
-              });
-
-              vrPanoRightViewer = pannellum.viewer('vrPanoRight', {
-                type: 'equirectangular',
-                panorama: <?php echo json_encode($stereoRightUrl !== '' ? $stereoRightUrl : $previewUrl); ?>,
-                autoLoad: true,
-                compass: false,
-                showZoomCtrl: false,
-                showFullscreenCtrl: false,
-                mouseZoom: true,
-                draggable: true,
-                orientationOnByDefault: false,
-                pitch: 0,
-                yaw: 0,
-                hfov: 100
-              });
-              vrPanoInitialized = true;
+            const bridge = getTourBridge();
+            const scene = bridge && typeof bridge.getCurrentScene === 'function' ? bridge.getCurrentScene() : null;
+            if (!vrPanoInitialized || scene) {
+              rebuildVrPanorama(scene);
+            } else if (!vrPanoLeftViewer || !vrPanoRightViewer) {
+              rebuildVrPanorama(null);
             }
 
-            if (vrPanoLeftViewer && vrPanoRightViewer) {
-              const basePitch = vrPanoLeftViewer.getPitch();
-              const baseYaw = vrPanoLeftViewer.getYaw();
-              const baseHfov = vrPanoLeftViewer.getHfov();
-              vrPanoRightViewer.setPitch(basePitch, false);
-              vrPanoRightViewer.setYaw(baseYaw, false);
-              vrPanoRightViewer.setHfov(baseHfov, false);
-            }
+            ensureVrTourSceneBinding();
 
             if (vrEyeRight) {
               vrEyeRight.classList.add('vr-eye-slave');
@@ -2700,6 +3018,10 @@ $vrSettings = file_viewer_load_vr_settings();
             closeVr();
           }
         });
+
+        if (window.__fileViewerTourBridge && typeof window.__fileViewerTourBridge.subscribe === 'function') {
+          ensureVrTourSceneBinding();
+        }
       })();
     </script>
   <?php endif; ?>

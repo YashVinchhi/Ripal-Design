@@ -1,0 +1,85 @@
+LLMs / SEO metadata for Ripal Design
+Generated: 2026-04-18
+
+SITE
+- name: Ripal Design
+- tagline: Where architecture vision meets execution precision
+- address: 538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat, India
+- phone: +91 94267 89012
+- email: projects@ripaldesign.in
+
+DOMAIN
+- Replace occurrences of REPLACE_WITH_YOUR_DOMAIN with your canonical domain, e.g. https://ripaldesign.in
+
+PRIMARY KEYWORDS (geo-targeted)
+- architecture in Rajkot
+- architects in Rajkot
+- Ripal Design Rajkot
+- residential architecture Rajkot
+- commercial architecture Rajkot
+- interior design Rajkot
+
+PRIORITY PAGES (document-root assumed to be `public/`)
+- /  (homepage)
+- /services.php
+- /about_us.php
+- /project_view.php  (project pages; include one URL per project with ?id= or slug)
+- /tour.php
+- /contact_us.php
+
+SUGGESTED META TITLES & DESCRIPTIONS (copy into each page <head>)
+- Home title: Ripal Design — Architecture Firm in Rajkot | Residential & Commercial
+- Home meta description: Ripal Design is a Rajkot-based architecture firm delivering residential, commercial and interior design solutions. Awarded for design-to-execution excellence — contact us for a free consultation.
+
+- Services title: Services — Ripal Design (Architecture, Interiors, Urban Planning)
+- Services meta description: Our services include residential architecture, commercial design, interior design and urban planning across Rajkot and Gujarat. We blend design vision with execution precision.
+
+- About title: About Ripal Design — Architects in Rajkot
+- About meta description: Learn about Ripal Design — founded 2017, trusted municipal and private project delivery partner in Rajkot. Meet our team and view portfolio highlights.
+
+- Contact title: Contact — Ripal Design (Rajkot)
+- Contact meta description: Contact Ripal Design in Rajkot for architecture and design consultation. Phone +91 94267 89012 or email projects@ripaldesign.in.
+
+JSON-LD (schema.org) — paste the following into your homepage <head>; replace URL placeholder
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Ripal Design",
+  "description": "Where architecture vision meets execution precision. Trusted municipal and private project delivery partner in Rajkot.",
+  "url": "https://REPLACE_WITH_YOUR_DOMAIN",
+  "telephone": "+91 94267 89012",
+  "email": "projects@ripaldesign.in",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "538 Jasal Complex, Nanavati Chowk, 150ft Ring Road",
+    "addressLocality": "Rajkot",
+    "addressRegion": "Gujarat",
+    "postalCode": "",
+    "addressCountry": "IN"
+  },
+  "areaServed": "Rajkot, Gujarat, India",
+  "sameAs": []
+}
+</script>
+
+LLM GUIDANCE: how to index and summarize
+- Give highest importance to homepage and services page for the query "architecture in Rajkot".
+- Use the firm description, services list, and address to generate local-intent snippets (include 'Rajkot' + service phrase).
+- Prefer human-friendly titles: include locality + service + brand, e.g. "Architecture in Rajkot — Ripal Design".
+- When generating FAQs or snippets, include practical items: consultation process, contact phone, project showcase.
+
+SITEMAP & ROBOTS
+- Sitemap file added at /sitemap.xml (update domain placeholder inside the file to your domain).
+- robots.txt updated to reference sitemap and disallow typical private paths.
+
+DEPLOYMENT CHECKLIST (quick)
+1) Replace REPLACE_WITH_YOUR_DOMAIN in `sitemap.xml`, `robots.txt`, and JSON-LD snippet.
+2) Add canonical link tags to each page pointing to the absolute canonical URL.
+3) Ensure public/ is the webserver document root; adjust paths if not.
+4) Submit `https://YOUR_DOMAIN/sitemap.xml` to Google Search Console and Bing Webmaster Tools.
+5) Ensure structured data passes Google's Rich Results test.
+
+NOTES
+- `llms.txt` is an LLM-friendly summary and metadata file to help large-index systems and internal tooling. It is NOT a formal web standard but useful for internal consumption and bulk SEO uploads.
+- For maximum local SEO: add NAP (name, address, phone) to visible footer markup, embed a Google Maps link with the full address, and collect local citations and Google Business Profile signals.
