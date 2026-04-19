@@ -125,6 +125,13 @@ if ($stmt->rowCount() > 0) {
 	<title>Reset Your Password - Ripal Design</title>
 	<style>
 		/* Base reset for email clients */
+		:root {
+			--email-container-max-width: 600px;
+			--email-outer-padding-vertical: 40px;
+			--email-content-padding: 20px 40px 40px 40px;
+			--email-h1-font-size: 28px;
+			--email-button-padding: 14px 30px;
+		}
 		body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
 		table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
 		img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
@@ -144,16 +151,16 @@ if ($stmt->rowCount() > 0) {
 <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
 
 	<!-- 100% background wrapper -->
-	<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 40px 0;">
+	<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: var(--email-outer-padding-vertical, 40px) 0;">
 		<tr>
 			<td align="center">
 				<!-- Main Email Container -->
-				<table border="0" cellpadding="0" cellspacing="0" width="600" class="email-container" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+				<table border="0" cellpadding="0" cellspacing="0" width="600" class="email-container" style="width: var(--email-container-max-width, 600px); background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     
 					<!-- Header/Logo Area -->
 					<tr>
-						<td align="center" style="padding: 40px 0 20px 0; background-color: #ffffff;">
-							<h1 style="margin: 0; color: #111827; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
+						<td align="center" style="padding: var(--email-outer-padding-vertical, 40px) 0 20px 0; background-color: #ffffff;">
+							<h1 style="margin: 0; color: #111827; font-size: var(--email-h1-font-size, 28px); font-weight: 700; letter-spacing: -0.5px;">
 								<span style="color: #731209;">Ripal</span> Design
 							</h1>
 						</td>
@@ -161,7 +168,7 @@ if ($stmt->rowCount() > 0) {
 
 					<!-- Main Content Area -->
 					<tr>
-						<td class="content-padding" style="padding: 20px 40px 40px 40px; color: #4b5563; line-height: 1.6; font-size: 16px;">
+						<td class="content-padding" style="padding: var(--email-content-padding, 20px 40px 40px 40px); color: #4b5563; line-height: 1.6; font-size: 16px;">
 							<p style="margin-top: 0; margin-bottom: 20px; font-weight: 600; color: #111827;">Hello {{user_name}},</p>
                             
 							<p style="margin-top: 0; margin-bottom: 24px;">
@@ -175,7 +182,7 @@ if ($stmt->rowCount() > 0) {
 										<table border="0" cellpadding="0" cellspacing="0">
 											<tr>
 												<td align="center" style="border-radius: 6px;" bgcolor="#731209">
-													<a href="{{reset_link}}" target="_blank" style="display: inline-block; padding: 14px 30px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600;">Reset Password</a>
+													<a href="{{reset_link}}" target="_blank" style="display: inline-block; padding: var(--email-button-padding, 14px 30px); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600;">Reset Password</a>
 												</td>
 											</tr>
 										</table>

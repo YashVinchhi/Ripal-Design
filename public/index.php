@@ -46,9 +46,9 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
         <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
             <div class="hero-overlay"></div>
             <div class="position-relative z-2 text-center container px-4">
-                <span data-stagger-entry class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: 30px; text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
+                <span data-stagger-entry class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: var(--hero-est-font-size, 30px); text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
                 <h1 data-stagger-entry class="display-1 mb-4"><?php echo esc($ct('hero_heading', "The Architect's Vision")); ?></h1>
-                <p data-stagger-entry class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
+                <p data-stagger-entry class="lead text-white-50 mx-auto" style="max-width: var(--content-max-width, 650px); letter-spacing: 0.05em;">
                     <?php echo esc($ct('hero_subheading', 'Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.')); ?>
                 </p>
                 <div class="mt-5 pt-4">
@@ -81,7 +81,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                 <div class="row gx-lg-5 align-items-center">
                     <div class="col-lg-5 mb-5 mb-lg-0">
                         <h2 class="display-3 mb-4"><?php echo esc($ct('story_heading_line', 'Duality in')); ?><br><span class="text-primary-brand"><?php echo esc($ct('story_heading_highlight', 'Execution')); ?></span></h2>
-                        <div style="width: 40px; height: 1px; background: var(--primary);" class="mb-3"></div>
+                        <div style="width: var(--section-divider-width, 40px); height: var(--section-divider-height, 1px); background: var(--primary);" class="mb-3"></div>
                         <p class="tracking-architect opacity-75"><?php echo esc($ct('story_kicker', 'The Ripal Approach')); ?></p>
                     </div>
                     <div class="col-lg-7">
@@ -107,7 +107,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">01</span>
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[0]['name']); ?></h2>
-                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <div style="width: var(--section-divider-width, 40px); height: var(--section-divider-height, 1px); background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_1_description', 'A masterpiece of modern residential architecture in the heart of Rajkot, redefining spatial excellence through minimalist precision.'))); ?>
                         </p>
@@ -125,7 +125,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">02</span>
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[1]['name']); ?></h2>
-                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <div style="width: var(--section-divider-width, 40px); height: var(--section-divider-height, 1px); background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_2_description', 'A landmark in Jam Khambhalia, bridging the gap between Tradition and contemporary living with breathable structure.'))); ?>
                         </p>
@@ -149,7 +149,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">03</span>
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[2]['name']); ?></h2>
-                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <div style="width: var(--section-divider-width, 40px); height: var(--section-divider-height, 1px); background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_3_description', "State-of-the-art Multi-Institutional System integrated into Rajkot's burgeoning urban landscape."))); ?>
                         </p>
@@ -167,7 +167,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <div class="project-showcase-inner">
                         <span class="project-number text-primary-brand">04</span>
                         <h2 class="project-title display-4 mb-4"><?php echo htmlspecialchars((string)$featuredProjects[3]['name']); ?></h2>
-                        <div style="width: 50px; height: 1px; background: var(--primary);" class="mb-4"></div>
+                        <div style="width: var(--section-divider-width, 40px); height: var(--section-divider-height, 1px); background: var(--primary);" class="mb-4"></div>
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_4_description', "Industrial refinement meeting contemporary aesthetics in the heart of India's ceramic capital."))); ?>
                         </p>
@@ -190,7 +190,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                 <div class="row mb-5">
                     <div class="col-lg-8 mx-auto text-center">
                         <h2 class="display-3 mb-4"><?php echo esc($ct('testimonials_heading', 'Client Perspectives')); ?></h2>
-                        <div style="width: 60px; height: 1px; background: var(--primary); margin: 0 auto;" class="mb-3"></div>
+                        <div style="width: var(--section-divider-width, 40px); height: var(--section-divider-height, 1px); background: var(--primary); margin: 0 auto;" class="mb-3"></div>
                         <p class="tracking-architect text-white-50"><?php echo esc($ct('testimonials_subheading', 'Voices from our collaborative journey')); ?></p>
                     </div>
                 </div>
@@ -200,7 +200,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <!-- Testimonial 1 -->
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
-                            <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
+                            <div class="testimonial-image mb-4 overflow-hidden" style="height: var(--testimonial-image-height, 250px);">
                                 <img src="<?php echo esc_attr($ctImage('testimonial_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM (1).jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_1', 'Client project 1')); ?>"
                                     class="w-100 h-100 object-fit-cover"
@@ -223,7 +223,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <!-- Testimonial 2 -->
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
-                            <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
+                            <div class="testimonial-image mb-4 overflow-hidden" style="height: var(--testimonial-image-height, 250px);">
                                 <img src="<?php echo esc_attr($ctImage('testimonial_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_2', 'Client project 2')); ?>"
                                     class="w-100 h-100 object-fit-cover"
@@ -246,7 +246,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                     <!-- Testimonial 3 -->
                     <div class="col-12 col-lg-4">
                         <div class="testimonial-card h-100 bg-dark border-0 p-4 p-lg-5" style="background: #111 !important; transition: all 0.4s ease;">
-                            <div class="testimonial-image mb-4 overflow-hidden" style="height: 250px;">
+                            <div class="testimonial-image mb-4 overflow-hidden" style="height: var(--testimonial-image-height, 250px);">
                                 <img src="<?php echo esc_attr($ctImage('testimonial_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_3', 'Client project 3')); ?>"
                                     class="w-100 h-100 object-fit-cover"

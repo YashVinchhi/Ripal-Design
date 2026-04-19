@@ -187,7 +187,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                             const mediaType = (f.media_type || 'IMAGE').toUpperCase();
                             if (mediaType === 'PANORAMA') {
                                 const panoId = 'pano_' + (f.id || Math.random().toString(36).slice(2,9));
-                                wrap.innerHTML = `<div id="${panoId}" style="width:100%;height:400px;"></div>`;
+                                wrap.innerHTML = `<div id="${panoId}" style="width:100%;height:var(--model-viewer-height,400px);"></div>`;
                                 gallery.appendChild(wrap);
                                 try {
                                     if (typeof pannellum !== 'undefined' && pannellum.viewer) {
@@ -200,7 +200,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                                     document.getElementById(panoId).innerHTML = '<img src="' + escapeHtml(f.file_path) + '" class="w-full h-full object-cover" alt="' + escapeHtml(f.name) + '">';
                                 }
                             } else if (mediaType === 'MODEL') {
-                                wrap.innerHTML = `<model-viewer src="${escapeHtml(f.file_path)}" alt="${escapeHtml(f.name)}" camera-controls auto-rotate style="width:100%;height:400px;background:#f7f7f7;"></model-viewer>`;
+                                wrap.innerHTML = `<model-viewer src="${escapeHtml(f.file_path)}" alt="${escapeHtml(f.name)}" camera-controls auto-rotate style="width:100%;height:var(--model-viewer-height,400px);background:#f7f7f7;"></model-viewer>`;
                                 gallery.appendChild(wrap);
                             } else {
                                 wrap.innerHTML = `<img src="${escapeHtml(f.file_path)}" class="w-full h-64 object-cover" alt="${escapeHtml(f.name)}">`;

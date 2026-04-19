@@ -19,23 +19,23 @@
 }
 
 .container {
-    max-width: 1320px;
+    max-width: var(--container-max-width-xl, 1320px);
 }
 
 @media (max-width: 1399.98px) {
-    .container { max-width: 1140px; }
+    .container { max-width: var(--container-max-width-lg, 1140px); }
 }
 
 @media (max-width: 1199.98px) {
-    .container { max-width: 960px; }
+    .container { max-width: var(--container-max-width-md, 960px); }
 }
 
 @media (max-width: 991.98px) {
-    .container { max-width: 720px; }
+    .container { max-width: var(--container-max-width-sm, 720px); }
 }
 
 @media (max-width: 767.98px) {
-    .container { max-width: 540px; }
+    .container { max-width: var(--container-max-width-xs, 540px); }
 }
 
 @media (max-width: 575.98px) {

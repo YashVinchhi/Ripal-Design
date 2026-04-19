@@ -1,0 +1,83 @@
+/* UI layout tokens and helpers
+   - Single source of truth for spacing and container sizes for non-Tailwind CSS
+   - Use these variables in existing legacy CSS (e.g., public/*.css, Common/*.css)
+*/
+:root {
+  /* Spacing tokens (matches Tailwind semantic tokens) */
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 0.75rem;   /* 12px */
+  --space-lg: 1rem;      /* 16px */
+  --space-xl: 1.5rem;    /* 24px */
+  --space-2xl: 2rem;     /* 32px */
+  --space-3xl: 3rem;     /* 48px */
+
+  /* Structural tokens */
+  --container-max-width: 1280px;
+  /* Container breakpoints (legacy compatibility) */
+  --container-max-width-xl: 1320px;
+  --container-max-width-lg: 1140px;
+  --container-max-width-md: 960px;
+  --container-max-width-sm: 720px;
+  --container-max-width-xs: 540px;
+  /* Default header height (matches current site default). Change centrally to alter all headers. */
+  --header-height: 80px;
+  /* Mobile header height (used for small-screen top offsets) */
+  --header-height-mobile: 60px;
+  /* Logo sizing for header (use these to keep logo rhythm consistent) */
+  --header-logo-height: 48px;
+  --header-logo-height-mobile: 42px;
+  --sidebar-width-expanded: 360px;
+  --sidebar-width-collapsed: 64px;
+  /* Page-specific semantic tokens (useful for legacy inline styles) */
+  --hero-est-font-size: 30px;
+  --content-max-width: 650px;
+  --section-divider-width: 40px;
+  --section-divider-height: 1px;
+  --tape-wrapper-height: 250px;
+  --tape-strip-padding-left: 120px;
+  /* Email template tokens */
+  --email-container-max-width: 600px;
+  --email-outer-padding-vertical: 40px;
+  --email-content-padding: 20px 40px 40px 40px;
+  --email-h1-font-size: 28px;
+  --email-button-padding: 14px 30px;
+  /* Component tokens */
+  --model-viewer-height: 400px;
+  /* Timeline / hero / nav tokens */
+  --blueprint-grid-size: 50px;
+  --menu-line-width: 32px;
+  --menu-line-height: 1px;
+  --nav-overlay-min-width: 350px;
+  --timeline-padding: 150px;
+  --tape-case-size: 140px;
+  --tape-strip-height: var(--space-3xl, 48px);
+  --tape-hook-width: 14px;
+  --tape-hook-height: 60px;
+  --year-box-padding: 20px;
+  --year-box-min-width: 180px;
+  --milestone-details-width: 280px;
+  --stat-item-padding: 60px 20px;
+  --testimonial-image-height: 250px;
+}
+
+/* utility: centered container for legacy CSS */
+.container-centered {
+  max-width: var(--container-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
+  width: 100%;
+}
+
+/* small helpers to migrate existing auth/forgot CSS to tokens */
+.ui-gap-sm { gap: var(--space-sm); }
+.ui-gap-md { gap: var(--space-md); }
+.ui-gap-lg { gap: var(--space-lg); }
+.ui-p-sm { padding: var(--space-sm); }
+.ui-p-md { padding: var(--space-md); }
+.ui-p-lg { padding: var(--space-lg); }
+
+/* header helper to normalize header height; prefer using this over inline values */
+.site-header-normal { height: var(--header-height); }

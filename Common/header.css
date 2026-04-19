@@ -15,7 +15,7 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 80px;
+      height: var(--header-height, 80px);
       display: flex;
       align-items: center;
       padding: 0 40px;
@@ -28,12 +28,12 @@
 
   @media (max-width: 767px) {
       nav.alt-header {
-          height: 60px;
+          height: var(--header-height-mobile, 60px);
           padding: 0 20px;
       }
       /* Ensure main content clears the fixed header on mobile */
-      main { padding-top: 60px; }
-      header { padding-top: 60px; }
+      main { padding-top: var(--header-height-mobile, 60px); }
+      header { padding-top: var(--header-height-mobile, 60px); }
   }
 
   .alt-logo {
@@ -311,7 +311,7 @@
   /* Popup: occupies full sidebar width and half viewport height */
   .notif-popup {
       position: absolute;
-      top: 64px;
+      top: var(--header-height, 80px);
       right: 0;
       left: 0;
       width: 100%;

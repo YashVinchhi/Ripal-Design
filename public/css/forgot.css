@@ -25,8 +25,10 @@ body::before {
     justify-content: center;
     align-items: flex-start;
     z-index: 1;
-    width: 23vw;
-    padding-top: 38px;
+    width: 90%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-top: var(--space-3xl, 38px);
     border-radius: 15px;
     background: rgba(18, 18, 18, 0.72);
     backdrop-filter: blur(15px);
@@ -80,7 +82,7 @@ body::before {
 
 .remider {
     display: flex;
-    gap: 24vh;
+    gap: var(--space-3xl, 24vh);
     margin-bottom: 20px;
     border: none;
 }
@@ -107,8 +109,8 @@ body::before {
 
 .top-back-btn {
     position: fixed;
-    top: 16px;
-    right: 16px;
+    top: var(--space-md, 16px);
+    right: var(--space-md, 16px);
     z-index: 9999;
     background: var(--primary) !important;
     border-color: var(--primary) !important;

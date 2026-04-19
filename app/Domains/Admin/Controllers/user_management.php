@@ -51,20 +51,28 @@ $users = [];
 
 $db = get_db();
 if ($db instanceof PDO) {
-    $hasRatingsTable = false;
+    // Prefer worker_scores/worker_metric_events if available (new scoring system). Fall back to worker_ratings if present.
+    $hasNewScoring = false;
+    $hasOldRatings = false;
     try {
-        $tableCheck = $db->query("SHOW TABLES LIKE 'worker_ratings'");
-        $hasRatingsTable = (bool)$tableCheck->fetch(PDO::FETCH_NUM);
+        $tableCheck = $db->query("SHOW TABLES LIKE 'worker_scores'");
+        $hasNewScoring = (bool)$tableCheck->fetch(PDO::FETCH_NUM);
+        $tableCheck2 = $db->query("SHOW TABLES LIKE 'worker_ratings'");
+        $hasOldRatings = (bool)$tableCheck2->fetch(PDO::FETCH_NUM);
     } catch (Exception $e) {
-        $hasRatingsTable = false;
+        $hasNewScoring = false; $hasOldRatings = false;
     }
 
-    $ratingSelect = $hasRatingsTable
-        ? ', COALESCE(r.avg_rating, 0) AS avg_rating, COALESCE(r.total_ratings, 0) AS total_ratings'
-        : ', 0 AS avg_rating, 0 AS total_ratings';
-    $ratingJoin = $hasRatingsTable
-        ? ' LEFT JOIN (SELECT worker_id, AVG(rating) AS avg_rating, COUNT(*) AS total_ratings FROM worker_ratings GROUP BY worker_id) r ON r.worker_id = users.id'
-        : '';
+    if ($hasNewScoring) {
+        $ratingSelect = ', COALESCE(ws.final_score,0) AS final_score, COALESCE(ev.total_events,0) AS total_ratings, COALESCE(ws.decision_score,0) AS decision_score';
+        $ratingJoin = ' LEFT JOIN worker_scores ws ON ws.worker_id = users.id LEFT JOIN (SELECT worker_id, COUNT(*) AS total_events FROM worker_metric_events GROUP BY worker_id) ev ON ev.worker_id = users.id';
+    } elseif ($hasOldRatings) {
+        $ratingSelect = ', COALESCE(r.avg_rating, 0) AS avg_rating, COALESCE(r.total_ratings, 0) AS total_ratings';
+        $ratingJoin = ' LEFT JOIN (SELECT worker_id, AVG(rating) AS avg_rating, COUNT(*) AS total_ratings FROM worker_ratings GROUP BY worker_id) r ON r.worker_id = users.id';
+    } else {
+        $ratingSelect = ', 0 AS avg_rating, 0 AS total_ratings';
+        $ratingJoin = '';
+    }
 
     $sql = 'SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync' . $ratingSelect . ' FROM users' . $ratingJoin;
     $where = [];
@@ -298,11 +306,12 @@ if ($db instanceof PDO) {
                                 <span class="px-3 py-1 bg-foundation-grey/5 text-foundation-grey text-[9px] font-bold uppercase tracking-[0.15em] border border-foundation-grey/10"><?php echo htmlspecialchars(strtoupper((string)$u['role'])); ?></span>
                             </td>
                             <td class="px-6 md:px-8 py-4 md:py-6 block md:table-cell" data-label="Rating">
-                                <?php $avgRating = (float)($u['avg_rating'] ?? 0); ?>
-                                <?php $totalRatings = (int)($u['total_ratings'] ?? 0); ?>
-                                <?php if ($totalRatings > 0): ?>
-                                    <span class="text-[11px] font-bold text-approval-green"><?php echo number_format($avgRating, 1); ?>/5</span>
-                                    <p class="text-[10px] text-gray-400 mt-1"><?php echo (int)$totalRatings; ?> entries</p>
+                                <?php $finalScore = floatval($u['final_score'] ?? 0.0); ?>
+                                <?php $decisionScore = floatval($u['decision_score'] ?? 0.0); ?>
+                                <?php $totalEvents = (int)($u['total_ratings'] ?? 0); ?>
+                                <?php if ($totalEvents > 0): ?>
+                                    <span class="text-[11px] font-bold text-approval-green"><?php echo htmlspecialchars(round($decisionScore * 100, 1)); ?>%</span>
+                                    <p class="text-[10px] text-gray-400 mt-1"><?php echo $totalEvents; ?> entries • Final <?php echo round($finalScore * 100,1); ?>%</p>
                                 <?php else: ?>
                                     <span class="text-[11px] font-bold text-gray-400">No ratings</span>
                                 <?php endif; ?>

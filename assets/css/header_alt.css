@@ -51,14 +51,14 @@ header.site-header .mirrored-logo img { height:48px; }
   /* Do not cap width so 90% works on large displays */
   max-width: none;
   margin: 0 5%;
-  padding: 6px 18px;
+  padding: var(--space-sm, 6px) var(--space-lg, 18px);
 }
 
 /* Tighten public header spacing and ensure full-width appearance */
 header.site-header .nav-inner {
   width: 100%;
   margin: 0;
-  padding: 10px 18px;
+  padding: var(--site-header-padding-vertical, 10px) var(--space-lg, 18px);
 }
 
 /* Force the menu button to sit at the right edge of the nav-inner
@@ -73,7 +73,7 @@ nav.fixed-top .nav-inner > .menu-btn {
 .mirrored-logo {
   display:flex; align-items:center; gap:12px;
 }
-.mirrored-logo img { height:42px; width:auto; display:block; }
+.mirrored-logo img { height: var(--header-logo-height-mobile, 42px); width:auto; display:block; }
 .brand-title { font-weight:700; font-size:1.1rem; color:var(--header-accent); letter-spacing:0.2px; }
 
 /* Primary navigation for public header */
@@ -110,7 +110,7 @@ nav.fixed-top .nav-inner nav a:hover {
 #sidebarBackdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:9998; }
 #sidebarBackdrop.open { opacity:1; pointer-events:auto; }
 /* Use transform for the sidebar to avoid layout thrashing and enable GPU compositing */
-#siteSidebar { position:fixed; top:0; right:0; width:360px; height:100%; background:var(--header-contrast); color:var(--header-text-color); box-shadow:-20px 0 60px rgba(17,18,24,0.15); transform: translateX(100%); transition: transform .32s cubic-bezier(.2,.9,.2,1); will-change: transform; z-index:9999; padding:28px 22px; overflow:auto; border-left:1px solid rgba(0,0,0,0.04); }
+#siteSidebar { position:fixed; top:0; right:0; width: var(--sidebar-width-expanded, 360px); height:100%; background:var(--header-contrast); color:var(--header-text-color); box-shadow:-20px 0 60px rgba(17,18,24,0.15); transform: translateX(100%); transition: transform .32s cubic-bezier(.2,.9,.2,1); will-change: transform; z-index:9999; padding:28px 22px; overflow:auto; border-left:1px solid rgba(0,0,0,0.04); }
 #siteSidebar.open { transform: translateX(0); }
 #siteSidebar h3 { margin-top:0; color:var(--header-accent); font-weight:700; }
 #siteSidebar nav a { display:block; padding:10px 6px; color:var(--header-text-color); border-radius:6px; margin-bottom:6px; }
@@ -118,7 +118,7 @@ nav.fixed-top .nav-inner nav a:hover {
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
-  .nav-inner { padding: 8px 12px; }
+  .nav-inner { padding: var(--space-sm, 8px) var(--space-md, 12px); }
   .nav-inner nav { display:none; }
   .menu-btn { display:inline-flex; }
 }
@@ -142,8 +142,8 @@ nav.fixed-top .nav-inner nav a:hover {
   justify-content: center !important;
   min-width: 140px !important;
   max-width: 420px !important;
-  height: 68px !important;
-  padding: 0 1rem !important;
+  height: var(--space-3xl, 68px) !important;
+  padding: 0 var(--space-md, 1rem) !important;
   border-radius: 10px !important;
   z-index: 999 !important;
   background: rgba(10,10,10,0.95) !important;

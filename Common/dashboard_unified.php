@@ -248,12 +248,14 @@ $actionCards = [
   ['label' => ($sessionRole === 'client' ? 'Review Requests (View)' : 'Review Requests'), 'href' => base_path('dashboard/review_requests.php'), 'icon' => 'clipboard-list'],
 ];
 
-if ($isAdmin) {
-  $actionCards[] = ['label' => 'User Controls', 'href' => base_path('admin/user_management.php'), 'icon' => 'user-cog'];
-  $actionCards[] = ['label' => 'Portfolio', 'href' => base_path('admin/project_management.php'), 'icon' => 'folder-kanban'];
-  $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-pen-line'];
-  $actionCards[] = ['label' => 'Contact Manager', 'href' => base_path('admin/contact_messages.php'), 'icon' => 'mail'];
-}
+  if ($isAdmin) {
+    $actionCards[] = ['label' => 'User Controls', 'href' => base_path('admin/user_management.php'), 'icon' => 'user-cog'];
+    $actionCards[] = ['label' => 'Portfolio', 'href' => base_path('admin/project_management.php'), 'icon' => 'folder-kanban'];
+    $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-pen-line'];
+    $actionCards[] = ['label' => 'Contact Manager', 'href' => base_path('admin/contact_messages.php'), 'icon' => 'mail'];
+    $actionCards[] = ['label' => 'Vendors', 'href' => base_path('admin/entities.php?tab=vendors'), 'icon' => 'truck'];
+    $actionCards[] = ['label' => 'Workers', 'href' => base_path('admin/entities.php?tab=workers'), 'icon' => 'users'];
+  }
 
 if ($useWorkerProjectView) {
   $actionCards = [

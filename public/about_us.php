@@ -36,9 +36,9 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
         <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
             <div class="hero-overlay"></div>
             <div class="position-relative z-2 text-center container px-4">
-                <span class="tracking-architect text-primary-brand mb-3 d-block" style="    font-size: 30px; text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
+                <span class="tracking-architect text-primary-brand mb-3 d-block" style="font-size: var(--hero-est-font-size, 30px); text-shadow: 2px 2px 5px black;"><?php echo esc($ct('hero_established', 'Est. 2017')); ?></span>
                 <h1 class="display-1 mb-4"><?php echo esc($ct('hero_heading', "The Architect's Vision")); ?></h1>
-                <p class="lead text-white-50 mx-auto" style="max-width: 650px; letter-spacing: 0.05em;">
+                <p class="lead text-white-50 mx-auto" style="max-width: var(--content-max-width, 650px); letter-spacing: 0.05em;">
                     <?php echo esc($ct('hero_subheading', 'Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.')); ?>
                 </p>
                 <div class="mt-5 pt-4">
@@ -55,7 +55,7 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
                 <div class="row gx-lg-5 align-items-center">
                     <div class="col-lg-5 mb-5 mb-lg-0">
                         <h2 class="display-3 mb-4"><?php echo esc($ct('story_heading_line', 'Duality in')); ?><br><span class="text-primary-brand"><?php echo esc($ct('story_heading_highlight', 'Execution')); ?></span></h2>
-                        <div style="width: 40px; height: 1px; background: var(--primary);" class="mb-3"></div>
+                        <div style="width: var(--section-divider-width, 40px); height: var(--section-divider-height, 1px); background: var(--primary);" class="mb-3"></div>
                         <p class="tracking-architect opacity-75"><?php echo esc($ct('story_kicker', 'The Ripal Approach')); ?></p>
                     </div>
                     <div class="col-lg-7">
@@ -78,7 +78,7 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
             </div>
 
             <div class="container-fluid px-lg-5">
-                <div class="tape-wrapper position-relative mx-auto" style="width: 90%; height: 250px;">
+                <div class="tape-wrapper position-relative mx-auto" style="width: 90%; height: var(--tape-wrapper-height, 250px);">
                     <!-- Tape Case -->
                     <div class="tape-body position-absolute start-0 top-50 translate-middle-y z-3">
                         <div class="tape-case d-flex align-items-center justify-content-center">
@@ -87,7 +87,7 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
                     </div>
 
                     <!-- Tape Strip Container -->
-                    <div class="tape-strip-container position-absolute top-50 translate-middle-y z-2 w-100" style="padding-left: 120px;">
+                    <div class="tape-strip-container position-absolute top-50 translate-middle-y z-2 w-100" style="padding-left: var(--tape-strip-padding-left, 120px);">
                         <div class="tape-strip d-flex align-items-center" id="tapeStrip" style="width: 0%;">
                             <div class="tape-ticks"></div>
                             <div class="tape-hook position-absolute end-0"></div>

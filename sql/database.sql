@@ -515,6 +515,121 @@ INSERT IGNORE INTO dashboard_modules (code, name, route) VALUES
 ('goods_invoice', 'Goods Invoice', '/dashboard/goods_invoice.php');
 
 -- ----------------------
+-- Vendors & Scoring: Tables and RBAC seeds
+-- ----------------------
+-- Permission for assigning vendors to projects
+INSERT IGNORE INTO permissions (code, resource, action, description) VALUES
+('project.assign_vendor', 'project', 'assign_vendor', 'Assign vendors to project');
+
+-- Dashboard module for vendor management
+INSERT IGNORE INTO dashboard_modules (code, name, route) VALUES
+('vendor_management', 'Vendor Management', '/admin/vendors.php');
+
+-- Vendor categories (e.g., wallpaper, tiles)
+CREATE TABLE IF NOT EXISTS vendor_categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(64) NOT NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
+  description TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Vendors master table
+CREATE TABLE IF NOT EXISTS vendors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  code VARCHAR(100) DEFAULT NULL,
+  contact_name VARCHAR(255) DEFAULT NULL,
+  phone VARCHAR(50) DEFAULT NULL,
+  email VARCHAR(255) DEFAULT NULL,
+  category_id INT DEFAULT NULL,
+  address TEXT DEFAULT NULL,
+  notes TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES vendor_categories(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Project <-> Vendor assignments (similar to project_assignments for workers)
+CREATE TABLE IF NOT EXISTS project_vendors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  project_id INT NOT NULL,
+  vendor_id INT NOT NULL,
+  assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  assigned_by VARCHAR(255) DEFAULT NULL,
+  CONSTRAINT fk_pv_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT fk_pv_vendor FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Worker metric events (one row per project evaluation event)
+CREATE TABLE IF NOT EXISTS worker_metric_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  worker_id INT NOT NULL,
+  project_id INT DEFAULT NULL,
+  rated_by VARCHAR(255) DEFAULT NULL,
+  charges_efficiency DECIMAL(5,2) NOT NULL DEFAULT 0,
+  work_quality DECIMAL(5,2) NOT NULL DEFAULT 0,
+  experience DECIMAL(5,2) NOT NULL DEFAULT 0,
+  speed_timing DECIMAL(5,2) NOT NULL DEFAULT 0,
+  reliability DECIMAL(5,2) NOT NULL DEFAULT 0,
+  rework_rate DECIMAL(5,2) NOT NULL DEFAULT 0,
+  communication DECIMAL(5,2) NOT NULL DEFAULT 0,
+  client_feedback DECIMAL(5,2) NOT NULL DEFAULT 0,
+  flexibility DECIMAL(5,2) NOT NULL DEFAULT 0,
+  safety DECIMAL(5,2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_wme_worker FOREIGN KEY (worker_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_wme_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Vendor metric events (one row per purchase order / batch)
+CREATE TABLE IF NOT EXISTS vendor_metric_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  vendor_id INT NOT NULL,
+  project_id INT DEFAULT NULL,
+  purchase_order_ref VARCHAR(255) DEFAULT NULL,
+  priced_by VARCHAR(255) DEFAULT NULL,
+  pricing DECIMAL(5,2) NOT NULL DEFAULT 0,
+  product_quality DECIMAL(5,2) NOT NULL DEFAULT 0,
+  consistency DECIMAL(5,2) NOT NULL DEFAULT 0,
+  delivery_reliability DECIMAL(5,2) NOT NULL DEFAULT 0,
+  stock_availability DECIMAL(5,2) NOT NULL DEFAULT 0,
+  variety DECIMAL(5,2) NOT NULL DEFAULT 0,
+  warranty_replacement DECIMAL(5,2) NOT NULL DEFAULT 0,
+  communication DECIMAL(5,2) NOT NULL DEFAULT 0,
+  credit_terms DECIMAL(5,2) NOT NULL DEFAULT 0,
+  logistics DECIMAL(5,2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_vme_vendor FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE,
+  CONSTRAINT fk_vme_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Aggregated score stores (optional, can be recalculated on demand)
+CREATE TABLE IF NOT EXISTS worker_scores (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  worker_id INT NOT NULL UNIQUE,
+  final_score DECIMAL(5,4) DEFAULT NULL,
+  risk DECIMAL(5,4) DEFAULT NULL,
+  confidence DECIMAL(5,4) DEFAULT NULL,
+  decision_score DECIMAL(5,4) DEFAULT NULL,
+  last_computed_at TIMESTAMP DEFAULT NULL,
+  CONSTRAINT fk_ws_worker FOREIGN KEY (worker_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS vendor_scores (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  vendor_id INT NOT NULL UNIQUE,
+  final_score DECIMAL(5,4) DEFAULT NULL,
+  risk DECIMAL(5,4) DEFAULT NULL,
+  confidence DECIMAL(5,4) DEFAULT NULL,
+  decision_score DECIMAL(5,4) DEFAULT NULL,
+  last_computed_at TIMESTAMP DEFAULT NULL,
+  CONSTRAINT fk_vs_vendor FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ----------------------
 -- RBAC Seed: Role -> Project access mapping (default)
 -- ----------------------
 INSERT IGNORE INTO role_project_access (role_id, project_access_level_id)

@@ -18,7 +18,7 @@
   .admin-toolbar-input { padding-left: .75rem !important; padding-right: .75rem !important; }
 
   /* Resize header logo image on small screens */
-  .alt-logo img { height: 36px; }
+  .alt-logo img { height: var(--header-logo-height-mobile, 36px); }
 }
 
 /* Improve overflow and scaling for tables */

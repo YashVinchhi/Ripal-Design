@@ -33,6 +33,16 @@ if (!function_exists('wmcp_action_catalog')) {
                 'default_params' => [],
                 'requires_confirmation' => true,
             ],
+            'project.assign_vendor' => [
+                'description' => 'Assign a vendor to a project.',
+                'endpoint' => '/dashboard/assign_vendor.php',
+                'method' => 'POST',
+                'encoding' => 'json',
+                'allowed_roles' => ['admin'],
+                'allowed_params' => ['project_id', 'vendor_id'],
+                'default_params' => [],
+                'requires_confirmation' => true,
+            ],
             'project.add_team_member' => [
                 'description' => 'Add a team member entry to a project.',
                 'endpoint' => '/dashboard/api/project_files.php',

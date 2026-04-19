@@ -15,10 +15,10 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 80px;
+      height: var(--header-height, 80px);
       display: flex;
       align-items: center;
-      padding: 0 40px;
+      padding: 0 var(--space-3xl, 40px);
       z-index: 9999;
       background: transparent !important;
       border: none !important;
@@ -28,12 +28,12 @@
 
   @media (max-width: 767px) {
       nav.alt-header {
-          height: 60px;
-          padding: 0 20px;
+          height: var(--header-height-mobile, 60px);
+          padding: 0 var(--space-md, 20px);
       }
       /* Ensure main content clears the fixed header on mobile */
-      main { padding-top: 60px; }
-      header { padding-top: 60px; }
+      main { padding-top: var(--header-height-mobile, 60px); }
+      header { padding-top: var(--header-height-mobile, 60px); }
   }
 
   .alt-logo {
@@ -75,8 +75,8 @@
       right: 0;
       top: 0;
       height: 100%;
-      width: min(25%, 360px);
-      max-width: 360px;
+      width: min(25%, var(--sidebar-width-expanded, 360px));
+      max-width: var(--sidebar-width-expanded, 360px);
       background: var(--alt-overlay-bg);
       box-shadow: -8px 0 24px rgba(0, 0, 0, 0.2);
       transform: translateX(100%);
@@ -128,8 +128,8 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      padding: 32px;
-      padding-top: 48px;
+      padding: var(--space-2xl, 32px);
+      padding-top: calc(var(--header-height, 80px) * 0.6);
       /* allow only vertical scrolling; prevent horizontal scrollbars */
       overflow-y: auto;
       overflow-x: hidden;
@@ -311,7 +311,7 @@
   /* Popup: occupies full sidebar width and half viewport height */
   .notif-popup {
       position: absolute;
-      top: 64px;
+      top: var(--header-height, 80px);
       right: 0;
       left: 0;
       width: 100%;

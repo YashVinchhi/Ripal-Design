@@ -105,15 +105,15 @@ body.auth-page::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6.2rem 1rem 2rem;
+    padding: var(--auth-main-top, 6.2rem) var(--space-lg, 1rem) var(--auth-main-bottom, 2rem);
     position: relative;
     z-index: 2;
 }
 
 .auth-main-public {
-    min-height: calc(100vh - 120px);
-    padding-top: 9.5rem;
-    padding-bottom: 6rem;
+    min-height: calc(100vh - var(--header-height, 80px) - var(--space-2xl, 32px));
+    padding-top: var(--auth-public-top, 9.5rem);
+    padding-bottom: var(--auth-public-bottom, 6rem);
 }
 
 .auth-card-wrap {
@@ -123,7 +123,7 @@ body.auth-page::before {
 
 .auth-card {
     width: 100%;
-    padding: 2.4rem 2rem;
+    padding: var(--space-2xl, 2.4rem) var(--space-lg, 2rem);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-bottom: 3px solid var(--primary);
     border-radius: 0;

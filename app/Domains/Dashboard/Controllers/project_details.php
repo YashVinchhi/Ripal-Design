@@ -771,6 +771,20 @@ if ($pdo instanceof PDO) {
         }
         $ownerCandidates = [];
     }
+    // Load vendors for quick assignment (if the vendors table exists)
+    $vendorList = [];
+    try {
+        if (function_exists('db_table_exists') && db_table_exists('vendors')) {
+            $vStmt = $pdo->prepare("SELECT id, name, COALESCE(contact_name, '') AS contact_name, COALESCE(email, '') AS email, COALESCE(category_id, 0) AS category_id FROM vendors ORDER BY name ASC");
+            $vStmt->execute();
+            $vendorList = $vStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (PDOException $e) {
+        if (function_exists('app_log')) {
+            app_log('warning', 'Failed to load vendors for project details', ['exception' => $e->getMessage(), 'project_id' => (int)$projectId]);
+        }
+        $vendorList = [];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -1441,10 +1455,16 @@ if ($pdo instanceof PDO) {
         <div class="tab-content" id="team-tab">
             <div class="mb-6 flex justify-between items-center">
                 <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Team Members</h2>
-                <button onclick="showAddTeamMemberModal()"
-                    class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-                    <span class="material-icons text-sm">add</span> Add Member
-                </button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="showAddTeamMemberModal()"
+                            class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                            <span class="material-icons text-sm">add</span> Add Member
+                        </button>
+                        <button onclick="showAssignVendorModal()" type="button"
+                            class="px-4 py-2 bg-amber-500 text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                            <span class="material-icons text-sm">local_shipping</span> Assign Vendor
+                        </button>
+                    </div>
             </div>
 
             <?php if (!empty($project['workers'])): ?>
@@ -1923,6 +1943,40 @@ if ($pdo instanceof PDO) {
             </div>
         </div>
     </div>
+    
+    <!-- Assign Vendor Modal -->
+    <div id="assignVendorModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100">Assign Vendor to Project</h3>
+                <button onclick="closeAssignVendorModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <?php if (!empty($vendorList)): ?>
+                    <div class="space-y-2 max-h-64 overflow-auto">
+                        <?php foreach ($vendorList as $v): ?>
+                            <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
+                                <div class="min-w-0 mr-3">
+                                    <p class="font-semibold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($v['name']); ?></p>
+                                    <p class="text-sm text-slate-500 truncate"><?php echo htmlspecialchars($v['contact_name'] ?? ''); ?><?php if (!empty($v['email'])): ?> &bull; <?php echo htmlspecialchars($v['email']); ?><?php endif; ?></p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" onclick="assignExistingVendor(<?php echo (int)$v['id']; ?>)" class="px-3 py-1.5 bg-amber-500 text-white rounded text-xs">Assign</button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <p class="text-sm text-slate-500 p-3">No vendors available. Add vendors from the admin Vendors page.</p>
+                <?php endif; ?>
+            </div>
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                <button type="button" onclick="closeAssignVendorModal()" class="px-4 py-2 border rounded text-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Hidden file upload inputs -->
 
@@ -1958,6 +2012,8 @@ if ($pdo instanceof PDO) {
         const projectShareUrl = <?php echo json_encode((!empty($projectId) ? rtrim(BASE_URL, '/') . '/dashboard/project_details.php?id=' . (int)$projectId : '')); ?>;
         // Worker users available for quick assignment (loaded server-side)
         const workerUsersData = <?php echo json_encode($workerUsers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?> || [];
+        // Vendors available for quick assignment (loaded server-side)
+        const vendorListData = <?php echo json_encode($vendorList ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?> || [];
         const csrfToken = <?php echo json_encode(csrf_token()); ?>;
         // Client-side upload guard: 450 MB limit (450 * 1024 * 1024 bytes)
         const MAX_UPLOAD_BYTES = 450 * 1024 * 1024;
@@ -2861,6 +2917,53 @@ if ($pdo instanceof PDO) {
                 }
             } catch (err) {
                 console.error('Assign worker error:', err);
+                showNotification('Network error occurred', 'error');
+            }
+        }
+
+        // Assign vendor helper
+        function showAssignVendorModal() {
+            const modal = document.getElementById('assignVendorModal');
+            if (!modal) return;
+            try { if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team'; } catch (err) {}
+            modal.classList.remove('hidden');
+        }
+
+        function closeAssignVendorModal() {
+            const modal = document.getElementById('assignVendorModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
+        async function assignExistingVendor(vendorId) {
+            const vendor = (vendorListData || []).find(v => Number(v.id) === Number(vendorId));
+            if (!vendor) {
+                showNotification('Vendor not found.', 'error');
+                return;
+            }
+            if (!confirm('Assign ' + (vendor.name || 'this vendor') + ' to the project?')) return;
+
+            const params = new URLSearchParams();
+            params.append('project_id', String(projectId));
+            params.append('vendor_id', String(vendor.id || ''));
+            params.append('csrf_token', csrfToken || '');
+
+            try {
+                const resp = await fetch('dashboard/assign_vendor.php', {
+                    method: 'POST',
+                    body: params
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    showNotification(result.message || 'Vendor assigned.', 'success');
+                    logActivity('assigned vendor', vendor.name || '');
+                    try { if (history.replaceState) history.replaceState(null, '', '#team'); else location.hash = 'team'; } catch (err) {}
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    showNotification(result.message || 'Failed to assign vendor', 'error');
+                }
+            } catch (err) {
+                console.error('Assign vendor error:', err);
                 showNotification('Network error occurred', 'error');
             }
         }

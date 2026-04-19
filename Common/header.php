@@ -167,6 +167,8 @@ foreach ($stylesheetCandidates as $candidate) {
 <link rel="apple-touch-icon" href="<?php echo esc_attr($faviconImage); ?>">
 
 <!-- Header Navigation (Always loaded) -->
+<!-- Layout tokens for legacy CSS (variables: spacing, header height, container) -->
+<link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . '/assets/css/_layout.css'); ?>">
 <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/header.css'); ?>">
 <?php if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } ?>
 <?php if ($headerMode === 'dashboard'): ?>
@@ -253,6 +255,8 @@ foreach ($stylesheetCandidates as $candidate) {
                                 ['href' => BASE_PATH . '/admin/leave_management.php', 'label' => $headerText('admin_link_leave_manager', 'Leave Manager')],
                                 ['href' => BASE_PATH . '/admin/payment_gateway.php', 'label' => $headerText('admin_link_financial_gateway', 'Financial Gateway')],
                                 ['href' => BASE_PATH . '/admin/content_management.php', 'label' => $headerText('admin_link_content_manager', 'Content Manager')],
+                                ['href' => BASE_PATH . '/admin/entities.php?tab=vendors', 'label' => 'Vendors'],
+                                ['href' => BASE_PATH . '/admin/entities.php?tab=workers', 'label' => 'Workers'],
                                 ['href' => BASE_PATH . '/admin/contact_messages.php', 'label' => $headerText('admin_link_contact_messages', 'Contact Messages')],
                             ],
                         ],
