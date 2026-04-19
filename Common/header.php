@@ -22,6 +22,10 @@ if (session_status() === PHP_SESSION_NONE) {
     @session_start();
 }
 
+if (function_exists('csrf_token')) {
+    csrf_token();
+}
+
 // Determine header mode (can be set by including page)
 $headerMode = $HEADER_MODE ?? 'public';
 
@@ -44,6 +48,8 @@ $faviconImage = $headerImage('favicon_image', '/favicon.ico');
 $dashboardProfileUrl = function_exists('base_path')
     ? base_path('dashboard/profile.php')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
+$phoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
+$whatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
 
 // Compute logo target: send logged-in users to their dashboard landing
 $logoHref = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php';
@@ -90,74 +96,18 @@ if (function_exists('current_user')) {
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"> 
 
-<!-- Lucide Icons (CAD style) -->
-<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
-
 <?php if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS): ?>
 <?php
-// Track if we've included a Tailwind-providing stylesheet
-$tailwindLoaded = false;
-
-// Check for local Tailwind CSS build first
 $tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
 if (file_exists($tailwindBuiltPath)) {
-    // Generate URL based on BASE_PATH. We avoid PUBLIC_PATH_PREFIX for assets/ as it is at the project root.
     $tailwindHref = rtrim((string)BASE_PATH, '/') . '/assets/css/tailwind.css';
     echo '<link rel="stylesheet" href="' . esc_attr($tailwindHref) . '">' . "\n";
-    $tailwindLoaded = true;
 }
 
-// Include TailwindCSS CDN only in development as a fallback if local build is missing.
-if (!$tailwindLoaded && defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0') {
-    echo '<script src="https://cdn.tailwindcss.com"></script>' . "\n";
-    echo '<script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        "rajkot-rust": "#94180C",
-                        "canvas-white": "#F9FAFB",
-                        "foundation-grey": "#2D2D2D",
-                        "slate-accent": "#334155",
-                        "approval-green": "#15803D",
-                        "pending-amber": "#B45309",
-                        primary: "#94180C",
-                        background: "#F9FAFB",
-                    },
-                    fontFamily: {
-                        sans: ["Inter", "sans-serif"],
-                        serif: ["Playfair Display", "serif"],
-                    },
-                    boxShadow: {
-                        "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
-                        "premium-hover": "0 20px 40px rgba(0, 0, 0, 0.1)",
-                    }
-                }
-            }
-        }
-    </script>' . "\n";
-}
-
-// Include other stylesheet candidates
-$stylesheetCandidates = [
-    '/public/css/index.css',
-    '/assets/css/styles.css',
-    '/assets/styles.css'
-];
-
-foreach ($stylesheetCandidates as $candidate) {
-    $filePath = PROJECT_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
-    if (file_exists($filePath)) {
-        // Handle pathing based on whether it is in public/ or not
-        if (strpos($candidate, '/public/') === 0) {
-            $publicRemoved = preg_replace('~^/public~i', '', $candidate);
-            $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
-        } else {
-            $href = rtrim((string)BASE_PATH, '/') . $candidate;
-        }
-        echo '<link rel="stylesheet" href="' . esc_attr($href) . '">' . "\n";
-    }
-}
+$variablesCss = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/variables.css';
+$mainCss = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/main.css';
+echo '<link rel="stylesheet" href="' . esc_attr($variablesCss) . '">' . "\n";
+echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 ?>
 <?php endif; ?>
 
@@ -181,6 +131,17 @@ foreach ($stylesheetCandidates as $candidate) {
             <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo htmlspecialchars($headerText('brand_name', 'Ripal Design')); ?></span>
         </a>
     </div>
+
+    <?php if ($headerMode === 'public'): ?>
+    <div class="d-none d-md-flex align-items-center gap-2 me-2">
+        <a href="<?php echo esc_attr($phoneHref); ?>" class="btn btn-sm btn-outline-light ms-2">
+            <i class="bi bi-telephone"></i> Call
+        </a>
+        <a href="<?php echo esc_attr($whatsAppHref); ?>" class="btn btn-sm btn-success ms-1" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+        </a>
+    </div>
+    <?php endif; ?>
     
     <div class="alt-menu">
         <button id="altMenuBtn" class="alt-btn" aria-label="Open menu" aria-expanded="false" aria-controls="altOverlay">
@@ -286,20 +247,7 @@ foreach ($stylesheetCandidates as $candidate) {
                 <?php if ($headerMode !== 'dashboard'): ?>
                     <a href="<?php echo htmlspecialchars($roleDashboardLink); ?>" class="btn-alt btn-login"><?php echo htmlspecialchars($headerText('btn_dashboard', 'Dashboard')); ?></a>
                 <?php endif; ?>
-                <!-- Global override: enforce sharp (square) corners across the site -->
                 <style>
-                    /* Remove rounded corners globally; use !important to override framework defaults */
-                    *, *::before, *::after {
-                        border-radius: 0 !important;
-                    }
-
-                    /* Ensure common Bootstrap/Tailwind rounded utility classes are neutralized */
-                    .rounded, .rounded-top, .rounded-bottom, .rounded-start, .rounded-end,
-                    .btn, .badge, .card, .modal-content, .dropdown-menu, .nav-pills .nav-link,
-                    .alt-hamburger span {
-                        border-radius: 0 !important;
-                    }
-
                     /* Dashboard-specific: use Cormorant Garamond (bold) for project title/location and stat numbers */
                     [data-stats-group] [data-countup], .stat-number {
                         font-family: 'Cormorant Garamond', 'Playfair Display', serif !important;

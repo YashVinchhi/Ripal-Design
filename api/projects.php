@@ -6,6 +6,14 @@ header('Content-Type: application/json; charset=utf-8');
 $db = get_db();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+// ============================================================
+// ENDPOINT: GET /api/projects.php?id=N
+// Returns single project detail with media
+// ============================================================
+// ============================================================
+// ENDPOINT: GET /api/projects.php?limit=N&offset=N
+// Returns paginated published project list
+// ============================================================
 if ($method === 'GET') {
     $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     if ($id > 0) {
@@ -121,6 +129,12 @@ if ($method === 'POST') {
 
 http_response_code(405);
 echo json_encode(['error' => 'Unsupported method']);
+
+// ============================================================
+// WebMCP compatibility endpoint (category/public-id based responses)
+// Kept in this file for backward compatibility with existing callers.
+// Safe split to separate files is deferred to avoid endpoint breakage.
+// ============================================================
 /**
  * WebMCP projects endpoint.
  *

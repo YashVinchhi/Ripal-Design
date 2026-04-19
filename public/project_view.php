@@ -49,10 +49,6 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
         /* Modal content scroll area */
         #projectModal .modal-content { max-height: calc(100vh - 120px); overflow: auto; }
     </style>
-    <!-- model-viewer for GLB/GLTF models and pannellum for panoramas -->
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/pannellum/build/pannellum.css" />
-    <script src="https://unpkg.com/pannellum/build/pannellum.js"></script>
 </head>
 <body class="bg-[#050505] text-white overflow-x-hidden">
     <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
@@ -101,6 +97,49 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                 let loading = false;
                 let finished = false;
                 const grid = document.getElementById('projectGrid');
+                let modelViewerLoaded = false;
+                let pannellumLoaded = false;
+
+                function loadScript(src, isModule = false) {
+                    return new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = src;
+                        if (isModule) {
+                            script.type = 'module';
+                        }
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                }
+
+                function loadStyle(href) {
+                    return new Promise((resolve) => {
+                        if (document.querySelector('link[data-runtime-style="' + href + '"]')) {
+                            resolve();
+                            return;
+                        }
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = href;
+                        link.setAttribute('data-runtime-style', href);
+                        link.onload = resolve;
+                        document.head.appendChild(link);
+                    });
+                }
+
+                async function ensureRuntimeViewerDeps(mediaTypes) {
+                    if (mediaTypes.includes('MODEL') && !modelViewerLoaded) {
+                        await loadScript('https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js', true);
+                        modelViewerLoaded = true;
+                    }
+
+                    if (mediaTypes.includes('PANORAMA') && !pannellumLoaded) {
+                        await loadStyle('https://unpkg.com/pannellum/build/pannellum.css');
+                        await loadScript('https://unpkg.com/pannellum/build/pannellum.js');
+                        pannellumLoaded = true;
+                    }
+                }
 
                 function escapeHtml(s) {
                     if (!s) return '';
@@ -128,6 +167,11 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                     return a;
                 }
 
+                function renderGridStatus(markup) {
+                    if (!grid) return;
+                    grid.innerHTML = markup;
+                }
+
                 async function loadMore() {
                     if (loading || finished) return;
                     loading = true;
@@ -136,7 +180,13 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                         if (!resp.ok) throw new Error('Network error');
                         const data = await resp.json();
                         const items = data.projects || [];
+                        if (offset === 0) {
+                            grid.innerHTML = '';
+                        }
                         if (!items.length) {
+                            if (offset === 0) {
+                                renderGridStatus('<div class="text-center py-5"><i class="bi bi-folder2-open fs-1 text-muted"></i><p class="mt-3 text-muted">No projects found.</p></div>');
+                            }
                             finished = true;
                             observer.disconnect();
                             sentinel.remove();
@@ -153,7 +203,10 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                             sentinel.remove();
                         }
                     } catch (e) {
-                        console.error(e);
+                        console.error('Project load failed:', e);
+                        if (offset === 0) {
+                            renderGridStatus('<div class="text-center py-5"><i class="bi bi-exclamation-triangle fs-1 text-warning"></i><p class="mt-3 text-muted">Unable to load projects. Please refresh the page.</p><button class="btn btn-outline-secondary mt-2" onclick="location.reload()">Try Again</button></div>');
+                        }
                     } finally {
                         loading = false;
                     }
@@ -176,6 +229,8 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                         const resp = await fetch(apiBase + '/api/projects.php?id=' + encodeURIComponent(projectId));
                         const data = await resp.json();
                         if (!data.project) return;
+                        const modalMediaTypes = (data.files || []).map(f => String(f.media_type || '').toUpperCase());
+                        await ensureRuntimeViewerDeps(modalMediaTypes);
                         document.getElementById('modalProjectTitle').innerText = data.project.name || '';
                         document.getElementById('modalProjectMeta').innerText = (data.project.location || '') + ' • ' + (data.project.owner_name || '');
                         document.getElementById('modalLikesCount').innerText = data.likes || 0;
@@ -203,7 +258,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                                 wrap.innerHTML = `<model-viewer src="${escapeHtml(f.file_path)}" alt="${escapeHtml(f.name)}" camera-controls auto-rotate style="width:100%;height:var(--model-viewer-height,400px);background:#f7f7f7;"></model-viewer>`;
                                 gallery.appendChild(wrap);
                             } else {
-                                wrap.innerHTML = `<img src="${escapeHtml(f.file_path)}" class="w-full h-64 object-cover" alt="${escapeHtml(f.name)}">`;
+                                wrap.innerHTML = `<img src="${escapeHtml(f.file_path)}" class="w-full h-64 object-cover" alt="${escapeHtml(f.name)}" loading="lazy">`;
                                 gallery.appendChild(wrap);
                             }
                         });
@@ -287,6 +342,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
 
                 // Init
                 document.addEventListener('DOMContentLoaded', function () {
+                    renderGridStatus('<div class="text-center py-5"><div class="spinner-border text-secondary" role="status" aria-label="Loading projects"></div></div>');
                     loadMore();
                 });
             </script>

@@ -20,10 +20,23 @@ $ctImage = static function ($key, $default = '') use ($indexContent) {
     return (string)$value;
 };
 
-$featuredProjects = db_connected() ? db_fetch_all('SELECT name, COALESCE(location, "") AS location FROM projects ORDER BY created_at DESC LIMIT 4') : [];
+$featuredProjects = db_connected() ? db_fetch_all('SELECT id, name, COALESCE(location, "") AS location FROM projects ORDER BY created_at DESC LIMIT 4') : [];
 for ($i = count($featuredProjects); $i < 4; $i++) {
-    $featuredProjects[] = ['name' => $ct('fallback_project_name', 'Project'), 'location' => ''];
+    $featuredProjects[] = ['id' => 0, 'name' => $ct('fallback_project_name', 'Project'), 'location' => ''];
 }
+
+$heroProofStats = json_decode((string)HERO_PROOF_STATS, true);
+if (!is_array($heroProofStats) || empty($heroProofStats)) {
+    $heroProofStats = [
+        ['value' => '50+', 'label' => 'Projects Delivered'],
+        ['value' => '10+', 'label' => 'Years Experience'],
+        ['value' => '100%', 'label' => 'Client Satisfaction'],
+    ];
+}
+
+$heroCtaSuccess = !empty($_SESSION['hero_cta_success']);
+$heroCtaError = (string)($_SESSION['hero_cta_error'] ?? '');
+unset($_SESSION['hero_cta_success'], $_SESSION['hero_cta_error']);
 ?>
 <html lang="en">
 
@@ -51,6 +64,16 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                 <p data-stagger-entry class="lead text-white-50 mx-auto" style="max-width: var(--content-max-width, 650px); letter-spacing: 0.05em;">
                     <?php echo esc($ct('hero_subheading', 'Precision in every measurement. Excellence in every build. Bridging the creative gap between design and reality.')); ?>
                 </p>
+                <div data-stagger-entry class="mt-4" id="start-project">
+                    <button type="button" class="btn btn-lg px-4 py-2 fw-semibold" style="background: var(--color-brand-primary); color: #fff;" data-bs-toggle="modal" data-bs-target="#heroQuickBriefModal">
+                        Start Your Project <span aria-hidden="true">&rarr;</span>
+                    </button>
+                </div>
+                <div class="hero-proof d-flex gap-4 mt-3">
+                    <?php foreach ($heroProofStats as $stat): ?>
+                        <span><strong><?php echo esc($stat['value'] ?? ''); ?></strong> <?php echo esc($stat['label'] ?? ''); ?></span>
+                    <?php endforeach; ?>
+                </div>
                 <div class="mt-5 pt-4">
                     <div class="vstack gap-2 align-items-center">
                         <span class="tracking-architect opacity-50"><?php echo esc($ct('hero_hint', 'Discovery')); ?></span>
@@ -64,13 +87,13 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             <div class="container" style="max-width: 100vw;">
                 <div class="carousel" id="projectsCarousel">
                     <div class="carousel-track" id="projectsTrack">
-                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_1', 'Project image 1')); ?>"></div>
-                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_2', 'Project image 2')); ?>"></div>
-                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_3', 'Project image 3')); ?>"></div>
-                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_4', 'Project image 4')); ?>"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_1', 'Project image 1')); ?>" loading="lazy"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_2', 'Project image 2')); ?>" loading="lazy"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_3', 'Project image 3')); ?>" loading="lazy"></div>
+                        <div class="carousel-slide"><img src="<?php echo esc_attr($ctImage('carousel_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('carousel_alt_4', 'Project image 4')); ?>" loading="lazy"></div>
                     </div>
-                    <button class="carousel-button" id="projectsPrev" style="left:12px"><span class="material-symbols-outlined">&lt; </span></button>
-                    <button class="carousel-button" id="projectsNext" style="right:12px"><span class="material-symbols-outlined">&gt; </span></button>
+                    <button class="carousel-button" id="projectsPrev" style="left:12px" aria-label="Previous slide"><i class="bi bi-chevron-left"></i></button>
+                    <button class="carousel-button" id="projectsNext" style="right:12px" aria-label="Next slide"><i class="bi bi-chevron-right"></i></button>
                 </div>
             </div>
         </section>
@@ -101,7 +124,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             <!-- Project 1 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
-                    <img src="<?php echo esc_attr($ctImage('featured_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_1', 'Featured project image 1')); ?>" >
+                    <img src="<?php echo esc_attr($ctImage('featured_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_1', 'Featured project image 1')); ?>" loading="lazy" >
                 </div>
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
@@ -111,7 +134,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_1_description', 'A masterpiece of modern residential architecture in the heart of Rajkot, redefining spatial excellence through minimalist precision.'))); ?>
                         </p>
-                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="<?php echo esc_attr('project_view.php?id=' . (int)($featuredProjects[0]['id'] ?? 0)); ?>" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
@@ -129,21 +152,21 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_2_description', 'A landmark in Jam Khambhalia, bridging the gap between Tradition and contemporary living with breathable structure.'))); ?>
                         </p>
-                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="<?php echo esc_attr('project_view.php?id=' . (int)($featuredProjects[1]['id'] ?? 0)); ?>" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
                     </div>
                 </div>
                 <div class="project-showcase-image project-image-right">
-                    <img src="<?php echo esc_attr($ctImage('featured_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_2', 'Featured project image 2')); ?>">
+                    <img src="<?php echo esc_attr($ctImage('featured_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_2', 'Featured project image 2')); ?>" loading="lazy">
                 </div>
             </div>
 
             <!-- Project 3 - Image Left -->
             <div class="project-showcase">
                 <div class="project-showcase-image project-image-left">
-                    <img src="<?php echo esc_attr($ctImage('featured_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_3', 'Featured project image 3')); ?>">
+                    <img src="<?php echo esc_attr($ctImage('featured_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_3', 'Featured project image 3')); ?>" loading="lazy">
                 </div>
                 <div class="project-showcase-content project-content-right">
                     <div class="project-showcase-inner">
@@ -153,7 +176,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_3_description', "State-of-the-art Multi-Institutional System integrated into Rajkot's burgeoning urban landscape."))); ?>
                         </p>
-                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="<?php echo esc_attr('project_view.php?id=' . (int)($featuredProjects[2]['id'] ?? 0)); ?>" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
@@ -171,14 +194,14 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                         <p class="project-description text-white-50 mb-5">
                             <?php echo nl2br(esc($ct('project_4_description', "Industrial refinement meeting contemporary aesthetics in the heart of India's ceramic capital."))); ?>
                         </p>
-                        <a href="services.php" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
+                        <a href="<?php echo esc_attr('project_view.php?id=' . (int)($featuredProjects[3]['id'] ?? 0)); ?>" class="project-link text-white text-decoration-none d-inline-flex align-items-center">
                             <span class="me-2"><?php echo esc($ct('project_link_label', 'View Project')); ?></span>
                             <span class="project-arrow">→</span>
                         </a>
                     </div>
                 </div>
                 <div class="project-showcase-image project-image-right">
-                    <img src="<?php echo esc_attr($ctImage('featured_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_4', 'Featured project image 4')); ?>">
+                    <img src="<?php echo esc_attr($ctImage('featured_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('featured_image_alt_4', 'Featured project image 4')); ?>" loading="lazy">
                 </div>
             </div>
         </section>
@@ -204,6 +227,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                                 <img src="<?php echo esc_attr($ctImage('testimonial_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM (1).jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_1', 'Client project 1')); ?>"
                                     class="w-100 h-100 object-fit-cover"
+                                    loading="lazy"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
@@ -227,6 +251,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                                 <img src="<?php echo esc_attr($ctImage('testimonial_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_2', 'Client project 2')); ?>"
                                     class="w-100 h-100 object-fit-cover"
+                                    loading="lazy"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
@@ -250,6 +275,7 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
                                 <img src="<?php echo esc_attr($ctImage('testimonial_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg')); ?>"
                                     alt="<?php echo esc_attr($ct('testimonial_image_alt_3', 'Client project 3')); ?>"
                                     class="w-100 h-100 object-fit-cover"
+                                    loading="lazy"
                                     style="opacity: 0.6; transition: opacity 0.4s ease;" />
                             </div>
                             <blockquote class="mb-4">
@@ -269,6 +295,43 @@ for ($i = count($featuredProjects); $i < 4; $i++) {
             </div>
         </section>
     </main>
+
+    <div class="modal fade" id="heroQuickBriefModal" tabindex="-1" aria-labelledby="heroQuickBriefLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--color-brand-surface); color: var(--color-brand-light);">
+                <div class="modal-header border-secondary">
+                    <h2 class="modal-title fs-5" id="heroQuickBriefLabel">Start Your Project</h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <?php if ($heroCtaSuccess): ?>
+                        <div class="alert alert-success mb-3">We'll be in touch within 24 hours.</div>
+                    <?php endif; ?>
+                    <?php if ($heroCtaError !== ''): ?>
+                        <div class="alert alert-danger mb-3"><?php echo h($heroCtaError); ?></div>
+                    <?php endif; ?>
+                    <form method="post" action="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" class="vstack gap-3">
+                        <?php echo csrf_token_field(); ?>
+                        <input type="hidden" name="submit" value="1">
+                        <input type="hidden" name="source" value="hero_cta">
+                        <div>
+                            <label class="form-label" for="heroBriefName">Name</label>
+                            <input id="heroBriefName" name="name" class="form-control" required>
+                        </div>
+                        <div>
+                            <label class="form-label" for="heroBriefContact">Phone or Email</label>
+                            <input id="heroBriefContact" name="contact" class="form-control" required>
+                        </div>
+                        <div>
+                            <label class="form-label" for="heroBriefMessage">Brief Message</label>
+                            <textarea id="heroBriefMessage" name="brief" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Send Brief</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <?php
     // enqueue page scripts so Common/footer.php can render them in the footer

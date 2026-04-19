@@ -66,6 +66,31 @@ function generate_unique_username(PDO $db, string $firstName, string $lastName):
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // CSRF validation
+    if (
+        empty($_POST['csrf_token']) ||
+        !isset($_SESSION['_csrf_token']) ||
+        !hash_equals((string)$_SESSION['_csrf_token'], (string)$_POST['csrf_token'])
+    ) {
+        http_response_code(403);
+        $_SESSION['error'] = 'Security token mismatch. Please refresh and try again.';
+        if (isset($_POST['signup'])) {
+            $_SESSION['register_error'] = $_SESSION['error'];
+            $_SESSION['active_form'] = 'signup';
+        } elseif (isset($_POST['login'])) {
+            $_SESSION['login_error'] = $_SESSION['error'];
+            $_SESSION['active_form'] = 'login';
+        }
+        $redirectTarget = 'login.php';
+        if (!empty($_SERVER['HTTP_REFERER']) && is_string($_SERVER['HTTP_REFERER'])) {
+            $redirectTarget = $_SERVER['HTTP_REFERER'];
+        }
+        header('Location: ' . $redirectTarget);
+        exit;
+    }
+}
+
 $db = get_db();
 if (!($db instanceof PDO)) {
     if (isset($_POST['signup'])) {
@@ -322,18 +347,14 @@ if (isset($_POST['login'])) {
         }
     }
 
-    // Legacy fallback: check signup table via mysqli
+    // Legacy fallback: check signup table via PDO when available
     try {
-        require_once __DIR__ . '/../sql/config.php';
-        if (isset($conn) && !$conn->connect_error) {
-            $stmt = $conn->prepare('SELECT * FROM signup WHERE email = ? LIMIT 1');
-            $stmt->bind_param('s', $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $legacyUser = $result ? $result->fetch_assoc() : null;
-            $stmt->close();
+        if (!function_exists('db_table_exists') || db_table_exists('signup')) {
+            $legacyStmt = $db->prepare('SELECT s_id, id, username, first_name, last_name, email, role, password FROM signup WHERE email = ? LIMIT 1');
+            $legacyStmt->execute([$email]);
+            $legacyUser = $legacyStmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($legacyUser && !empty($legacyUser['password']) && password_verify($user_password, $legacyUser['password'])) {
+            if ($legacyUser && !empty($legacyUser['password']) && password_verify($user_password, (string)$legacyUser['password'])) {
                 $legacyUsername = trim((string)($legacyUser['username'] ?? ''));
                 if ($legacyUsername === '') {
                     $legacyUsername = preg_replace('/[^a-z0-9._-]+/', '', strtolower(trim((string)($legacyUser['first_name'] ?? '') . '.' . (string)($legacyUser['last_name'] ?? '')))) ?: 'user';
@@ -362,7 +383,7 @@ if (isset($_POST['login'])) {
                 exit();
             }
         }
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         if (function_exists('app_log')) {
             app_log('warning', 'Legacy login failed', ['exception' => $e->getMessage()]);
         }

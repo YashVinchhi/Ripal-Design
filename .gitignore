@@ -1,6 +1,8 @@
 # Environment secrets
 .env
+*.env
 .env.local
+.env.production
 # Ignore local wiki mirrors
 wikis/
 
@@ -45,6 +47,7 @@ DATABASE.erd
 Database.md
 sql/database.sql
 storage/private_uploads/
+/storage/private_uploads/
 
 issues.md
 
@@ -3292,3 +3295,8 @@ uploads/project/11/files/360_1_-_Panorama_1776501250_2c8ca8d0.png
 uploads/project/12/files/behance_239114219_04_1776500910_6447e954.png
 README_PROJECT_GALLERY.md
 ui-layout-report.md
+demo.php
+.gitignore
+uploads/project/11/files/this_tree_is_growing_1776604491_6edb784a.glb
+uploads/project/9/files/WhatsApp_Image_2026-03-25_at_11.19.33_PM_1776596501_55a40788.jpeg
+task-end.md

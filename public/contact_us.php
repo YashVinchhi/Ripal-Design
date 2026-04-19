@@ -14,13 +14,32 @@ if (isset($_POST['submit'])) {
         header('Location: ' . $contactPageUrl);
         exit();
     }
-    
+
+    $source = trim((string)($_POST['source'] ?? ''));
+    $isHeroCta = $source === 'hero_cta';
 
     $first_name = trim((string)($_POST['first_name'] ?? ''));
     $last_name = trim((string)($_POST['last_name'] ?? ''));
     $email = trim((string)($_POST['email'] ?? ''));
     $subject = trim((string)($_POST['subject'] ?? ''));
     $message = trim((string)($_POST['message'] ?? ''));
+
+    if ($isHeroCta) {
+        $heroName = trim((string)($_POST['name'] ?? ''));
+        $heroContact = trim((string)($_POST['contact'] ?? ''));
+        $heroBrief = trim((string)($_POST['brief'] ?? ''));
+
+        $nameParts = preg_split('/\s+/', $heroName, 2);
+        $first_name = trim((string)($nameParts[0] ?? ''));
+        $last_name = trim((string)($nameParts[1] ?? ''));
+        if (filter_var($heroContact, FILTER_VALIDATE_EMAIL)) {
+            $email = $heroContact;
+        } else {
+            $email = '';
+        }
+        $subject = 'Hero CTA Brief';
+        $message = "Contact: " . $heroContact . "\n\nBrief: " . $heroBrief;
+    }
 
     $_SESSION['contact_form_old'] = [
         'first_name' => $first_name,
@@ -48,16 +67,28 @@ if (isset($_POST['submit'])) {
             ':message' => $message,
         ]);
 
-        $_SESSION['contact_form_success'] = true;
-        unset($_SESSION['contact_form_old']);
+        if ($isHeroCta) {
+            $_SESSION['hero_cta_success'] = true;
+        } else {
+            $_SESSION['contact_form_success'] = true;
+            unset($_SESSION['contact_form_old']);
+        }
     } catch (Throwable $e) {
         if (function_exists('app_log')) {
             app_log('warning', 'Contact form submission failed', ['exception' => $e->getMessage(), 'email' => $email]);
         }
-        $_SESSION['contact_form_error'] = $ct('error_message', 'Failed to send message. Please try again.');
+        if ($isHeroCta) {
+            $_SESSION['hero_cta_error'] = $ct('error_message', 'Failed to send message. Please try again.');
+        } else {
+            $_SESSION['contact_form_error'] = $ct('error_message', 'Failed to send message. Please try again.');
+        }
     }
 
-    header('Location: ' . $contactPageUrl);
+    if ($isHeroCta) {
+        header('Location: ' . rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php#start-project');
+    } else {
+        header('Location: ' . $contactPageUrl);
+    }
     exit();
 }
 
@@ -78,9 +109,8 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="./js/validation.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
+    <script src="./js/validation.js" defer></script>
     <link rel="stylesheet" href="./css/contact_us.css">
 </head>
 
@@ -91,7 +121,7 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
     ?>
         <?php if ($form_error): ?>
             <div class="fixed top-24 right-6 z-[100] bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
-                <?php echo htmlspecialchars($form_error); ?>
+                <?php echo h($form_error); ?>
             </div>
         <?php endif; ?>
 
@@ -100,7 +130,7 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
         <?php if ($form_success): ?>
             <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
                 <div class="bg-white p-12 max-w-lg w-full text-center border-b-4 border-rajkot-rust shadow-premium">
-                    <i data-lucide="check-circle" class="w-16 h-16 text-approval-green mx-auto mb-6"></i>
+                    <i class="bi bi-check-circle-fill text-approval-green" style="font-size: 4rem;"></i>
                     <h2 class="text-3xl font-serif font-bold text-foundation-grey mb-4"><?php echo esc($ct('success_title', 'Message Sent')); ?></h2>
                     <p class="text-gray-500 mb-8"><?php echo esc($ct('success_message', 'Thank you for reaching out. Our design team will review your inquiry and contact you shortly.')); ?></p>
                     <button onclick="window.location.href='index.php'" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all">
@@ -137,17 +167,17 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
                             <div class="icon-container">
                                 <a class="icon" href="https://www.instagram.com/ripal_design12/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($ct('social_instagram_label', 'Instagram')); ?>">
                                     <span class="sr-only"><?php echo esc($ct('social_instagram_label', 'Instagram')); ?></span>
-                                    <i class="fab fa-instagram"></i>
+                                    <i class="bi bi-instagram"></i>
                                 </a>
 
                                 <a class="icon" href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($ct('social_linkedin_label', 'LinkedIn')); ?>">
                                     <span class="sr-only"><?php echo esc($ct('social_linkedin_label', 'LinkedIn')); ?></span>
-                                    <i class="fab fa-linkedin-in"></i>
+                                    <i class="bi bi-linkedin"></i>
                                 </a>
 
                                 <a class="icon" href="https://www.behance.net/mayankvinchhi" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($ct('social_behance_label', 'Behance')); ?>">
                                     <span class="sr-only"><?php echo esc($ct('social_behance_label', 'Behance')); ?></span>
-                                    <i class="fab fa-behance"></i>
+                                    <i class="bi bi-behance"></i>
                                 </a>
                             </div>
                         </div>

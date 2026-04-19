@@ -6,9 +6,81 @@ require_login();
 
 $projectOptions = db_connected() ? db_fetch_all('SELECT id, name FROM projects ORDER BY id DESC LIMIT 200') : [];
 
+if (!function_exists('client_uuid_v4')) {
+  /**
+   * Generate a UUID v4 for unguessable upload filenames.
+   */
+  function client_uuid_v4(): string
+  {
+      $data = random_bytes(16);
+      $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+      $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+      return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+  }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   require_csrf();
-    $msg = 'Blueprint received and queued for architectural review.';
+
+    $maxBytes = 5 * 1024 * 1024;
+    $allowedMimes = [
+      'image/jpeg' => 'jpg',
+      'image/png' => 'png',
+      'image/webp' => 'webp',
+    ];
+
+    $uploaded = $_FILES['drawing'] ?? null;
+    if (!is_array($uploaded) || (int)($uploaded['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+      $msg = 'Please select an image file before submitting.';
+    } elseif ((int)($uploaded['size'] ?? 0) <= 0 || (int)($uploaded['size'] ?? 0) > $maxBytes) {
+      $msg = 'Image must be between 1 byte and 5 MB.';
+    } else {
+      $tmpPath = (string)($uploaded['tmp_name'] ?? '');
+      $detectedMime = '';
+      if (function_exists('finfo_open') && function_exists('finfo_file')) {
+        $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo !== false) {
+          $detectedMime = (string)@finfo_file($finfo, $tmpPath);
+          @finfo_close($finfo);
+        }
+      }
+
+      if (!isset($allowedMimes[$detectedMime])) {
+        $msg = 'Only JPEG, PNG, or WEBP images are allowed.';
+      } else {
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $notes = trim((string)($_POST['submission_notes'] ?? ''));
+
+        $relativeDir = 'client_drawings/' . date('Y/m');
+        $absoluteDir = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+        if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+          $msg = 'Unable to prepare secure upload storage.';
+        } else {
+          $storedName = client_uuid_v4() . '.' . $allowedMimes[$detectedMime];
+          $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
+          if (!move_uploaded_file($tmpPath, $absolutePath)) {
+            $msg = 'Upload failed while storing the file.';
+          } else {
+            $storagePath = 'uploads/' . $relativeDir . '/' . $storedName;
+            if ($projectId > 0 && db_connected()) {
+              try {
+                $db = get_db();
+                if ($db instanceof PDO) {
+                  $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())');
+                  $displayName = 'Client drawing' . ($notes !== '' ? ': ' . mb_substr($notes, 0, 120) : '');
+                  $stmt->execute([$projectId, $displayName, 'v1.0', 'Under Review', $storagePath]);
+                }
+              } catch (Throwable $e) {
+                if (function_exists('app_log')) {
+                  app_log('warning', 'Client upload metadata save failed', ['exception' => $e->getMessage(), 'project_id' => $projectId]);
+                }
+              }
+            }
+            $msg = 'Blueprint received and queued for architectural review.';
+          }
+        }
+      }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -17,34 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Upload Drawings | Ripal Design</title>
-  <?php
-  $tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
-  $hasLocalTailwind = file_exists($tailwindBuiltPath);
-  if ($hasLocalTailwind): 
-      $tailwindHref = rtrim((string)BASE_PATH, '/') . '/assets/css/tailwind.css';
-  ?>
-  <link rel="stylesheet" href="<?php echo esc_attr($tailwindHref); ?>">
-  <?php elseif (defined('APP_ENV') && APP_ENV === 'development' && (string)getenv('ENABLE_TAILWIND_CDN') !== '0'): ?>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'rajkot-rust': '#94180C',
-            'canvas-white': '#F9FAFB',
-            'foundation-grey': '#2D2D2D',
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Playfair Display', 'serif'],
-          }
-        }
-      }
-    };
-  </script>
-  <?php endif; ?>
+  <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/main.css'); ?>">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header_alt.php'; ?>
   
@@ -81,9 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="mb-8">
-          <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Upload Drawing (PDF/DWG)</label>
+           <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Upload Drawing (JPEG/PNG/WEBP)</label>
           <div class="border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center group hover:border-rajkot-rust transition cursor-pointer relative">
-             <input type="file" name="drawing" class="absolute inset-0 opacity-0 cursor-pointer" id="fileInput" data-validation="required fileType:pdf,dwg fileSize:51200">
+             <input type="file" name="drawing" class="absolute inset-0 opacity-0 cursor-pointer" id="fileInput" accept="image/jpeg,image/png,image/webp" data-validation="required fileType:jpg,jpeg,png,webp fileSize:5120">
              <span id="name_error" class="text-danger"></span>
              <div class="space-y-4">
                 <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto group-hover:bg-red-50 group-hover:text-rajkot-rust transition">
@@ -91,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div>
                    <p class="text-sm font-bold text-foundation-grey">Click to upload or drag and drop</p>
-                   <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Maximum file size: 50MB</p>
+                   <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Maximum file size: 5MB</p>
                 </div>
              </div>
           </div>
@@ -99,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="mb-10">
           <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Submission Notes</label>
-          <textarea rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rajkot-rust focus:border-transparent outline-none transition" placeholder="Briefly describe the changes or purpose of this upload..."></textarea>
+          <textarea name="submission_notes" rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rajkot-rust focus:border-transparent outline-none transition" placeholder="Briefly describe the changes or purpose of this upload..."></textarea>
         </div>
 
         <button type="submit" class="w-full py-4 bg-rajkot-rust text-white font-bold rounded-xl hover:bg-red-800 transition shadow-xl shadow-red-900/20 uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">

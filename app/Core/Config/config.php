@@ -89,6 +89,20 @@ if (!function_exists('env_bool')) {
     }
 }
 
+if (!function_exists('env_value')) {
+    /**
+     * Read environment value with fallback default.
+     */
+    function env_value(string $key, string $default = ''): string
+    {
+        $raw = getenv($key);
+        if ($raw === false || $raw === null || $raw === '') {
+            return $default;
+        }
+        return trim((string)$raw);
+    }
+}
+
 if (!function_exists('app_is_https')) {
     /**
      * Best-effort HTTPS detection including reverse-proxy headers.
@@ -337,6 +351,23 @@ if (!defined('UPLOAD_STORAGE_ROOT')) {
     } else {
         define('UPLOAD_STORAGE_ROOT', rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'private_uploads');
     }
+}
+
+if (!defined('PHONE_NUMBER')) {
+    define('PHONE_NUMBER', env_value('PHONE_NUMBER', '+919426789012'));
+}
+
+if (!defined('WHATSAPP_NUMBER')) {
+    $wa = preg_replace('/\D+/', '', env_value('WHATSAPP_NUMBER', '919426789012'));
+    define('WHATSAPP_NUMBER', $wa ?: '919426789012');
+}
+
+if (!defined('HERO_PROOF_STATS')) {
+    define('HERO_PROOF_STATS', json_encode([
+        ['value' => env_value('HERO_PROOF_PROJECTS', '50+'), 'label' => 'Projects Delivered'],
+        ['value' => env_value('HERO_PROOF_YEARS', '10+'), 'label' => 'Years Experience'],
+        ['value' => env_value('HERO_PROOF_SATISFACTION', '100%'), 'label' => 'Client Satisfaction'],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 }
 
 // Enable error display in development mode only

@@ -23,6 +23,8 @@ $footerContent = function_exists('public_content_page_values') ? public_content_
 $footerText = static function ($key, $default = '') use ($footerContent) {
     return (string)($footerContent[$key] ?? $default);
 };
+$footerPhoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
+$footerWhatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
 
 $currentYear = date('Y');
 ?>
@@ -70,7 +72,7 @@ $currentYear = date('Y');
                      <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" 
                          class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
                    role="button">
-                    <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
+                    <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i class="bi bi-arrow-right ms-2"></i>
                 </a>
             </div>
 
@@ -78,7 +80,7 @@ $currentYear = date('Y');
                 <h3 class="text-xl font-serif text-gray-400 mb-6"><?php echo esc($footerText('contact_heading', 'Contact Us')); ?></h3>
                 <div class="space-y-4">
                     <div class="flex items-start gap-3">
-                        <i data-lucide="map-pin" class="w-5 h-5 text-rajkot-rust shrink-0"></i>
+                        <i class="bi bi-geo-alt text-rajkot-rust shrink-0"></i>
                         <address class="not-italic text-gray-400 text-sm">
                             <?php
                             if (function_exists('public_content_get_html')) {
@@ -90,7 +92,13 @@ $currentYear = date('Y');
                         </address>
                     </div>
                     <div class="flex items-center gap-3">
-                        <i data-lucide="mail" class="w-5 h-5 text-rajkot-rust"></i>
+                        <i class="bi bi-telephone text-rajkot-rust"></i>
+                        <a href="<?php echo esc_attr($footerPhoneHref); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
+                            <?php echo esc(PHONE_NUMBER); ?>
+                        </a>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i class="bi bi-envelope text-rajkot-rust"></i>
                         <a href="mailto:<?php echo esc_attr($footerText('email', 'projects@ripaldesign.in')); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
                             <?php echo esc($footerText('email', 'projects@ripaldesign.in')); ?>
                         </a>
@@ -109,15 +117,18 @@ $currentYear = date('Y');
     </div>
 </footer>
 
+<a href="<?php echo esc_attr($footerWhatsAppHref); ?>" class="whatsapp-fab d-md-none" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat">
+    <i class="bi bi-whatsapp"></i>
+</a>
+
+<nav class="mobile-bottom-nav d-flex d-md-none" aria-label="Mobile navigation">
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>"><i class="bi bi-house"></i><span>Home</span></a>
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><i class="bi bi-grid"></i><span>Projects</span></a>
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><i class="bi bi-envelope"></i><span>Contact</span></a>
+</nav>
+
 <div id="transition-curtain" aria-hidden="true"></div>
 <div id="transition-orb" aria-hidden="true"></div>
-
-<script>
-    // Initialize Lucide icons
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-</script>
 
 <?php
 // Include Bootstrap JavaScript (needed for footer and header)

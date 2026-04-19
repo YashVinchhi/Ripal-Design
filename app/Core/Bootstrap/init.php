@@ -73,6 +73,11 @@ if (file_exists(__DIR__ . '/../Support/util.php')) {
     require_once __DIR__ . '/../Support/util.php';
 }
 
+$commonFunctionsPath = rtrim((string)PROJECT_ROOT, '/\\') . '/Common/functions.php';
+if (file_exists($commonFunctionsPath)) {
+    require_once $commonFunctionsPath;
+}
+
 $legacyIncludesDir = rtrim((string)(defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3)), '/\\') . DIRECTORY_SEPARATOR . 'includes';
 
 $notificationServicePath = rtrim((string)PROJECT_ROOT, '/\\') . '/app/Domains/Notifications/Services/notification_service.php';

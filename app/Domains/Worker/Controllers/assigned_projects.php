@@ -1,6 +1,8 @@
 <?php
 if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php'; }
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+  @session_start();
+}
 require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);

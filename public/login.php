@@ -52,8 +52,8 @@ function showActive($form, $active_form)
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/login.css">
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="./js/validation.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
+  <script src="./js/validation.js" defer></script>
 </head>
 
 <body class="auth-page">
@@ -68,6 +68,7 @@ function showActive($form, $active_form)
         <p class="auth-subtitle"><?php echo esc($ct('form_subtitle', 'Welcome back. Sign in to continue your project journey.')); ?></p>
 
         <form id="loginForm" method="post" novalidate action="<?= htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX . '/login_register.php', ENT_QUOTES, 'UTF-8'); ?>" class="auth-form">
+          <input type="hidden" name="csrf_token" value="<?= h($_SESSION['_csrf_token'] ?? '') ?>">
           <?= showError($errors['login']); ?>
 
           <div class="field">
