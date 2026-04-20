@@ -280,7 +280,14 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 <!-- Header Navigation Script -->
     <!-- Phantom root: wraps main page content. Closed in Common/footer.php -->
     <phantom-ui loading id="phantom-ui-root">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+    <!-- Lucide icons (used via data-lucide="icon-name") -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.259.0/dist/lucide.min.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            try { if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons(); } catch(e){}
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
 <script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/gsap-core-init.js" defer></script>
 <script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/gsap-motion-presets.js" defer></script>
