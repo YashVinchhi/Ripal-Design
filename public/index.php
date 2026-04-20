@@ -94,7 +94,7 @@ unset($_SESSION['hero_cta_success'], $_SESSION['hero_cta_error']);
         </section>
 
         <!-- Projects carousel below main image -->
-        <section id="projectsCarouselSection" class="py-5 bg-black mt-4">
+        <section id="projectsCarouselSection" class="py-5 bg-black">
             <div class="container" style="max-width: 100vw;">
                 <div class="carousel" id="projectsCarousel">
                     <div class="carousel-track" id="projectsTrack">

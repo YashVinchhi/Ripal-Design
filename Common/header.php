@@ -95,6 +95,8 @@ if (function_exists('current_user')) {
 <!-- Bootstrap CSS and Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"> 
+<!-- Font Awesome (fallback / replacement for lucide) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <?php if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS): ?>
 <?php
@@ -280,13 +282,134 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 <!-- Header Navigation Script -->
     <!-- Phantom root: wraps main page content. Closed in Common/footer.php -->
     <phantom-ui loading id="phantom-ui-root">
-    <!-- Lucide icons (used via data-lucide="icon-name") -->
-    <script src="https://cdn.jsdelivr.net/npm/lucide@0.259.0/dist/lucide.min.js" defer></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            try { if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons(); } catch(e){}
-        });
-    </script>
+        <!-- Lucide icons (used via data-lucide="icon-name"). Initialize after the library loads. -->
+        <script>
+            (function(){
+                var lucideScript = document.createElement('script');
+                // Prefer local copy to avoid CORB/CSP/CDN issues. Fallback to CDN if not present.
+                var localPath = '<?php echo esc_attr(rtrim((string)BASE_PATH, "/") . "/assets/js/lucide.min.js"); ?>';
+                // server-side: if local file exists, use it. Otherwise use CDN.
+                var useLocal = false;
+                try {
+                    useLocal = <?php echo (file_exists(PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'lucide.min.js') ? 'true' : 'false'); ?>;
+                } catch(e){ useLocal = false; }
+                lucideScript.src = useLocal ? localPath : 'https://cdn.jsdelivr.net/npm/lucide@0.259.0/dist/lucide.min.js';
+                lucideScript.defer = false;
+                lucideScript.async = true;
+                lucideScript.onload = function () {
+                    try { if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons(); } catch(e){}
+
+                    // Mutation observer to initialize icons for dynamically added nodes
+                    try {
+                        function initLucide(root) {
+                            try { if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons({ parent: root || document }); } catch(e){}
+                        }
+                        var observer = new MutationObserver(function (mutations) {
+                            for (var i = 0; i < mutations.length; i++) {
+                                var m = mutations[i];
+                                if (m.addedNodes && m.addedNodes.length) {
+                                    for (var j = 0; j < m.addedNodes.length; j++) {
+                                        var n = m.addedNodes[j];
+                                        if (n.nodeType === 1 && (n.matches && n.matches('[data-lucide]') || (n.querySelector && n.querySelector('[data-lucide]')))) {
+                                            initLucide(n);
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+                    } catch (e) {}
+                };
+                lucideScript.onerror = function(){ /* silent fallback */ };
+                document.head.appendChild(lucideScript);
+            })();
+        </script>
+        <script>
+            // Replace <i data-lucide="name"> with Font Awesome equivalent when lucide isn't available
+            (function(){
+                var map = {
+                    'eye':'fa-eye',
+                    'user-plus':'fa-user-plus',
+                    'settings-2':'fa-gear',
+                    'search':'fa-search',
+                    'filter':'fa-filter',
+                    'loader-2':'fa-spinner',
+                    'download':'fa-download',
+                    'edit-3':'fa-pen-to-square',
+                    'plus':'fa-plus',
+                    'chevron-right':'fa-chevron-right',
+                    'mail':'fa-envelope',
+                    'lock':'fa-lock',
+                    'shield-check':'fa-shield-halved',
+                    'user':'fa-user',
+                    'file-text':'fa-file-lines',
+                    'download-cloud':'fa-cloud-arrow-down',
+                    'image-plus':'fa-image',
+                    'trash-2':'fa-trash',
+                    'eye-off':'fa-eye-slash',
+                    'x':'fa-xmark',
+                    'check':'fa-check',
+                    'alert-circle':'fa-circle-exclamation',
+                    'info':'fa-circle-info',
+                    'external-link':'fa-arrow-up-right-from-square',
+                    'calendar':'fa-calendar',
+                    'map-pin':'fa-map-pin',
+                    'phone':'fa-phone',
+                    'download-cloud':'fa-cloud-arrow-down'
+                };
+
+                function replaceIcons(root){
+                    root = root || document;
+                    var nodes = root.querySelectorAll('i[data-lucide]');
+                    nodes.forEach(function(n){
+                        try {
+                            var name = (n.getAttribute('data-lucide')||'').trim();
+                            if(!name) return;
+                            var fa = map[name] || ('fa-' + name.replace(/_/g,'-'));
+                            // keep size classes from original element
+                            var classes = Array.from(n.classList).filter(Boolean).join(' ');
+                            var span = document.createElement('i');
+                            span.className = 'fa-solid ' + fa + (classes ? ' ' + classes : '');
+                            // transfer title/aria-hidden
+                            if(n.getAttribute('title')) span.setAttribute('title', n.getAttribute('title'));
+                            if(n.getAttribute('aria-hidden')) span.setAttribute('aria-hidden', n.getAttribute('aria-hidden'));
+                            n.parentNode.replaceChild(span, n);
+                        } catch(e){}
+                    });
+                }
+
+                document.addEventListener('DOMContentLoaded', function(){
+                    // If lucide loaded successfully, prefer it; otherwise replace with FA
+                    setTimeout(function(){
+                        if(!(window.lucide && typeof window.lucide.createIcons==='function')){
+                            replaceIcons(document);
+                        }
+                    }, 50);
+                });
+
+                // Watch for dynamic content
+                try{
+                    var obs = new MutationObserver(function(mutations){
+                        mutations.forEach(function(m){
+                            if(m.addedNodes && m.addedNodes.length){
+                                for(var i=0;i<m.addedNodes.length;i++){
+                                    var n = m.addedNodes[i];
+                                    if(n.nodeType===1){
+                                        if(n.matches && n.matches('i[data-lucide]') || (n.querySelector && n.querySelector('i[data-lucide]'))){
+                                            if(!(window.lucide && typeof window.lucide.createIcons==='function')){
+                                                replaceIcons(n);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    obs.observe(document.documentElement || document.body, { childList:true, subtree:true });
+                }catch(e){}
+            })();
+        </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
 <script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/gsap-core-init.js" defer></script>
