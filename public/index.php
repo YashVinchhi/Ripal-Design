@@ -41,10 +41,21 @@ unset($_SESSION['hero_cta_success'], $_SESSION['hero_cta_error']);
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><?php echo esc($ct('page_title', 'Home | Ripal Design')); ?></title>
-    <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
+    <?php
+    require_once __DIR__ . '/../includes/seo.php';
+    require_once __DIR__ . '/../includes/schema.php';
+
+    $page_data = [
+        'title' => $ct('page_title', 'Home'),
+        'description' => $ct('meta_description', 'Precision in every measurement. Excellence in every build.'),
+        'image' => $ctImage('hero_image_src', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
+        'url' => rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'
+    ];
+    render_seo_head($page_data);
+    // Render site-level schema
+    render_localbusiness_schema();
+    render_breadcrumbs_schema();
+    ?>
     <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/index.css'); ?>">
 </head>
 

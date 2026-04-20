@@ -19,15 +19,31 @@ $ctImage = static function ($key, $default = '') use ($servicesContent) {
 <html lang="en" class="scroll-smooth">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?php echo esc($ct('page_title', 'Services | Ripal Design')); ?></title>
+  <?php
+  require_once __DIR__ . '/../includes/seo.php';
+  require_once __DIR__ . '/../includes/schema.php';
+  $page_data = [
+    'title' => $ct('page_title', 'Services'),
+    'description' => $ct('meta_description', 'Our architectural and design services.'),
+    'image' => $ctImage('hero_image_src', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
+    'url' => rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'
+  ];
+  render_seo_head($page_data);
+  // Build a simple services list for schema
+  $servicesList = [
+    ['name' => $ct('service_1_title', 'Architectural Planning'), 'description' => $ct('service_1_description', '')],
+    ['name' => $ct('service_2_title', 'Interior Design'), 'description' => $ct('service_2_description', '')],
+    ['name' => $ct('service_3_title', 'Landscape Architecture'), 'description' => $ct('service_3_description', '')],
+    ['name' => $ct('service_4_title', 'Project Management'), 'description' => $ct('service_4_description', '')],
+  ];
+  render_services_schema($servicesList);
+  render_breadcrumbs_schema();
+  ?>
   <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/service.css">
-
 
 </head>
 

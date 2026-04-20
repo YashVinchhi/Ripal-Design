@@ -38,8 +38,13 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
         return false;
     }
 
-    $safeBaseName = preg_replace('/[^A-Za-z0-9._-]+/', '_', pathinfo($originalName, PATHINFO_FILENAME));
-    $safeBaseName = $safeBaseName !== '' ? $safeBaseName : 'photo';
+    // Create SEO-friendly filename: lowercase, words separated by hyphens, no spaces
+    $safeBaseName = pathinfo($originalName, PATHINFO_FILENAME);
+    $safeBaseName = mb_strtolower($safeBaseName, 'UTF-8');
+    $safeBaseName = preg_replace('/[^\p{L}\p{Nd}]+/u', '-', $safeBaseName);
+    $safeBaseName = preg_replace('/-+/', '-', $safeBaseName);
+    $safeBaseName = trim($safeBaseName, '-');
+    $safeBaseName = $safeBaseName !== '' ? mb_substr($safeBaseName, 0, 80) : 'photo';
 
     $relativeDir = 'project/' . $projectId . '/files';
     $absoluteDir = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
@@ -48,8 +53,7 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
         return false;
     }
 
-    $storedName = $safeBaseName . '_' . time() . '_' . bin2hex(random_bytes(4));
-    $storedName .= '.' . $ext;
+    $storedName = $safeBaseName . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
 
     $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
     if (!move_uploaded_file($tmpPath, $absolutePath)) {

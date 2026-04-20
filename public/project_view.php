@@ -154,9 +154,11 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                     a.className = 'project-item group cursor-pointer no-underline block';
                     a.dataset.projectId = p.id;
                     const cover = p.cover_image || <?php echo json_encode(rtrim(BASE_PATH, '/')); ?> + '/assets/Content/placeholder.jpg';
+                    // Use server-side thumbnail endpoint for appropriately sized images
+                    const thumb = (cover.indexOf('/') === 0 || cover.indexOf('http') === 0) ? (<?php echo json_encode(rtrim(BASE_PATH, '/')); ?> + '/_thumb.php?src=' + encodeURIComponent(cover) + '&w=600') : cover;
                     a.innerHTML = `
                         <div class="relative overflow-hidden w-full">
-                            <img src="${escapeHtml(cover)}" loading="lazy" decoding="async" class="w-full h-auto object-cover" alt="${escapeHtml(p.name)}">
+                            <img src="${escapeHtml(thumb)}" loading="lazy" decoding="async" class="w-full h-auto object-cover" alt="${escapeHtml(p.name)} — architectural design by Ripal Design" width="600" height="400">
                         </div>
                         <div class="mt-2">
                             <h3 class="text-lg serif mb-1">${escapeHtml(p.name)}</h3>
@@ -248,17 +250,17 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                                     if (typeof pannellum !== 'undefined' && pannellum.viewer) {
                                         pannellum.viewer(panoId, { type: 'equirectangular', panorama: f.file_path, autoLoad: true, showZoomCtrl: true });
                                     } else {
-                                        document.getElementById(panoId).innerHTML = '<img src="' + escapeHtml(f.file_path) + '" class="w-full h-full object-cover" alt="' + escapeHtml(f.name) + '">';
+                                        document.getElementById(panoId).innerHTML = '<img src="' + escapeHtml(f.file_path) + '" class="w-full h-full object-cover" alt="' + escapeHtml(p.name) + ' — architectural design by Ripal Design" loading="lazy" width="1600" height="900">';
                                     }
                                 } catch (e) {
                                     console.error('pannellum init error', e);
-                                    document.getElementById(panoId).innerHTML = '<img src="' + escapeHtml(f.file_path) + '" class="w-full h-full object-cover" alt="' + escapeHtml(f.name) + '">';
+                                        document.getElementById(panoId).innerHTML = '<img src="' + escapeHtml(f.file_path) + '" class="w-full h-full object-cover" alt="' + escapeHtml(p.name) + ' — architectural design by Ripal Design" loading="lazy" width="1600" height="900">';
                                 }
                             } else if (mediaType === 'MODEL') {
                                 wrap.innerHTML = `<model-viewer src="${escapeHtml(f.file_path)}" alt="${escapeHtml(f.name)}" camera-controls auto-rotate style="width:100%;height:var(--model-viewer-height,400px);background:#f7f7f7;"></model-viewer>`;
                                 gallery.appendChild(wrap);
                             } else {
-                                wrap.innerHTML = `<img src="${escapeHtml(f.file_path)}" class="w-full h-64 object-cover" alt="${escapeHtml(f.name)}" loading="lazy">`;
+                                wrap.innerHTML = `<img src="${escapeHtml(f.file_path)}" class="w-full h-64 object-cover" alt="${escapeHtml(p.name)} — architectural design by Ripal Design" loading="lazy" width="1200" height="800">`;
                                 gallery.appendChild(wrap);
                             }
                         });

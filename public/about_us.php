@@ -19,9 +19,19 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><?php echo esc($ct('page_title', 'About Us | Ripal Design')); ?></title>
+    <?php
+    require_once __DIR__ . '/../includes/seo.php';
+    require_once __DIR__ . '/../includes/schema.php';
+    $page_data = [
+        'title' => $ct('page_title', 'About Us'),
+        'description' => $ct('meta_description', 'About Ripal Design - our story and values.'),
+        'image' => $ctImage('timeline_logo_image', '/assets/Content/Logo.png'),
+        'url' => rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'
+    ];
+    render_seo_head($page_data);
+    render_localbusiness_schema();
+    render_breadcrumbs_schema();
+    ?>
     <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/about_us.css">
 </head>

@@ -6,8 +6,34 @@ $sessionUser = $_SESSION['user'] ?? null;
 $sessionRole = is_array($sessionUser) ? (string)($sessionUser['role'] ?? '') : '';
 $isWorkerReadOnly = ($sessionRole === 'worker') || (isset($_GET['readonly']) && $_GET['readonly'] === '1');
 
-$projectId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+// Resolve project by slug or id. Prefer slug for SEO-friendly URLs.
+$projectId = 0;
+if (!empty($_GET['slug'])) {
+    $slugParam = trim((string)$_GET['slug']);
+    if ($slugParam !== '') {
+        $row = db_fetch('SELECT id FROM projects WHERE slug = ? LIMIT 1', [$slugParam]);
+        if ($row && !empty($row['id'])) {
+            $projectId = (int)$row['id'];
+        }
+    }
+}
+if ($projectId === 0) {
+    $projectId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+}
+
 $project = get_project_full_data($projectId);
+
+// If page was requested by numeric id but project has a slug, redirect to slug URL (301)
+if ($project && isset($_GET['id']) && empty($_GET['slug'])) {
+    $slug = trim((string)($project['slug'] ?? ''));
+    if ($slug !== '') {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '');
+        $target = rtrim($scheme . '://' . $host, '/') . '/projects/' . rawurlencode($slug);
+        header('Location: ' . $target, true, 301);
+        exit;
+    }
+}
 
 if (!$project) {
     if (function_exists('show_404')) {
@@ -184,10 +210,29 @@ if (in_array($workerExt, ['glb', 'gltf'], true)) {
 <!doctype html>
 <html lang="en" class="bg-canvas-white">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><?php echo htmlspecialchars($project['name']); ?> | Ripal Design</title>
-    <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; 
+    <?php
+    // Use centralized SEO head renderer
+    require_once PROJECT_ROOT . '/includes/seo.php';
+    $projTitle = trim((string)($project['name'] ?? 'Project'));
+    $projDesc = trim((string)($project['summary'] ?? $project['description'] ?? ''));
+    // fallback short description
+    if ($projDesc === '') {
+        $projDesc = substr(trim((string)($project['excerpt'] ?? '')), 0, 160);
+    }
+    $projImage = '';
+    if (!empty($project['cover_image'])) {
+        $projImage = (strpos($project['cover_image'], 'http') === 0) ? $project['cover_image'] : rtrim((string)BASE_PATH, '/') . '/' . ltrim($project['cover_image'], '/');
+    } elseif (!empty($project['featured_image'])) {
+        $projImage = (strpos($project['featured_image'], 'http') === 0) ? $project['featured_image'] : rtrim((string)BASE_PATH, '/') . '/' . ltrim($project['featured_image'], '/');
+    }
+    $canonUrl = rtrim((string)BASE_PATH, '/') . '/project_view.php?id=' . (int)($project['id'] ?? 0);
+    render_seo_head([
+        'title' => $projTitle,
+        'description' => $projDesc,
+        'image' => $projImage,
+        'url' => $canonUrl,
+    ]);
+    $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; 
     
     // Handle review request submission (blocked in read-only worker mode)
     $request_sent = false;
@@ -548,7 +593,7 @@ if (in_array($workerExt, ['glb', 'gltf'], true)) {
                             </div>
                             <div id="panoViewer" class="w-full h-full"></div>
                         <?php elseif ($workerViewerMode === 'image'): ?>
-                            <img src="<?php echo htmlspecialchars($workerPreviewUrl); ?>" alt="<?php echo htmlspecialchars($workerFileName); ?>" class="w-full h-full object-contain bg-white" loading="lazy">
+                            <img src="<?php echo htmlspecialchars($workerPreviewUrl); ?>" alt="<?php echo htmlspecialchars($project['name'] ?? 'Project'); ?> — architectural design by Ripal Design" class="w-full h-full object-contain bg-white" loading="lazy" width="1200" height="800">
                         <?php elseif ($workerViewerMode === 'pdf'): ?>
                             <iframe src="<?php echo htmlspecialchars($workerPreviewUrl); ?>" class="w-full h-full bg-white" title="PDF Preview"></iframe>
                         <?php elseif ($workerViewerMode === 'video'): ?>

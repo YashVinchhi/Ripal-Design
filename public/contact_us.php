@@ -6,6 +6,17 @@ $ct = static function ($key, $default = '') use ($contactContent) {
     return (string)($contactContent[$key] ?? $default);
 };
 
+$ctImage = static function ($key, $default = '') use ($contactContent) {
+    $value = (string)($contactContent[$key] ?? $default);
+    if (function_exists('public_content_image_url')) {
+        return (string)public_content_image_url($value, $default);
+    }
+    if (function_exists('base_path')) {
+        return (string)base_path(ltrim((string)$value, '/'));
+    }
+    return (string)$value;
+};
+
 $contactPageUrl = BASE_PATH . PUBLIC_PATH_PREFIX . '/contact_us.php';
 
 if (isset($_POST['submit'])) {
@@ -102,9 +113,20 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
 <html lang="en" class="scroll-smooth">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><?php echo esc($ct('page_title', 'Contact Us | Ripal Design')); ?></title>
+    <?php
+    require_once __DIR__ . '/../includes/seo.php';
+    require_once __DIR__ . '/../includes/schema.php';
+    $page_data = [
+        'title' => $ct('page_title', 'Contact Us'),
+        'description' => $ct('meta_description', 'Get in touch with Ripal Design.'),
+        'image' => $ctImage('left_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
+        'url' => rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'
+    ];
+    render_seo_head($page_data);
+    render_contactpage_schema();
+    render_localbusiness_schema();
+    render_breadcrumbs_schema();
+    ?>
     <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

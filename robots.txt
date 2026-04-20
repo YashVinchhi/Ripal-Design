@@ -1,14 +1,15 @@
 User-agent: *
-Allow: /api/
-Allow: /.well-known/
-
-# Keep existing public pages crawlable.
 Allow: /
 
-# Disallow likely private or admin areas to avoid accidental indexing
+# Explicitly allow major crawler verification paths
+Allow: /.well-known/
+
+# Block admin, uploads, config and internal folders
 Disallow: /admin/
+Disallow: /uploads/
 Disallow: /app/
 Disallow: /includes/
+Disallow: /api/
 Disallow: /vendor/
 Disallow: /storage/
 Disallow: /tests/
@@ -16,8 +17,10 @@ Disallow: /docker/
 Disallow: /sql/
 Disallow: /node_modules/
 
-# Sitemap locations - replace the domain placeholder with your canonical domain
-Sitemap: https://REPLACE_WITH_YOUR_DOMAIN/sitemap.xml
-Sitemap: /sitemap.xml
+# Preferred sitemap location (sitemap.php serves dynamic sitemap)
+# Replace example.com below with your canonical domain in production if needed
+Sitemap: https://example.com/sitemap.php
 
-# TODO: review Disallow rules for any additional private folders on your deployment
+# Notes:
+# - Keep sensitive areas blocked here; for extra safety add meta "noindex" to admin pages.
+# - Update the Sitemap URL to your real domain before submitting to Search Console.

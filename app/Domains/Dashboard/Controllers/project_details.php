@@ -544,6 +544,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                         'owner_contact' => $ownerContact,
                         'owner_email' => $ownerEmail
                     ]);
+                        // Persist SEO fields if DB has columns
+                        $seoTitle = trim((string)($_POST['seo_title'] ?? ''));
+                        $metaDesc = trim((string)($_POST['meta_description'] ?? ''));
+                        if (function_exists('db_column_exists') && db_column_exists('projects', 'seo_title') && db_column_exists('projects', 'meta_description')) {
+                            $upd2 = $pdo->prepare('UPDATE projects SET seo_title = :seo_title, meta_description = :meta_description WHERE id = :id');
+                            $upd2->execute(['seo_title' => $seoTitle, 'meta_description' => $metaDesc, 'id' => $projectId]);
+                        }
                     $_SESSION['project_success'] = 'Project updated successfully!';
 
                     // Log activity
@@ -605,6 +612,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
                         'owner_email' => $ownerEmail
                     ]);
                     $projectId = $pdo->lastInsertId();
+                        // Persist SEO fields for newly created project if columns exist
+                        $seoTitle = trim((string)($_POST['seo_title'] ?? ''));
+                        $metaDesc = trim((string)($_POST['meta_description'] ?? ''));
+                        if (function_exists('db_column_exists') && db_column_exists('projects', 'seo_title') && db_column_exists('projects', 'meta_description')) {
+                            $updSeo = $pdo->prepare('UPDATE projects SET seo_title = :seo_title, meta_description = :meta_description WHERE id = :id');
+                            $updSeo->execute(['seo_title' => $seoTitle, 'meta_description' => $metaDesc, 'id' => $projectId]);
+                        }
 
                     // Log activity for new project
                     $activityStmt = $pdo->prepare('
@@ -793,7 +807,28 @@ if ($pdo instanceof PDO) {
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Project Details - <?php echo htmlspecialchars($project['name']); ?> - Ripal Design</title>
+    <?php
+    // Centralized SEO head
+    require_once PROJECT_ROOT . '/includes/seo.php';
+    $projTitle = trim((string)($project['name'] ?? 'Project'));
+    $projDesc = trim((string)($project['excerpt'] ?? $project['summary'] ?? $project['description'] ?? ''));
+    if ($projDesc === '') {
+        $projDesc = substr($projTitle, 0, 160);
+    }
+    $projImage = '';
+    if (!empty($project['cover_image'])) {
+        $projImage = (strpos($project['cover_image'], 'http') === 0) ? $project['cover_image'] : rtrim((string)BASE_PATH, '/') . '/' . ltrim($project['cover_image'], '/');
+    } elseif (!empty($project['featured_image'])) {
+        $projImage = (strpos($project['featured_image'], 'http') === 0) ? $project['featured_image'] : rtrim((string)BASE_PATH, '/') . '/' . ltrim($project['featured_image'], '/');
+    }
+    $canonUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php?id=' . (int)($project['id'] ?? 0);
+    render_seo_head([
+        'title' => $projTitle,
+        'description' => $projDesc,
+        'image' => $projImage,
+        'url' => $canonUrl,
+    ]);
+    ?>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
         rel="stylesheet" />
@@ -1112,7 +1147,7 @@ if ($pdo instanceof PDO) {
 
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 class="text-4xl font-serif font-bold text-white"><?php echo htmlspecialchars($project['name']); ?></h1>
+                                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
                     <!-- Owner Contact Modal -->
                     <div id="ownerContactModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
                         <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
@@ -1194,6 +1229,24 @@ if ($pdo instanceof PDO) {
                     data-tab="drawings">Drawings</a>
             <?php endif; ?>
         </div>
+        <script>
+            (function(){
+                var ta = document.getElementById('metaDescription');
+                var count = document.getElementById('metaCount');
+                if (!ta || !count) return;
+                function update(){
+                    var len = ta.value.length;
+                    count.textContent = '('+len+')';
+                    if (len < 120 || len > 160) {
+                        ta.classList.add('border-red-300');
+                    } else {
+                        ta.classList.remove('border-red-300');
+                    }
+                }
+                ta.addEventListener('input', update);
+                update();
+            })();
+        </script>
 
         <!-- Overview Tab -->
         <div class="tab-content active" id="overview-tab">
@@ -1299,6 +1352,22 @@ if ($pdo instanceof PDO) {
                                                     <?php endif; ?>
                                                 </p>
                                                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Click the info button to reveal map preview.</p>
+                                            <!-- SEO Fields -->
+                                            <div class="mt-6">
+                                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">SEO</h3>
+                                                <div class="space-y-3">
+                                                    <div>
+                                                        <label class="text-[10px] font-bold text-slate-400 uppercase">SEO Title (optional)</label>
+                                                        <input type="text" name="seo_title" value="<?php echo htmlspecialchars($project['seo_title'] ?? ''); ?>" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary">
+                                                        <p class="text-xs text-slate-500 mt-1">If set, this will override the public page title.</p>
+                                                    </div>
+                                                    <div>
+                                                        <label class="text-[10px] font-bold text-slate-400 uppercase">Meta Description <span id="metaCount" class="text-xs text-slate-500">(0)</span></label>
+                                                        <textarea name="meta_description" id="metaDescription" rows="3" required class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"><?php echo htmlspecialchars($project['meta_description'] ?? ''); ?></textarea>
+                                                        <p class="text-xs text-slate-500 mt-1">Required. Recommended length 120–160 characters.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             </div>
                                             <button
                                                 type="button"
