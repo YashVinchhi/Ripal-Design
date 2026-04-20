@@ -136,6 +136,23 @@ if (session_status() === PHP_SESSION_NONE) {
 
 apply_security_headers();
 
+// Polyfill for mbstring functions when the extension is not available.
+if (!function_exists('mb_substr')) {
+    function mb_substr(string $str, int $start, ?int $length = null, string $encoding = 'UTF-8')
+    {
+        if ($length === null) {
+            return substr($str, $start);
+        }
+        return substr($str, $start, $length);
+    }
+}
+if (!function_exists('mb_strlen')) {
+    function mb_strlen(string $str, string $encoding = 'UTF-8')
+    {
+        return strlen($str);
+    }
+}
+
 // Attempt auto-login from remember-me cookie if session empty
 if (function_exists('auth_try_auto_login')) {
     auth_try_auto_login();

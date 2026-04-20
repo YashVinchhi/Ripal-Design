@@ -74,7 +74,7 @@ if ($db instanceof PDO) {
         $ratingJoin = '';
     }
 
-    $sql = 'SELECT id, username, first_name, last_name, full_name, email, role, status, COALESCE(updated_at, created_at) AS last_sync' . $ratingSelect . ' FROM users' . $ratingJoin;
+    $sql = 'SELECT users.id AS id, users.username, users.first_name, users.last_name, users.full_name, users.email, users.role, users.status, COALESCE(users.updated_at, users.created_at) AS last_sync' . $ratingSelect . ' FROM users' . $ratingJoin;
     $where = [];
     $params = [];
 
@@ -93,7 +93,7 @@ if ($db instanceof PDO) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }
 
-    $sql .= ' ORDER BY id DESC LIMIT 200';
+    $sql .= ' ORDER BY users.id DESC LIMIT 200';
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
