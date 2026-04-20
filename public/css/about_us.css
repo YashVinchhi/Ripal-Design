@@ -8,6 +8,7 @@
 }
 
 /* Base Aesthetics */
+html,
 body {
     background-color: var(--bg-dark);
     color: #fff;
@@ -16,6 +17,13 @@ body {
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     margin: 0;
+}
+
+/* Bootstrap is loaded later via header, so force dark base on about page */
+html,
+body,
+main {
+    background-color: var(--bg-dark) !important;
 }
 
 /* Film Grain & Grid Overlay */
@@ -34,7 +42,10 @@ body::before {
 .grain {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: url('https://grainy-gradients.vercel.app/noise.svg');
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.12) 1px, transparent 0),
+        radial-gradient(circle at 2px 2px, rgba(0, 0, 0, 0.1) 1px, transparent 0);
+    background-size: 3px 3px, 4px 4px;
     opacity: 0.05;
     pointer-events: none;
     z-index: 9999;
@@ -118,11 +129,86 @@ nav.mixed-blend-mode {
     background: linear-gradient(to bottom, rgba(10,10,10,0.4), rgba(10,10,10,1));
 }
 
+/* Story section: match reference light middle band */
+.story-section {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+.story-section .container {
+    background: transparent !important;
+}
+.story-section h2,
+.story-section .display-3 {
+    color: #ffffff !important;
+    text-shadow: 0 8px 26px rgba(0,0,0,0.8) !important;
+    font-weight: 600 !important;
+}
+.story-section .tracking-architect {
+    color: rgba(255,255,255,0.82) !important;
+}
+.story-section p.lead,
+.story-section p {
+    color: rgba(255,255,255,0.9) !important;
+    text-shadow: 0 6px 20px rgba(0,0,0,0.75) !important;
+}
+
+/* Make story paragraphs gray as requested */
+.story-section .col-lg-7 p.lead.text-white-50,
+.story-section .col-lg-7 p.text-white-50 {
+    color: #6c757d !important;
+}
+
+/* Ensure story paragraph backgrounds are transparent (override Bootstrap) */
+.story-section .col-lg-7 p.lead.text-white-50,
+.story-section .col-lg-7 p.text-white-50,
+.story-section .col-lg-7 p.lead,
+.story-section .col-lg-7 p {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* About page CTA: match reference (light band with dark heading/body) */
+.about-cta {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+.about-cta .container {
+    background: transparent !important;
+}
+.about-cta h2 {
+    color: #ffffff !important;
+    text-shadow: 0 8px 24px rgba(0,0,0,0.8) !important;
+    font-weight: 500 !important;
+}
+.about-cta p.lead {
+    color: rgba(255,255,255,0.86) !important;
+}
+.about-cta .about-cta-btn {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #ffffff !important;
+    border-radius: 0 !important;
+}
+
 /* Timeline (Measuring Tape) */
 .timeline-section {
+    background: transparent !important;
+    color: #ffffff !important;
     padding: var(--timeline-padding, 150px) 0;
     position: relative;
     z-index: 2;
+}
+
+.timeline-section h2,
+.timeline-section .display-4 {
+    color: #ffffff !important;
+    text-shadow: 0 8px 24px rgba(0,0,0,0.8) !important;
+    font-weight: 500 !important;
+}
+
+.timeline-section .tracking-architect {
+    color: var(--primary) !important;
 }
 
 .tape-case {
@@ -207,7 +293,7 @@ nav.mixed-blend-mode {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    -webkit-text-stroke: 1px rgba(255,255,255,0.05);
+    -webkit-text-stroke: 1px rgba(0,0,0,0.10);
     color: transparent;
     font-family: 'Cormorant Garamond', serif;
     z-index: 0;
@@ -221,6 +307,21 @@ nav.mixed-blend-mode {
 /* Utilities */
 .py-lg-9 { padding-top: 8rem; padding-bottom: 8rem; }
 .text-primary-brand { color: var(--primary); }
+
+/* Stats block in about page should also be in the light middle band */
+.about-stats-section {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+
+.about-stats-section .display-3,
+.about-stats-section .font-serif {
+    color: #ffffff !important;
+}
+
+.about-stats-section .tracking-architect {
+    color: rgba(255,255,255,0.72) !important;
+}
 
 @media (max-width: 991px) {
     .timeline-section { padding: 80px 0; }

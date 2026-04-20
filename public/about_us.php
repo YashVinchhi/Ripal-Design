@@ -50,7 +50,7 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
         </section>
 
         <!-- Our Story -->
-        <section class="py-5 py-lg-9">
+        <section class="py-5 py-lg-9 story-section">
             <div class="container py-5">
                 <div class="row gx-lg-5 align-items-center">
                     <div class="col-lg-5 mb-5 mb-lg-0">
@@ -134,7 +134,7 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
         </section>
 
         <!-- Stats Section -->
-        <section class="py-5 border-top border-secondary border-opacity-10">
+        <section class="py-5 border-top border-secondary border-opacity-10 about-stats-section">
             <div class="container">
                 <div class="row g-0">
                     <div class="col-md-4 border-end border-secondary border-opacity-10">
@@ -168,11 +168,11 @@ $ctImage = static function ($key, $default = '') use ($aboutContent) {
             </div>
         </section>
 
-        <section class="py-5 bg-white text-black text-center">
+        <section class="py-5 about-cta text-center">
             <div class="container py-5">
                 <h2 class="display-3 font-serif mb-4"><?php echo esc($ct('cta_heading', 'Build the Extraordinary')); ?></h2>
                 <p class="lead mb-5 opacity-75"><?php echo esc($ct('cta_subheading', 'Ready to start your next project with Ripal Design?')); ?></p>
-                <a href="contact_us.php" class="btn btn-primary rounded-0 px-5 py-3 tracking-architect" style="background:#731209;border-color:#731209;color:#fff;"><?php echo esc($ct('cta_button', 'Contact Our Studio')); ?></a>
+                <a href="contact_us.php" class="btn btn-primary rounded-0 px-5 py-3 tracking-architect about-cta-btn"><?php echo esc($ct('cta_button', 'Contact Our Studio')); ?></a>
             </div>
         </section>
     </main>

@@ -133,7 +133,8 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
     </div>
 
     <?php if ($headerMode === 'public'): ?>
-    <div class="d-none d-md-flex align-items-center gap-2 me-2">
+    <!-- Hidden on desktop: Call & WhatsApp removed from header for desktop view -->
+    <div class="d-none" aria-hidden="true">
         <a href="<?php echo esc_attr($phoneHref); ?>" class="btn btn-sm btn-outline-light ms-2">
             <i class="bi bi-telephone"></i> Call
         </a>

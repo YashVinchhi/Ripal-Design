@@ -1,69 +1,86 @@
-$(document).ready(function(){
-    gsap.registerPlugin(ScrollTrigger);
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.gsap === 'undefined') {
+        return;
+    }
 
-    // 1. Navigation Logic
-    const menuBtn = $('#menuBtn');
-    const closeBtn = $('#closeBtn');
-    const navOverlay = $('#navOverlay');
+    if (typeof window.ScrollTrigger !== 'undefined') {
+        window.gsap.registerPlugin(window.ScrollTrigger);
+    }
 
-    menuBtn.on('click', function() {
-        navOverlay.addClass('open');
-        gsap.from('#navOverlay nav a', {
-            y: 30,
-            opacity: 0,
-            stagger: 0.1,
-            duration: 0.6,
-            ease: "power2.out"
+    // 1. Legacy nav fallback: only run if those elements exist
+    var menuBtn = document.getElementById('menuBtn');
+    var closeBtn = document.getElementById('closeBtn');
+    var navOverlay = document.getElementById('navOverlay');
+
+    if (menuBtn && navOverlay) {
+        menuBtn.addEventListener('click', function () {
+            navOverlay.classList.add('open');
+            window.gsap.from('#navOverlay nav a', {
+                y: 30,
+                opacity: 0,
+                stagger: 0.1,
+                duration: 0.6,
+                ease: 'power2.out'
+            });
         });
-    });
+    }
 
-    closeBtn.on('click', () => navOverlay.removeClass('open'));
+    if (closeBtn && navOverlay) {
+        closeBtn.addEventListener('click', function () {
+            navOverlay.classList.remove('open');
+        });
+    }
 
-    // 2. Timeline Animation Logic
-    // Reset states
-    gsap.set('#tapeStrip', { width: '0%' });
-    gsap.set('.milestone-marker', { opacity: 0, scale: 0.8, y: 30 });
+    // 2. Timeline animation logic
+    var tapeStrip = document.getElementById('tapeStrip');
+    var markers = document.querySelectorAll('.milestone-marker');
+    var timelineSection = document.querySelector('.timeline-section');
 
-    const timelineMaster = gsap.timeline({
+    if (!timelineSection || !tapeStrip || !markers.length) {
+        return;
+    }
+
+    window.gsap.set('#tapeStrip', { width: '0%' });
+    window.gsap.set('.milestone-marker', { opacity: 0, scale: 0.8, y: 30 });
+
+    var timelineMaster = window.gsap.timeline({
         scrollTrigger: {
-            trigger: ".timeline-section",
-            start: "top 45%",
-            end: "bottom 20%",
-            toggleActions: "play none none reverse"
+            trigger: '.timeline-section',
+            start: 'top 45%',
+            end: 'bottom 20%',
+            toggleActions: 'play none none reverse'
         }
     });
 
-    // Tape extend
     timelineMaster.to('#tapeStrip', {
         width: '100%',
         duration: 2.5,
-        ease: "expo.inOut"
+        ease: 'expo.inOut'
     });
 
-    // Markers pop in sequence
     timelineMaster.to('.milestone-marker', {
         opacity: 1,
         scale: 1,
         y: 0,
         duration: 0.8,
         stagger: 0.4,
-        ease: "back.out(1.7)"
-    }, "-=1.8");
+        ease: 'back.out(1.7)'
+    }, '-=1.8');
 
-    // Individual highlight logic based on progress
-    const markers = document.querySelectorAll('.milestone-marker');
-    markers.forEach((marker, index) => {
+    markers.forEach(function (marker, index) {
         timelineMaster.to(marker, {
-            onStart: () => $(marker).addClass('active'),
+            onStart: function () {
+                marker.classList.add('active');
+            },
             duration: 0.1
-        }, `-=${2 - (index * 0.7)}`);
+        }, '-=' + (2 - (index * 0.7)));
     });
 
-    // 3. Stats Section Parallax/Reveal
-    gsap.from('.stat-number-bg', {
+    // 3. Stats section parallax/reveal
+    window.gsap.from('.stat-number-bg', {
         scrollTrigger: {
             trigger: '.stat-item',
-            start: "top 90%",
+            start: 'top 90%',
             scrub: 1
         },
         y: 100,

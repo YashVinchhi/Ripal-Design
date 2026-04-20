@@ -40,6 +40,7 @@ $currentYear = date('Y');
     .site-footer .footer-cta-btn {
         color: #ffffff !important;
         text-decoration: none !important;
+        border-radius: 0 !important;
     }
 
     .site-footer .footer-contact-link {

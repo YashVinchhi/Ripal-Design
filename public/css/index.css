@@ -218,6 +218,145 @@ h3,
   background: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 1));
 }
 
+/* Improve hero heading readability on top of background images */
+.hero-section h1 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.85) !important;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.02;
+}
+
+/* Hero CTA: sharp edges */
+.hero-section #start-project .btn,
+.hero-section #start-project button.btn {
+  border-radius: 0 !important;
+}
+
+/* Hero stats: color the numeric values */
+.hero-proof strong {
+  color: #94180C !important;
+  font-weight: 700 !important;
+}
+
+/* Make hero supporting text more visible (Discovery, subheading) */
+.hero-section .tracking-architect,
+.hero-section p.lead,
+.hero-section .vstack,
+.hero-section .hero-proof,
+.hero-section .hero-proof span {
+  color: rgba(255,255,255,0.94) !important;
+  opacity: 1 !important;
+}
+
+/* Ensure hero content sits above the overlay and is readable */
+.hero-section .position-relative,
+.hero-section .container {
+  position: relative !important;
+  z-index: 50 !important;
+}
+
+.hero-section p.lead {
+  color: #ffffff !important;
+  font-weight: 400 !important;
+  opacity: 1 !important;
+  text-shadow: 0 6px 22px rgba(0,0,0,0.85) !important;
+}
+
+.hero-section .vstack,
+.hero-section .tracking-architect {
+  color: #ffffff !important;
+  text-shadow: 0 4px 18px rgba(0,0,0,0.75) !important;
+}
+
+/* Story section: replace white band with transparent/dark background matching site */
+.story-section {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+.story-section .container {
+  background: transparent !important;
+}
+.story-section h2,
+.story-section .display-3 {
+  color: #ffffff !important;
+  text-shadow: 0 10px 36px rgba(0,0,0,0.85) !important;
+  font-weight: 700 !important;
+}
+.story-section .tracking-architect {
+  color: rgba(255,255,255,0.9) !important;
+  letter-spacing: 0.35em !important;
+}
+.story-section p.lead,
+.story-section p {
+  color: rgba(255,255,255,0.95) !important;
+  text-shadow: 0 8px 30px rgba(0,0,0,0.9) !important;
+}
+
+/* Stronger 'Discovery' label for visibility */
+.hero-section .tracking-architect {
+  font-size: 0.95rem !important;
+  letter-spacing: 0.35em !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  margin-top: 0.8rem !important;
+}
+
+/* Additional readability improvements for hero */
+.hero-overlay {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.9));
+}
+
+/* Project content: add subtle background overlay to ensure contrast */
+.project-showcase .project-showcase-content {
+  position: relative;
+}
+.project-showcase .project-showcase-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,0.62), rgba(0,0,0,0.3));
+  z-index: 1;
+  pointer-events: none;
+}
+.project-showcase .project-showcase-inner {
+  position: relative;
+  z-index: 2;
+  padding: 1.25rem 0.5rem;
+}
+
+/* Stronger project title contrast */
+.project-showcase .project-title,
+.featured-projects-section .project-title {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 12px 44px rgba(0,0,0,0.9) !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+.project-showcase .project-description,
+.project-showcase .project-link {
+  color: rgba(255,255,255,0.95) !important;
+}
+
+/* Client Perspectives section heading clarity */
+.testimonials-section h2,
+.testimonials-section .display-3 {
+  color: #ffffff !important;
+  text-shadow: 0 6px 28px rgba(0,0,0,0.85) !important;
+}
+
+/* Improve readability for featured project titles and testimonials */
+.featured-projects-section .project-title,
+.project-showcase .project-title,
+.testimonials-section h2,
+.testimonials-section .display-3,
+.project-showcase .project-description,
+.project-link {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6) !important;
+  font-weight: 600 !important;
+}
+
 /* Timeline (Measuring Tape) */
 /* Removed timeline/measuring tape components (unused on index) */
 

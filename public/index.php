@@ -99,7 +99,7 @@ unset($_SESSION['hero_cta_success'], $_SESSION['hero_cta_error']);
         </section>
 
         <!-- Our Story -->
-        <section class="py-5 py-lg-9" data-anim="reveal">
+        <section class="py-5 py-lg-9 story-section" data-anim="reveal">
             <div class="container py-5">
                 <div class="row gx-lg-5 align-items-center">
                     <div class="col-lg-5 mb-5 mb-lg-0">
