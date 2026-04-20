@@ -13,6 +13,18 @@ if ($activePage === '' || !isset($registry[$activePage])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Detect likely exceeded post_max_size/upload_max_filesize: when
+  // Content-Length is present but $_POST is empty, PHP may have
+  // discarded the superglobals. Give a helpful flash instead of
+  // failing CSRF validation which confuses users.
+  $contentLen = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+  $hasPost = !empty($_POST);
+  if ($contentLen > 0 && !$hasPost) {
+    set_flash('Upload failed: request body too large. Increase post_max_size or upload_max_filesize in php.ini, or upload a smaller file.', 'danger');
+    header('Location: ' . base_path('admin/content_management.php?page=' . rawurlencode($activePage)));
+    exit;
+  }
+
   require_csrf();
 
   $action = strtolower(trim((string)($_POST['action'] ?? 'save')));
