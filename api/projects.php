@@ -125,6 +125,34 @@ if ($method === 'POST') {
         echo json_encode(['success' => true, 'action' => $actionRes, 'count' => $count]);
         exit;
     }
+
+    // ============================================================
+    // ENDPOINT: POST /api/projects.php
+    // Creates a new project
+    // ============================================================
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    // Validate input
+    if (empty($input['name']) || empty($input['budget']) || empty($input['owner_name'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing required fields: name, budget, owner_name']);
+        exit;
+    }
+
+    // Insert project into database
+    $stmt = $db->prepare('INSERT INTO projects (name, budget, owner_name, status, created_at) VALUES (?, ?, ?, ?, NOW())');
+    $stmt->execute([
+        $input['name'],
+        $input['budget'],
+        $input['owner_name'],
+        $input['status'] ?? 'new'
+    ]);
+
+    $projectId = $db->lastInsertId();
+
+    http_response_code(201);
+    echo json_encode(['success' => true, 'project_id' => $projectId]);
+    exit;
 }
 
 http_response_code(405);

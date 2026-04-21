@@ -373,11 +373,11 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
           <p class="text-gray-400 mt-2">Welcome back, <span class="text-rajkot-rust font-semibold"><?php echo esc($displayName); ?></span>. Here is your project overview.</p>
         </div>
         <div class="flex gap-3">
-          <button class="bg-rajkot-rust hover:bg-red-700 text-white px-6 py-2.5 flex items-center gap-2 transition-all shadow-lg active:scale-95" onclick="location.href='<?php echo esc_attr(base_path('dashboard/project_details.php')); ?>'" type="button">
+          <button class="bg-rajkot-rust hover:bg-red-700 text-white px-6 py-2.5 flex items-center gap-2 transition-all shadow-lg active:scale-95" onclick="location.href='<?php echo esc_attr($isAdmin ? base_path('admin/new_projects.php') : base_path('dashboard/project_details.php')); ?>'" type="button">
             <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Project
           </button>
           <a href="<?php echo esc_attr(base_path('dashboard/profile.php')); ?>" class="bg-white/10 border border-white/20 text-white px-6 py-2.5 flex items-center gap-2 hover:bg-white/20 transition-all no-underline">
-            <i data-lucide="user" class="w-5 h-5"></i> Profile
+            <i data-lucide="user" class="w-5 h-5 text-rajkot-rust"></i> Profile
           </a>
         </div>
       </div>

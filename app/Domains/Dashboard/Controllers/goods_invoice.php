@@ -106,9 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $body = "Invoice for project: " . ($project['name'] ?? '') . "\n";
         $body .= "Invoice ID: " . $invoice_id . "\n";
         $body .= "Date: " . date('F j, Y') . "\n\n";
-        $body .= "Subtotal: â‚¹ " . number_format($subtotal, 2) . "\n";
-        $body .= "Tax (" . ($tax_rate * 100) . "%): â‚¹ " . number_format($tax, 2) . "\n";
-        $body .= "Total: â‚¹ " . number_format($total, 2) . "\n\n";
+        $body .= "Subtotal: ₹ " . number_format($subtotal, 2) . "\n";
+        $body .= "Tax (" . ($tax_rate * 100) . "%): ₹ " . number_format($tax, 2) . "\n";
+        $body .= "Total: ₹ " . number_format($total, 2) . "\n\n";
         $body .= "View the invoice online: " . $share_url . "\n\n";
         if ($userMessage) $body .= "Message from sender:\n" . $userMessage . "\n\n";
         $body .= "Regards,\nRipal Design";
@@ -441,7 +441,7 @@ if (function_exists('render_flash')) { render_flash(); }
                     
                     <div class="mt-auto border-t border-rajkot-rust/10 pt-4">
                         <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1 font-sans">Estimated Invoice Total</div>
-                        <div class="text-2xl font-serif font-bold text-rajkot-rust">â‚¹ <?php echo number_format($total, 2); ?></div>
+                        <div class="text-2xl font-serif font-bold text-rajkot-rust">₹ <?php echo number_format($total, 2); ?></div>
                     </div>
                 </div>
             </div>
@@ -473,8 +473,8 @@ if (function_exists('render_flash')) { render_flash(); }
                                     <span class="text-foundation-grey font-bold"><?php echo intval($g['quantity']); ?></span>
                                     <span class="text-[10px] uppercase text-gray-400 ml-1 font-bold tracking-tighter"><?php echo h($g['unit'] ?? 'pcs'); ?></span>
                                 </td>
-                                <td class="px-4 py-6 text-right text-sm font-medium text-gray-500 font-mono">â‚¹ <?php echo number_format($g['unit_price'], 2); ?></td>
-                                <td class="px-4 py-6 text-right text-sm font-bold text-foundation-grey font-mono">â‚¹ <?php echo number_format($g['total_price'], 2); ?></td>
+                                <td class="px-4 py-6 text-right text-sm font-medium text-gray-500 font-mono">₹ <?php echo number_format($g['unit_price'], 2); ?></td>
+                                <td class="px-4 py-6 text-right text-sm font-bold text-foundation-grey font-mono">₹ <?php echo number_format($g['total_price'], 2); ?></td>
                             </tr>
                         <?php endforeach; endif; ?>
                     </tbody>
@@ -494,15 +494,15 @@ if (function_exists('render_flash')) { render_flash(); }
                     <div class="space-y-4 font-sans">
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-400 uppercase tracking-widest font-bold text-[10px]">Subtotal</span>
-                            <span class="font-bold text-foundation-grey font-mono">â‚¹ <?php echo number_format($subtotal, 2); ?></span>
+                            <span class="font-bold text-foundation-grey font-mono">₹ <?php echo number_format($subtotal, 2); ?></span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-400 uppercase tracking-widest font-bold text-[10px]">Tax (<?php echo ($tax_rate*100); ?>% GST)</span>
-                            <span class="font-bold text-foundation-grey font-mono">â‚¹ <?php echo number_format($tax, 2); ?></span>
+                            <span class="font-bold text-foundation-grey font-mono">₹ <?php echo number_format($tax, 2); ?></span>
                         </div>
                         <div class="flex justify-between items-center pt-4 border-t-2 border-rajkot-rust bg-rajkot-rust/5 px-4 py-3 -mx-4">
                             <span class="text-foundation-grey uppercase tracking-widest font-black text-[11px]">Grand Total</span>
-                            <span class="text-2xl font-serif font-bold text-rajkot-rust">â‚¹ <?php echo number_format($total, 2); ?></span>
+                            <span class="text-2xl font-serif font-bold text-rajkot-rust">₹ <?php echo number_format($total, 2); ?></span>
                         </div>
                     </div>
                 </div>
@@ -538,7 +538,7 @@ if (function_exists('render_flash')) { render_flash(); }
                         </div>
                         <div class="space-y-2 text-sm text-gray-600">
                             <p class="font-bold text-foundation-grey">Scan QR to pay</p>
-                            <p>Amount: <span class="font-bold">â‚¹ <?php echo number_format($total, 2); ?></span></p>
+                            <p>Amount: <span class="font-bold">₹ <?php echo number_format($total, 2); ?></span></p>
                             <p>UPI ID: <span class="font-mono font-bold"><?php echo h($upi_vpa); ?></span></p>
                             <p class="text-xs text-gray-400">If QR scan is not available on your device, use the button to open your installed UPI app with amount pre-filled.</p>
                         </div>
@@ -659,15 +659,15 @@ if (function_exists('render_flash')) { render_flash(); }
                 </div>
 
                 <div class="md:col-span-4">
-                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2 text-right font-sans">Estimated Unit Price (â‚¹)</label>
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2 text-right font-sans">Estimated Unit Price (₹)</label>
                     <div class="relative">
-                        <span class="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300 text-xs font-mono">â‚¹</span>
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300 text-xs font-mono">₹</span>
                         <input id="unit_price" name="unit_price" type="number" step="0.01" min="0" value="0" class="w-full bg-white border-b-2 border-gray-100 pl-4 py-2.5 text-sm focus:border-rajkot-rust outline-none transition-colors text-right font-bold font-mono">
                     </div>
                 </div>
 
                 <div class="md:col-span-4">
-                    <div id="lineTotal" class="text-[10px] text-gray-400 text-right mb-4 font-mono font-bold">Line Total: â‚¹ 0.00</div>
+                    <div id="lineTotal" class="text-[10px] text-gray-400 text-right mb-4 font-mono font-bold">Line Total: ₹ 0.00</div>
                     <button type="submit" class="w-full bg-foundation-grey hover:bg-rajkot-rust text-white py-3 shadow-lg font-bold transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2">
                         <i data-lucide="plus" class="w-3 h-3"></i> Add to Invoice
                     </button>
@@ -798,7 +798,7 @@ if (function_exists('render_flash')) { render_flash(); }
     const q = Math.max(0, parseFloat(qtyEl?.value) || 0);
     const p = Math.max(0, parseFloat(priceEl?.value) || 0);
     const t = q * p;
-    if (lineTotalEl) lineTotalEl.textContent = 'Line Total: â‚¹ ' + t.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (lineTotalEl) lineTotalEl.textContent = 'Line Total: ₹ ' + t.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     return t;
   }
 

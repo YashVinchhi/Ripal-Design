@@ -5,9 +5,28 @@ require_role('admin');
 
 $pdo = get_db();
 $projects = [];
-if ($pdo instanceof PDO) {
-    $stmt = $pdo->query('SELECT id, name, COALESCE(seo_title, "") AS seo_title, COALESCE(meta_description, "") AS meta_description, COALESCE(slug, "") AS slug FROM projects ORDER BY id DESC');
+if ($pdo instanceof PDO && function_exists('db_table_exists') && db_table_exists('projects')) {
+  // Build select dynamically to avoid errors on missing columns
+  $select = ['id', 'name'];
+  $select[] = (function() {
+    try { return db_column_exists('projects', 'seo_title') ? 'COALESCE(seo_title, "") AS seo_title' : '"" AS seo_title'; } catch (Throwable $e) { return '"" AS seo_title'; }
+  })();
+  $select[] = (function() {
+    try { return db_column_exists('projects', 'meta_description') ? 'COALESCE(meta_description, "") AS meta_description' : '"" AS meta_description'; } catch (Throwable $e) { return '"" AS meta_description'; }
+  })();
+  $select[] = (function() {
+    try { return db_column_exists('projects', 'slug') ? 'COALESCE(slug, "") AS slug' : '"" AS slug'; } catch (Throwable $e) { return '"" AS slug'; }
+  })();
+
+  $sql = 'SELECT ' . implode(', ', $select) . ' FROM projects ORDER BY id DESC';
+  try {
+    $stmt = $pdo->query($sql);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  } catch (PDOException $e) {
+    // If query fails, keep projects empty and log if available
+    if (function_exists('app_log')) app_log('warning', 'SEO dashboard query failed', ['exception' => $e->getMessage()]);
+    $projects = [];
+  }
 }
 
 function flag_missing($p) {
@@ -67,5 +86,29 @@ function flag_missing($p) {
       </tbody>
     </table>
   </main>
+
+  </phantom-ui>
+  <script>
+    (function () {
+      function reveal() {
+        var root = document.getElementById('phantom-ui-root') || document.querySelector('phantom-ui[loading]');
+        if (!root) return;
+        try {
+          if (root.hasAttribute('loading')) {
+            root.removeAttribute('loading');
+          }
+        } catch (e) {}
+      }
+
+      if (document.readyState === 'complete') {
+        setTimeout(reveal, 50);
+      } else {
+        window.addEventListener('load', function () { setTimeout(reveal, 50); });
+      }
+
+      // Fallback: always reveal even if load handler is delayed.
+      setTimeout(reveal, 1500);
+    })();
+  </script>
 </body>
 </html>

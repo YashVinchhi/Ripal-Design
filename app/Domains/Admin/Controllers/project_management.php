@@ -5,7 +5,7 @@ require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 require_login();
 require_role('admin');
 
-$newProjectUrl = rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php';
+$newProjectUrl = rtrim((string)BASE_PATH, '/') . '/admin/new_projects.php';
 
 $storeProjectImage = static function (int $projectId, array $uploadedFile): bool {
     if ($projectId <= 0) {
@@ -389,9 +389,209 @@ $resolveRegion = static function (string $location): string {
               padding: 1.25rem;
           }
       }
-  </style>
+</style>
+<style>
+    /* Force sharp corners on project management page */
+    .project-management-sharp *,
+    .project-management-sharp *::before,
+    .project-management-sharp *::after {
+        border-radius: 0 !important;
+    }
+
+    /* Override common rounded utility classes for this page */
+    .project-management-sharp .rounded,
+    .project-management-sharp .rounded-lg,
+    .project-management-sharp .rounded-full,
+    .project-management-sharp button,
+    .project-management-sharp a,
+    .project-management-sharp .project-card,
+    .project-management-sharp .project-card-media,
+    .project-management-sharp .cover-edit-form,
+    .project-management-sharp .cover-edit-btn,
+    .project-management-sharp .publish-form,
+    .project-management-sharp .publish-toggle-btn,
+    .project-management-sharp .project-cover-dot {
+        border-radius: 0 !important;
+    }
+
+    /* Size adjustments for filter controls */
+    .project-management-sharp .project-filter-wrap span {
+        font-size: 13px;
+        letter-spacing: .08em;
+        display: inline-flex;
+        align-items: center;
+        margin-right: 0.5rem;
+    }
+
+    .project-management-sharp #region-filters .filter-btn {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        font-size: 13px !important;
+        height: 40px !important;
+        line-height: 40px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        border-radius: 0 !important;
+    }
+
+    .project-management-sharp #projectStatusFilter,
+    .project-management-sharp #projectSearchInput {
+        height: 40px !important;
+        font-size: 14px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        line-height: 40px !important;
+        padding-left: 2.5rem !important; /* keeps space for the icon */
+    }
+
+    .project-management-sharp #region-filters,
+    .project-management-sharp .project-filter-controls,
+    .project-management-sharp .project-filter-controls .relative {
+        min-height: 40px;
+        align-items: center;
+    }
+
+    /* Redesigned segmented control + styled inputs */
+    .project-management-sharp .segmented-control {
+        display: flex;
+        gap: 8px;
+    }
+    .project-management-sharp .seg-btn {
+        background: #ffffff;
+        color: #6b7280;
+        border: 1px solid #e6e6e6;
+        padding: 0 14px;
+        height: 40px;
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .project-management-sharp .seg-btn.active-filter,
+    .project-management-sharp .seg-btn[aria-pressed="true"] {
+        background: #7f140a; /* rajkot-rust */
+        color: #fff;
+        border-color: #7f140a;
+    }
+
+    .project-management-sharp .styled-select,
+    .project-management-sharp .styled-input {
+        height: 40px;
+        border: 1px solid #e6e6e6;
+        background: #fafafa;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        line-height: 40px !important;
+        font-size: 14px;
+        color: #374151;
+        outline: none;
+    }
+    .project-management-sharp .styled-input:focus,
+    .project-management-sharp .styled-select:focus {
+        border-color: #7f140a;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(127,20,10,0.06);
+    }
+
+    /* Reduce visual gap on very small screens */
+    @media (max-width: 640px) {
+        .project-management-sharp #region-filters .filter-btn {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            height: 36px !important;
+            font-size: 12px !important;
+            line-height: 36px !important;
+        }
+        .project-management-sharp #projectStatusFilter,
+        .project-management-sharp #projectSearchInput {
+            height: 36px !important;
+            font-size: 13px !important;
+            line-height: 36px !important;
+        }
+    }
+
+    /* Mobile responsiveness: stack and tighten controls */
+    @media (max-width: 767px) {
+        .project-management-sharp .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            padding: 0 12px;
+        }
+        .project-management-sharp .filter-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        .project-management-sharp .filter-label {
+            margin-bottom: 0.25rem;
+            font-size: 12px;
+        }
+        .project-management-sharp .segmented-control {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            gap: 6px;
+            padding-bottom: 4px;
+        }
+        .project-management-sharp .seg-btn {
+            min-width: 110px;
+            height: 36px;
+            font-size: 12px;
+            padding: 0 10px;
+            flex: 0 0 auto;
+        }
+        .project-management-sharp .filter-right {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        .project-management-sharp .relative { min-width: 0; }
+        .project-management-sharp .styled-select,
+        .project-management-sharp .styled-input {
+            width: 100%;
+            height: 36px;
+            line-height: 36px !important;
+            font-size: 13px;
+        }
+
+        /* Make project cards tighter on mobile */
+        .project-management-sharp .project-card-media { height: 200px; }
+        .project-management-sharp .project-grid-mobile { gap: 1.25rem; }
+    }
+
+    /* Desktop alignment: vertically center filter groups and controls */
+    @media (min-width: 1024px) {
+        .project-management-sharp .project-filter-wrap {
+            align-items: center;
+        }
+        .project-management-sharp .project-filter-wrap > div:first-child {
+            align-items: center;
+        }
+        .project-management-sharp .project-filter-controls {
+            align-items: center;
+        }
+        .project-management-sharp .project-filter-controls .relative {
+            display: flex;
+            align-items: center;
+        }
+        .project-management-sharp #projectStatusFilter,
+        .project-management-sharp #projectSearchInput {
+            padding-left: 2.5rem !important;
+        }
+    }
+</style>
 </head>
-<body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
+<body class="project-management-sharp bg-canvas-white font-sans text-foundation-grey min-h-screen">
   
   <div class="min-h-screen flex flex-col">
     <!-- Unified Dark Portal Header -->
@@ -414,30 +614,34 @@ $resolveRegion = static function (string $location): string {
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Filter Bar -->
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 mb-10 project-filter-wrap">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Region Select:</span>
-                <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto no-scrollbar" id="region-filters">
-                    <button type="button" data-region="Global" class="px-4 py-1.5 bg-rajkot-rust text-white text-[10px] font-bold uppercase tracking-widest shadow-sm filter-btn active-filter whitespace-nowrap">Global</button>
-                    <button type="button" data-region="Rajkot" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Rajkot</button>
-                    <button type="button" data-region="Jam Khambhalia" class="px-4 py-1.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:border-rajkot-rust transition-colors filter-btn whitespace-nowrap">Jam Khambhalia</button>
+        <!-- Redesigned Filter Row -->
+        <div class="project-filter-bar mb-10">
+            <div class="filter-row max-w-7xl mx-auto flex items-center gap-6">
+                <div class="filter-left flex items-center gap-4">
+                    <label class="filter-label text-[11px] font-bold text-gray-400 uppercase tracking-widest">Region Select:</label>
+                    <nav id="region-filters" class="segmented-control flex items-center gap-2" role="tablist" aria-label="Region Filters">
+                        <button type="button" data-region="Global" class="seg-btn active-filter" aria-pressed="true">Global</button>
+                        <button type="button" data-region="Rajkot" class="seg-btn">Rajkot</button>
+                        <button type="button" data-region="Jam Khambhalia" class="seg-btn">Jam Khambhalia</button>
+                    </nav>
                 </div>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto project-filter-controls">
-                <div class="relative flex-grow lg:w-64">
-                    <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <select id="projectStatusFilter" class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer">
-                        <option value="all" <?php echo $statusFilter === 'all' ? 'selected' : ''; ?>>All Statuses</option>
-                        <option value="planning" <?php echo $statusFilter === 'planning' ? 'selected' : ''; ?>>Conceptual Design</option>
-                        <option value="paused" <?php echo $statusFilter === 'paused' ? 'selected' : ''; ?>>Approval Pending</option>
-                        <option value="ongoing" <?php echo $statusFilter === 'ongoing' ? 'selected' : ''; ?>>Construction Ongoing</option>
-                        <option value="completed" <?php echo $statusFilter === 'completed' ? 'selected' : ''; ?>>Project Handover</option>
-                    </select>
-                </div>
-                <div class="relative flex-grow lg:w-80">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                    <input id="projectSearchInput" type="search" placeholder="Search Master Registry..." value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" class="w-full pl-10 pr-4 py-2.5 border border-gray-100 bg-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm">
+
+                <div class="filter-right ml-auto flex items-center gap-4 w-full lg:w-auto">
+                    <div class="relative" style="min-width:220px;">
+                        <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
+                        <select id="projectStatusFilter" class="styled-select w-full pl-10 pr-4 appearance-none" aria-label="Project status">
+                            <option value="all" <?php echo $statusFilter === 'all' ? 'selected' : ''; ?>>All Statuses</option>
+                            <option value="planning" <?php echo $statusFilter === 'planning' ? 'selected' : ''; ?>>Conceptual Design</option>
+                            <option value="paused" <?php echo $statusFilter === 'paused' ? 'selected' : ''; ?>>Approval Pending</option>
+                            <option value="ongoing" <?php echo $statusFilter === 'ongoing' ? 'selected' : ''; ?>>Construction Ongoing</option>
+                            <option value="completed" <?php echo $statusFilter === 'completed' ? 'selected' : ''; ?>>Project Handover</option>
+                        </select>
+                    </div>
+
+                    <div class="relative flex-1 lg:flex-initial" style="min-width:300px;">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
+                        <input id="projectSearchInput" type="search" placeholder="Search Master Registry..." value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" class="styled-input w-full pl-10 pr-4" aria-label="Search projects">
+                    </div>
                 </div>
             </div>
         </div>
@@ -523,7 +727,7 @@ $resolveRegion = static function (string $location): string {
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-5 md:py-4 border-t border-gray-50">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Budget: â‚¹ <?php echo number_format((float)($p['budget'] ?? 0), 0, '.', ','); ?></span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Budget: ₹ <?php echo number_format((float)($p['budget'] ?? 0), 0, '.', ','); ?></span>
                         <a href="../dashboard/project_details.php?id=<?php echo (int)$p['id']; ?>" class="h-10 w-full sm:w-auto px-4 bg-gray-50 md:bg-transparent text-[10px] font-bold uppercase tracking-widest text-foundation-grey hover:text-rajkot-rust flex items-center justify-center border border-gray-100 md:border-0 rounded transition-all">Open Record</a>
                     </div>
                 </div>

@@ -110,6 +110,13 @@ if ($db instanceof PDO) {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Workers | Ripal Design</title>
   <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; ?>
+  <style>
+    /* Make main content use 80% width on desktop with 10% margins */
+    .page-80 { width: 100%; max-width: none !important; }
+    @media (min-width: 768px) {
+      .page-80 { width: 80% !important; margin-left: 10% !important; margin-right: 10% !important; }
+    }
+  </style>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   <div class="min-h-screen flex flex-col">
@@ -120,7 +127,7 @@ if ($db instanceof PDO) {
       </div>
     </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 page-80">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-white p-6 shadow-premium border border-gray-100">
           <h2 class="text-xl font-bold mb-4">Add Worker</h2>

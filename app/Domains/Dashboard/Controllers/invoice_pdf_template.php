@@ -63,8 +63,8 @@ function invoice_pdf_html($project, $goods, $subtotal, $tax, $total, $invoice_id
                         <td class="center"><?php echo $i++; ?></td>
                         <td><?php echo htmlspecialchars($g['name'] ?? ''); ?><?php if (!empty($g['description'])) echo '<div style="color:#666;font-size:11px;margin-top:4px">'.htmlspecialchars($g['description']).'</div>'; ?></td>
                         <td class="center"><?php echo intval($g['quantity']); ?> <?php echo htmlspecialchars($g['unit'] ?? ''); ?></td>
-                        <td class="right">â‚¹ <?php echo number_format($g['unit_price'],2); ?></td>
-                        <td class="right">â‚¹ <?php echo number_format($g['total_price'],2); ?></td>
+                        <td class="right">₹ <?php echo number_format($g['unit_price'],2); ?></td>
+                        <td class="right">₹ <?php echo number_format($g['total_price'],2); ?></td>
                     </tr>
                 <?php endforeach; endif; ?>
             </tbody>
@@ -75,9 +75,9 @@ function invoice_pdf_html($project, $goods, $subtotal, $tax, $total, $invoice_id
                 <td></td>
                 <td style="width:260px;">
                     <table style="width:100%;border:none;">
-                        <tr><td class="right">Subtotal:</td><td class="right">â‚¹ <?php echo number_format($subtotal,2); ?></td></tr>
-                        <tr><td class="right">Tax (<?php echo (floatval(18)); ?>%):</td><td class="right">â‚¹ <?php echo number_format($tax,2); ?></td></tr>
-                        <tr style="font-weight:700"><td class="right">Grand Total:</td><td class="right">â‚¹ <?php echo number_format($total,2); ?></td></tr>
+                        <tr><td class="right">Subtotal:</td><td class="right">₹ <?php echo number_format($subtotal,2); ?></td></tr>
+                        <tr><td class="right">Tax (<?php echo (floatval(18)); ?>%):</td><td class="right">₹ <?php echo number_format($tax,2); ?></td></tr>
+                        <tr style="font-weight:700"><td class="right">Grand Total:</td><td class="right">₹ <?php echo number_format($total,2); ?></td></tr>
                     </table>
                 </td>
             </tr>

@@ -180,10 +180,21 @@ if ($db instanceof PDO) {
                 margin-bottom: 0.75rem;
             }
         }
+        /* Force sharp corners on this admin page */
+        .user-management-sharp *,
+        .user-management-sharp *::before,
+        .user-management-sharp *::after {
+            border-radius: 0 !important;
+        }
+        .user-management-sharp .rounded,
+        .user-management-sharp .rounded-lg,
+        .user-management-sharp .rounded-full {
+            border-radius: 0 !important;
+        }
     </style>
   <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; ?>
 </head>
-<body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
+<body class="user-management-sharp bg-canvas-white font-sans text-foundation-grey min-h-screen">
   
   <div class="min-h-screen flex flex-col">
     <!-- Unified Dark Portal Header -->

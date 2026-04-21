@@ -97,8 +97,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
             <td><?php echo htmlspecialchars($g['name']); ?><div class="small muted"><?php echo htmlspecialchars($g['description']); ?></div></td>
             <td><?php echo htmlspecialchars($g['unit']); ?></td>
             <td><?php echo intval($g['quantity']); ?></td>
-            <td>â‚¹ <?php echo number_format($g['unit_price'],2); ?></td>
-            <td>â‚¹ <?php echo number_format($g['total_price'],2); ?></td>
+            <td>₹ <?php echo number_format($g['unit_price'],2); ?></td>
+            <td>₹ <?php echo number_format($g['total_price'],2); ?></td>
             <td>
               <form method="post" onsubmit="return confirm('Delete item?')" style="display:inline;">
                 <?php echo csrf_token_field(); ?>

@@ -16,7 +16,49 @@ require_role('admin');
 
 $error = '';
 $success = '';
+$mailStatus = '';
 $generated = [];
+
+if (!function_exists('generate_policy_compliant_temp_password')) {
+    function generate_policy_compliant_temp_password(int $length = 12): string
+    {
+        $minLength = 8;
+        $length = max($minLength, $length);
+
+        $upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $lower = 'abcdefghijkmnopqrstuvwxyz';
+        $numbers = '23456789';
+        $special = '!@#$%^&*()-_=+[]{}?';
+        $all = $upper . $lower . $numbers . $special;
+
+        $pick = static function (string $chars): string {
+            $idx = random_int(0, strlen($chars) - 1);
+            return $chars[$idx];
+        };
+
+        // Guarantee policy coverage: 1 uppercase, 1 lowercase, 1 number, 1 special.
+        $chars = [
+            $pick($upper),
+            $pick($lower),
+            $pick($numbers),
+            $pick($special),
+        ];
+
+        while (count($chars) < $length) {
+            $chars[] = $pick($all);
+        }
+
+        // Fisher-Yates shuffle with cryptographic randomness.
+        for ($i = count($chars) - 1; $i > 0; $i--) {
+            $j = random_int(0, $i);
+            $tmp = $chars[$i];
+            $chars[$i] = $chars[$j];
+            $chars[$j] = $tmp;
+        }
+
+        return implode('', $chars);
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!function_exists('require_csrf')) {
@@ -40,11 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid email address.';
     } else {
-        // Simulate temp credential creation
+        // Generate policy-compliant temporary credential password.
         try {
-            $tempPassword = substr(bin2hex(random_bytes(4)), 0, 8);
+            $tempPassword = generate_policy_compliant_temp_password(12);
         } catch (Exception $e) {
-            $tempPassword = 'tmp' . rand(1000,9999);
+            // Fallback that still complies with policy requirements.
+            $tempPassword = 'Temp@' . rand(1000, 9999) . 'aA';
         }
 
         $generated = [
@@ -56,6 +99,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         $success = 'Temporary credentials generated for approval.';
+
+        // Send temporary credentials email using shared mail setup.
+        $renderTemplate = static function ($template, array $vars = []) {
+            return strtr((string)$template, $vars);
+        };
+        $templatePath = PROJECT_ROOT . '/public/email_preview/temp_credentials_preview.html';
+        $defaultTemplate = '<h3>Your Temporary Login Credentials</h3><p>Hello {{full_name}},</p><p>Username: {{username}}</p><p>Temporary Password: {{temp_password}}</p><p>Role: {{role}}</p><p>Designation: {{subrole}}</p><p><a href="{{login_url}}">Open Login Page</a></p><p>Please change your password after first login.</p>';
+        $htmlTemplate = is_readable($templatePath) ? (string)file_get_contents($templatePath) : $defaultTemplate;
+        $loginUrl = rtrim(BASE_URL, '/') . PUBLIC_PATH_PREFIX . '/login.php';
+        $mailHtml = $renderTemplate($htmlTemplate, [
+            '{{full_name}}' => htmlspecialchars($generated['name'], ENT_QUOTES, 'UTF-8'),
+            '{{username}}' => htmlspecialchars($generated['username'], ENT_QUOTES, 'UTF-8'),
+            '{{temp_password}}' => htmlspecialchars($generated['password'], ENT_QUOTES, 'UTF-8'),
+            '{{role}}' => htmlspecialchars((string)$generated['role'], ENT_QUOTES, 'UTF-8'),
+            '{{subrole}}' => htmlspecialchars((string)($generated['subrole'] !== '' ? $generated['subrole'] : '-'), ENT_QUOTES, 'UTF-8'),
+            '{{login_url}}' => htmlspecialchars($loginUrl, ENT_QUOTES, 'UTF-8'),
+        ]);
+        $mailText = $renderTemplate(
+            "Hello {{full_name}},\n\nYour temporary credentials are below:\nUsername: {{username}}\nPassword: {{temp_password}}\nRole: {{role}}\nDesignation: {{subrole}}\n\nLogin: {{login_url}}\n\nPlease change your password after first login.",
+            [
+                '{{full_name}}' => (string)$generated['name'],
+                '{{username}}' => (string)$generated['username'],
+                '{{temp_password}}' => (string)$generated['password'],
+                '{{role}}' => (string)$generated['role'],
+                '{{subrole}}' => (string)($generated['subrole'] !== '' ? $generated['subrole'] : '-'),
+                '{{login_url}}' => $loginUrl,
+            ]
+        );
+
+        try {
+            $mailBootstrap = PROJECT_ROOT . '/public/mailer.php';
+            if (!is_readable($mailBootstrap)) {
+                throw new RuntimeException('Shared mail bootstrap is unavailable.');
+            }
+            $mail = require $mailBootstrap;
+            if (!($mail instanceof \PHPMailer\PHPMailer\PHPMailer)) {
+                throw new RuntimeException('Mailer instance could not be initialized.');
+            }
+
+            $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.in';
+            $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
+            $mail->clearAddresses();
+            $mail->setFrom($from, $fromName);
+            $mail->addAddress($email, $generated['name']);
+            $mail->isHTML(true);
+            $mail->Subject = 'Temporary Login Credentials - Ripal Design';
+            $mail->Body = $mailHtml;
+            $mail->AltBody = $mailText;
+            $mail->send();
+            $mailStatus = 'Temporary credentials email sent to ' . $email . '.';
+        } catch (Throwable $e) {
+            $mailStatus = 'Temporary credentials generated, but email could not be sent.';
+            if (function_exists('app_log')) {
+                app_log('warning', 'Temp credentials email failed', [
+                    'email' => $email,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 }
 ?>
@@ -107,6 +209,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="bg-approval-green/10 border-l-4 border-approval-green text-foundation-grey p-4 md:p-5 mb-6 md:mb-8 text-[12px] font-bold flex items-center gap-4" role="alert">
                         <i data-lucide="check-circle" class="w-5 h-5 text-approval-green shrink-0"></i>
                         <span><?php echo htmlspecialchars($success); ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($mailStatus): ?>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 text-foundation-grey p-4 md:p-5 mb-6 md:mb-8 text-[12px] font-bold flex items-center gap-4" role="status">
+                        <i data-lucide="mail" class="w-5 h-5 text-blue-500 shrink-0"></i>
+                        <span><?php echo htmlspecialchars($mailStatus); ?></span>
                     </div>
                 <?php endif; ?>
 

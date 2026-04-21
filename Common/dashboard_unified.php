@@ -228,7 +228,7 @@ if ($isAdmin) {
   }
 } else {
   $statCards = [
-    ['label' => 'Active Projects', 'value' => count($projects), 'icon' => 'layout'],
+    ['label' => 'Active Projects', 'value' => count($projects), 'icon' => 'layout-grid'],
     ['label' => 'Assigned Workers', 'value' => count($workers), 'icon' => 'users'],
     ['label' => 'Pending Approvals', 'value' => $pendingApprovals, 'icon' => 'check-square'],
     ['label' => 'Invoices Pending', 'value' => number_format($invoicePending, 0, '.', ','), 'icon' => 'indian-rupee'],
@@ -242,16 +242,20 @@ $mdCols = ($statCount >= 3) ? 3 : max(1, $statCount);
 $lgCols = ($statCount >= 4) ? 4 : max(1, $statCount);
 $statGridClasses = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-{$mdCols} lg:grid-cols-{$lgCols} gap-4 md:gap-6 mb-8 md:mb-12";
 
+$createHref = $sessionRole === 'client'
+  ? base_path('dashboard/dashboard.php')
+  : ($isAdmin ? base_path('admin/new_projects.php') : base_path('dashboard/project_details.php'));
+
 $actionCards = [
   ['label' => 'Profile', 'href' => base_path('dashboard/profile.php'), 'icon' => 'user'],
-  ['label' => ($sessionRole === 'client' ? 'Project Details (View)' : 'Create Project'), 'href' => ($sessionRole === 'client' ? base_path('dashboard/dashboard.php') : base_path('dashboard/project_details.php')), 'icon' => 'layout-grid'],
+  ['label' => ($sessionRole === 'client' ? 'Project Details (View)' : 'Create Project'), 'href' => $createHref, 'icon' => 'plus-square'],
   ['label' => ($sessionRole === 'client' ? 'Review Requests (View)' : 'Review Requests'), 'href' => base_path('dashboard/review_requests.php'), 'icon' => 'clipboard-list'],
 ];
 
   if ($isAdmin) {
     $actionCards[] = ['label' => 'User Controls', 'href' => base_path('admin/user_management.php'), 'icon' => 'user-cog'];
-    $actionCards[] = ['label' => 'Portfolio', 'href' => base_path('admin/project_management.php'), 'icon' => 'folder-kanban'];
-    $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-pen-line'];
+    $actionCards[] = ['label' => 'Portfolio', 'href' => base_path('admin/project_management.php'), 'icon' => 'folder'];
+    $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-text'];
     $actionCards[] = ['label' => 'Contact Manager', 'href' => base_path('admin/contact_messages.php'), 'icon' => 'mail'];
     $actionCards[] = ['label' => 'Vendors', 'href' => base_path('admin/entities.php?tab=vendors'), 'icon' => 'truck'];
     $actionCards[] = ['label' => 'Workers', 'href' => base_path('admin/entities.php?tab=workers'), 'icon' => 'users'];
@@ -275,6 +279,13 @@ if ($useWorkerProjectView) {
   <title><?php echo esc($title); ?></title>
   <?php $HEADER_MODE = 'dashboard';
   require_once __DIR__ . '/header.php'; ?>
+  <style>
+    /* Dashboard desktop: center main content with 10% side margins */
+    .dashboard-main { width: 100%; max-width: none !important; }
+    @media (min-width: 1024px) {
+      .dashboard-main { width: 80% !important; margin-left: 10% !important; margin-right: 10% !important; }
+    }
+  </style>
 </head>
 
 <body class="font-sans text-foundation-grey bg-canvas-white">
@@ -301,7 +312,7 @@ if ($useWorkerProjectView) {
       </div>
     </header>
 
-    <main class="flex-grow px-4 sm:px-6 lg:px-8 pb-10" style="width:80%; margin-left:10%; margin-right:10%;">
+    <main class="dashboard-main flex-grow px-4 sm:px-6 lg:px-8 pb-10">
       <div class="<?php echo $statGridClasses; ?>" data-stats-group>
         <?php foreach ($statCards as $card): ?>
           <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden" data-stat-card>

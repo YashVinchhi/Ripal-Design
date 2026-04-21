@@ -198,7 +198,7 @@ if (isset($_POST['signup'])) {
             if (is_readable(__DIR__ . '/mailer.php')) {
                 $mail = require __DIR__ . '/mailer.php';
             }
-                if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
+            if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
                 $mail->clearAddresses();
                 $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.in';
                 $fromName = $ct('signup_welcome_from_name', 'Ripal Design');
@@ -206,53 +206,38 @@ if (isset($_POST['signup'])) {
                 $mail->addAddress($email, $fullName);
                 $mail->isHTML(true);
                 $mail->Subject = $ct('signup_welcome_subject', 'Welcome to Ripal Design');
+                $loginUrl = BASE_URL . PUBLIC_PATH_PREFIX . '/login.php';
+                $safeFirstName = htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8');
+                $safeFullName = htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8');
+                $safeLoginUrl = htmlspecialchars($loginUrl, ENT_QUOTES, 'UTF-8');
 
-                $defaultWelcomeHtml = <<<'HTML'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Ripal Design</title>
-    <style>body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } img { -ms-interpolation-mode: bicubic; border: 0; height: auto; outline: none; text-decoration: none; }</style>
-</head>
-<body style="font-family: Inter, Arial, sans-serif; background:#f4f4f5; padding:20px;">
-    <div style="max-width:600px;margin:auto;background:#fff;padding:24px;border-radius:8px;">
-        <h2 style="color:#731209;">Thanks for registering</h2>
-        <p>Hi [User Name],</p>
-        <p>Your account has been created successfully and is now active.</p>
-        <p>You can <a href="{{login_link}}">log in</a> any time to access your dashboard.</p>
-        <p style="margin-top:24px;">— The Ripal Design Team</p>
-    </div>
-</body>
-</html>
-HTML;
+                $welcomeHtml = function_exists('public_content_get_html')
+                    ? public_content_get_html(
+                        'login_register',
+                        'signup_welcome_html',
+                        '<h3>Registration Successful</h3><p>Hi {{first_name}},</p><p>Your account was created successfully. You can now log in and start using Ripal Design.</p><p><a href="{{login_url}}">Login to your account</a></p>'
+                    )
+                    : $ct(
+                        'signup_welcome_html',
+                        '<h3>Registration Successful</h3><p>Hi {{first_name}},</p><p>Your account was created successfully. You can now log in and start using Ripal Design.</p><p><a href="{{login_url}}">Login to your account</a></p>'
+                    );
 
-                // Prefer the shared welcome preview template for outgoing welcome emails.
-                $templatePath = __DIR__ . '/email_preview/welcome_preview.html';
-                if (is_readable($templatePath)) {
-                    $tpl = file_get_contents($templatePath);
-                    $marker = '<!-- Begin rendered email -->';
-                    if (false !== ($pos = strpos($tpl, $marker))) {
-                        $emailHtml = substr($tpl, $pos + strlen($marker));
-                    } else {
-                        $emailHtml = $tpl;
-                    }
-                    $mail->Body = $renderTemplate($emailHtml, [
-                        '{{login_link}}' => htmlspecialchars((BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'), ENT_QUOTES, 'UTF-8'),
-                        '{{first_name}}' => htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8'),
-                        '{{full_name}}' => htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'),
-                    ]);
-                } else {
-                    // Fallback to embedded default if template missing
-                    $mail->Body = $renderTemplate($defaultWelcomeHtml, [
-                        '{{login_link}}' => htmlspecialchars((BASE_URL . PUBLIC_PATH_PREFIX . '/login.php'), ENT_QUOTES, 'UTF-8'),
-                        '[User Name]' => htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'),
-                    ]);
-                }
+                $mail->Body = $renderTemplate($welcomeHtml, [
+                    '{{first_name}}' => $safeFirstName,
+                    '{{full_name}}' => $safeFullName,
+                    '{{user_name}}' => $safeFullName,
+                    '{{login_url}}' => $safeLoginUrl,
+                    '{{login_link}}' => $safeLoginUrl,
+                    '[User Name]' => $safeFullName,
+                ]);
 
-                $mail->AltBody = $renderTemplate($ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created successfully and is now active.'), [
+                $mail->AltBody = $renderTemplate($ct('signup_welcome_alt', 'Hi {{first_name}}, your account was created successfully. Login at {{login_url}}'), [
                     '{{first_name}}' => $first_name,
+                    '{{full_name}}' => $fullName,
+                    '{{user_name}}' => $fullName,
+                    '{{login_url}}' => $loginUrl,
+                    '{{login_link}}' => $loginUrl,
+                    '[User Name]' => $fullName,
                 ]);
 
                 try {

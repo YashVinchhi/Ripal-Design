@@ -62,7 +62,11 @@ unset($_SESSION['hero_cta_success'], $_SESSION['hero_cta_error']);
 <body>
     <div class="grain"></div>
 
-    <?php $HEADER_MODE = 'public';
+    <?php
+    // Dynamic title/meta for header include
+    $pageTitle = $ct('page_title', 'Home') . ' | Ripal Design';
+    $metaDesc = $ct('meta_description', 'Precision in every measurement. Excellence in every build.');
+    $HEADER_MODE = 'public';
     require_once __DIR__ . '/../app/Ui/header.php'; ?>
 
     <main>

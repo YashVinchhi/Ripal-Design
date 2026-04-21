@@ -56,6 +56,13 @@ if ($db instanceof PDO) {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Vendors | Ripal Design</title>
   <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; ?>
+  <style>
+    /* Make main content use 80% width on desktop with 10% margins */
+    .page-80 { width: 100%; max-width: none !important; }
+    @media (min-width: 768px) {
+      .page-80 { width: 80% !important; margin-left: 10% !important; margin-right: 10% !important; }
+    }
+  </style>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   <div class="min-h-screen flex flex-col">
@@ -66,7 +73,7 @@ if ($db instanceof PDO) {
       </div>
     </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 page-80">
       <?php if ($message !== ''): ?>
         <div class="mb-6 bg-approval-green/10 border border-approval-green/30 text-approval-green px-4 py-3 text-xs font-bold uppercase tracking-wider"><?php echo esc($message); ?></div>
       <?php endif; ?>

@@ -47,7 +47,7 @@ if (!$project) {
 // Normalize DB rows to template keys.
 $project['address'] = $project['address'] ?? ($project['location'] ?? '');
 $project['area'] = $project['area'] ?? 'N/A';
-$project['budget'] = isset($project['budget']) ? ('â‚¹ ' . number_format((float)$project['budget'], 0, '.', ',')) : 'â‚¹ 0';
+$project['budget'] = isset($project['budget']) ? ('₹ ' . number_format((float)$project['budget'], 0, '.', ',')) : '₹ 0';
 $project['lat'] = $project['latitude'] ?? null;
 $project['lng'] = $project['longitude'] ?? null;
 

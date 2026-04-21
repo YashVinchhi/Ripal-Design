@@ -1112,11 +1112,24 @@ if ($pdo instanceof PDO) {
 </head>
 
 <body
-    class="bg-canvas-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
+    class="project-details-sharp bg-canvas-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300">
 
     <?php
+    // Dynamic title/meta for project page
+    $pageTitle = ($project && !empty($project['name'])) ? ($project['name'] . ' | Project Details | Ripal Design') : 'Project Details | Ripal Design';
+    $metaDesc = ($project && !empty($project['description'])) ? substr(trim((string)$project['description']), 0, 155) : 'Project details and progress for ' . ($project['name'] ?? 'this project') . '.';
     $HEADER_MODE = 'dashboard';
     require_once PROJECT_ROOT . '/Common/header.php';
+    ?>
+    <style>
+        /* Force sharp corners on project details page (applies after header styles) */
+        .project-details-sharp *,
+        .project-details-sharp *::before,
+        .project-details-sharp *::after {
+            border-radius: 0 !important;
+        }
+    </style>
+    <?php
     ?>
 
     <?php if ($error): ?>
@@ -1352,22 +1365,7 @@ if ($pdo instanceof PDO) {
                                                     <?php endif; ?>
                                                 </p>
                                                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Click the info button to reveal map preview.</p>
-                                            <!-- SEO Fields -->
-                                            <div class="mt-6">
-                                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">SEO</h3>
-                                                <div class="space-y-3">
-                                                    <div>
-                                                        <label class="text-[10px] font-bold text-slate-400 uppercase">SEO Title (optional)</label>
-                                                        <input type="text" name="seo_title" value="<?php echo htmlspecialchars($project['seo_title'] ?? ''); ?>" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary">
-                                                        <p class="text-xs text-slate-500 mt-1">If set, this will override the public page title.</p>
-                                                    </div>
-                                                    <div>
-                                                        <label class="text-[10px] font-bold text-slate-400 uppercase">Meta Description <span id="metaCount" class="text-xs text-slate-500">(0)</span></label>
-                                                        <textarea name="meta_description" id="metaDescription" rows="3" required class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded text-sm focus:ring-primary focus:border-primary"><?php echo htmlspecialchars($project['meta_description'] ?? ''); ?></textarea>
-                                                        <p class="text-xs text-slate-500 mt-1">Required. Recommended length 120–160 characters.</p>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <!-- SEO Fields removed as requested -->
                                             </div>
                                             <button
                                                 type="button"
@@ -2106,6 +2104,7 @@ if ($pdo instanceof PDO) {
                 // Show corresponding content
                 const tabName = this.getAttribute('data-tab');
                 document.getElementById(tabName + '-tab').classList.add('active');
+                try{ if(typeof gtag === 'function'){ gtag('event','section_view', {'section': tabName}); } }catch(e){}
             });
         });
 

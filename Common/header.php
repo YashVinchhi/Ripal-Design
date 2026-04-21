@@ -71,6 +71,26 @@ if (function_exists('current_user')) {
 
 // Render common HTML head assets
 ?>
+    <!-- Dynamic page title -->
+    <title><?php echo htmlspecialchars($pageTitle ?? 'Ripal Design - Architecture & Project Management'); ?></title>
+
+    <!-- Dynamic meta description -->
+    <meta name="description" content="<?php echo htmlspecialchars($metaDesc ?? 'Ripal Design — architecture and project management for design firms.'); ?>">
+
+    <!-- Canonical URL (strip query string to avoid duplicate content) -->
+    <?php
+    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    $canonical = $proto . '://' . $host . $path;
+    ?>
+    <link rel="canonical" href="<?php echo esc_attr($canonical); ?>">
+
+    <!-- Analytics include (GA4 + Clarity placeholders) - disabled in development -->
+    <?php if (!defined('APP_ENV') || APP_ENV !== 'development') {
+        if (file_exists(__DIR__ . '/analytics.php')) { include __DIR__ . '/analytics.php'; }
+    } ?>
+
 <!-- Common Stylesheets and Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

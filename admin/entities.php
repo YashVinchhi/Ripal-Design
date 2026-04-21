@@ -111,6 +111,13 @@ if ($db instanceof PDO) {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Entities | Ripal Design</title>
   <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; ?>
+  <style>
+    /* Make main content use 80% width on desktop with 10% margins */
+    .page-80 { width: 100%; max-width: none !important; }
+    @media (min-width: 768px) {
+      .page-80 { width: 80% !important; margin-left: 10% !important; margin-right: 10% !important; }
+    }
+  </style>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
   <div class="min-h-screen flex flex-col">
@@ -121,7 +128,7 @@ if ($db instanceof PDO) {
       </div>
     </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 page-80">
       <?php if ($message): ?><div class="mb-6 bg-approval-green/10 border border-approval-green/30 text-approval-green px-4 py-3 text-xs font-bold uppercase tracking-wider"><?php echo esc($message); ?></div><?php endif; ?>
       <?php if ($error): ?><div class="mb-6 bg-red-50 border border-rajkot-rust text-rajkot-rust px-4 py-3 text-xs font-bold uppercase tracking-wider"><?php echo esc($error); ?></div><?php endif; ?>
 
@@ -139,24 +146,24 @@ if ($db instanceof PDO) {
             </div>
 
             <div id="vendor_fields">
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Vendor Name</label><input name="name" class="w-full p-3 border"></div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Contact Name</label><input name="contact_name" class="w-full p-3 border"></div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Phone</label><input name="phone" class="w-full p-3 border"></div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Email</label><input name="email" class="w-full p-3 border" type="email"></div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Category</label>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Vendor Name</label><input name="name" class="w-full p-3 border"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Contact Name</label><input name="contact_name" class="w-full p-3 border"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Phone</label><input name="phone" class="w-full p-3 border"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Email</label><input name="email" class="w-full p-3 border" type="email"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Category</label>
                 <select name="category_id" class="w-full p-3 border">
                   <option value="">-- none --</option>
                   <?php foreach ($categories as $c): ?><option value="<?php echo (int)$c['id']; ?>"><?php echo esc($c['name']); ?></option><?php endforeach; ?>
                 </select>
               </div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Notes</label><textarea name="notes" class="w-full p-3 border"></textarea></div>
+              <div class="mb-3 full"><label class="block text-sm font-bold mb-1">Notes</label><textarea name="notes" class="w-full p-3 border"></textarea></div>
             </div>
 
             <div id="worker_fields" style="display:none;">
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">First Name</label><input name="first_name" class="w-full p-3 border"></div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Last Name</label><input name="last_name" class="w-full p-3 border"></div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Email</label><input name="email" class="w-full p-3 border" type="email"></div>
-              <div class="mb-3"><label class="block text-sm font-bold mb-1">Phone</label><input name="phone" class="w-full p-3 border"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">First Name</label><input name="first_name" class="w-full p-3 border"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Last Name</label><input name="last_name" class="w-full p-3 border"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Email</label><input name="email" class="w-full p-3 border" type="email"></div>
+              <div class="mb-3 two-col"><label class="block text-sm font-bold mb-1">Phone</label><input name="phone" class="w-full p-3 border"></div>
             </div>
 
             <div class="mt-4"><button type="submit" class="bg-foundation-grey text-white px-6 py-3 font-bold">Add</button></div>
