@@ -81,11 +81,11 @@ $HEADER_MODE = 'dashboard';
                     <p class="text-[11px] mt-2 uppercase tracking-widest text-gray-300">Showing <?php echo count($messages); ?> messages</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <a href="?export=csv" class="inline-flex items-center gap-2 bg-white text-foundation-grey px-3 py-2 rounded border hover:shadow-sm no-underline">
+                    <a href="?export=csv" class="inline-flex items-center gap-2 bg-white text-foundation-grey px-3 py-2 rounded-none border hover:shadow-sm no-underline">
                         <i data-lucide="download" class="w-4 h-4"></i>
                         Export CSV
                     </a>
-                    <a href="<?php echo esc_attr(base_path('admin/content_management.php')); ?>" class="inline-flex items-center gap-2 bg-rajkot-rust text-white px-3 py-2 rounded no-underline">Admin Home</a>
+                    <a href="<?php echo esc_attr(base_path('admin/content_management.php')); ?>" class="inline-flex items-center gap-2 bg-rajkot-rust text-white px-3 py-2 rounded-none no-underline">Admin Home</a>
                 </div>
             </div>
         </header>
@@ -97,7 +97,7 @@ $HEADER_MODE = 'dashboard';
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex-1 pr-4">
                         <label for="searchInput" class="sr-only">Search messages</label>
-                        <input id="searchInput" type="search" placeholder="Search by name, email, subject or message..." class="w-full border border-gray-200 rounded px-3 py-2" />
+                        <input id="searchInput" type="search" placeholder="Search by name, email, subject or message..." class="w-full border border-gray-200 rounded-none px-3 py-2" />
                     </div>
                     <div class="flex-shrink-0">
                         <span class="text-sm text-gray-500">Total: <strong class="text-foundation-grey"><?php echo count($messages); ?></strong></span>

@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $body .= "Regards,\nRipal Design";
 
         // Default from values (can be overridden by env). Fallback to a no-reply sender.
-        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.in');
+        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.studio');
         $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
 
         $sent = false;

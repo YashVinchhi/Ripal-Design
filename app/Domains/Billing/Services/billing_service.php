@@ -345,7 +345,7 @@ if (!function_exists('billing_send_invoice_email')) {
             'Total: ' . number_format((float)$ctx['total'], 2) . PHP_EOL .
             'View and pay online: ' . (string)$ctx['share_url'];
 
-        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.in');
+        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.studio');
         $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
 
         $sent = false;
@@ -611,7 +611,7 @@ if (!function_exists('billing_send_invoice_email')) {
             'Total: ' . number_format((float)$ctx['total'], 2) . PHP_EOL .
             'View and pay online: ' . (string)$ctx['share_url'];
 
-        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.in');
+        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.studio');
         $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
 
         $sent = false;

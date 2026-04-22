@@ -399,6 +399,45 @@ body.auth-page::before {
     color: var(--accent-strong);
 }
 
+/* Password checklist styles */
+.password-checklist {
+    margin-top: 0.5rem;
+}
+.password-checklist ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.35rem;
+}
+.password-checklist li {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.65);
+    padding-left: 1.6rem;
+    position: relative;
+}
+.password-checklist li::before {
+    content: "\2713";
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateY(0);
+    width: 1.2rem;
+    height: 1.2rem;
+    line-height: 1.2rem;
+    text-align: center;
+    border-radius: 0.25rem;
+    background: rgba(255,255,255,0.06);
+    color: transparent;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+.password-checklist li.met::before {
+    background: var(--accent-strong);
+    color: #fff;
+}
+.password-checklist li.met { color: #ffffff; opacity: 0.95 }
+.password-checklist li.unmet { color: rgba(255,255,255,0.65); opacity: 0.9 }
+
 .btn-1 {
     width: 100%;
     border: none;

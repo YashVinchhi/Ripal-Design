@@ -96,7 +96,7 @@ try {
         $mailer = new PHPMailer\PHPMailer\PHPMailer(true);
         $configured = function_exists('configure_mailer') ? configure_mailer($mailer) : false;
 
-        $mailer->setFrom(getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@ripaldesign.in', getenv('MAIL_FROM_NAME') ?: 'Ripal Design');
+        $mailer->setFrom(getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@ripaldesign.studio', getenv('MAIL_FROM_NAME') ?: 'Ripal Design');
         $mailer->addAddress($email, $name);
         $mailer->isHTML(true);
         $mailer->Subject = $mailSubject;
@@ -112,7 +112,7 @@ try {
         $headers = [];
         $headers[] = 'MIME-Version: 1.0';
         $headers[] = 'Content-type: text/html; charset=UTF-8';
-        $headers[] = 'From: Ripal Design <no-reply@ripaldesign.in>';
+        $headers[] = 'From: Ripal Design <no-reply@ripaldesign.studio>';
 
         $confirmationSent = mail($email, $mailSubject, $mailBodyHtml, implode("\r\n", $headers));
     }

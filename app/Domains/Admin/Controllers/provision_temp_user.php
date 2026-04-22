@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('Mailer instance could not be initialized.');
             }
 
-            $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.in';
+            $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.studio';
             $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
             $mail->clearAddresses();
             $mail->setFrom($from, $fromName);
@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label for="email" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
                         <input id="email" name="email" type="email" required
                             class="w-full px-4 py-3 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium" 
-                            placeholder="user@ripaldesign.in">
+                            placeholder="user@ripaldesign.studio">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">

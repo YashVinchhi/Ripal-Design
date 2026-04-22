@@ -330,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </label>
                         <input type="email" id="email" name="email" required
                             class="w-full px-5 py-3 md:py-4 bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium"
-                            placeholder="user@ripaldesign.in"
+                            placeholder="user@ripaldesign.studio"
                             value="<?php echo htmlspecialchars($form['email']); ?>">
                     </div>
 

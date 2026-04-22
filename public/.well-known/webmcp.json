@@ -3,7 +3,7 @@
   "name": "Ripal Design Architecture",
   "description": "AI-accessible tools for exploring Ripal Design's architecture portfolio and requesting consultations",
   "tools_page": "/",
-  "contact": "projects@ripaldesign.in",
+  "contact": "projects@ripaldesign.studio",
   "capabilities": ["portfolio", "search", "project-team", "role-actions", "consultation-booking"],
   "read_only_by_default": true,
   "requires_user_consent_for": ["request_consultation"]

@@ -57,6 +57,7 @@ require_once __DIR__ . '/../app/Ui/header.php';
   <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/login.css'); ?>">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
   <script src="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/js/validation.js'); ?>" defer></script>
+  <script src="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/js/password-checklist.js'); ?>" defer></script>
 
   <main class="auth-main auth-main-public">
     <section class="auth-card-wrap" aria-labelledby="loginTitle">
@@ -82,6 +83,15 @@ require_once __DIR__ . '/../app/Ui/header.php';
                 <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
               </button>
 
+            </div>
+            <div id="passwordChecklist" class="password-checklist" aria-live="polite">
+              <ul>
+                <li data-check="length" class="unmet">Password is at least 8 characters</li>
+                <li data-check="uppercase" class="unmet">Contains an uppercase letter (A-Z)</li>
+                <li data-check="lowercase" class="unmet">Contains a lowercase letter (a-z)</li>
+                <li data-check="number" class="unmet">Contains a number (0-9)</li>
+                <li data-check="special" class="unmet">Contains a special character (e.g. !@#$%)</li>
+              </ul>
             </div>
             <span id="password_error" class="text-danger"></span>
           </div>

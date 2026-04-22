@@ -50,8 +50,8 @@ if ($viewMode === 'archive') {
                 </span>`;
             }
             
-            const notification = document.createElement('div');
-            notification.className = `fixed bottom-8 right-8 ${color} text-white px-8 py-4 shadow-2xl z-50 rounded-lg border-b-4 border-black/20 animate-bounce-in`;
+                  const notification = document.createElement('div');
+                  notification.className = `fixed bottom-8 right-8 ${color} text-white px-8 py-4 shadow-2xl z-50 rounded-none border-b-4 border-black/20 animate-bounce-in`;
             notification.innerHTML = `<p class="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Registry Updated</p><p class="text-sm"><b>${employeeName}</b> is ${action}.</p>`;
             document.body.appendChild(notification);
             
@@ -106,36 +106,36 @@ if ($viewMode === 'archive') {
 
     <!-- Summary Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-t-4 border-t-amber-500">
+      <div class="bg-white p-6 rounded-none shadow-sm border border-gray-100 border-t-4 border-t-amber-500">
         <div class="flex justify-between items-start">
           <div>
             <p class="text-sm text-gray-400 uppercase tracking-wider font-semibold">Pending</p>
             <p class="text-2xl font-bold text-foundation-grey mt-1"><?php echo (int)$leaveStats['pending']; ?></p>
           </div>
-          <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
+          <div class="p-2 bg-amber-50 rounded-none text-amber-600">
             <i class="bi bi-hourglass-split text-xl"></i>
           </div>
         </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-t-4 border-t-green-600">
+      <div class="bg-white p-6 rounded-none shadow-sm border border-gray-100 border-t-4 border-t-green-600">
         <div class="flex justify-between items-start">
           <div>
             <p class="text-sm text-gray-400 uppercase tracking-wider font-semibold">Approved</p>
             <p class="text-2xl font-bold text-foundation-grey mt-1"><?php echo (int)$leaveStats['approved']; ?></p>
           </div>
-          <div class="p-2 bg-green-50 rounded-lg text-green-600">
+          <div class="p-2 bg-green-50 rounded-none text-green-600">
             <i class="bi bi-check-circle text-xl"></i>
           </div>
         </div>
         <p class="text-[10px] text-green-600 font-medium mt-2">This month</p>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-t-4 border-t-rajkot-rust">
+      <div class="bg-white p-6 rounded-none shadow-sm border border-gray-100 border-t-4 border-t-rajkot-rust">
         <div class="flex justify-between items-start">
           <div>
             <p class="text-sm text-gray-400 uppercase tracking-wider font-semibold">On Leave Today</p>
             <p class="text-2xl font-bold text-foundation-grey mt-1"><?php echo (int)$leaveStats['on_leave']; ?></p>
           </div>
-          <div class="p-2 bg-red-50 rounded-lg text-rajkot-rust">
+          <div class="p-2 bg-red-50 rounded-none text-rajkot-rust">
             <i class="bi bi-calendar-event text-xl"></i>
           </div>
         </div>
@@ -143,7 +143,7 @@ if ($viewMode === 'archive') {
     </div>
 
     <!-- Table Container -->
-    <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+    <div class="bg-white shadow-sm border border-gray-100 rounded-none overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
         <h2 class="font-bold text-foundation-grey"><?php echo $viewMode === 'archive' ? 'Archived Requests' : 'Recent Requests'; ?></h2>
         <div class="flex gap-2">
@@ -171,10 +171,10 @@ if ($viewMode === 'archive') {
               $status = strtolower((string)($lr['status'] ?? 'pending'));
               $statusClass = $status === 'approved' ? 'bg-green-50 text-green-700 border border-green-100' : ($status === 'rejected' ? 'bg-red-50 text-red-700 border border-red-100' : ($status === 'on_leave' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-600 border border-amber-100'));
             ?>
-            <tr class="hover:bg-gray-50 transition block md:table-row mb-4 md:mb-0 border md:border-0 rounded-lg md:rounded-none bg-white md:bg-transparent">
+            <tr class="hover:bg-gray-50 transition block md:table-row mb-4 md:mb-0 border md:border-0 rounded-none md:rounded-none bg-white md:bg-transparent">
               <td class="px-6 py-4 block md:table-cell" data-label="Employee">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs"><?php echo htmlspecialchars($initials); ?></div>
+                  <div class="w-9 h-9 rounded-none bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs"><?php echo htmlspecialchars($initials); ?></div>
                   <div>
                     <p class="font-medium text-foundation-grey text-sm"><?php echo htmlspecialchars($employeeName); ?></p>
                     <p class="text-[10px] text-gray-400"><?php echo htmlspecialchars((string)($lr['role'] ?? '')); ?></p>
@@ -182,7 +182,7 @@ if ($viewMode === 'archive') {
                 </div>
               </td>
               <td class="px-6 py-4 block md:table-cell" data-label="Type">
-                 <span class="text-xs font-medium text-gray-600 px-2 py-0.5 bg-gray-100 rounded border border-gray-200"><?php echo htmlspecialchars((string)($lr['leave_type'] ?? '')); ?></span>
+                 <span class="text-xs font-medium text-gray-600 px-2 py-0.5 bg-gray-100 rounded-none border border-gray-200"><?php echo htmlspecialchars((string)($lr['leave_type'] ?? '')); ?></span>
               </td>
               <td class="px-6 py-4 block md:table-cell" data-label="Dates">
                 <p class="text-xs text-foundation-grey font-medium"><?php echo htmlspecialchars((string)($lr['start_date'] ?? '')); ?> - <?php echo htmlspecialchars((string)($lr['end_date'] ?? '')); ?></p>
@@ -191,7 +191,7 @@ if ($viewMode === 'archive') {
                 <p class="text-xs text-gray-500 max-w-xs truncate md:max-w-none md:whitespace-normal"><?php echo htmlspecialchars((string)($lr['reason'] ?? '')); ?></p>
               </td>
               <td class="px-6 py-4 block md:table-cell" data-label="Status">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase <?php echo htmlspecialchars($statusClass); ?>">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[10px] font-bold uppercase <?php echo htmlspecialchars($statusClass); ?>">
                   <?php echo htmlspecialchars($status); ?>
                 </span>
               </td>
@@ -202,7 +202,7 @@ if ($viewMode === 'archive') {
                     <?php echo csrf_token_field(); ?>
                     <input type="hidden" name="leave_id" value="<?php echo (int)$lr['id']; ?>">
                     <input type="hidden" name="status" value="approved">
-                    <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded bg-green-600 text-white flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 hover:bg-green-700 transition active:scale-95" title="Approve">
+                    <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded-none bg-green-600 text-white flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 hover:bg-green-700 transition active:scale-95" title="Approve">
                       <i class="bi bi-check-lg text-lg md:text-base"></i>
                     </button>
                   </form>
@@ -210,7 +210,7 @@ if ($viewMode === 'archive') {
                     <?php echo csrf_token_field(); ?>
                     <input type="hidden" name="leave_id" value="<?php echo (int)$lr['id']; ?>">
                     <input type="hidden" name="status" value="rejected">
-                    <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded bg-rajkot-rust text-white flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 hover:bg-red-800 transition active:scale-95" title="Reject">
+                    <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded-none bg-rajkot-rust text-white flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 hover:bg-red-800 transition active:scale-95" title="Reject">
                       <i class="bi bi-x-lg text-lg md:text-base"></i>
                     </button>
                   </form>

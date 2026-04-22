@@ -180,7 +180,7 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
                         </div>
                         <div>
                             <h4 class="text-white text-lg font-medium mb-1"><?php echo esc($ct('contact_heading', 'Contact')); ?></h4>
-                            <p><?php echo esc($ct('contact_phone', '+91 94267 89012')); ?><br><?php echo esc($ct('contact_email', 'projects@ripaldesign.in')); ?></p>
+                            <p><?php echo esc($ct('contact_phone', '+91 94267 89012')); ?><br><?php echo esc($ct('contact_email', 'projects@ripaldesign.studio')); ?></p>
                         </div>
                         <div>
                             <h4 class="text-white text-lg font-medium mb-1"><?php echo esc($ct('social_heading', 'Social')); ?></h4>

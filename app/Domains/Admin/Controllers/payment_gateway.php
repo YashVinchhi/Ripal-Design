@@ -327,15 +327,15 @@ $statusClass = static function (string $status): string {
         <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
             <div class="bg-white p-5 border border-gray-100 shadow-premium">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Total Invoiced</p>
-                <p class="text-xl font-serif font-bold mt-2">$<?php echo number_format($invoiceTotals['invoiced'], 2); ?></p>
+                <p class="text-xl font-serif font-bold mt-2">₹<?php echo number_format($invoiceTotals['invoiced'], 2); ?></p>
             </div>
             <div class="bg-white p-5 border border-gray-100 shadow-premium">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Collected</p>
-                <p class="text-xl font-serif font-bold mt-2 text-approval-green">$<?php echo number_format($invoiceTotals['collected'], 2); ?></p>
+                <p class="text-xl font-serif font-bold mt-2 text-approval-green">₹<?php echo number_format($invoiceTotals['collected'], 2); ?></p>
             </div>
             <div class="bg-white p-5 border border-gray-100 shadow-premium">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Outstanding</p>
-                <p class="text-xl font-serif font-bold mt-2 text-pending-amber">$<?php echo number_format($invoiceTotals['outstanding'], 2); ?></p>
+                <p class="text-xl font-serif font-bold mt-2 text-pending-amber">₹<?php echo number_format($invoiceTotals['outstanding'], 2); ?></p>
             </div>
             <div class="bg-white p-5 border border-gray-100 shadow-premium">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Overdue</p>
@@ -347,7 +347,7 @@ $statusClass = static function (string $status): string {
             </div>
             <div class="bg-white p-5 border border-gray-100 shadow-premium">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Goods Catalog Value</p>
-                <p class="text-xl font-serif font-bold mt-2">$<?php echo number_format($totalGoodsCatalog, 2); ?></p>
+                <p class="text-xl font-serif font-bold mt-2">₹<?php echo number_format($totalGoodsCatalog, 2); ?></p>
             </div>
         </section>
 
@@ -422,11 +422,11 @@ $statusClass = static function (string $status): string {
                                     <p class="font-semibold text-foundation-grey"><?php echo esc((string)$p['name']); ?></p>
                                     <p class="text-xs text-gray-400"><?php echo esc((string)$p['client_name']); ?></p>
                                 </td>
-                                <td class="px-4 py-4" data-label="Budget">$<?php echo number_format((float)$p['budget'], 2); ?></td>
-                                <td class="px-4 py-4" data-label="Goods">$<?php echo number_format((float)$p['goods_total'], 2); ?></td>
-                                <td class="px-4 py-4" data-label="Invoiced">$<?php echo number_format((float)$p['total_invoiced'], 2); ?></td>
-                                <td class="px-4 py-4 text-approval-green font-semibold" data-label="Collected">$<?php echo number_format((float)$p['total_collected'], 2); ?></td>
-                                <td class="px-4 py-4 text-pending-amber font-semibold" data-label="Open">$<?php echo number_format($open, 2); ?></td>
+                                <td class="px-4 py-4" data-label="Budget">₹<?php echo number_format((float)$p['budget'], 2); ?></td>
+                                <td class="px-4 py-4" data-label="Goods">₹<?php echo number_format((float)$p['goods_total'], 2); ?></td>
+                                <td class="px-4 py-4" data-label="Invoiced">₹<?php echo number_format((float)$p['total_invoiced'], 2); ?></td>
+                                <td class="px-4 py-4 text-approval-green font-semibold" data-label="Collected">₹<?php echo number_format((float)$p['total_collected'], 2); ?></td>
+                                <td class="px-4 py-4 text-pending-amber font-semibold" data-label="Open">₹<?php echo number_format($open, 2); ?></td>
                                 <td class="px-6 py-4 text-right" data-label="Action">
                                     <a href="<?php echo esc_attr($goodsInvoiceLink); ?>" class="text-xs uppercase tracking-widest font-bold text-rajkot-rust hover:text-red-700">Goods Invoice</a>
                                 </td>
@@ -442,7 +442,7 @@ $statusClass = static function (string $status): string {
             <div class="px-6 md:px-8 py-5 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <h2 class="text-sm font-bold uppercase tracking-[0.3em] text-foundation-grey">Invoice Lifecycle Registry</h2>
                 <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <input id="invoiceSearch" type="search" placeholder="Search by invoice, project, client" class="w-full sm:w-72 border border-gray-200 px-3 py-2 text-xs outline-none focus:border-rajkot-rust">
+                    <input id="invoiceSearch" type="search" placeholder="Search by invoice, project, client" class="w-full sm:w-72 border border-gray-200 rounded-none px-3 py-2 text-xs outline-none focus:border-rajkot-rust">
                     <select id="invoiceStatusFilter" class="border border-gray-200 px-3 py-2 text-xs outline-none focus:border-rajkot-rust bg-white min-w-[170px]">
                         <option value="all">All Statuses</option>
                         <option value="issued">Issued</option>
@@ -501,9 +501,9 @@ $statusClass = static function (string $status): string {
                                     <div><?php echo esc((string)($inv['client_name'] ?? 'Client')); ?></div>
                                     <div class="text-xs text-gray-400"><?php echo esc((string)($inv['client_email'] ?? '')); ?></div>
                                 </td>
-                                <td class="px-4 py-4 font-semibold" data-label="Total">$<?php echo number_format($invTotal, 2); ?></td>
-                                <td class="px-4 py-4 text-approval-green font-semibold" data-label="Paid">$<?php echo number_format($invPaid, 2); ?></td>
-                                <td class="px-4 py-4 text-pending-amber font-semibold" data-label="Outstanding">$<?php echo number_format($invOut, 2); ?></td>
+                                <td class="px-4 py-4 font-semibold" data-label="Total">₹<?php echo number_format($invTotal, 2); ?></td>
+                                <td class="px-4 py-4 text-approval-green font-semibold" data-label="Paid">₹<?php echo number_format($invPaid, 2); ?></td>
+                                <td class="px-4 py-4 text-pending-amber font-semibold" data-label="Outstanding">₹<?php echo number_format($invOut, 2); ?></td>
                                 <td class="px-4 py-4" data-label="Due"><?php echo !empty($inv['due_date']) ? esc((string)$inv['due_date']) : 'N/A'; ?></td>
                                 <td class="px-4 py-4" data-label="Status"><span class="text-[10px] uppercase tracking-widest font-bold <?php echo esc_attr($statusClass($invStatus)); ?>"><?php echo esc(strtoupper($invStatus)); ?></span></td>
                                 <td class="px-6 py-4" data-label="Operations">
@@ -584,7 +584,7 @@ $statusClass = static function (string $status): string {
                                 </td>
                                 <td class="px-4 py-4" data-label="Invoice"><?php echo esc((string)($pay['invoice_code'] ?? '-')); ?></td>
                                 <td class="px-4 py-4" data-label="Project"><?php echo esc((string)($pay['project_name'] ?? '-')); ?></td>
-                                <td class="px-4 py-4 font-semibold" data-label="Amount">$<?php echo number_format($amount, 2); ?> <?php echo esc((string)$pay['currency']); ?></td>
+                                <td class="px-4 py-4 font-semibold" data-label="Amount">₹<?php echo number_format($amount, 2); ?> <?php echo esc((string)$pay['currency']); ?></td>
                                 <td class="px-4 py-4" data-label="Status"><span class="text-[10px] uppercase tracking-widest font-bold <?php echo esc_attr($statusClass((string)($pay['status'] ?? 'created'))); ?>"><?php echo esc(strtoupper((string)($pay['status'] ?? 'created'))); ?></span></td>
                                 <td class="px-6 py-4 text-xs text-gray-500" data-label="Time"><?php echo esc(date('M d, Y H:i', strtotime((string)$pay['created_at']))); ?></td>
                             </tr>

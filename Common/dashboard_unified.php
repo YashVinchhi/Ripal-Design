@@ -299,12 +299,12 @@ if ($useWorkerProjectView) {
         </div>
         <a href="<?php echo esc_attr($profileUrl); ?>" aria-label="Open profile settings" title="Open Profile" class="no-underline">
           <?php if ($sessionAvatar !== ''): ?>
-            <div class="w-12 h-12 rounded-full overflow-hidden shadow-inner" style="display:inline-block;">
+            <div class="w-12 h-12 rounded-none overflow-hidden shadow-inner" style="display:inline-block;">
               <img src="<?php echo esc_attr($sessionAvatar); ?>" alt="Avatar" class="w-12 h-12 object-cover block" onerror="this.style.display='none'; document.getElementById('dashProfileInitials').style.display='flex';">
-              <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg text-white" style="display:none;"><?php echo esc($userInitials); ?></div>
+              <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-none flex items-center justify-center font-bold text-lg text-white" style="display:none;"><?php echo esc($userInitials); ?></div>
             </div>
           <?php else: ?>
-            <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-full flex items-center justify-center font-bold text-lg shadow-inner no-underline text-white hover:bg-[#7f140a] transition-colors">
+            <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-none flex items-center justify-center font-bold text-lg shadow-inner no-underline text-white hover:bg-[#7f140a] transition-colors">
               <?php echo esc($userInitials); ?>
             </div>
           <?php endif; ?>

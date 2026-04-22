@@ -71,7 +71,7 @@ $tagline = 'Where architecture vision meets execution precision';
 $foundedYear = '2017';
 $address = '538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat, India';
 $phone = '+91 94267 89012';
-$email = 'projects@ripaldesign.in';
+$email = 'projects@ripaldesign.studio';
 
 if (function_exists('public_content_page_values')) {
     $aboutValues = public_content_page_values('about_us');

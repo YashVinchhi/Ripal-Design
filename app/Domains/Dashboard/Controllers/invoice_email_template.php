@@ -61,7 +61,7 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                                         Architects & Interior Design
                                                     </p>
                                                     <p style="margin: 0; font-size: 11px; color: #9ca3af;">
-                                                        projects@ripaldesign.in | +91 98765 43210
+                                                        projects@ripaldesign.studio | +91 98765 43210
                                                     </p>
                                                 </td>
                                             </tr>
@@ -248,7 +248,7 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px;">
                     <tr>
                         <td align="center" style="padding: 20px 20px; font-size: 12px; color: #6b7280;">
-                            <p style="margin: 0;">If you have questions about this invoice, reply to this email or contact <a href="mailto:projects@ripaldesign.in" style="color:#b91c1c;text-decoration:underline;">projects@ripaldesign.in</a>.</p>
+                            <p style="margin: 0;">If you have questions about this invoice, reply to this email or contact <a href="mailto:projects@ripaldesign.studio" style="color:#b91c1c;text-decoration:underline;">projects@ripaldesign.studio</a>.</p>
                             <p style="margin: 6px 0 0 0;">&copy; <?php echo date('Y'); ?> Ripal Design. All rights reserved.</p>
                         </td>
                     </tr>

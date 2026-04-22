@@ -34,7 +34,7 @@ if (!($mail instanceof PHPMailer\PHPMailer\PHPMailer)) {
         fwrite(STDERR, "No SMTP configuration found. Set MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD in environment or .env\n");
         exit(1);
     }
-    $from = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.in');
+    $from = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.studio');
     $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design (Test)';
     $mail->setFrom($from, $fromName);
 }

@@ -200,7 +200,7 @@ if (isset($_POST['signup'])) {
             }
             if ($mail && $mail instanceof \PHPMailer\PHPMailer\PHPMailer) {
                 $mail->clearAddresses();
-                $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.in';
+                $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.studio';
                 $fromName = $ct('signup_welcome_from_name', 'Ripal Design');
                 $mail->setFrom($from, $fromName);
                 $mail->addAddress($email, $fullName);

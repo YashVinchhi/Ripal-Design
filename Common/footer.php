@@ -100,8 +100,8 @@ $currentYear = date('Y');
                     </div>
                     <div class="flex items-center gap-3">
                         <i class="bi bi-envelope text-rajkot-rust"></i>
-                        <a href="mailto:<?php echo esc_attr($footerText('email', 'projects@ripaldesign.in')); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
-                            <?php echo esc($footerText('email', 'projects@ripaldesign.in')); ?>
+                        <a href="mailto:<?php echo esc_attr($footerText('email', 'projects@ripaldesign.studio')); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
+                            <?php echo esc($footerText('email', 'projects@ripaldesign.studio')); ?>
                         </a>
                     </div>
                 </div>
@@ -111,8 +111,8 @@ $currentYear = date('Y');
         <div class="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
             <div>&copy; <?php echo $currentYear; ?> <?php echo esc($footerText('copyright_brand', 'Ripal Design')); ?>. <?php echo esc($footerText('copyright_suffix', 'All rights reserved.')); ?></div>
             <div class="flex gap-6 mt-4 md:mt-0">
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
-                <a href="<?php echo esc_attr(BASE_PATH); ?>/sitemap.php" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/privacy.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/terms.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
             </div>
         </div>
     </div>
@@ -127,6 +127,13 @@ $currentYear = date('Y');
     <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><i class="bi bi-grid"></i><span>Projects</span></a>
     <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><i class="bi bi-envelope"></i><span>Contact</span></a>
 </nav>
+
+<style>
+    /* Ensure the mobile bottom nav links (Home / Projects / Contact) are hidden on desktop widths */
+    @media (min-width: 768px) {
+        .mobile-bottom-nav, .whatsapp-fab { display: none !important; }
+    }
+</style>
 
 <div id="transition-curtain" aria-hidden="true"></div>
 <div id="transition-orb" aria-hidden="true"></div>
