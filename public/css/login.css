@@ -228,12 +228,15 @@ body.auth-page::before {
     top: 50%;
     transform: translateY(-50%);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(255, 255, 255);
+    background: transparent;
     color: var(--muted);
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 0.35rem;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        -webkit-appearance: none;
+        appearance: none;
     width: 2.2rem;
     height: 2.2rem;
     border-radius: 0.35rem;
@@ -246,10 +249,10 @@ body.auth-page::before {
 }
 
 .input-with-icon .toggle-password-btn:hover {
-    background: #767779; /* light gray */
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text);
     transform: translateY(-50%) scale(1.03);
-    border-color: rgba(0,0,0,0.08);
+    border-color: rgba(255,255,255,0.12);
 }
 
 .input-with-icon .toggle-password-btn:focus-visible {
@@ -277,11 +280,22 @@ body.auth-page::before {
     top: auto;
     transform: none;
     width: 2.6rem;
-    height: 2.6rem;
-    padding: 0.45rem;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+    color: var(--text);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 0.1rem;
 }
 
-@media (max-width: 575px) {
+.auth-card-signup .form-control::placeholder {
+    color: rgba(230, 222, 212, 0.58);
+}
+
+    border: none;
     .auth-card-signup .input-with-icon {
         flex-direction: row;
     }
@@ -292,9 +306,20 @@ body.auth-page::before {
 }
 
 /* Login: apply same separate inline layout to login card(s) */
+
+.input-with-icon .toggle-password-btn:hover {
+     background: transparent !important;
+     color: var(--text);
+     transform: translateY(-50%) scale(1.0);
+}
+
+.input-with-icon .toggle-password-btn:focus-visible {
+     outline: none;
+     outline-offset: 0;
+}
 .auth-card-compact .input-with-icon,
 .auth-card .input-with-icon {
-    display: flex;
+    border: none;
     align-items: center;
     gap: 0.4rem;
 }
@@ -315,6 +340,8 @@ body.auth-page::before {
     width: 2.6rem;
     height: 2.6rem;
     padding: 0.45rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 575px) {
@@ -465,4 +492,94 @@ body.auth-page::before {
     .field-grid {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+/* Strong override: remove any thin borders or shadows from password toggle buttons */
+.input-with-icon .toggle-password-btn,
+.auth-card-signup .input-with-icon .toggle-password-btn,
+.auth-card-compact .input-with-icon .toggle-password-btn,
+.auth-card .input-with-icon .toggle-password-btn {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.input-with-icon .toggle-password-btn:hover {
+    background: transparent !important;
+}
+
+/* Make "Remember me" checkbox corners sharp and use brand color when checked */
+.form-check-input {
+    border-radius: 0 !important;
+    accent-color: #94120C !important;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0;
+}
+
+/* Fallback styling for browsers that don't honour accent-color */
+@supports not (accent-color: #000) {
+    .form-check-input {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 1.05rem;
+        height: 1.05rem;
+        border: 1px solid rgba(255,255,255,0.18);
+        background: transparent;
+        border-radius: 0;
+        display: inline-block;
+        vertical-align: middle;
+        position: relative;
+    }
+    .form-check-input:checked {
+        background: #94120C;
+        border-color: #94120C;
+    }
+    .form-check-input:checked::after {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 2px;
+        width: 4px;
+        height: 8px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+}
+
+/* Strong final override: ensure input and toggle sit inline in auth cards */
+.auth-card .input-with-icon,
+.auth-card-compact .input-with-icon,
+.auth-card-signup .input-with-icon {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+}
+
+.auth-card .input-with-icon .form-control,
+.auth-card-compact .input-with-icon .form-control,
+.auth-card-signup .input-with-icon .form-control {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    padding-right: 0.5rem !important;
+}
+
+.auth-card .input-with-icon .toggle-password-btn,
+.auth-card-compact .input-with-icon .toggle-password-btn,
+.auth-card-signup .input-with-icon .toggle-password-btn {
+    position: static !important;
+    width: 2.4rem !important;
+    height: 2.4rem !important;
+    padding: 0.35rem !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.input-with-icon .toggle-password {
+    color: #94180c !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    display: block;
 }

@@ -44,26 +44,23 @@ function showActive($form, $active_form)
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title><?php echo esc($ct('page_title', 'Sign Up - Ripal Design')); ?></title>
-    <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/login.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
-    <script src="./js/validation.js" defer></script>
-</head>
+<?php
+// Use shared header for consistent head assets, title and meta
+$pageTitle = $ct('page_title', 'Sign Up - Ripal Design') . ' | Ripal Design';
+$metaDesc = $ct('meta_description', 'Create an account to start your design experience.');
+$HEADER_MODE = 'public';
+require_once __DIR__ . '/../app/Ui/header.php';
+?>
 
 <body class="auth-page">
     <div class="grain"></div>
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
+    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/login.css'); ?>">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
+    <script src="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/js/validation.js'); ?>" defer></script>
 
     <main class="auth-main auth-main-public">
         <section class="auth-card-wrap" aria-labelledby="signupTitle">
-            <div class="auth-card auth-card-signup">
+            <div class="auth-card auth-card-compact auth-card-signup">
                 <h1 class="auth-title" id="signupTitle"><?php echo esc($ct('form_title', 'Create Account')); ?></h1>
                 <p class="auth-subtitle"><?php echo esc($ct('form_subtitle', 'Start your design experience with a curated account setup.')); ?></p>
 
