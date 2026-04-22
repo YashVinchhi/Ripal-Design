@@ -454,7 +454,7 @@ if ($avatar_initials === '') {
                 <aside class="lg:col-span-4 space-y-8">
                     <div class="bg-white shadow-premium border border-gray-100 p-8 text-center">
                         <?php if (!empty($user_data['avatar'])): ?>
-                            <img id="profileAvatarDisplay" src="<?php echo htmlspecialchars($user_data['avatar']); ?>" alt="Avatar" class="w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg" onerror="this.style.display='none'; var el=document.getElementById('profileAvatarInitials'); if(el){ el.style.display='flex'; }">
+                            <img id="profileAvatarDisplay" src="<?php echo htmlspecialchars($user_data['avatar']); ?>" alt="Avatar" class="w-24 h-24 object-cover mx-auto mb-6 shadow-lg" onerror="this.style.display='none'; var el=document.getElementById('profileAvatarInitials'); if(el){ el.style.display='flex'; }">
                             <div id="profileAvatarInitials" class="w-24 h-24 bg-rajkot-rust text-white font-serif text-4xl font-bold flex items-center justify-center mx-auto mb-6 shadow-lg" style="display:none;">
                                 <?php echo htmlspecialchars($avatar_initials); ?>
                             </div>
@@ -730,7 +730,7 @@ if ($avatar_initials === '') {
                                 var img = document.createElement('img');
                                 img.id = 'profileAvatarDisplay';
                                 img.alt = 'Avatar';
-                                img.className = 'w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg';
+                                img.className = 'w-24 h-24 object-cover mx-auto mb-6 shadow-lg';
                                 img.src = ev.target.result;
                                 img.onerror = function(){ this.style.display='none'; var el = document.getElementById('profileAvatarInitials'); if(el){ el.style.display='flex'; } };
                                 avatarElem.replaceWith(img);
