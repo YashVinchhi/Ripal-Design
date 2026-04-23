@@ -2,10 +2,25 @@
 /**
  * Minimal mail transport configurator.
  *
- * Reads SMTP configuration from environment variables and applies them to
- * a PHPMailer instance. Returns true if SMTP transport was configured,
- * false if no SMTP host was found.
+ * Loads the bundled PHPMailer classes directly so production mail flows do not
+ * depend on Composer autoload files being present on the server.
  */
+
+if (!defined('PROJECT_ROOT')) {
+    $bootstrapPath = dirname(__DIR__, 2) . '/Core/Bootstrap/init.php';
+    if (file_exists($bootstrapPath)) {
+        require_once $bootstrapPath;
+    }
+}
+
+$phpMailerBase = rtrim((string)(defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3)), '/\\') . '/src';
+foreach (['Exception.php', 'OAuthTokenProvider.php', 'SMTP.php', 'PHPMailer.php'] as $phpMailerFile) {
+    $phpMailerPath = $phpMailerBase . '/' . $phpMailerFile;
+    if (file_exists($phpMailerPath)) {
+        require_once $phpMailerPath;
+    }
+}
+
 if (!function_exists('configure_mailer')) {
     function configure_mailer($mail): bool
     {

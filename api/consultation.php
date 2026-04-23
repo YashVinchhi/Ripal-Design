@@ -11,10 +11,6 @@ if (file_exists(__DIR__ . '/../app/Shared/Mail/mail_helper.php')) {
     require_once __DIR__ . '/../app/Shared/Mail/mail_helper.php';
 }
 
-if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require_once __DIR__ . '/../vendor/autoload.php';
-}
-
 wmcp_require_https();
 wmcp_handle_options(false, 'POST, OPTIONS');
 

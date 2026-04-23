@@ -381,10 +381,7 @@ if (!function_exists('billing_send_invoice_email')) {
         $sent = false;
         $error = '';
 
-        $autoload = rtrim((string)PROJECT_ROOT, '/\\') . '/vendor/autoload.php';
-        if (file_exists($autoload)) {
-            require_once $autoload;
-        }
+        require_once rtrim((string)PROJECT_ROOT, '/\\') . '/app/Shared/Mail/mail_helper.php';
 
         if (class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
             try {
@@ -392,7 +389,6 @@ if (!function_exists('billing_send_invoice_email')) {
                 $mail->CharSet = 'UTF-8';
                 $mail->isHTML(true);
 
-                require_once rtrim((string)PROJECT_ROOT, '/\\') . '/app/Shared/Mail/mail_helper.php';
                 // Centralized SMTP configuration (reads from env). Returns false when no SMTP host is configured.
                 @configure_mailer($mail);
 
