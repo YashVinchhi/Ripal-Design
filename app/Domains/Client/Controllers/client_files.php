@@ -1,7 +1,6 @@
 <?php
 if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php'; }
 // Client Files (Redesigned UI)
-session_start();
 require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 $projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 
