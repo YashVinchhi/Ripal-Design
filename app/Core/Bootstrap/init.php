@@ -81,7 +81,7 @@ if (file_exists($commonFunctionsPath)) {
 $legacyIncludesDir = rtrim((string)(defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3)), '/\\') . DIRECTORY_SEPARATOR . 'includes';
 
 $notificationServicePath = rtrim((string)PROJECT_ROOT, '/\\') . '/app/Domains/Notifications/Services/notification_service.php';
-$paypalServicePath = rtrim((string)PROJECT_ROOT, '/\\') . '/app/Domains/Billing/Services/paypal_service.php';
+$razorpayServicePath = rtrim((string)PROJECT_ROOT, '/\\') . '/app/Domains/Billing/Services/razorpay_service.php';
 $billingServicePath = rtrim((string)PROJECT_ROOT, '/\\') . '/app/Domains/Billing/Services/billing_service.php';
 $publicContentPath = rtrim((string)PROJECT_ROOT, '/\\') . '/app/Domains/Content/Services/public_content.php';
 
@@ -92,11 +92,9 @@ if (file_exists($notificationServicePath)) {
     require_once $legacyIncludesDir . '/notification_service.php';
 }
 
-// Load PayPal service helpers (depends on config/util/db)
-if (file_exists($paypalServicePath)) {
-    require_once $paypalServicePath;
-} elseif (file_exists($legacyIncludesDir . '/paypal_service.php')) {
-    require_once $legacyIncludesDir . '/paypal_service.php';
+// Load Razorpay service helpers (depends on config/util/db)
+if (file_exists($razorpayServicePath)) {
+    require_once $razorpayServicePath;
 }
 
 // Load billing service helpers (depends on db/util/auth)

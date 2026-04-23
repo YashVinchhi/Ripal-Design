@@ -7,12 +7,10 @@ require_role('client');
 $billingReady = function_exists('billing_ensure_tables') && billing_ensure_tables();
 $paymentsReady = function_exists('payments_ensure_table') && payments_ensure_table();
 
-$paypalClientId = trim((string)(getenv('PAYPAL_CLIENT_ID') ?: ''));
-$paypalClientSecret = trim((string)(getenv('PAYPAL_CLIENT_SECRET') ?: ''));
-$paypalMode = strtolower(trim((string)(getenv('PAYPAL_MODE') ?: 'sandbox')));
-$paypalMode = $paypalMode === 'live' ? 'live' : 'sandbox';
-$isPaypalConfigured = $paypalClientId !== '' && $paypalClientSecret !== '';
-$paypalCurrency = 'USD';
+$razorpayKeyId = trim((string)(getenv('RAZORPAY_KEY_ID') ?: getenv('RAZORPAY_KEY') ?: ''));
+$razorpayKeySecret = trim((string)(getenv('RAZORPAY_KEY_SECRET') ?: ''));
+$isRazorpayConfigured = $razorpayKeyId !== '' && $razorpayKeySecret !== '';
+$paymentCurrency = strtoupper(trim((string)(getenv('PAYMENT_CURRENCY') ?: 'INR')));
 
 $sessionUser = current_user();
 $sessionEmail = strtolower(trim((string)($sessionUser['email'] ?? '')));
@@ -107,7 +105,7 @@ $HEADER_MODE = 'dashboard';
             </div>
             <div class="bg-white/10 border border-white/20 rounded px-5 py-4">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-300 font-bold">Gateway</p>
-                <p class="font-bold text-lg mt-1"><?php echo esc(strtoupper($paypalMode)); ?> PAYPAL</p>
+                <p class="font-bold text-lg mt-1"><?php echo esc(strtoupper((string)(getenv('PAYMENT_PROVIDER') ?: 'razorpay'))); ?></p>
             </div>
         </div>
     </header>
@@ -118,15 +116,15 @@ $HEADER_MODE = 'dashboard';
         <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="bg-white border border-gray-100 shadow-premium p-5">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Total Invoiced</p>
-                <p class="text-xl font-serif font-bold mt-2">$<?php echo number_format($totals['invoiced'], 2); ?></p>
+                <p class="text-xl font-serif font-bold mt-2">₹<?php echo number_format($totals['invoiced'], 2); ?></p>
             </div>
             <div class="bg-white border border-gray-100 shadow-premium p-5">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Paid</p>
-                <p class="text-xl font-serif font-bold mt-2 text-approval-green">$<?php echo number_format($totals['paid'], 2); ?></p>
+                <p class="text-xl font-serif font-bold mt-2 text-approval-green">₹<?php echo number_format($totals['paid'], 2); ?></p>
             </div>
             <div class="bg-white border border-gray-100 shadow-premium p-5">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Outstanding</p>
-                <p class="text-xl font-serif font-bold mt-2 text-pending-amber">$<?php echo number_format($totals['outstanding'], 2); ?></p>
+                <p class="text-xl font-serif font-bold mt-2 text-pending-amber">₹<?php echo number_format($totals['outstanding'], 2); ?></p>
             </div>
             <div class="bg-white border border-gray-100 shadow-premium p-5">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Overdue</p>
@@ -139,7 +137,7 @@ $HEADER_MODE = 'dashboard';
                 <h2 class="text-sm font-bold uppercase tracking-[0.3em] text-foundation-grey">Your Invoices</h2>
                 <input id="clientInvoiceSearch" type="search" placeholder="Search invoice or project" class="w-full md:w-72 border border-gray-200 px-3 py-2 text-xs outline-none focus:border-rajkot-rust">
             </div>
-            <div id="clientBillingNotice" class="px-6 md:px-8 py-3 text-xs bg-gray-50 border-b border-gray-100 text-gray-500">Pay online from any invoice row using PayPal sandbox.</div>
+            <div id="clientBillingNotice" class="px-6 md:px-8 py-3 text-xs bg-gray-50 border-b border-gray-100 text-gray-500">Pay online from any invoice row using Razorpay checkout.</div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm admin-table">
                     <thead>
@@ -175,16 +173,16 @@ $HEADER_MODE = 'dashboard';
                                     <div class="text-xs text-gray-400">ID #<?php echo (int)$inv['id']; ?></div>
                                 </td>
                                 <td class="px-4 py-4" data-label="Project"><?php echo esc((string)($inv['project_name'] ?? 'Project')); ?></td>
-                                <td class="px-4 py-4 font-semibold" data-label="Total">$<?php echo number_format($invTotal, 2); ?></td>
-                                <td class="px-4 py-4 text-approval-green font-semibold" data-label="Paid">$<?php echo number_format($invPaid, 2); ?></td>
-                                <td class="px-4 py-4 text-pending-amber font-semibold" data-label="Outstanding">$<?php echo number_format($invOut, 2); ?></td>
+                                <td class="px-4 py-4 font-semibold" data-label="Total">₹<?php echo number_format($invTotal, 2); ?></td>
+                                <td class="px-4 py-4 text-approval-green font-semibold" data-label="Paid">₹<?php echo number_format($invPaid, 2); ?></td>
+                                <td class="px-4 py-4 text-pending-amber font-semibold" data-label="Outstanding">₹<?php echo number_format($invOut, 2); ?></td>
                                 <td class="px-4 py-4" data-label="Due"><?php echo !empty($inv['due_date']) ? esc((string)$inv['due_date']) : 'N/A'; ?></td>
                                 <td class="px-4 py-4" data-label="Status"><span class="text-[10px] uppercase tracking-widest font-bold <?php echo esc_attr($statusClass($invStatus)); ?>"><?php echo esc(strtoupper($invStatus)); ?></span></td>
                                 <td class="px-6 py-4" data-label="Actions">
                                     <div class="flex flex-col items-stretch md:items-end gap-2">
                                         <a href="<?php echo esc_attr($pdfUrl); ?>" class="text-[10px] uppercase tracking-widest font-bold text-foundation-grey hover:text-rajkot-rust">Download PDF</a>
                                         <?php if ($invOut > 0 && $invStatus !== 'cancelled'): ?>
-                                            <div class="client-paypal-btn w-full md:w-[220px]" data-invoice-id="<?php echo (int)$inv['id']; ?>" data-outstanding="<?php echo esc_attr(number_format($invOut, 2, '.', '')); ?>"></div>
+                                            <div class="client-razorpay-btn w-full md:w-[220px]" data-invoice-id="<?php echo (int)$inv['id']; ?>" data-outstanding="<?php echo esc_attr(number_format($invOut, 2, '.', '')); ?>"></div>
                                         <?php else: ?>
                                             <span class="text-xs text-gray-400">No payment due</span>
                                         <?php endif; ?>
@@ -225,7 +223,7 @@ $HEADER_MODE = 'dashboard';
                                 <td class="px-6 py-4"><div class="font-mono text-xs"><?php echo esc((string)$pay['provider_order_id']); ?></div><div class="text-xs text-gray-400"><?php echo esc(strtoupper((string)$pay['provider'])); ?></div></td>
                                 <td class="px-4 py-4"><?php echo esc((string)($pay['invoice_code'] ?? '-')); ?></td>
                                 <td class="px-4 py-4"><?php echo esc((string)($pay['project_name'] ?? '-')); ?></td>
-                                <td class="px-4 py-4 font-semibold">$<?php echo number_format($amount, 2); ?> <?php echo esc((string)$pay['currency']); ?></td>
+                                <td class="px-4 py-4 font-semibold">₹<?php echo number_format($amount, 2); ?> <?php echo esc((string)$pay['currency']); ?></td>
                                 <td class="px-4 py-4"><span class="text-[10px] uppercase tracking-widest font-bold <?php echo esc_attr($statusClass((string)($pay['status'] ?? 'created'))); ?>"><?php echo esc(strtoupper((string)($pay['status'] ?? 'created'))); ?></span></td>
                                 <td class="px-6 py-4 text-xs text-gray-500"><?php echo esc(date('M d, Y H:i', strtotime((string)$pay['created_at']))); ?></td>
                             </tr>
@@ -240,8 +238,8 @@ $HEADER_MODE = 'dashboard';
     <?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>
 </div>
 
-<?php if ($isPaypalConfigured): ?>
-<script src="https://www.paypal.com/sdk/js?client-id=<?php echo rawurlencode($paypalClientId); ?>&currency=<?php echo rawurlencode($paypalCurrency); ?>&intent=capture"></script>
+<?php if ($isRazorpayConfigured): ?>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <?php endif; ?>
 <script>
 (function () {
@@ -250,11 +248,11 @@ $HEADER_MODE = 'dashboard';
     const notice = document.getElementById('clientBillingNotice');
 
     const cfg = {
-        enabled: <?php echo $isPaypalConfigured ? 'true' : 'false'; ?>,
+        enabled: <?php echo $isRazorpayConfigured ? 'true' : 'false'; ?>,
         csrfToken: <?php echo esc_js(csrf_token()); ?>,
-        createOrderUrl: <?php echo esc_js(base_path('admin/api/paypal_create_order.php')); ?>,
-        captureOrderUrl: <?php echo esc_js(base_path('admin/api/paypal_capture_order.php')); ?>,
-        currency: <?php echo esc_js($paypalCurrency); ?>
+        createOrderUrl: <?php echo esc_js(base_path('api/create-order.php')); ?>,
+        verifyPaymentUrl: <?php echo esc_js(base_path('api/verify-payment.php')); ?>,
+        currency: <?php echo esc_js($paymentCurrency); ?>
     };
 
     const setNotice = function (msg, isErr) {
@@ -278,54 +276,80 @@ $HEADER_MODE = 'dashboard';
         return;
     }
 
-    if (!window.paypal || typeof window.paypal.Buttons !== 'function') {
-        setNotice('PayPal SDK load failed. Try reloading the page.', true);
+    if (!window.Razorpay) {
+        setNotice('Razorpay SDK load failed. Try reloading the page.', true);
         return;
     }
 
-    document.querySelectorAll('.client-paypal-btn').forEach(function (el) {
+    document.querySelectorAll('.client-razorpay-btn').forEach(function (el) {
         const invoiceId = parseInt(el.dataset.invoiceId || '0', 10);
         const amount = el.dataset.outstanding || '0.00';
         if (!invoiceId || parseFloat(amount) <= 0) {
             return;
         }
 
-        window.paypal.Buttons({
-            style: { layout: 'horizontal', shape: 'rect', color: 'gold', label: 'pay', height: 34 },
-            createOrder: async function () {
-                setNotice('Creating payment order...', false);
-                const r = await fetch(cfg.createOrderUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': cfg.csrfToken },
-                    body: JSON.stringify({ invoice_id: invoiceId, amount: amount, currency: cfg.currency })
-                });
-                const d = await r.json();
-                if (!r.ok || !d.success || !d.data || !d.data.order_id) {
-                    const msg = (d && d.message) ? d.message : 'Unable to create order.';
-                    setNotice(msg, true);
-                    throw new Error(msg);
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'w-full bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all';
+        trigger.textContent = 'Pay with Razorpay';
+        el.appendChild(trigger);
+
+        trigger.addEventListener('click', async function () {
+            setNotice('Creating payment order...', false);
+            const r = await fetch(cfg.createOrderUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': cfg.csrfToken },
+                body: JSON.stringify({ invoice_id: invoiceId, amount: amount, currency: cfg.currency })
+            });
+            const d = await r.json();
+            if (!r.ok || !d.success || !d.data || !d.data.order_id) {
+                const msg = (d && d.message) ? d.message : 'Unable to create order.';
+                setNotice(msg, true);
+                return;
+            }
+
+            const options = {
+                key: d.data.key_id,
+                amount: d.data.amount,
+                currency: d.data.currency,
+                name: d.data.name,
+                description: d.data.description,
+                order_id: d.data.order_id,
+                prefill: d.data.prefill || {},
+                theme: { color: '#94180C' },
+                handler: async function (paymentResponse) {
+                    setNotice('Verifying payment...', false);
+                    const verifyResponse = await fetch(cfg.verifyPaymentUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': cfg.csrfToken },
+                        body: JSON.stringify(paymentResponse)
+                    });
+                    const verifyData = await verifyResponse.json();
+                    if (!verifyResponse.ok || !verifyData.success) {
+                        const msg = (verifyData && verifyData.message) ? verifyData.message : 'Payment verification failed.';
+                        setNotice(msg, true);
+                        return;
+                    }
+                    setNotice('Payment successful. Refreshing...', false);
+                    window.setTimeout(function () { window.location.reload(); }, 800);
+                },
+                modal: {
+                    ondismiss: function () {
+                        setNotice('Payment cancelled.', true);
+                    }
                 }
-                return d.data.order_id;
-            },
-            onApprove: async function (data) {
-                setNotice('Capturing payment...', false);
-                const r = await fetch(cfg.captureOrderUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': cfg.csrfToken },
-                    body: JSON.stringify({ order_id: data.orderID })
+            };
+
+            try {
+                const checkout = new window.Razorpay(options);
+                checkout.on('payment.failed', function () {
+                    setNotice('Payment failed unexpectedly.', true);
                 });
-                const d = await r.json();
-                if (!r.ok || !d.success) {
-                    const msg = (d && d.message) ? d.message : 'Capture failed.';
-                    setNotice(msg, true);
-                    return;
-                }
-                setNotice('Payment successful. Refreshing...', false);
-                window.setTimeout(function () { window.location.reload(); }, 800);
-            },
-            onCancel: function () { setNotice('Payment cancelled.', true); },
-            onError: function () { setNotice('Payment failed unexpectedly.', true); }
-        }).render(el);
+                checkout.open();
+            } catch (err) {
+                setNotice(err && err.message ? err.message : 'Unable to open Razorpay checkout.', true);
+            }
+        });
     });
 })();
 </script>

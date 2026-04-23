@@ -48,7 +48,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Manage Goods â€” <?php echo htmlspecialchars($project['name']); ?></title>
+<title>Manage Goods • <?php echo htmlspecialchars($project['name']); ?></title>
 <link rel="stylesheet" href="../assets/css/tailwind.css">
 </head>
 <body>

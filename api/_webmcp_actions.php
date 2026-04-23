@@ -93,9 +93,9 @@ if (!function_exists('wmcp_action_catalog')) {
                 'default_params' => ['action' => 'mark_all_read'],
                 'requires_confirmation' => true,
             ],
-            'payments.create_paypal_order' => [
-                'description' => 'Create a PayPal order for invoice or project payment.',
-                'endpoint' => '/admin/api/paypal_create_order.php',
+            'payments.create_razorpay_order' => [
+                'description' => 'Create a Razorpay order for invoice or project payment.',
+                'endpoint' => '/admin/api/razorpay_create_order.php',
                 'method' => 'POST',
                 'encoding' => 'json',
                 'allowed_roles' => ['admin', 'client'],
@@ -103,13 +103,13 @@ if (!function_exists('wmcp_action_catalog')) {
                 'default_params' => [],
                 'requires_confirmation' => true,
             ],
-            'payments.capture_paypal_order' => [
-                'description' => 'Capture a PayPal order after approval.',
-                'endpoint' => '/admin/api/paypal_capture_order.php',
+            'payments.verify_razorpay_payment' => [
+                'description' => 'Verify a Razorpay payment after checkout.',
+                'endpoint' => '/admin/api/razorpay_verify_payment.php',
                 'method' => 'POST',
                 'encoding' => 'json',
                 'allowed_roles' => ['admin', 'client'],
-                'allowed_params' => ['order_id'],
+                'allowed_params' => ['razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature'],
                 'default_params' => [],
                 'requires_confirmation' => true,
             ],

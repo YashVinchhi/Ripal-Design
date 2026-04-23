@@ -331,6 +331,35 @@ if (!function_exists('billing_send_invoice_email')) {
         $projectName = trim((string)($project['name'] ?? 'Project'));
         $invoiceCode = (string)($ctx['invoice_code'] ?? ('BIL-' . $invoiceId));
         $subject = 'Invoice ' . $invoiceCode . ' - ' . $projectName;
+
+        // Attempt to create a Razorpay payment link (falls back to the invoice page URL)
+        $paymentLink = (string)$ctx['share_url'];
+        $razHelper = rtrim((string)PROJECT_ROOT, '/\\') . '/app/Shared/Payments/razorpay_helper.php';
+        if (file_exists($razHelper)) {
+            try {
+                require_once $razHelper;
+                if (function_exists('razorpay_create_payment_link')) {
+                    $custName = trim((string)($project['owner_name'] ?? $invoice['client_name'] ?? ''));
+                    $custEmail = trim((string)($invoice['client_email'] ?? $project['owner_email'] ?? ''));
+                    $custContact = trim((string)($invoice['client_contact'] ?? $project['owner_contact'] ?? ''));
+                    $rz = razorpay_create_payment_link([
+                        'amount' => (float)$ctx['total'],
+                        'currency' => 'INR',
+                        'reference_id' => $invoiceCode,
+                        'description' => 'Payment for invoice ' . $invoiceCode,
+                        'customer' => ['name' => $custName, 'email' => $custEmail, 'contact' => $custContact],
+                        'notify' => ['email' => true, 'sms' => false],
+                        'reminder_enable' => true,
+                    ]);
+                    if (!empty($rz['ok']) && !empty($rz['url'])) {
+                        $paymentLink = $rz['url'];
+                    }
+                }
+            } catch (Throwable $e) {
+                // silently fall back to share URL
+            }
+        }
+
         $html = invoice_email_html(
             $project,
             $goods,
@@ -338,12 +367,13 @@ if (!function_exists('billing_send_invoice_email')) {
             (float)$ctx['tax'],
             (float)$ctx['total'],
             $invoiceCode,
-            (string)$ctx['share_url']
+            (string)$ctx['share_url'],
+            $paymentLink
         );
 
         $textBody = 'Invoice ' . $invoiceCode . ' for project ' . $projectName . PHP_EOL .
             'Total: ' . number_format((float)$ctx['total'], 2) . PHP_EOL .
-            'View and pay online: ' . (string)$ctx['share_url'];
+            'View and pay online: ' . $paymentLink;
 
         $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.studio');
         $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';

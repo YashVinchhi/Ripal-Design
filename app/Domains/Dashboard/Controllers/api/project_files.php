@@ -129,7 +129,7 @@ if (!($db instanceof PDO)) {
 
 // Detect oversized requests early: when the request body exceeds PHP's
 // `post_max_size`, PHP will discard `$_POST`/`$_FILES` and leave us with
-// empty input. This often manifests as "Invalid project ID." â€” provide a
+// empty input. This often manifests as "Invalid project ID." • provide a
 // clear error instead so callers know to increase server limits.
 function parse_ini_size_to_bytes(string $val): int {
     $val = trim($val);

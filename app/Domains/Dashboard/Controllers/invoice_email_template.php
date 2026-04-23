@@ -231,7 +231,8 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                         <div style="margin-top:8px;font-size:13px;color:#6b7280;">
                                             If the button doesn't open on your device, view the invoice online: <a href="<?php echo htmlspecialchars($share_url); ?>" style="color:#b91c1c;text-decoration:underline;">Open invoice</a>
                                         </div>
-                                        <?php if (!empty($qr_data_uri)): ?>
+                                        <div style="margin-top:12px;font-size:13px;color:#6b7280;">Open the invoice page to complete payment securely through Razorpay.</div>
+                                        <?php if (false && !empty($qr_data_uri)): ?>
                                             <div style="margin-top:12px;text-align:center;">
                                                 <img src="<?php echo htmlspecialchars($qr_data_uri); ?>" alt="UPI QR" width="160" height="160" style="display:block;margin:0 auto;border:0;" />
                                                 <div style="font-size:13px;color:#6b7280;margin-top:8px;">Scan to pay ₹ <?php echo number_format($total,2); ?> using your UPI app</div>

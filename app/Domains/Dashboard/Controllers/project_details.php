@@ -1846,7 +1846,7 @@ if ($pdo instanceof PDO) {
                     <?php endif; ?>
                     <div class="flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800">
                         <div>
-                            <p class="text-sm text-slate-500">â€” Unassign â€”</p>
+                            <p class="text-sm text-slate-500">• Unassign •</p>
                         </div>
                         <div><button type="button" onclick="selectOwner(0, '')" class="px-3 py-1.5 border rounded text-xs">Unassign</button></div>
                     </div>
@@ -2057,7 +2057,7 @@ if ($pdo instanceof PDO) {
             <form id="contactForm" class="p-6 space-y-4">
                 <div>
                     <label class="text-xs font-semibold text-slate-500 uppercase">To</label>
-                    <div id="contactTo" class="mt-2 text-sm text-slate-700 dark:text-slate-300">â€”</div>
+                    <div id="contactTo" class="mt-2 text-sm text-slate-700 dark:text-slate-300">•</div>
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-slate-500 uppercase">Message</label>
@@ -3144,7 +3144,7 @@ if ($pdo instanceof PDO) {
             const email = (owner && owner.email) ? owner.email : '';
             const role = (owner && owner.role) ? owner.role : 'Owner';
 
-            nameEl.textContent = name || 'â€”';
+            nameEl.textContent = name || '•';
             roleEl.textContent = role || 'Owner';
             phoneEl.textContent = contact || 'Not available';
             emailEl.textContent = email || 'Not available';

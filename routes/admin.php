@@ -11,6 +11,6 @@ return [
 	'admin.payments' => '/admin/payment_gateway.php',
 	'admin.file_viewer' => '/admin/file_viewer.php',
 	'admin.provision_temp_user' => '/admin/provision_temp_user.php',
-	'admin.api.paypal_create' => '/admin/api/paypal_create_order.php',
-	'admin.api.paypal_capture' => '/admin/api/paypal_capture_order.php',
+	'admin.api.razorpay_create' => '/admin/api/razorpay_create_order.php',
+	'admin.api.razorpay_verify' => '/admin/api/razorpay_verify_payment.php',
 ];

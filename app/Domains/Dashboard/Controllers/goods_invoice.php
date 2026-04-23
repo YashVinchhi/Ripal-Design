@@ -9,6 +9,10 @@ if (!$project_id) { header('Location: dashboard.php'); exit; }
 $sessionUser = $_SESSION['user'] ?? [];
 $sessionRole = strtolower(trim((string)($sessionUser['role'] ?? '')));
 $isClientReadOnly = ($sessionRole === 'client');
+$razorpayKeyId = trim((string)(getenv('RAZORPAY_KEY_ID') ?: getenv('RAZORPAY_KEY') ?: ''));
+$razorpayKeySecret = trim((string)(getenv('RAZORPAY_KEY_SECRET') ?: ''));
+$isRazorpayConfigured = $razorpayKeyId !== '' && $razorpayKeySecret !== '';
+$paymentCurrency = strtoupper(trim((string)(getenv('PAYMENT_CURRENCY') ?: 'INR')));
 
 // Handle form submissions: add item or save meta
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -165,44 +169,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 if (file_exists($templateFile)) {
                                     require_once $templateFile;
                                     try {
-                                        // Create a UPI deep link prefilled with payee VPA and amount
-                                        $upiVpa = 'yashhvinchhi@okaxis';
-                                        $upiName = 'Ripal Design';
-                                        $upiAmount = number_format((float)$total, 2, '.', '');
-                                        $upiNote = 'Invoice ' . $invoice_id;
-                                        $upiParams = [
-                                            'pa' => $upiVpa,
-                                            'pn' => $upiName,
-                                            'am' => $upiAmount,
-                                            'cu' => 'INR',
-                                            'tn' => $upiNote,
-                                            'tr' => $invoice_id,
-                                        ];
-                                        $upiQuery = http_build_query($upiParams, '', '&', PHP_QUERY_RFC3986);
-                                        $payment_link = 'upi://pay?' . $upiQuery;
-
-                                        // Try to generate an inline QR code (PNG) for the UPI deep link using Google Chart API
-                                        $qr_data_uri = null;
-                                        $qrServiceUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=' . rawurlencode($payment_link) . '&chld=L|1';
-                                        $qrBin = false;
-                                        if (ini_get('allow_url_fopen')) {
-                                            $qrBin = @file_get_contents($qrServiceUrl);
-                                        }
-                                        if ($qrBin === false && function_exists('curl_init')) {
-                                            $ch = curl_init($qrServiceUrl);
-                                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                                            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-                                            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-                                            $qrBin = curl_exec($ch);
-                                            curl_close($ch);
-                                        }
-                                        if (is_string($qrBin) && strlen($qrBin) > 0) {
-                                            $qr_data_uri = 'data:image/png;base64,' . base64_encode($qrBin);
-                                        }
-
-                                        // Render the HTML email (button uses $payment_link). $share_url remains available as web fallback.
-                                        $htmlBody = invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_id, $share_url, $payment_link, $qr_data_uri);
+                                        $payment_link = $share_url . '#pay-now';
+                                        $htmlBody = invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_id, $share_url, $payment_link, null);
                                         $mail->isHTML(true);
                                         $mail->Body = $htmlBody;
                                         $mail->AltBody = $body;
@@ -225,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                 }
 
-        // Fallback to PHP mail() â€” send HTML when available
+        // Fallback to PHP mail() • send HTML when available
         if (!$sent) {
             $headers = "MIME-Version: 1.0\r\n";
             $headers .= "Content-type: text/html; charset=UTF-8\r\n";
@@ -302,20 +270,9 @@ $tax = round($subtotal * $tax_rate, 2);
 $total = round($subtotal + $tax, 2);
 $invoice_id = 'INV-' . str_pad($project_id, 6, '0', STR_PAD_LEFT) . '-' . date('Ymd');
 $share_url = rtrim(BASE_URL, '/') . '/dashboard/goods_invoice.php?project_id=' . $project_id;
-$upi_vpa = 'yashhvinchhi@okaxis';
-$upi_name = 'Ripal Design';
-$upi_amount = number_format((float)$total, 2, '.', '');
-$upi_note = 'Invoice ' . $invoice_id;
-$upiParams = [
-    'pa' => $upi_vpa,
-    'pn' => $upi_name,
-    'am' => $upi_amount,
-    'cu' => 'INR',
-    'tn' => $upi_note,
-    'tr' => $invoice_id,
-];
-$upi_link = 'upi://pay?' . http_build_query($upiParams, '', '&', PHP_QUERY_RFC3986);
-$upi_qr_url = 'https://chart.googleapis.com/chart?cht=qr&chs=320x320&chl=' . rawurlencode($upi_link) . '&chld=L|1';
+$upi_vpa = '';
+$upi_link = '';
+$upi_qr_url = '';
 
 $displayName = $_SESSION['user']['first_name'] ?? 'User';
 $title = "Invoice " . $invoice_id . " | Ripal Design";
@@ -516,8 +473,8 @@ if (function_exists('render_flash')) { render_flash(); }
                         <p class="text-sm text-gray-500 mt-1">You can request invoice changes and pay this invoice online.</p>
                     </div>
                     <div class="text-sm text-gray-600">
-                        <div class="uppercase tracking-widest text-[10px] text-gray-400 font-bold">UPI ID</div>
-                        <div class="font-mono font-bold text-foundation-grey"><?php echo h($upi_vpa); ?></div>
+                        <div class="uppercase tracking-widest text-[10px] text-gray-400 font-bold">Gateway</div>
+                        <div class="font-mono font-bold text-foundation-grey"><?php echo $isRazorpayConfigured ? 'RAZORPAY' : 'UNAVAILABLE'; ?></div>
                     </div>
                 </div>
 
@@ -526,15 +483,17 @@ if (function_exists('render_flash')) { render_flash(); }
                         <i data-lucide="file-pen-line" class="w-4 h-4"></i> Request Edit
                     </button>
                     <button id="payNowBtn" type="button" class="bg-rajkot-rust hover:bg-[#7f140a] text-white px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
-                        <i data-lucide="qr-code" class="w-4 h-4"></i> Pay Now
+                        <i data-lucide="credit-card" class="w-4 h-4"></i> Pay with Razorpay
                     </button>
                 </div>
 
-                <div id="upiPanel" class="hidden mt-6 p-4 bg-white border border-gray-100">
-                    <div class="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6 items-start">
-                        <div>
-                            <img src="<?php echo esc_attr($upi_qr_url); ?>" alt="UPI payment QR" class="w-full max-w-[320px] border border-gray-100" />
-                            <a href="<?php echo esc_attr($upi_link); ?>" class="mt-3 inline-flex w-full max-w-[320px] justify-center bg-foundation-grey hover:bg-black text-white px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest no-underline transition-all">Open UPI App to Pay</a>
+                <div id="paymentPanel" class="hidden mt-6 p-4 bg-white border border-gray-100">
+                    <div class="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-6 items-start">
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <p class="font-bold text-foundation-grey">Pay this invoice online</p>
+                            <p>Amount: <span class="font-bold">â‚¹ <?php echo number_format($total, 2); ?></span></p>
+                            <p>Invoice: <span class="font-mono font-bold"><?php echo h($invoice_id); ?></span></p>
+                            <p class="text-xs text-gray-400">Razorpay checkout will open in a secure modal and verify the payment immediately after completion.</p>
                         </div>
                         <div class="space-y-2 text-sm text-gray-600">
                             <p class="font-bold text-foundation-grey">Scan QR to pay</p>
@@ -685,6 +644,17 @@ if (function_exists('render_flash')) { render_flash(); }
   // Ensure lucide icons are created
   if (window.lucide) window.lucide.createIcons();
 
+  const paymentConfig = {
+    enabled: <?php echo $isRazorpayConfigured ? 'true' : 'false'; ?>,
+    csrfToken: '<?php echo addslashes(csrf_token()); ?>',
+        createOrderUrl: '<?php echo addslashes(base_path('api/create-order.php')); ?>',
+        verifyPaymentUrl: '<?php echo addslashes(base_path('api/verify-payment.php')); ?>',
+    currency: '<?php echo addslashes($paymentCurrency); ?>',
+    amount: '<?php echo addslashes(number_format($total, 2, '.', '')); ?>',
+    projectId: <?php echo (int)$project_id; ?>,
+    invoiceLabel: '<?php echo addslashes($invoice_id); ?>'
+  };
+
   function showToast(message){
     const toast = document.createElement('div');
     toast.textContent = message;
@@ -777,14 +747,88 @@ if (function_exists('render_flash')) { render_flash(); }
         showToast('Submitting edit request...');
     });
 
-    document.getElementById('payNowBtn')?.addEventListener('click', function(){
-        const panel = document.getElementById('upiPanel');
+    document.getElementById('payNowBtn')?.addEventListener('click', async function(){
+        const panel = document.getElementById('paymentPanel') || document.getElementById('upiPanel');
         if (!panel) return;
-        panel.classList.toggle('hidden');
-        if (!panel.classList.contains('hidden')) {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            showToast('UPI QR ready to scan');
+        panel.classList.remove('hidden');
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        const mount = document.getElementById('goodsInvoiceRazorpayMount') || panel;
+        if (mount && !mount.dataset.razorpayReady) {
+            mount.dataset.razorpayReady = '1';
+            mount.innerHTML = '<div class="border border-gray-100 bg-white p-4 text-sm text-gray-600"><p class="font-bold text-foundation-grey">Pay this invoice online</p><p class="mt-2">Amount: <span class="font-bold">INR ' + paymentConfig.amount + '</span></p><p>Invoice: <span class="font-mono font-bold">' + paymentConfig.invoiceLabel + '</span></p><button id="goodsInvoiceRazorpayBtn" type="button" class="mt-4 w-full bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all">Launch Razorpay</button></div>';
         }
+
+        const launch = async function () {
+            if (!paymentConfig.enabled) {
+                showToast('Razorpay is not configured');
+                return;
+            }
+            if (!window.Razorpay) {
+                showToast('Razorpay SDK failed to load');
+                return;
+            }
+
+            const response = await fetch(paymentConfig.createOrderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': paymentConfig.csrfToken
+                },
+                body: JSON.stringify({
+                    project_id: paymentConfig.projectId,
+                    amount: paymentConfig.amount,
+                    currency: paymentConfig.currency
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success || !data.data || !data.data.order_id) {
+                showToast((data && data.message) ? data.message : 'Unable to create payment order');
+                return;
+            }
+
+            const options = {
+                key: data.data.key_id,
+                amount: data.data.amount,
+                currency: data.data.currency,
+                name: data.data.name,
+                description: 'Goods invoice payment',
+                order_id: data.data.order_id,
+                prefill: data.data.prefill || {},
+                theme: { color: '#94180C' },
+                handler: async function (paymentResponse) {
+                    const verifyResponse = await fetch(paymentConfig.verifyPaymentUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': paymentConfig.csrfToken
+                        },
+                        body: JSON.stringify(paymentResponse)
+                    });
+                    const verifyData = await verifyResponse.json();
+                    if (!verifyResponse.ok || !verifyData.success) {
+                        showToast((verifyData && verifyData.message) ? verifyData.message : 'Payment verification failed');
+                        return;
+                    }
+                    showToast('Payment successful');
+                    window.setTimeout(function(){ window.location.reload(); }, 900);
+                },
+                modal: {
+                    ondismiss: function () {
+                        showToast('Payment cancelled');
+                    }
+                }
+            };
+
+            const checkout = new window.Razorpay(options);
+            checkout.on('payment.failed', function () {
+                showToast('Payment failed');
+            });
+            checkout.open();
+        };
+
+        document.getElementById('goodsInvoiceRazorpayBtn')?.addEventListener('click', launch, { once: true });
+        launch();
     });
 
   // Dynamic Price Calculation
@@ -824,5 +868,9 @@ if (function_exists('render_flash')) { render_flash(); }
   });
 })();
 </script>
+
+<?php if ($isRazorpayConfigured): ?>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<?php endif; ?>
 
 <?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>

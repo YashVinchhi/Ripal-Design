@@ -120,7 +120,7 @@ $HEADER_MODE = 'dashboard';
                         <tbody>
                             <?php foreach ($messages as $m):
                                 $id = (int)($m['id'] ?? 0);
-                                $name = trim((string)($m['first_name'] ?? '') . ' ' . ($m['last_name'] ?? '')) ?: 'â€”';
+                                $name = trim((string)($m['first_name'] ?? '') . ' ' . ($m['last_name'] ?? '')) ?: '•';
                                 $email = (string)($m['email'] ?? '');
                                 $subject = (string)($m['subject'] ?? '');
                                 $messageFull = (string)($m['message'] ?? '');

@@ -7,12 +7,10 @@ require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 require_login();
 require_role('admin');
 
-$paypalClientId = trim((string)(getenv('PAYPAL_CLIENT_ID') ?: ''));
-$paypalClientSecret = trim((string)(getenv('PAYPAL_CLIENT_SECRET') ?: ''));
-$paypalMode = strtolower(trim((string)(getenv('PAYPAL_MODE') ?: 'sandbox')));
-$paypalMode = $paypalMode === 'live' ? 'live' : 'sandbox';
-$isPaypalConfigured = $paypalClientId !== '' && $paypalClientSecret !== '';
-$paypalCurrency = 'USD';
+$razorpayKeyId = trim((string)(getenv('RAZORPAY_KEY_ID') ?: getenv('RAZORPAY_KEY') ?: ''));
+$razorpayKeySecret = trim((string)(getenv('RAZORPAY_KEY_SECRET') ?: ''));
+$isRazorpayConfigured = $razorpayKeyId !== '' && $razorpayKeySecret !== '';
+$paymentCurrency = strtoupper(trim((string)(getenv('PAYMENT_CURRENCY') ?: 'INR')));
 
 $billingReady = function_exists('billing_ensure_tables') && billing_ensure_tables();
 $paymentsReady = function_exists('payments_ensure_table') && payments_ensure_table();
@@ -147,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $invoiceId,
                     current_user_id(),
                     (int)round($manualAmount * 100),
-                    'USD',
+                    'INR',
                     'captured',
                     $orderId,
                     $orderId,
@@ -315,8 +313,8 @@ $statusClass = static function (string $status): string {
             </div>
             <div class="bg-white/10 border border-white/20 rounded px-5 py-4">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-gray-300 font-bold">Payment Provider</p>
-                <p class="font-bold text-lg mt-1"><?php echo esc(strtoupper((string)(getenv('PAYMENT_PROVIDER') ?: 'paypal'))); ?> / <?php echo esc(strtoupper($paypalMode)); ?></p>
-                <p class="text-[11px] text-gray-400 mt-1"><?php echo $isPaypalConfigured ? 'PayPal API is configured' : 'PayPal credentials missing'; ?></p>
+                <p class="font-bold text-lg mt-1"><?php echo esc(strtoupper((string)(getenv('PAYMENT_PROVIDER') ?: 'razorpay'))); ?> / LIVE API</p>
+                <p class="text-[11px] text-gray-400 mt-1"><?php echo $isRazorpayConfigured ? 'Razorpay API is configured' : 'Razorpay credentials missing'; ?></p>
             </div>
         </div>
     </header>
@@ -454,7 +452,7 @@ $statusClass = static function (string $status): string {
                 </div>
             </div>
 
-            <div id="gatewayNotice" class="px-6 md:px-8 py-3 text-xs bg-gray-50 border-b border-gray-100 text-gray-500">Use PayPal inline buttons to collect outstanding invoice balances instantly.</div>
+            <div id="gatewayNotice" class="px-6 md:px-8 py-3 text-xs bg-gray-50 border-b border-gray-100 text-gray-500">Use Razorpay checkout to collect outstanding invoice balances instantly.</div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-sm admin-table">
@@ -537,7 +535,7 @@ $statusClass = static function (string $status): string {
                                                 <button type="submit" class="text-[10px] uppercase tracking-widest font-bold text-slate-accent hover:text-foundation-grey">Record</button>
                                             </form>
 
-                                            <div class="paypal-invoice-btn w-full md:w-[250px]"
+                                            <div class="razorpay-invoice-btn w-full md:w-[250px]"
                                                  data-invoice-id="<?php echo (int)$inv['id']; ?>"
                                                  data-outstanding="<?php echo esc_attr(number_format($invOut, 2, '.', '')); ?>">
                                             </div>
@@ -599,8 +597,8 @@ $statusClass = static function (string $status): string {
     <?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>
 </div>
 
-<?php if ($isPaypalConfigured): ?>
-    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo rawurlencode($paypalClientId); ?>&currency=<?php echo rawurlencode($paypalCurrency); ?>&intent=capture"></script>
+<?php if ($isRazorpayConfigured): ?>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <?php endif; ?>
 
 <script>
@@ -611,11 +609,11 @@ $statusClass = static function (string $status): string {
     const gatewayNotice = document.getElementById('gatewayNotice');
 
     const config = {
-        paypalEnabled: <?php echo $isPaypalConfigured ? 'true' : 'false'; ?>,
+        razorpayEnabled: <?php echo $isRazorpayConfigured ? 'true' : 'false'; ?>,
         csrfToken: <?php echo esc_js(csrf_token()); ?>,
-        createOrderUrl: <?php echo esc_js(base_path('admin/api/paypal_create_order.php')); ?>,
-        captureOrderUrl: <?php echo esc_js(base_path('admin/api/paypal_capture_order.php')); ?>,
-        currency: <?php echo esc_js($paypalCurrency); ?>
+        createOrderUrl: <?php echo esc_js(base_path('api/create-order.php')); ?>,
+        verifyPaymentUrl: <?php echo esc_js(base_path('api/verify-payment.php')); ?>,
+        currency: <?php echo esc_js($paymentCurrency); ?>
     };
 
     const setNotice = function (message, isError) {
@@ -648,17 +646,17 @@ $statusClass = static function (string $status): string {
     if (invoiceSearch) invoiceSearch.addEventListener('input', applyInvoiceFilter);
     if (invoiceStatusFilter) invoiceStatusFilter.addEventListener('change', applyInvoiceFilter);
 
-    if (!config.paypalEnabled) {
-        setNotice('PayPal credentials are missing in .env. Manual recording still works.', true);
+    if (!config.razorpayEnabled) {
+        setNotice('Razorpay credentials are missing in .env. Manual recording still works.', true);
         return;
     }
 
-    if (!window.paypal || typeof window.paypal.Buttons !== 'function') {
-        setNotice('PayPal SDK could not be loaded. Check internet or credentials.', true);
+    if (!window.Razorpay) {
+        setNotice('Razorpay SDK could not be loaded. Check internet or credentials.', true);
         return;
     }
 
-    document.querySelectorAll('.paypal-invoice-btn').forEach(function (container) {
+    document.querySelectorAll('.razorpay-invoice-btn').forEach(function (container) {
         const invoiceId = parseInt(container.dataset.invoiceId || '0', 10);
         const outstanding = container.dataset.outstanding || '0.00';
 
@@ -666,68 +664,81 @@ $statusClass = static function (string $status): string {
             return;
         }
 
-        window.paypal.Buttons({
-            style: {
-                layout: 'horizontal',
-                shape: 'rect',
-                color: 'gold',
-                label: 'pay',
-                height: 34
-            },
-            createOrder: async function () {
-                setNotice('Creating PayPal order for invoice #' + invoiceId + '...', false);
-                const response = await fetch(config.createOrderUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': config.csrfToken
-                    },
-                    body: JSON.stringify({
-                        invoice_id: invoiceId,
-                        amount: outstanding,
-                        currency: config.currency
-                    })
-                });
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'w-full bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all';
+        trigger.textContent = 'Pay with Razorpay';
+        container.appendChild(trigger);
 
-                const data = await response.json();
-                if (!response.ok || !data.success || !data.data || !data.data.order_id) {
-                    const msg = (data && data.message) ? data.message : 'Unable to create payment order.';
-                    setNotice(msg, true);
-                    throw new Error(msg);
-                }
+        trigger.addEventListener('click', async function () {
+            setNotice('Creating Razorpay order for invoice #' + invoiceId + '...', false);
+            const response = await fetch(config.createOrderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': config.csrfToken
+                },
+                body: JSON.stringify({
+                    invoice_id: invoiceId,
+                    amount: outstanding,
+                    currency: config.currency
+                })
+            });
 
-                return data.data.order_id;
-            },
-            onApprove: async function (data) {
-                setNotice('Capturing payment for invoice #' + invoiceId + '...', false);
-                const response = await fetch(config.captureOrderUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': config.csrfToken
-                    },
-                    body: JSON.stringify({
-                        order_id: data.orderID
-                    })
-                });
-
-                const result = await response.json();
-                if (!response.ok || !result.success) {
-                    const msg = (result && result.message) ? result.message : 'Capture failed.';
-                    setNotice(msg, true);
-                    return;
-                }
-
-                setNotice('Payment captured successfully. Refreshing dashboard...', false);
-                window.setTimeout(function () { window.location.reload(); }, 900);
-            },
-            onCancel: function () {
-                setNotice('Payment flow cancelled by user.', true);
-            },
-            onError: function () {
-                setNotice('Unexpected PayPal checkout error.', true);
+            const data = await response.json();
+            if (!response.ok || !data.success || !data.data || !data.data.order_id) {
+                const msg = (data && data.message) ? data.message : 'Unable to create payment order.';
+                setNotice(msg, true);
+                return;
             }
-        }).render(container);
+
+            const options = {
+                key: data.data.key_id,
+                amount: data.data.amount,
+                currency: data.data.currency,
+                name: data.data.name,
+                description: data.data.description,
+                order_id: data.data.order_id,
+                prefill: data.data.prefill || {},
+                theme: { color: '#94180C' },
+                handler: async function (paymentResponse) {
+                    setNotice('Verifying Razorpay payment for invoice #' + invoiceId + '...', false);
+                    const verifyResponse = await fetch(config.verifyPaymentUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': config.csrfToken
+                        },
+                        body: JSON.stringify(paymentResponse)
+                    });
+
+                    const verifyData = await verifyResponse.json();
+                    if (!verifyResponse.ok || !verifyData.success) {
+                        const msg = (verifyData && verifyData.message) ? verifyData.message : 'Payment verification failed.';
+                        setNotice(msg, true);
+                        return;
+                    }
+
+                    setNotice('Payment verified successfully. Refreshing dashboard...', false);
+                    window.setTimeout(function () { window.location.reload(); }, 900);
+                },
+                modal: {
+                    ondismiss: function () {
+                        setNotice('Payment flow cancelled by user.', true);
+                    }
+                }
+            };
+
+            try {
+                const checkout = new window.Razorpay(options);
+                checkout.on('payment.failed', function () {
+                    setNotice('Unexpected Razorpay checkout error.', true);
+                });
+                checkout.open();
+            } catch (err) {
+                setNotice(err && err.message ? err.message : 'Unable to open Razorpay checkout.', true);
+            }
+        });
     });
 })();
 </script>

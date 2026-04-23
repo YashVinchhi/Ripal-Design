@@ -1,6 +1,6 @@
 <?php
 if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php'; }
-// Redirect goods_list.php to goods_invoice.php â€” keep one canonical invoice route
+// Redirect goods_list.php to goods_invoice.php • keep one canonical invoice route
 session_start();
 $project_id = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 if ($project_id) {
