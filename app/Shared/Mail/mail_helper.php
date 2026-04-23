@@ -29,11 +29,17 @@ if (!function_exists('configure_mailer')) {
             return false;
         }
 
+        $smtpUser = getenv('MAIL_USERNAME') ?: getenv('SMTP_USER') ?: '';
+        $smtpPass = getenv('MAIL_PASSWORD') ?: getenv('SMTP_PASS') ?: '';
+        // Gmail app passwords are often stored with spaces for readability.
+        // Strip all whitespace so the SMTP client receives the actual token.
+        $smtpPass = preg_replace('/\s+/', '', (string)$smtpPass);
+
         $mail->isSMTP();
-        $mail->Host = $smtpHost;
+        $mail->Host = trim((string)$smtpHost);
         $mail->SMTPAuth = true;
-        $mail->Username = getenv('MAIL_USERNAME') ?: getenv('SMTP_USER') ?: '';
-        $mail->Password = getenv('MAIL_PASSWORD') ?: getenv('SMTP_PASS') ?: '';
+        $mail->Username = trim((string)$smtpUser);
+        $mail->Password = $smtpPass;
         $mail->SMTPSecure = getenv('MAIL_ENCRYPTION') ?: 'tls';
         $mail->Port = (int)(getenv('MAIL_PORT') ?: 587);
 
