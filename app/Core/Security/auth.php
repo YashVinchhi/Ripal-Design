@@ -495,7 +495,171 @@ function enforce_protected_route_login() {
     }
 
     if ($isProtected) {
+        // Also support legacy include-style guard for explicit per-page requires
+        $legacyGuard = rtrim((string)(defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3)), '/\\') . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'auth_check.php';
+        if (is_file($legacyGuard)) {
+            @require_once $legacyGuard;
+        }
         require_login();
+        enforce_gui_navigation_guard($script);
+    }
+}
+
+if (!function_exists('auth_strict_gui_navigation_enabled')) {
+    /**
+     * Determine if strict GUI-only navigation guard is enabled.
+     *
+     * @return bool
+     */
+    function auth_strict_gui_navigation_enabled(): bool
+    {
+        if (function_exists('env_bool')) {
+            return env_bool('STRICT_GUI_NAVIGATION', false);
+        }
+
+        $raw = strtolower(trim((string)(getenv('STRICT_GUI_NAVIGATION') ?: '')));
+        return in_array($raw, ['1', 'true', 'yes', 'on'], true);
+    }
+}
+
+if (!function_exists('auth_is_interactive_page_get_request')) {
+    /**
+     * Check whether current request is an interactive HTML page GET request.
+     *
+     * @param string $script
+     * @return bool
+     */
+    function auth_is_interactive_page_get_request(string $script): bool
+    {
+        if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
+            return false;
+        }
+
+        if (strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest') {
+            return false;
+        }
+
+        if (strpos($script, '/api/') !== false || strpos($script, '/dashboard/api/') !== false) {
+            return false;
+        }
+
+        $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
+        if ($accept === '') {
+            return true;
+        }
+
+        return strpos($accept, 'text/html') !== false || strpos($accept, '*/*') !== false;
+    }
+}
+
+if (!function_exists('auth_has_same_origin_referrer')) {
+    /**
+     * Validate that request referrer is same-origin and within app base path.
+     *
+     * @return bool
+     */
+    function auth_has_same_origin_referrer(): bool
+    {
+        $referrer = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
+        if ($referrer === '') {
+            return false;
+        }
+
+        $refHost = strtolower((string)(parse_url($referrer, PHP_URL_HOST) ?: ''));
+        $curHost = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+
+        if ($refHost === '' || $curHost === '') {
+            return false;
+        }
+
+        $normalizedCurHost = preg_replace('/:[0-9]+$/', '', $curHost);
+        if (!is_string($normalizedCurHost) || $normalizedCurHost === '') {
+            $normalizedCurHost = $curHost;
+        }
+
+        if ($refHost !== $normalizedCurHost) {
+            return false;
+        }
+
+        $refPath = (string)(parse_url($referrer, PHP_URL_PATH) ?: '/');
+        $basePath = rtrim((string)(defined('BASE_PATH') ? BASE_PATH : ''), '/');
+        if ($basePath === '') {
+            return true;
+        }
+
+        return strpos($refPath, $basePath . '/') === 0 || $refPath === $basePath;
+    }
+}
+
+if (!function_exists('auth_has_trusted_fetch_metadata_navigation')) {
+    /**
+     * Validate browser fetch metadata for in-app top-level navigation.
+     *
+     * @return bool
+     */
+    function auth_has_trusted_fetch_metadata_navigation(): bool
+    {
+        $fetchSite = strtolower(trim((string)($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '')));
+        $fetchMode = strtolower(trim((string)($_SERVER['HTTP_SEC_FETCH_MODE'] ?? '')));
+        $fetchDest = strtolower(trim((string)($_SERVER['HTTP_SEC_FETCH_DEST'] ?? '')));
+
+        if ($fetchSite === '' && $fetchMode === '' && $fetchDest === '') {
+            // Header set not present (older clients); caller should use referrer fallback.
+            return false;
+        }
+
+        // Allow only top-level navigation requests originating from same-origin/site.
+        if (!in_array($fetchSite, ['same-origin', 'same-site'], true)) {
+            return false;
+        }
+
+        if ($fetchMode !== '' && $fetchMode !== 'navigate') {
+            return false;
+        }
+
+        if ($fetchDest !== '' && $fetchDest !== 'document') {
+            return false;
+        }
+
+        return true;
+    }
+}
+
+if (!function_exists('enforce_gui_navigation_guard')) {
+    /**
+     * Block direct URL access for protected pages when strict mode is enabled.
+     *
+     * @param string $script
+     * @return void
+     */
+    function enforce_gui_navigation_guard(string $script): void
+    {
+        if (!auth_strict_gui_navigation_enabled()) {
+            return;
+        }
+
+        if (!auth_is_interactive_page_get_request($script)) {
+            return;
+        }
+
+        if (auth_has_same_origin_referrer() || auth_has_trusted_fetch_metadata_navigation()) {
+            return;
+        }
+
+        if (!headers_sent()) {
+            http_response_code(403);
+            header('Content-Type: text/html; charset=UTF-8');
+        }
+
+        $dashboardUrl = function_exists('auth_dashboard_url') ? auth_dashboard_url() : '/dashboard/dashboard.php';
+        $safeDashboardUrl = htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8');
+
+        echo '<!doctype html><html><head><meta charset="utf-8"><title>Direct Access Blocked</title></head><body style="font-family:Arial,sans-serif;padding:24px;line-height:1.5;">';
+        echo '<h2>Direct URL access is blocked</h2>';
+        echo '<p>Please navigate using the application menu and links.</p>';
+        echo '<p><a href="' . $safeDashboardUrl . '">Return to dashboard</a></p>';
+        echo '</body></html>';
+        exit;
     }
 }
 

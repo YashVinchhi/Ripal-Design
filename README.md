@@ -128,7 +128,7 @@ For production compose, see [docker-compose.prod.yml](docker-compose.prod.yml) a
 ## Configuration
 
 - Copy `.env.example` → `.env` and fill values. Do not commit `.env`.
-- Typical keys: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`, `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_PORT`, `APP_BASE_URL`, `APP_ENV`.
+- Typical keys: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`, `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_PORT`, `APP_BASE_URL`, `APP_ENV`, `STRICT_GUI_NAVIGATION`.
 
 ## Database
 

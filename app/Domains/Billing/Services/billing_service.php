@@ -375,7 +375,7 @@ if (!function_exists('billing_send_invoice_email')) {
             'Total: ' . number_format((float)$ctx['total'], 2) . PHP_EOL .
             'View and pay online: ' . $paymentLink;
 
-        $fromEmail = getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.studio');
+        $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: getenv('MAIL_FROM') ?: (getenv('SMTP_FROM') ?: 'no-reply@ripaldesign.studio');
         $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
 
         $sent = false;
@@ -397,8 +397,9 @@ if (!function_exists('billing_send_invoice_email')) {
                 $mail->Subject = $subject;
                 $mail->Body = $html;
                 $mail->AltBody = $textBody;
-                $mail->send();
-                $sent = true;
+                $sent = function_exists('app_send_mail')
+                    ? app_send_mail($mail, ['mail_type' => 'invoice', 'invoice' => $invoiceCode, 'target' => $target])
+                    : (bool)@$mail->send();
             } catch (Throwable $e) {
                 $error = $e->getMessage();
                 $sent = false;
@@ -406,17 +407,51 @@ if (!function_exists('billing_send_invoice_email')) {
         }
 
         if (!$sent) {
-            $headers = "MIME-Version: 1.0\r\n";
-            $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-            $headers .= 'From: ' . $fromName . ' <' . $fromEmail . "\r\n";
-            $headers .= 'Reply-To: ' . $fromEmail . "\r\n";
+            $sentFallback = false;
 
-            if (!mail($target, $subject, $html, $headers)) {
-                if ($error === '') {
-                    $error = 'Unable to send invoice email using configured mail transports.';
+            if (function_exists('app_mailer')) {
+                $fallbackMailer = app_mailer();
+                if ($fallbackMailer) {
+                    try {
+                        if (method_exists($fallbackMailer, 'clearAddresses')) $fallbackMailer->clearAddresses();
+                        $fallbackMailer->setFrom($fromEmail, $fromName);
+                        $fallbackMailer->addAddress($target);
+                        $fallbackMailer->Subject = $subject;
+                        $fallbackMailer->isHTML(true);
+                        $fallbackMailer->Body = $html;
+                        $fallbackMailer->AltBody = $textBody;
+                        $sentFallback = function_exists('app_send_mail') ? app_send_mail($fallbackMailer, ['mail_type' => 'invoice', 'invoice' => $invoiceCode, 'target' => $target, 'fallback' => true]) : (bool)$fallbackMailer->send();
+                    } catch (Throwable $e) {
+                        if (function_exists('app_log')) app_log('warning', 'Invoice fallback PHPMailer failed', ['exception' => $e->getMessage(), 'invoice' => $invoiceCode, 'target' => $target]);
+                        $sentFallback = false;
+                    }
+                }
+            }
+
+            if (!$sentFallback) {
+                $headers = "MIME-Version: 1.0\r\n";
+                $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+                $headers .= 'From: ' . $fromName . ' <' . $fromEmail . "\r\n";
+                $headers .= 'Reply-To: ' . $fromEmail . "\r\n";
+
+                if (!mail($target, $subject, $html, $headers)) {
+                    if ($error === '') {
+                        $error = 'Unable to send invoice email using configured mail transports.';
+                    }
+                    if (function_exists('app_log')) {
+                        app_log('warning', 'Invoice email fallback mail() failed', ['invoice' => $invoiceCode, 'target' => $target, 'error' => $error]);
+                    }
+                } else {
+                    $sent = true;
+                    if (function_exists('app_log')) {
+                        app_log('info', 'Invoice email sent via fallback mail()', ['invoice' => $invoiceCode, 'target' => $target]);
+                    }
                 }
             } else {
                 $sent = true;
+                if (function_exists('app_log')) {
+                    app_log('info', 'Invoice email sent via fallback PHPMailer', ['invoice' => $invoiceCode, 'target' => $target]);
+                }
             }
         }
 
@@ -662,8 +697,9 @@ if (!function_exists('billing_send_invoice_email')) {
                 $mail->Subject = $subject;
                 $mail->Body = $html;
                 $mail->AltBody = $textBody;
-                $mail->send();
-                $sent = true;
+                $sent = function_exists('app_send_mail')
+                    ? app_send_mail($mail, ['mail_type' => 'invoice', 'invoice' => $invoiceCode, 'target' => $target])
+                    : (bool)@$mail->send();
             } catch (Throwable $e) {
                 $error = $e->getMessage();
                 $sent = false;
@@ -680,8 +716,14 @@ if (!function_exists('billing_send_invoice_email')) {
                 if ($error === '') {
                     $error = 'Unable to send invoice email using configured mail transports.';
                 }
+                if (function_exists('app_log')) {
+                    app_log('warning', 'Invoice email fallback mail() failed', ['invoice' => $invoiceCode, 'target' => $target, 'error' => $error]);
+                }
             } else {
                 $sent = true;
+                if (function_exists('app_log')) {
+                    app_log('info', 'Invoice email sent via fallback mail()', ['invoice' => $invoiceCode, 'target' => $target]);
+                }
             }
         }
 

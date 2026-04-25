@@ -80,13 +80,13 @@ if ($db instanceof PDO) {
 
     if ($search !== '') {
         $searchLike = '%' . $search . '%';
-        $where[] = '(full_name LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR username LIKE ? OR email LIKE ?)';
-        array_push($params, $searchLike, $searchLike, $searchLike, $searchLike, $searchLike);
+        $where[] = '(full_name LIKE :search OR first_name LIKE :search OR last_name LIKE :search OR username LIKE :search OR email LIKE :search)';
+        $params[':search'] = $searchLike;
     }
 
     if ($role !== 'all') {
-        $where[] = 'LOWER(role) = ?';
-        $params[] = $role;
+        $where[] = 'LOWER(role) = :role';
+        $params[':role'] = $role;
     }
 
     if (!empty($where)) {

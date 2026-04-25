@@ -67,12 +67,12 @@ function generate_unique_username(PDO $db, string $firstName, string $lastName):
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF validation
-    if (
-        empty($_POST['csrf_token']) ||
-        !isset($_SESSION['_csrf_token']) ||
-        !hash_equals((string)$_SESSION['_csrf_token'], (string)$_POST['csrf_token'])
-    ) {
+    // Centralized CSRF validation
+    if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
+        if (function_exists('app_log')) {
+            $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+            app_log('warning', 'CSRF validation failed on login/register', ['ip' => $clientIp, 'post_keys' => array_keys($_POST ?? [])]);
+        }
         http_response_code(403);
         $_SESSION['error'] = 'Security token mismatch. Please refresh and try again.';
         if (isset($_POST['signup'])) {
@@ -191,6 +191,10 @@ if (isset($_POST['signup'])) {
         ];
         $_SESSION['user_id'] = $user_id;
         @session_regenerate_id(true);
+        $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+        if (function_exists('app_log')) {
+            app_log('info', 'User registered', ['user_id' => $user_id, 'email' => $email, 'ip' => $clientIp]);
+        }
 
         // Attempt to send a notification email to the user about pending status
         try {
@@ -240,12 +244,12 @@ if (isset($_POST['signup'])) {
                     '[User Name]' => $fullName,
                 ]);
 
-                try {
-                    $mail->send();
-                } catch (Exception $em) {
-                    if (function_exists('app_log')) {
-                        app_log('warning', 'Welcome email failed', ['mailer_error' => $mail->ErrorInfo, 'exception' => $em->getMessage()]);
-                    }
+                // Use centralized send wrapper which logs outcome without exposing body
+                $sentWelcome = function_exists('app_send_mail')
+                    ? app_send_mail($mail, ['mail_type' => 'signup_welcome', 'user_id' => $user_id ?? null, 'email' => $email])
+                    : (bool)@$mail->send();
+                if (!$sentWelcome && function_exists('app_log')) {
+                    app_log('warning', 'Welcome email failed', ['mailer_error' => $mail->ErrorInfo ?? '', 'email' => $email]);
                 }
             }
         } catch (\Throwable $e) {
@@ -314,6 +318,10 @@ if (isset($_POST['login'])) {
                 ];
                 $_SESSION['user_id'] = (int)($user['id'] ?? 0);
                 @session_regenerate_id(true);
+                $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+                if (function_exists('app_log')) {
+                    app_log('info', 'User logged in', ['user_id' => (int)$_SESSION['user_id'], 'email' => $email, 'ip' => $clientIp]);
+                }
                 // If user asked to be remembered, create persistent remember token/cookie
                 if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
                     auth_set_remember_token((int)$_SESSION['user_id']);
@@ -356,6 +364,10 @@ if (isset($_POST['login'])) {
                 ];
                 $_SESSION['user_id'] = (int)($legacyUser['s_id'] ?? $legacyUser['id'] ?? 0);
                 @session_regenerate_id(true);
+                $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+                if (function_exists('app_log')) {
+                    app_log('info', 'User logged in (legacy)', ['user_id' => (int)$_SESSION['user_id'], 'email' => $email, 'ip' => $clientIp]);
+                }
                 // If user asked to be remembered, create persistent remember token/cookie
                 if (!empty($_POST['remember']) && function_exists('auth_set_remember_token')) {
                     auth_set_remember_token((int)$_SESSION['user_id']);
@@ -374,5 +386,9 @@ if (isset($_POST['login'])) {
         }
     }
 
+    if (function_exists('app_log')) {
+        $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+        app_log('warning', 'Failed login attempt', ['email' => $email, 'ip' => $clientIp, 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '']);
+    }
     login_error_and_redirect($ct('login_invalid_credentials', 'Invalid email or password.'));
 }// End of login/register processor

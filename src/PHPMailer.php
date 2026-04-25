@@ -1662,10 +1662,31 @@ class PHPMailer
     {
         try {
             if (!$this->preSend()) {
+                if (function_exists('\\app_log')) {
+                    $toList = [];
+                    foreach ($this->getToAddresses() as $t) {
+                        $toList[] = is_array($t) && isset($t[0]) ? (string)$t[0] : (string)$t;
+                    }
+                    \app_log('warning', 'PHPMailer preSend failed', ['to' => $toList, 'subject' => $this->Subject, 'error' => $this->ErrorInfo]);
+                }
                 return false;
             }
 
-            return $this->postSend();
+            $result = $this->postSend();
+
+            if (function_exists('\\app_log')) {
+                $toList = [];
+                foreach ($this->getToAddresses() as $t) {
+                    $toList[] = is_array($t) && isset($t[0]) ? (string)$t[0] : (string)$t;
+                }
+                if ($result) {
+                    \app_log('info', 'PHPMailer sent', ['to' => $toList, 'subject' => $this->Subject]);
+                } else {
+                    \app_log('warning', 'PHPMailer failed to send', ['to' => $toList, 'subject' => $this->Subject, 'error' => $this->ErrorInfo]);
+                }
+            }
+
+            return $result;
         } catch (Exception $exc) {
             $this->mailHeader = '';
             $this->setError($exc->getMessage());

@@ -38,6 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	redirect_with_message($ct('method_not_allowed', 'Method not allowed.'));
 }
 
+// Enforce CSRF for reset requests
+if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
+	if (function_exists('app_log')) {
+		app_log('warning', 'CSRF validation failed on reset request', ['ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 'post_keys' => array_keys($_POST ?? [])]);
+	}
+	redirect_with_message($ct('security_token_mismatch', 'Security token mismatch. Please refresh and try again.'), 'error');
+}
+
 $db = get_db();
 if (!($db instanceof PDO)) {
 	redirect_with_message($ct('db_unavailable', 'Database connection unavailable. Please try later.'));
@@ -91,7 +99,7 @@ if ($stmt->rowCount() > 0) {
 	$resetPath = rtrim(BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/reset_password.php';
 	$resetLink = $scheme . '://' . $host . $resetPath . '?token=' . urlencode($token);
 
-	$mail->setFrom('noreply@example.com', $ct('mail_from_name', 'Ripal Design'));
+	$mail->setFrom(getenv('MAIL_FROM_ADDRESS') ?: getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.studio', $ct('mail_from_name', 'Ripal Design'));
 	$mail->addAddress($email);
 	$mail->isHTML(true);
 	$mail->Subject = $ct('mail_subject', 'Password Reset Request');
@@ -131,12 +139,15 @@ if ($stmt->rowCount() > 0) {
 		'{{user_name}}' => $userName,
 		'[User Name]' => $userName,
 	]);
-	try {
-		$mail->send();
+	$sent = function_exists('app_send_mail')
+		? app_send_mail($mail, ['mail_type' => 'reset_password', 'email' => $email])
+		: (bool)@$mail->send();
+
+	if ($sent) {
 		redirect_with_flash_cookie($ct('flash_sent_success', 'Reset link sent. Please check your email.'), 'success');
-	} catch (\Throwable $e) {
+	} else {
 		if (function_exists('app_log')) {
-			app_log('error', 'PHPMailer reset email send failed', ['mailer_error' => $mail->ErrorInfo, 'exception' => $e->getMessage(), 'email' => $email]);
+			app_log('error', 'PHPMailer reset email send failed', ['mailer_error' => $mail->ErrorInfo ?? '', 'email' => $email]);
 		}
 		redirect_with_flash_cookie($ct('flash_sent_failed', 'Failed to send reset link.'), 'error');
 	}

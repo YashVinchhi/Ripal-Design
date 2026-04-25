@@ -27,8 +27,60 @@ if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/../Config/config.php';
 }
 
+// Load .env into environment if present. Prefer vlucas/phpdotenv when available,
+// otherwise fall back to a lightweight parser that sets getenv()/$_ENV/$_SERVER.
+$autoload = rtrim((string)defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3), '/\\') . '/vendor/autoload.php';
+$envPath = rtrim((string)defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3), '/\\') . '/.env';
+if (file_exists($autoload)) {
+    try {
+        require_once $autoload;
+        if (class_exists('\\Dotenv\\Dotenv')) {
+            try {
+                $dot = \Dotenv\Dotenv::createImmutable(rtrim((string)PROJECT_ROOT, '/\\'));
+                $dot->safeLoad();
+            } catch (Throwable $e) {
+                // ignore dotenv failures and fall back to manual loader below
+            }
+        }
+    } catch (Throwable $e) {
+        // ignore autoload failures
+    }
+}
+
+if (file_exists($envPath) && is_readable($envPath)) {
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (is_array($lines)) {
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0) continue;
+            if (strpos($line, '=') === false) continue;
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim((string)$name);
+            $value = trim((string)$value);
+            $value = trim($value, "\"'");
+            if (getenv($name) === false) {
+                putenv($name . '=' . $value);
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
+        }
+    }
+}
+
 if (file_exists(__DIR__ . '/../Support/logger.php')) {
     require_once __DIR__ . '/../Support/logger.php';
+}
+
+// Optionally load CSRF helpers for form protection
+$incCsrf = rtrim((string)(defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3)), '/\\') . '/includes/csrf.php';
+if (file_exists($incCsrf)) {
+    require_once $incCsrf;
+}
+
+// Optionally load upload helpers
+$incUpload = rtrim((string)(defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3)), '/\\') . '/includes/upload_secure.php';
+if (file_exists($incUpload)) {
+    require_once $incUpload;
 }
 
 if (file_exists(__DIR__ . '/../Http/routes.php')) {
@@ -38,26 +90,29 @@ if (file_exists(__DIR__ . '/../Http/routes.php')) {
     }
 }
 
-if (!function_exists('apply_security_headers')) {
-    /**
-     * Apply low-risk HTTP security headers globally.
-     */
-    function apply_security_headers(): void {
-        if (headers_sent()) {
-            return;
-        }
+// Load centralized security headers if available, otherwise provide a safe fallback.
+$incHeaders = rtrim((string)(defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3)), '/\\') . '/includes/headers.php';
+if (file_exists($incHeaders)) {
+    require_once $incHeaders;
+} else {
+    if (!function_exists('apply_security_headers')) {
+        function apply_security_headers(): void {
+            if (headers_sent()) {
+                return;
+            }
 
-        header('X-Content-Type-Options: nosniff');
-        header('X-Frame-Options: SAMEORIGIN');
-        header('Referrer-Policy: strict-origin-when-cross-origin');
-        header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+            header('X-Frame-Options: DENY');
+            header('X-Content-Type-Options: nosniff');
+            header('Referrer-Policy: strict-origin-when-cross-origin');
+            header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
 
-        if (defined('SECURITY_ENABLE_CSP') && SECURITY_ENABLE_CSP && defined('SECURITY_CSP_POLICY') && SECURITY_CSP_POLICY !== '') {
-            header('Content-Security-Policy: ' . SECURITY_CSP_POLICY);
-        }
+            // Default CSP (allows self resources; permits inline styles for legacy layouts).
+            $csp = "default-src 'self' https: data: blob: 'unsafe-inline'; script-src 'self' https: 'unsafe-inline' 'unsafe-eval'; style-src 'self' https: 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' https: data:; connect-src 'self' https: wss:; frame-src 'self' https:; media-src 'self' https: data: blob:; object-src 'none';";
+            header('Content-Security-Policy: ' . $csp);
 
-        if (function_exists('app_is_https') && app_is_https() && defined('SECURITY_ENABLE_HSTS') && SECURITY_ENABLE_HSTS) {
-            header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+            if (function_exists('app_is_https') && app_is_https() && defined('SECURITY_ENABLE_HSTS') && SECURITY_ENABLE_HSTS) {
+                header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+            }
         }
     }
 }

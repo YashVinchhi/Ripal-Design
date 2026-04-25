@@ -136,6 +136,12 @@ if ($selectedResourceId <= 0 && isset($_GET['file_id'])) {
     $selectedResourceId = (int)$_GET['file_id'];
 }
 
+// Validate resource kind
+$allowedKinds = ['drawing', 'file'];
+if (!in_array($selectedResourceKind, $allowedKinds, true)) {
+    throw new InvalidArgumentException('Invalid resource kind.');
+}
+
 $projectResources = [];
 
 foreach ($project['files'] ?? [] as $f) {

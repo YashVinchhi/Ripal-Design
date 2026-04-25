@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 require_once PROJECT_ROOT . '/app/Shared/Mail/mail_helper.php';
                                 @configure_mailer($mail);
 
-                                $mail->setFrom($fromEmail, $fromName);
+                                $mail->setFrom(getenv('MAIL_FROM_ADDRESS') ?: getenv('MAIL_FROM') ?: $fromEmail, $fromName);
                                 $mail->addAddress($to);
                                 $mail->Subject = $subject;
                                 $mail->Body = $body;
@@ -185,26 +185,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $mail->AltBody = $body;
                                 }
 
-                                $mail->send();
-                                $sent = true;
+                                $sent = function_exists('app_send_mail') ? app_send_mail($mail, ['mail_type' => 'invoice', 'invoice_id' => $invoice_id ?? null, 'to' => $to]) : (bool)$mail->send();
                         } catch (Exception $ex) {
                                 $errorMsg = $ex->getMessage();
                                 $sent = false;
                         }
                 }
 
-        // Fallback to PHP mail() • send HTML when available
+        // Fallback to centralized mail helper -> PHPMailer -> PHP mail() as last resort
         if (!$sent) {
-            $headers = "MIME-Version: 1.0\r\n";
-            $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-            $headers .= 'From: ' . $fromName . ' <' . $fromEmail . "\r\n";
-            $headers .= 'Reply-To: ' . $fromEmail . "\r\n";
-            $headers .= 'X-Mailer: PHP/' . phpversion();
-            $messageForMail = $htmlBody ?? nl2br(htmlspecialchars($body));
-            if (mail($to, $subject, $messageForMail, $headers)) {
-                $sent = true;
+            $sentFallback = false;
+
+            // Ensure centralized mail helper is available when present
+            if (file_exists(rtrim((string)PROJECT_ROOT, '/\\') . '/app/Shared/Mail/mail_helper.php')) {
+                require_once rtrim((string)PROJECT_ROOT, '/\\') . '/app/Shared/Mail/mail_helper.php';
+            }
+
+            if (function_exists('app_mailer')) {
+                $fallbackMailer = app_mailer();
+                if ($fallbackMailer) {
+                    try {
+                        if (method_exists($fallbackMailer, 'clearAddresses')) $fallbackMailer->clearAddresses();
+                        $fallbackMailer->setFrom($fromEmail, $fromName);
+                        $fallbackMailer->addAddress($to);
+                        $fallbackMailer->isHTML(true);
+                        $fallbackMailer->Subject = $subject;
+                        $fallbackMailer->Body = $htmlBody ?? nl2br(htmlspecialchars($body));
+                        $fallbackMailer->AltBody = $body;
+                        $sentFallback = function_exists('app_send_mail') ? app_send_mail($fallbackMailer, ['mail_type' => 'invoice', 'invoice_id' => $invoice_id ?? null, 'to' => $to, 'fallback' => true]) : (bool)$fallbackMailer->send();
+                    } catch (Throwable $e) {
+                        if (function_exists('app_log')) app_log('warning', 'Invoice fallback PHPMailer failed', ['exception' => $e->getMessage(), 'invoice_id' => $invoice_id ?? null, 'to' => $to]);
+                        $sentFallback = false;
+                    }
+                }
+            }
+
+            if (!$sentFallback) {
+                $headers = "MIME-Version: 1.0\r\n";
+                $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+                $headers .= 'From: ' . $fromName . ' <' . $fromEmail . "\r\n";
+                $headers .= 'Reply-To: ' . $fromEmail . "\r\n";
+                $headers .= 'X-Mailer: PHP/' . phpversion();
+                $messageForMail = $htmlBody ?? nl2br(htmlspecialchars($body));
+                if (mail($to, $subject, $messageForMail, $headers)) {
+                    $sent = true;
+                    if (function_exists('app_log')) {
+                        app_log('info', 'Invoice email sent via fallback mail()', ['invoice_id' => $invoice_id ?? null, 'to' => $to]);
+                    }
+                } else {
+                    if ($errorMsg === '') $errorMsg = 'Server unable to send mail (mail() returned false).';
+                    if (function_exists('app_log')) {
+                        app_log('warning', 'Invoice fallback mail() failed', ['invoice_id' => $invoice_id ?? null, 'to' => $to, 'error' => $errorMsg]);
+                    }
+                }
             } else {
-                if ($errorMsg === '') $errorMsg = 'Server unable to send mail (mail() returned false).';
+                $sent = true;
+                if (function_exists('app_log')) {
+                    app_log('info', 'Invoice email sent via fallback PHPMailer', ['invoice_id' => $invoice_id ?? null, 'to' => $to]);
+                }
             }
         }
 

@@ -92,7 +92,7 @@ try {
         $mailer = new PHPMailer\PHPMailer\PHPMailer(true);
         $configured = function_exists('configure_mailer') ? configure_mailer($mailer) : false;
 
-        $mailer->setFrom(getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@ripaldesign.studio', getenv('MAIL_FROM_NAME') ?: 'Ripal Design');
+        $mailer->setFrom(getenv('MAIL_FROM_ADDRESS') ?: getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.studio', getenv('MAIL_FROM_NAME') ?: 'Ripal Design');
         $mailer->addAddress($email, $name);
         $mailer->isHTML(true);
         $mailer->Subject = $mailSubject;
@@ -103,14 +103,40 @@ try {
             $mailer->isMail();
         }
 
-        $confirmationSent = $mailer->send();
+        // Use centralized send wrapper which logs outcome without exposing message body
+        $confirmationSent = function_exists('app_send_mail') ? app_send_mail($mailer, ['mail_type' => 'consultation', 'reference' => $referenceId]) : (bool)$mailer->send();
     } else {
-        $headers = [];
-        $headers[] = 'MIME-Version: 1.0';
-        $headers[] = 'Content-type: text/html; charset=UTF-8';
-        $headers[] = 'From: Ripal Design <no-reply@ripaldesign.studio>';
+        $confirmationSent = false;
 
-        $confirmationSent = mail($email, $mailSubject, $mailBodyHtml, implode("\r\n", $headers));
+        if (function_exists('app_mailer')) {
+            $fallbackMailer = app_mailer();
+            if ($fallbackMailer) {
+                try {
+                    if (method_exists($fallbackMailer, 'clearAddresses')) $fallbackMailer->clearAddresses();
+                    $fallbackMailer->setFrom(getenv('MAIL_FROM_ADDRESS') ?: getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.studio', getenv('MAIL_FROM_NAME') ?: 'Ripal Design');
+                    $fallbackMailer->addAddress($email, $name);
+                    $fallbackMailer->isHTML(true);
+                    $fallbackMailer->Subject = $mailSubject;
+                    $fallbackMailer->Body = $mailBodyHtml;
+                    $confirmationSent = function_exists('app_send_mail') ? app_send_mail($fallbackMailer, ['mail_type' => 'consultation', 'reference' => $referenceId, 'fallback' => true]) : (bool)$fallbackMailer->send();
+                } catch (Throwable $e) {
+                    if (function_exists('app_log')) app_log('warning', 'Consultation confirmation fallback PHPMailer failed', ['exception' => $e->getMessage(), 'email' => $email, 'reference' => $referenceId]);
+                    $confirmationSent = false;
+                }
+            }
+        }
+
+        if (!$confirmationSent) {
+            $headers = [];
+            $headers[] = 'MIME-Version: 1.0';
+            $headers[] = 'Content-type: text/html; charset=UTF-8';
+            $headers[] = 'From: Ripal Design <no-reply@ripaldesign.studio>';
+
+            $confirmationSent = mail($email, $mailSubject, $mailBodyHtml, implode("\r\n", $headers));
+            if (!$confirmationSent && function_exists('app_log')) {
+                app_log('warning', 'Consultation confirmation fallback mail() failed', ['email' => $email, 'reference' => $referenceId]);
+            }
+        }
     }
 } catch (Throwable $e) {
     $confirmationSent = false;

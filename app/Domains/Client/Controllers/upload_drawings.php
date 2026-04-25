@@ -23,61 +23,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   require_csrf();
 
     $maxBytes = 5 * 1024 * 1024;
-    $allowedMimes = [
-      'image/jpeg' => 'jpg',
-      'image/png' => 'png',
-      'image/webp' => 'webp',
-    ];
 
     $uploaded = $_FILES['drawing'] ?? null;
     if (!is_array($uploaded) || (int)($uploaded['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
       $msg = 'Please select an image file before submitting.';
-    } elseif ((int)($uploaded['size'] ?? 0) <= 0 || (int)($uploaded['size'] ?? 0) > $maxBytes) {
-      $msg = 'Image must be between 1 byte and 5 MB.';
     } else {
-      $tmpPath = (string)($uploaded['tmp_name'] ?? '');
-      $detectedMime = '';
-      if (function_exists('finfo_open') && function_exists('finfo_file')) {
-        $finfo = @finfo_open(FILEINFO_MIME_TYPE);
-        if ($finfo !== false) {
-          $detectedMime = (string)@finfo_file($finfo, $tmpPath);
-          @finfo_close($finfo);
-        }
-      }
-
-      if (!isset($allowedMimes[$detectedMime])) {
-        $msg = 'Only JPEG, PNG, or WEBP images are allowed.';
+      // Use centralized secure upload helper
+      if (!function_exists('store_uploaded_file_array')) {
+        $msg = 'Server upload handler not available.';
       } else {
-        $projectId = (int)($_POST['project_id'] ?? 0);
-        $notes = trim((string)($_POST['submission_notes'] ?? ''));
-
-        $relativeDir = 'client_drawings/' . date('Y/m');
-        $absoluteDir = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
-        if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
-          $msg = 'Unable to prepare secure upload storage.';
+        $res = store_uploaded_file_array($uploaded, ['max_size' => $maxBytes]);
+        if (empty($res['ok'])) {
+          $msg = 'Upload failed: ' . ($res['error'] ?? 'unknown');
+          if (function_exists('app_log')) {
+            app_log('warning', 'Upload failed', ['error' => $res['error'] ?? '', 'tmp' => $uploaded['tmp_name'] ?? '', 'uploader_id' => function_exists('current_user_id') ? current_user_id() : 0]);
+          }
         } else {
-          $storedName = client_uuid_v4() . '.' . $allowedMimes[$detectedMime];
-          $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
-          if (!move_uploaded_file($tmpPath, $absolutePath)) {
-            $msg = 'Upload failed while storing the file.';
-          } else {
-            $storagePath = 'uploads/' . $relativeDir . '/' . $storedName;
-            if ($projectId > 0 && db_connected()) {
-              try {
-                $db = get_db();
-                if ($db instanceof PDO) {
-                  $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())');
-                  $displayName = 'Client drawing' . ($notes !== '' ? ': ' . mb_substr($notes, 0, 120) : '');
-                  $stmt->execute([$projectId, $displayName, 'v1.0', 'Under Review', $storagePath]);
-                }
-              } catch (Throwable $e) {
-                if (function_exists('app_log')) {
-                  app_log('warning', 'Client upload metadata save failed', ['exception' => $e->getMessage(), 'project_id' => $projectId]);
-                }
+          $projectId = (int)($_POST['project_id'] ?? 0);
+          $notes = trim((string)($_POST['submission_notes'] ?? ''));
+
+          $storedName = $res['stored_name'];
+          $storagePath = 'private_uploads/' . $storedName;
+
+          if (function_exists('app_log')) {
+            app_log('info', 'File uploaded', ['stored_name' => $storedName, 'storage_path' => $storagePath, 'uploader_id' => function_exists('current_user_id') ? current_user_id() : 0, 'size' => (int)($res['size'] ?? 0)]);
+          }
+
+          if ($projectId > 0 && db_connected()) {
+            try {
+              $db = get_db();
+              if ($db instanceof PDO) {
+                $stmt = $db->prepare('INSERT INTO project_drawings (project_id, name, version, status, file_path, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())');
+                $displayName = 'Client drawing' . ($notes !== '' ? ': ' . mb_substr($notes, 0, 120) : '');
+                $stmt->execute([$projectId, $displayName, 'v1.0', 'Under Review', $storagePath]);
+              }
+            } catch (Throwable $e) {
+              if (function_exists('app_log')) {
+                app_log('warning', 'Client upload metadata save failed', ['exception' => $e->getMessage(), 'project_id' => $projectId]);
               }
             }
-            $msg = 'Blueprint received and queued for architectural review.';
           }
+          $msg = 'Blueprint received and queued for architectural review.';
         }
       }
     }

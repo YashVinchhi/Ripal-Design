@@ -96,9 +96,11 @@ $message = '';
 $workers = [];
 if ($db instanceof PDO) {
     try {
-        $workers = $db->query("SELECT u.id, COALESCE(u.first_name, '') AS first_name, COALESCE(u.last_name, '') AS last_name, u.username, u.email, u.phone, COALESCE(ws.decision_score,0) AS decision_score, COALESCE(ws.final_score,0) AS final_score, COALESCE(ws.confidence,0) AS confidence, COALESCE(ws.risk,0) AS risk, (SELECT COUNT(*) FROM worker_metric_events wme WHERE wme.worker_id = u.id) AS events_count FROM users u LEFT JOIN worker_scores ws ON ws.worker_id = u.id WHERE u.role = 'worker' ORDER BY u.username ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $db->prepare("SELECT u.id, COALESCE(u.first_name, '') AS first_name, COALESCE(u.last_name, '') AS last_name, u.username, u.email, u.phone, COALESCE(ws.decision_score,0) AS decision_score, COALESCE(ws.final_score,0) AS final_score, COALESCE(ws.confidence,0) AS confidence, COALESCE(ws.risk,0) AS risk, (SELECT COUNT(*) FROM worker_metric_events wme WHERE wme.worker_id = u.id) AS events_count FROM users u LEFT JOIN worker_scores ws ON ws.worker_id = u.id WHERE u.role = :role ORDER BY u.username ASC");
+        $stmt->execute([':role' => 'worker']);
+        $workers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        // ignore
+        if (function_exists('app_log')) app_log('error','admin worker metric save failed',['ex'=>$e->getMessage()]);
     }
 }
 

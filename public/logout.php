@@ -15,6 +15,12 @@ if (function_exists('auth_clear_remember_cookie')) {
     auth_clear_remember_cookie();
 }
 
+// Log logout event
+$clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+if ($userId > 0 && function_exists('app_log')) {
+    app_log('info', 'User logged out', ['user_id' => $userId, 'ip' => $clientIp]);
+}
+
 // Destroy session and redirect to home
 $_SESSION = [];
 if (ini_get("session.use_cookies")) {

@@ -762,7 +762,11 @@ if (db_connected()) {
 if (db_connected() && $projectId > 0) {
   $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
   $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
-  $projectFilesRows = db_fetch_all('SELECT id, name, type, file_path, storage_path, uploaded_at, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE project_id = ? ORDER BY uploaded_at DESC', [$projectId]);
+
+  $stmt = $db->prepare('SELECT id, name, type, file_path, storage_path, uploaded_at, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files WHERE project_id = :project_id ORDER BY uploaded_at DESC');
+  $stmt->execute([':project_id' => $projectId]);
+  $projectFilesRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
   foreach ($projectFilesRows as $item) {
     $name = (string)($item['name'] ?? 'File');
     $filePathCandidate = (string)($item['file_path'] ?? '');
@@ -936,6 +940,10 @@ if (!empty($projectLibrary)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Enforce CSRF for form actions
+  if (function_exists('require_csrf')) {
+    require_csrf();
+  }
   $vrAction = trim((string)($_POST['vr_action'] ?? ''));
   if ($vrAction === 'save_settings') {
     $device = trim((string)($_POST['vr_device'] ?? 'Custom'));
@@ -1194,8 +1202,8 @@ if (db_connected()) {
     if ($resourceKind === 'file') {
       $projectFilterSql = $projectId > 0 ? ' AND pf.project_id = ' . (int)$projectId . ' ' : ' ';
       $storageSelect = $hasProjectFilesStoragePath ? 'pf.storage_path AS storage_path' : "'' AS storage_path";
-      $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(pf.revision_group, \'\') AS revision_group' : "'' AS revision_group";
-      $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(pf.revision_no, 1) AS revision_no' : '1 AS revision_no';
+      $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
+      $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
       $row = db_fetch("SELECT pf.id, pf.project_id, pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . ", " . $revisionGroupSelect . ", " . $revisionNoSelect . "
             FROM project_files pf
             LEFT JOIN projects p ON p.id = pf.project_id
@@ -1794,14 +1802,8 @@ $vrSettings = file_viewer_load_vr_settings();
                   $entryId = (int)($entry['id'] ?? 0);
                   $entryProjectId = (int)($entry['project_id'] ?? $projectId);
                   $entryGroup = trim((string)($entry['revision_group'] ?? ''));
-                  if ($entryGroup === '') {
-                    $entryGroup = strtolower(trim((string)($entry['name'] ?? '')));
-                  }
-                  $entryGroup = preg_replace('/\s+/', ' ', (string)$entryGroup);
-                  $entryGroupKey = $entryProjectId . '|' . $entryGroup;
-                  $isActiveEntry = $resourceId > 0 && $resourceKind === $entryKind && $entryId === $resourceId;
-                  if ($entryKind === 'file' && $selectedFileGroupKey !== '') {
-                    $isActiveEntry = ($selectedFileGroupKey === $entryGroupKey);
+                  if ($entryGroup !== '' && $entryNameKey !== '') {
+                    $nameToGroupMap[$entryProjectId . '|' . $entryNameKey] = $entryGroup;
                   }
                   $entryExt = strtolower((string)($entry['ext'] ?? ''));
                   $entryUrl = file_viewer_url([

@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('Mailer instance could not be initialized.');
             }
 
-            $from = getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.studio';
+            $from = getenv('MAIL_FROM_ADDRESS') ?: getenv('MAIL_FROM') ?: 'no-reply@ripaldesign.studio';
             $fromName = getenv('MAIL_FROM_NAME') ?: 'Ripal Design';
             $mail->clearAddresses();
             $mail->setFrom($from, $fromName);
@@ -147,8 +147,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mail->Subject = 'Temporary Login Credentials - Ripal Design';
             $mail->Body = $mailHtml;
             $mail->AltBody = $mailText;
-            $mail->send();
-            $mailStatus = 'Temporary credentials email sent to ' . $email . '.';
+            $sent = function_exists('app_send_mail')
+                ? app_send_mail($mail, ['mail_type' => 'temp_credentials', 'email' => $email])
+                : (bool)@$mail->send();
+            if ($sent) {
+                $mailStatus = 'Temporary credentials email sent to ' . $email . '.';
+            } else {
+                $mailStatus = 'Temporary credentials generated, but email could not be sent.';
+                if (function_exists('app_log')) {
+                    app_log('warning', 'Temp credentials email failed', ['email' => $email]);
+                }
+            }
         } catch (Throwable $e) {
             $mailStatus = 'Temporary credentials generated, but email could not be sent.';
             if (function_exists('app_log')) {

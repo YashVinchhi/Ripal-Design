@@ -15,6 +15,7 @@ Add these to your production environment:
 
 ```env
 APP_STRICT_SECURITY=true
+STRICT_GUI_NAVIGATION=true
 SECURITY_REQUIRE_CSRF_FOR_API=true
 SECURITY_ENFORCE_UPLOAD_ALLOWLIST=true
 SECURITY_ALLOWED_UPLOAD_EXTS=pdf,dwg,dxf,jpg,jpeg,png,webp,gif,txt,csv,doc,docx,xls,xlsx,ppt,pptx,zip,rar
@@ -26,6 +27,7 @@ UPLOAD_STORAGE_ROOT=/var/www/thefinal/storage/private_uploads
 Behavior:
 
 - `APP_STRICT_SECURITY` enables stricter defaults.
+- `STRICT_GUI_NAVIGATION` blocks direct URL access to protected app pages and allows navigation through same-site GUI flow only.
 - `SECURITY_REQUIRE_CSRF_FOR_API` enforces CSRF on API POST requests.
 - `SECURITY_ENFORCE_UPLOAD_ALLOWLIST` constrains general uploads to allowlist.
 - `SECURITY_ALLOWED_UPLOAD_EXTS` controls allowed extensions.

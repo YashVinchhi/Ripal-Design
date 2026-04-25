@@ -48,6 +48,7 @@ $ct = static function ($key, $default = '') use ($forgotContent) {
                 <p class="auth-note"><?php echo esc($ct('form_note', 'Enter your account email and we will send a secure reset link.')); ?></p>
 
                 <form id="forgotPasswordForm" method="post" action="./send_reset_password.php" class="auth-form" novalidate>
+                    <?php echo csrf_token_field(); ?>
                     <?php if ($message !== ''): ?>
                         <div class="auth-status <?php echo ($type === 'success') ? 'auth-status-success' : 'auth-status-error'; ?>">
                             <?php echo htmlspecialchars($message); ?>

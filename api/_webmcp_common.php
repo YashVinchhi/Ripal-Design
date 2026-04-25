@@ -9,6 +9,23 @@
 require_once __DIR__ . '/../app/Core/Config/config.php';
 require_once __DIR__ . '/../app/Core/Database/db.php';
 require_once __DIR__ . '/../app/Core/Support/util.php';
+// Bring in auth helpers so API endpoints can enforce authentication when needed
+require_once __DIR__ . '/../app/Core/Security/auth.php';
+
+// Protect internal dashboard API endpoints by default. Public APIs (e.g. public_tours.php)
+// intentionally include this file but will continue to be accessible. We only block
+// requests under /dashboard/api/ to ensure AJAX/JSON endpoints used by authenticated
+// dashboards cannot be accessed anonymously.
+$script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+if (strpos($script, '/dashboard/api/') !== false) {
+    // Ensure API clients receive a JSON 401 rather than an HTML redirect.
+    if (!is_logged_in()) {
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code(401);
+        echo json_encode(['error' => 'Authentication required.']);
+        exit;
+    }
+}
 
 if (!function_exists('wmcp_set_json_headers')) {
     function wmcp_set_json_headers($readOnly = true, $allowMethods = 'GET, OPTIONS')
