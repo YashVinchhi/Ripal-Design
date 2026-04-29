@@ -44,7 +44,7 @@ if ($method === 'GET') {
     // list published projects
     $limit = isset($_GET['limit']) ? min(200, (int)$_GET['limit']) : 50;
     $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
-    $stmt = $db->prepare('SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE is_published = 1 ORDER BY published_at DESC LIMIT ? OFFSET ?');
+    $stmt = $db->prepare("SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE is_published = 1 AND LOWER(name) NOT LIKE '%test%' ORDER BY published_at DESC LIMIT ? OFFSET ?");
     $stmt->bindValue(1, $limit, PDO::PARAM_INT);
     $stmt->bindValue(2, $offset, PDO::PARAM_INT);
     $stmt->execute();

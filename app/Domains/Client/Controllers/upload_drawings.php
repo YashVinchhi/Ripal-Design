@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="mb-12">
       <div class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
          <a href="client_files.php" class="hover:text-rajkot-rust transition">Design Studio</a>
-         <i class="bi bi-chevron-right text-[8px]"></i>
+         <i class="fa-solid fa-chevron-right text-[8px]"></i>
          <span>Upload Drawings</span>
       </div>
       <h1 class="text-3xl font-serif font-bold text-rajkot-rust">Submit Blueprints</h1>
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php if (!empty($msg)): ?>
     <div class="mb-8 p-4 bg-green-50 border border-green-100 rounded-xl flex items-center gap-3 text-green-700 shadow-sm animate-bounce-slow">
-       <i class="bi bi-check-circle-fill text-xl"></i>
+      <i class="fa-solid fa-circle-check text-xl"></i>
        <p class="text-sm font-bold"><?php echo htmlspecialchars($msg); ?></p>
     </div>
     <?php endif; ?>
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              <span id="name_error" class="text-danger"></span>
              <div class="space-y-4">
                 <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto group-hover:bg-red-50 group-hover:text-rajkot-rust transition">
-                   <i class="bi bi-cloud-arrow-up text-3xl"></i>
+                   <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
                 </div>
                 <div>
                    <p class="text-sm font-bold text-foundation-grey">Click to upload or drag and drop</p>
@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <button type="submit" class="w-full py-4 bg-rajkot-rust text-white font-bold rounded-xl hover:bg-red-800 transition shadow-xl shadow-red-900/20 uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">
-          Submit for Review <i class="bi bi-send-fill"></i>
+          Submit for Review <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
         </button>
       </form>
 

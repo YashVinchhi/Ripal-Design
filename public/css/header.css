@@ -1,8 +1,8 @@
   :root {
-      --alt-overlay-bg: rgba(148, 24, 12, 0.96);
-      --alt-text: #fff;
-      --transition-curtain-bg: #94180c;
-      --transition-orb-bg: #94180c;
+      --alt-overlay-bg: rgba(15, 15, 15, 0.97);
+      --alt-text: #f6f2ec;
+      --transition-curtain-bg: #7a2f20;
+      --transition-orb-bg: #c6a26a;
   }
 
   /* Prevent accidental horizontal scrolling caused by large decorative elements */
@@ -20,10 +20,11 @@
       align-items: center;
       padding: 0 var(--space-3xl, 40px);
       z-index: 9999;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      transition: height 0.3s ease, padding 0.3s ease;
+      background: linear-gradient(180deg, rgba(11, 11, 11, 0.82), rgba(11, 11, 11, 0.35));
+      border-bottom: 1px solid rgba(246, 242, 236, 0.08);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(10px);
+      transition: height 0.3s ease, padding 0.3s ease, background 0.3s ease;
   }
 
   @media (max-width: 767px) {
@@ -75,10 +76,10 @@
       right: 0;
       top: 0;
       height: 100%;
-      width: min(25%, var(--sidebar-width-expanded, 360px));
+      width: min(26%, var(--sidebar-width-expanded, 360px));
       max-width: var(--sidebar-width-expanded, 360px);
-      background: var(--alt-overlay-bg);
-      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(180deg, rgba(14, 14, 14, 0.98), rgba(12, 12, 12, 0.95));
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.35);
       transform: translateX(100%);
       transition: transform .28s ease;
       display: flex;
@@ -101,12 +102,12 @@
       position: absolute;
       inset: 0;
       background-image:
-          linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 24px 24px, 24px 24px;
+          linear-gradient(rgba(246, 242, 236, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(246, 242, 236, 0.03) 1px, transparent 1px);
+      background-size: 28px 28px, 28px 28px;
       mix-blend-mode: overlay;
       pointer-events: none;
-      opacity: 0.9;
+      opacity: 0.6;
   }
 
   .alt-panel::after {
@@ -118,7 +119,7 @@
       left: calc(var(--spot-x) - 350px);
       top: calc(var(--spot-y) - 350px);
       pointer-events: none;
-      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 25%, transparent 50%);
+      background: radial-gradient(circle at center, rgba(198, 162, 106, 0.09) 0%, rgba(122, 47, 32, 0.02) 28%, transparent 55%);
       transition: left 0.05s linear, top 0.05s linear;
   }
 
@@ -152,9 +153,24 @@
       color: var(--alt-text);
       font-size: 18px;
       text-decoration: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
       /* ensure long link text wraps instead of causing horizontal overflow */
       word-wrap: break-word;
       white-space: normal;
+  }
+
+  .alt-panel a.nav-link-active {
+      color: #c6a26a;
+  }
+
+  .alt-panel a.nav-link-active::after {
+      content: '';
+      display: block;
+      width: 28px;
+      height: 2px;
+      margin-top: 6px;
+      background: #c6a26a;
   }
 
   .alt-panel .panel-footer {
@@ -168,9 +184,11 @@
 
   .btn-alt {
       padding: 10px 14px;
-      /* border-radius: 8px; */
       font-weight: 600;
-      border: 2px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(246, 242, 236, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.7rem;
   }
 
   .btn-login {
@@ -179,8 +197,8 @@
   }
 
   .btn-signup {
-      background: #fff;
-      color: var(--alt-overlay-bg);
+      background: #f6f2ec;
+      color: #0b0b0b;
   }
 
   /* Ensure sign-up button text overrides the general anchor color inside panel */

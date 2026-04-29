@@ -6667,3 +6667,8 @@ vendor/theseer/tokenizer/src/TokenCollection.php
 vendor/theseer/tokenizer/src/TokenCollectionException.php
 vendor/theseer/tokenizer/src/Tokenizer.php
 vendor/theseer/tokenizer/src/XMLSerializer.php
+Design/SKILL.md
+Design/references/accessibility.md
+Design/references/audit-checklist.md
+Design/references/design-tokens.md
+Design/references/spacing-tokens.md

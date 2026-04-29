@@ -12,62 +12,70 @@
     /* ========================================================================
        BRAND COLORS
        ======================================================================== */
-    
-    /* Primary brand color - Ripal Design maroon */
-    --primary: #731209;
-    --primary-light: #94180C;
-    --primary-dark: #5a0e07;
-    
+
+    /* Primary brand color - Ripal Design rust */
+    --primary: #7a2f20;
+    --primary-light: #a04732;
+    --primary-dark: #5b1f14;
+    --accent: #c6a26a;
+
     /* Ensure Bootstrap uses our brand color */
-    --bs-primary: #731209;
-    --bs-primary-rgb: 115, 18, 9;
-    --bs-link-color: #731209;
-    --bs-link-hover-color: #94180C;
-    
+    --bs-primary: #7a2f20;
+    --bs-primary-rgb: 122, 47, 32;
+    --bs-link-color: #7a2f20;
+    --bs-link-hover-color: #a04732;
+
     /* Legacy alias for backwards compatibility */
-    --brand: #731209;
-    --brand-hover: #94180C;
-    
+    --brand: #7a2f20;
+    --brand-hover: #a04732;
+
     /* ========================================================================
        BACKGROUND COLORS
        ======================================================================== */
-    
-    --bg-dark: #0a0a0a;
-    --bg-darker: #050505;
+
+    --bg-dark: #0b0b0b;
+    --bg-darker: #070707;
     --bg-panel: #121212;
-    --bg-card: #1a1a1a;
-    
+    --bg-card: #161616;
+
     /* ========================================================================
        TEXT COLORS
        ======================================================================== */
-    
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-muted: rgba(255, 255, 255, 0.6);
-    --text-disabled: rgba(255, 255, 255, 0.4);
-    
+
+    --text-primary: #f5f1eb;
+    --text-secondary: rgba(245, 241, 235, 0.72);
+    --text-muted: rgba(245, 241, 235, 0.56);
+    --text-disabled: rgba(245, 241, 235, 0.35);
+
     /* ========================================================================
        SURFACE COLORS
        ======================================================================== */
-    
-    --surface-light: #f8f9fa;
-    --surface-dark: #1a1a1a;
-    
+
+    --surface-light: #f6f2ec;
+    --surface-dark: #171717;
+
     /* ========================================================================
        BORDER COLORS
        ======================================================================== */
-    
-    --border-light: rgba(255, 255, 255, 0.1);
-    --border-medium: rgba(255, 255, 255, 0.2);
-    --border-dark: rgba(0, 0, 0, 0.1);
-    
+
+    --border-light: rgba(245, 241, 235, 0.08);
+    --border-medium: rgba(245, 241, 235, 0.18);
+    --border-dark: rgba(0, 0, 0, 0.2);
+
+    /* ========================================================================
+       TYPOGRAPHY
+       ======================================================================== */
+
+    --font-display: "Bodoni Moda", "Playfair Display", serif;
+    --font-body: "Space Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
     /* ========================================================================
        DECORATIVE ELEMENTS
        ======================================================================== */
-    
+
     /* Blueprint grid pattern */
-    --blueprint-grid: rgba(255, 255, 255, 0.03);
-    
+    --blueprint-grid: rgba(245, 241, 235, 0.04);
+
     /* Grain overlay opacity */
     --grain-opacity: 0.05;
     

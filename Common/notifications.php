@@ -21,7 +21,7 @@ $notifCsrf = function_exists('csrf_token') ? csrf_token() : '';
         data-api-url="<?php echo htmlspecialchars($notifApiUrl, ENT_QUOTES, 'UTF-8'); ?>"
         data-csrf-token="<?php echo htmlspecialchars($notifCsrf, ENT_QUOTES, 'UTF-8'); ?>"
     >
-        <i class="bi bi-bell-fill" aria-hidden="true"></i>
+        <i class="fa-solid fa-bell" aria-hidden="true"></i>
         <span class="notif-count"><?php echo (int)$notifUnread; ?></span>
     </button>
 

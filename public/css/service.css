@@ -1,12 +1,14 @@
 :root {
-    --blueprint-grid: rgba(255, 255, 255, 0.05);
-    --brand-red: #731209;
+    --blueprint-grid: rgba(245, 241, 235, 0.04);
+    --brand-red: #7a2f20;
+    --font-display: "Bodoni Moda", "Playfair Display", serif;
+    --font-body: "Space Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 body {
-    background-color: #000000;
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
+    background-color: #0b0b0b;
+    color: #f6f2ec;
+    font-family: var(--font-body);
     position: relative;
 }
 
@@ -38,7 +40,7 @@ h1,
 h2,
 h3,
 .serif {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--font-display);
 }
 
 /* Ensure content sits above backgrounds */
@@ -51,8 +53,10 @@ header,
 
 /* Hero Section */
 .hero-section {
-    height: 100vh;
-    background: url(Sample\ img-1.png) center/cover no-repeat;
+    min-height: 86vh;
+    background:
+        linear-gradient(180deg, rgba(8, 8, 8, 0.18), rgba(8, 8, 8, 0.86)),
+    url('/assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg') center/cover no-repeat;
 }
 
 .hero-overlay {
@@ -61,14 +65,14 @@ header,
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 1));
+    background: linear-gradient(to bottom, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.92));
 }
 
 /* Service Items */
 .service-item {
     transition: all 0.5s ease;
     opacity: 0.5;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 1px solid rgba(246, 242, 236, 0.12);
 }
 
 .service-item.active {
@@ -93,24 +97,44 @@ header,
     text-transform: uppercase;
 }
 
+.hero-scroll-cue {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(246, 242, 236, 0.7);
+}
+
+.hero-scroll-cue i {
+    font-size: 0.85rem;
+    animation: hero-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes hero-bounce {
+    0%, 100% { transform: translateY(0); opacity: 0.7; }
+    50% { transform: translateY(6px); opacity: 1; }
+}
+
 .service-highlight-badge {
     z-index: 3;
     min-width: 190px;
     padding: 0.8rem 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(246, 242, 236, 0.25);
     background: rgba(14, 14, 14, 0.7);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .service-highlight-brand {
     display: block;
     margin-bottom: 0.2rem;
-    color: #c44737;
-    font-size: 0.78rem;
+    color: var(--brand-red);
+    font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
 }

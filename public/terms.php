@@ -57,8 +57,8 @@ $page_data = [
             z-index: 2;
             padding: 7rem 1.5rem 5rem;
             background:
-                radial-gradient(circle at top, rgba(148, 24, 12, 0.16), transparent 34%),
-                linear-gradient(180deg, #0d0d0d 0%, #121212 100%);
+                radial-gradient(circle at top, rgba(198, 162, 106, 0.14), transparent 34%),
+                linear-gradient(180deg, #0b0b0b 0%, #141414 100%);
         }
 
         .legal-shell {
@@ -67,9 +67,9 @@ $page_data = [
         }
 
         .legal-card {
-            background: rgba(18, 18, 18, 0.88);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+            background: rgba(18, 18, 18, 0.86);
+            border: 1px solid rgba(246, 242, 236, 0.1);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
             padding: 3rem;
             backdrop-filter: blur(8px);
         }
@@ -86,8 +86,8 @@ $page_data = [
 
         .legal-title {
             margin: 0 0 1rem;
-            color: #f5efe8;
-            font-family: 'Cormorant Garamond', serif;
+            color: #f6f2ec;
+            font-family: "Bodoni Moda", "Playfair Display", serif;
             font-size: clamp(2.6rem, 5vw, 4.8rem);
             font-weight: 600;
             line-height: 0.96;
@@ -97,21 +97,21 @@ $page_data = [
         .legal-intro {
             max-width: 46rem;
             margin: 0 0 2.2rem;
-            color: rgba(255, 255, 255, 0.74);
+            color: rgba(245, 241, 235, 0.74);
             font-size: 1.05rem;
             line-height: 1.8;
         }
 
         .legal-body {
-            color: rgba(255, 255, 255, 0.78);
+            color: rgba(245, 241, 235, 0.78);
             font-size: 1rem;
             line-height: 1.9;
         }
 
         .legal-body h2 {
             margin: 2.4rem 0 0.8rem;
-            color: #f4ede5;
-            font-family: 'Cormorant Garamond', serif;
+            color: #f6f2ec;
+            font-family: "Bodoni Moda", "Playfair Display", serif;
             font-size: clamp(1.7rem, 2.4vw, 2.2rem);
             font-weight: 600;
             line-height: 1.1;
@@ -138,9 +138,9 @@ $page_data = [
         }
 
         .legal-body a {
-            color: #d86c5d;
+            color: #c6a26a;
             text-decoration: none;
-            border-bottom: 1px solid rgba(216, 108, 93, 0.35);
+            border-bottom: 1px solid rgba(198, 162, 106, 0.35);
         }
 
         .legal-body a:hover {

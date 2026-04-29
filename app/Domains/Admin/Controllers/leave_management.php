@@ -112,8 +112,8 @@ if ($viewMode === 'archive') {
             <p class="text-sm text-gray-400 uppercase tracking-wider font-semibold">Pending</p>
             <p class="text-2xl font-bold text-foundation-grey mt-1"><?php echo (int)$leaveStats['pending']; ?></p>
           </div>
-          <div class="p-2 bg-amber-50 rounded-none text-amber-600">
-            <i class="bi bi-hourglass-split text-xl"></i>
+            <div class="p-2 bg-amber-50 rounded-none text-amber-600">
+            <i class="fa-solid fa-hourglass-half text-xl"></i>
           </div>
         </div>
       </div>
@@ -124,7 +124,7 @@ if ($viewMode === 'archive') {
             <p class="text-2xl font-bold text-foundation-grey mt-1"><?php echo (int)$leaveStats['approved']; ?></p>
           </div>
           <div class="p-2 bg-green-50 rounded-none text-green-600">
-            <i class="bi bi-check-circle text-xl"></i>
+            <i class="fa-solid fa-circle-check text-xl"></i>
           </div>
         </div>
         <p class="text-[10px] text-green-600 font-medium mt-2">This month</p>
@@ -136,7 +136,7 @@ if ($viewMode === 'archive') {
             <p class="text-2xl font-bold text-foundation-grey mt-1"><?php echo (int)$leaveStats['on_leave']; ?></p>
           </div>
           <div class="p-2 bg-red-50 rounded-none text-rajkot-rust">
-            <i class="bi bi-calendar-event text-xl"></i>
+            <i class="fa-regular fa-calendar text-xl"></i>
           </div>
         </div>
       </div>
@@ -202,8 +202,8 @@ if ($viewMode === 'archive') {
                     <?php echo csrf_token_field(); ?>
                     <input type="hidden" name="leave_id" value="<?php echo (int)$lr['id']; ?>">
                     <input type="hidden" name="status" value="approved">
-                    <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded-none bg-green-600 text-white flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 hover:bg-green-700 transition active:scale-95" title="Approve">
-                      <i class="bi bi-check-lg text-lg md:text-base"></i>
+                      <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded-none bg-green-600 text-white flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 hover:bg-green-700 transition active:scale-95" title="Approve">
+                      <i class="fa-solid fa-check text-lg md:text-base"></i>
                     </button>
                   </form>
                   <form method="post" class="inline-block">
@@ -211,7 +211,7 @@ if ($viewMode === 'archive') {
                     <input type="hidden" name="leave_id" value="<?php echo (int)$lr['id']; ?>">
                     <input type="hidden" name="status" value="rejected">
                     <button class="flex-grow md:flex-grow-0 h-12 md:h-9 px-6 md:px-4 rounded-none bg-rajkot-rust text-white flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 hover:bg-red-800 transition active:scale-95" title="Reject">
-                      <i class="bi bi-x-lg text-lg md:text-base"></i>
+                      <i class="fa-solid fa-xmark text-lg md:text-base"></i>
                     </button>
                   </form>
                   <?php endif; ?>

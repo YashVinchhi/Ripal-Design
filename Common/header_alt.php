@@ -23,8 +23,8 @@ $candidates = [
 echo '<link rel="preconnect" href="https://fonts.googleapis.com" />' . "\n";
 echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />' . "\n";
 echo '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />' . "\n";
-echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">' . "\n";
-echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">' . "\n";
+// Prefer Font Awesome icons (Bootstrap CSS removed in migration to Tailwind)
+echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">' . "\n";
 // echo '<link rel="stylesheet" href="css/bootstrap.min.css">' . "\n";
 
 foreach ($candidates as $c) {

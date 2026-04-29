@@ -18,6 +18,10 @@ $ctImage = static function ($key, $default = '') use ($contactContent) {
 };
 
 $contactPageUrl = BASE_PATH . PUBLIC_PATH_PREFIX . '/contact_us.php';
+$contactAddress = strip_tags((string)public_content_get_html('contact_us', 'address_html', '538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat, India'));
+$contactMapQuery = trim((string)($contactAddress !== '' ? $contactAddress : 'Ripal Design Rajkot'));
+$contactMapSrc = 'https://www.google.com/maps?q=' . rawurlencode($contactMapQuery) . '&output=embed';
+$contactMapLink = 'https://www.google.com/maps?q=' . rawurlencode($contactMapQuery);
 
 if (isset($_POST['submit'])) {
     if (!csrf_validate((string)($_POST['csrf_token'] ?? ''))) {
@@ -152,7 +156,7 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
         <?php if ($form_success): ?>
             <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
                 <div class="bg-white p-12 max-w-lg w-full text-center border-b-4 border-rajkot-rust shadow-premium">
-                    <i class="bi bi-check-circle-fill text-approval-green" style="font-size: 4rem;"></i>
+                    <i class="fa-solid fa-circle-check text-approval-green" style="font-size: 4rem;"></i>
                     <h2 class="text-3xl font-serif font-bold text-foundation-grey mb-4"><?php echo esc($ct('success_title', 'Message Sent')); ?></h2>
                     <p class="text-gray-500 mb-8"><?php echo esc($ct('success_message', 'Thank you for reaching out. Our design team will review your inquiry and contact you shortly.')); ?></p>
                     <button onclick="window.location.href='index.php'" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all">
@@ -189,19 +193,34 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
                             <div class="icon-container">
                                 <a class="icon" href="https://www.instagram.com/ripal_design12/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($ct('social_instagram_label', 'Instagram')); ?>">
                                     <span class="sr-only"><?php echo esc($ct('social_instagram_label', 'Instagram')); ?></span>
-                                    <i class="bi bi-instagram"></i>
+                                    <i class="fa-brands fa-instagram"></i>
                                 </a>
 
-                                <a class="icon" href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($ct('social_linkedin_label', 'LinkedIn')); ?>">
+                                <a class="icon" href="<?php echo esc_attr($ct('social_linkedin_url', 'https://www.linkedin.com/company/ripal-design-studio/')); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($ct('social_linkedin_label', 'LinkedIn')); ?>">
                                     <span class="sr-only"><?php echo esc($ct('social_linkedin_label', 'LinkedIn')); ?></span>
-                                    <i class="bi bi-linkedin"></i>
+                                    <i class="fa-brands fa-linkedin"></i>
                                 </a>
 
                                 <a class="icon" href="https://www.behance.net/mayankvinchhi" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($ct('social_behance_label', 'Behance')); ?>">
                                     <span class="sr-only"><?php echo esc($ct('social_behance_label', 'Behance')); ?></span>
-                                    <i class="bi bi-behance"></i>
+                                    <i class="fa-brands fa-behance"></i>
                                 </a>
                             </div>
+                        </div>
+                        <div class="mt-10">
+                            <h4 class="text-white text-lg font-medium mb-3"><?php echo esc($ct('map_heading', 'Visit the Studio')); ?></h4>
+                            <div class="map-embed">
+                                <iframe
+                                    title="Ripal Design location map"
+                                    src="<?php echo esc_attr($contactMapSrc); ?>"
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+                            <a href="<?php echo esc_attr($contactMapLink); ?>" class="map-link" target="_blank" rel="noopener noreferrer">
+                                <?php echo esc($ct('map_link_label', 'Open in Google Maps')); ?>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -216,39 +235,44 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="group">
-                        <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_first_name', 'First Name')); ?></label>
-                        <input type="text" name="first_name" value="<?php echo htmlspecialchars((string)($old_input['first_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" data-validation="required min alphabetic" data-min="2">
-                        <span id="first_name_error" class="text-danger"></span>
+                        <label for="contactFirstName" class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_first_name', 'First Name')); ?></label>
+                        <input id="contactFirstName" type="text" name="first_name" value="<?php echo htmlspecialchars((string)($old_input['first_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" placeholder="<?php echo esc_attr($ct('placeholder_first_name', 'Your first name')); ?>" data-validation="required min alphabetic" data-min="2" required aria-describedby="first_name_help first_name_error">
+                        <small id="first_name_help" class="field-help"><?php echo esc($ct('help_first_name', 'Minimum 2 characters.')); ?></small>
+                        <span id="first_name_error" class="text-danger" role="alert"></span>
                     </div>
                     <div class="group">
-                        <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_last_name', 'Last Name')); ?></label>
-                        <input type="text" name="last_name" value="<?php echo htmlspecialchars((string)($old_input['last_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" data-validation="required min alphabetic" data-min="2">
-                        <span id="last_name_error" class="text-danger"></span>
+                        <label for="contactLastName" class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_last_name', 'Last Name')); ?></label>
+                        <input id="contactLastName" type="text" name="last_name" value="<?php echo htmlspecialchars((string)($old_input['last_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" placeholder="<?php echo esc_attr($ct('placeholder_last_name', 'Your last name')); ?>" data-validation="required min alphabetic" data-min="2" required aria-describedby="last_name_help last_name_error">
+                        <small id="last_name_help" class="field-help"><?php echo esc($ct('help_last_name', 'Minimum 2 characters.')); ?></small>
+                        <span id="last_name_error" class="text-danger" role="alert"></span>
                     </div>
                 </div>
 
                 <div class="group">
-                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_email', 'Email Address')); ?></label>
-                    <input type="email" name="email" value="<?php echo htmlspecialchars((string)($old_input['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" data-validation="required email">
-                    <span id="email_error" class="text-danger"></span>
+                    <label for="contactEmail" class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_email', 'Email Address')); ?></label>
+                    <input id="contactEmail" type="email" name="email" value="<?php echo htmlspecialchars((string)($old_input['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors" placeholder="<?php echo esc_attr($ct('placeholder_email', 'you@company.com')); ?>" data-validation="required email" required aria-describedby="email_help email_error">
+                    <small id="email_help" class="field-help"><?php echo esc($ct('help_email', 'We will only use this to reply.')); ?></small>
+                    <span id="email_error" class="text-danger" role="alert"></span>
                 </div>
 
                 <div class="group">
-                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_subject', 'Subject')); ?></label>
-                    <select name="subject" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors text-gray-300" data-validation="required select">
+                    <label for="contactSubject" class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_subject', 'Subject')); ?></label>
+                    <select id="contactSubject" name="subject" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors text-gray-300" data-validation="required select" required aria-describedby="subject_help subject_error">
                         <option value="" class="bg-black" <?php echo (($old_input['subject'] ?? '') === '') ? 'selected' : ''; ?>><?php echo esc($ct('subject_default', 'Select Inquiry Type')); ?></option>
                         <option value="residential" class="bg-black" <?php echo (($old_input['subject'] ?? '') === 'residential') ? 'selected' : ''; ?>><?php echo esc($ct('subject_residential', 'Residential Project')); ?></option>
                         <option value="commercial" class="bg-black" <?php echo (($old_input['subject'] ?? '') === 'commercial') ? 'selected' : ''; ?>><?php echo esc($ct('subject_commercial', 'Commercial Project')); ?></option>
                         <option value="consultation" class="bg-black" <?php echo (($old_input['subject'] ?? '') === 'consultation') ? 'selected' : ''; ?>><?php echo esc($ct('subject_consultation', 'Design Consultation')); ?></option>
                         <option value="other" class="bg-black" <?php echo (($old_input['subject'] ?? '') === 'other') ? 'selected' : ''; ?>><?php echo esc($ct('subject_other', 'Other')); ?></option>
                     </select>
-                    <span id="subject_error" class="text-danger"></span>
+                    <small id="subject_help" class="field-help"><?php echo esc($ct('help_subject', 'Choose the project type or consultation.')); ?></small>
+                    <span id="subject_error" class="text-danger" role="alert"></span>
                 </div>
 
                 <div class="group">
-                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_message', 'Message')); ?></label>
-                    <textarea name="message" rows="4" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors resize-none" data-validation="required min" data-min="10"><?php echo htmlspecialchars((string)($old_input['message'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
-                    <span id="message_error" class="text-danger"></span>
+                    <label for="contactMessage" class="block text-xs uppercase tracking-widest text-gray-500 mb-2"><?php echo esc($ct('label_message', 'Message')); ?></label>
+                    <textarea id="contactMessage" name="message" rows="4" class="w-full py-3 text-lg border-b border-white/20 bg-transparent focus:border-[#731209] outline-none transition-colors resize-none" placeholder="<?php echo esc_attr($ct('placeholder_message', 'Tell us about the project scope, site location, and timeline.')); ?>" data-validation="required min" data-min="10" required aria-describedby="message_help message_error"><?php echo htmlspecialchars((string)($old_input['message'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
+                    <small id="message_help" class="field-help"><?php echo esc($ct('help_message', 'Minimum 10 characters.')); ?></small>
+                    <span id="message_error" class="text-danger" role="alert"></span>
                 </div>
 
                 <div style="text-align:left; margin-top:1.5rem;">
@@ -260,7 +284,7 @@ unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
         </div>
     </main>
 
-    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
+    <?php $HIDE_FOOTER_CTA = true; require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 
 </html>

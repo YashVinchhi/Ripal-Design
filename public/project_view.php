@@ -14,6 +14,26 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
     }
     return (string)$value;
 };
+$fallbackCards = [
+    [
+        'image' => $ctImage('card_1_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
+        'title' => $ct('card_1_title', 'Italian Marble Series'),
+        'subtitle' => $ct('card_1_subtitle', 'Flooring & Cladding'),
+        'alt' => $ct('card_1_image_alt', 'Project showcase image 1'),
+    ],
+    [
+        'image' => $ctImage('card_2_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'),
+        'title' => $ct('card_2_title', 'Lumina Pendant'),
+        'subtitle' => $ct('card_2_subtitle', 'Lighting'),
+        'alt' => $ct('card_2_image_alt', 'Project showcase image 2'),
+    ],
+    [
+        'image' => $ctImage('card_3_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'),
+        'title' => $ct('card_3_title', 'Oak Wood Panels'),
+        'subtitle' => $ct('card_3_subtitle', 'Interiors'),
+        'alt' => $ct('card_3_image_alt', 'Project showcase image 3'),
+    ],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
@@ -26,8 +46,8 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <style>
-        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; }
-        .serif { font-family: 'Cormorant Garamond', serif; }
+        body { background-color: #0b0b0b; color: #f6f2ec; font-family: "Space Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+        .serif { font-family: "Bodoni Moda", "Playfair Display", serif; }
         .product-card:hover img { transform: scale(1.05); }
 
         /* Masonry-like layout using CSS columns for a Pinterest/Behance feel */
@@ -43,7 +63,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
             -webkit-column-break-inside: avoid;
             -moz-column-break-inside: avoid;
         }
-        .project-item img { width: 100%; height: auto; display: block; border-radius: 0.5rem; transition: transform 0.35s ease; }
+        .project-item img { width: 100%; height: auto; display: block; border-radius: 0; transition: transform 0.35s ease; }
         .project-item:hover img { transform: scale(1.03); }
 
         /* Modal content scroll area */
@@ -66,7 +86,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
             <div id="gridEndSentinel" aria-hidden="true"></div>
 
             <!-- Project modal/catalogue -->
-            <div id="projectModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+            <div id="projectModal" class="fixed inset-0 z-50 hidden items-center justify-center" aria-hidden="true" hidden style="display:none;">
                 <div class="absolute inset-0 bg-black/70" id="projectModalOverlay"></div>
                 <div class="relative z-60 max-w-6xl w-full mx-4 bg-white text-gray-900 rounded-lg overflow-hidden shadow-2xl">
                     <div class="flex items-center justify-between p-4 border-b">
@@ -92,6 +112,8 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
 
             <script>
                 const apiBase = <?php echo json_encode(rtrim(BASE_PATH, '/')); ?>;
+                const fallbackCards = <?php echo json_encode($fallbackCards); ?>;
+                const fallbackCover = (fallbackCards && fallbackCards.length) ? fallbackCards[0].image : (<?php echo json_encode(rtrim(BASE_PATH, '/')); ?> + '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg');
                 const limitPerPage = 18;
                 let offset = 0;
                 let loading = false;
@@ -153,7 +175,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                     a.href = '#';
                     a.className = 'project-item group cursor-pointer no-underline block';
                     a.dataset.projectId = p.id;
-                    const cover = p.cover_image || <?php echo json_encode(rtrim(BASE_PATH, '/')); ?> + '/assets/Content/placeholder.jpg';
+                    const cover = p.cover_image || fallbackCover;
                     // Use server-side thumbnail endpoint for appropriately sized images
                     const thumb = (cover.indexOf('/') === 0 || cover.indexOf('http') === 0) ? (<?php echo json_encode(rtrim(BASE_PATH, '/')); ?> + '/_thumb.php?src=' + encodeURIComponent(cover) + '&w=600') : cover;
                     a.innerHTML = `
@@ -174,6 +196,32 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                     grid.innerHTML = markup;
                 }
 
+                function renderFallbackGrid() {
+                    if (!grid) return;
+                    if (!fallbackCards || !fallbackCards.length) {
+                        renderGridStatus('<div class="text-center py-5"><i class="fa-regular fa-folder-open fs-1 text-muted"></i><p class="mt-3 text-muted">No projects found.</p><a href="contact_us.php" class="inline-block mt-3 text-white no-underline border-b border-[#731209] pb-1 text-sm tracking-widest uppercase">Start a Project</a></div>');
+                        return;
+                    }
+                    const cardsMarkup = fallbackCards.map(card => {
+                        const title = escapeHtml(card.title || 'Project');
+                        const subtitle = escapeHtml(card.subtitle || '');
+                        const img = escapeHtml(card.image || fallbackCover);
+                        const alt = escapeHtml(card.alt || (title + ' — architectural design by Ripal Design'));
+                        return `
+                            <div class="project-item">
+                                <div class="relative overflow-hidden w-full">
+                                    <img src="${img}" loading="lazy" decoding="async" class="w-full h-auto object-cover" alt="${alt}" width="600" height="400">
+                                </div>
+                                <div class="mt-2">
+                                    <h3 class="text-lg serif mb-1">${title}</h3>
+                                    <p class="text-gray-400 text-sm uppercase tracking-wide">${subtitle}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    grid.innerHTML = cardsMarkup + '<div class="text-center mt-10"><a href="contact_us.php" class="inline-block border-b border-[#731209] pb-1 text-sm tracking-widest uppercase hover:text-[#731209] transition-colors text-decoration-none">Request a Project Consultation</a></div>';
+                }
+
                 async function loadMore() {
                     if (loading || finished) return;
                     loading = true;
@@ -187,7 +235,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                         }
                         if (!items.length) {
                             if (offset === 0) {
-                                renderGridStatus('<div class="text-center py-5"><i class="bi bi-folder2-open fs-1 text-muted"></i><p class="mt-3 text-muted">No projects found.</p></div>');
+                                renderFallbackGrid();
                             }
                             finished = true;
                             observer.disconnect();
@@ -207,7 +255,7 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                     } catch (e) {
                         console.error('Project load failed:', e);
                         if (offset === 0) {
-                            renderGridStatus('<div class="text-center py-5"><i class="bi bi-exclamation-triangle fs-1 text-warning"></i><p class="mt-3 text-muted">Unable to load projects. Please refresh the page.</p><button class="btn btn-outline-secondary mt-2" onclick="location.reload()">Try Again</button></div>');
+                            renderGridStatus('<div class="text-center py-5"><i class="fa-solid fa-triangle-exclamation fs-1 text-warning"></i><p class="mt-3 text-muted">Unable to load projects. Please refresh the page.</p><button class="btn btn-outline-secondary mt-2" onclick="location.reload()">Try Again</button></div>');
                         }
                     } finally {
                         loading = false;
@@ -300,6 +348,9 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
 
                         // show modal
                         const modal = document.getElementById('projectModal');
+                        modal.hidden = false;
+                        modal.style.display = 'flex';
+                        modal.setAttribute('aria-hidden', 'false');
                         modal.classList.remove('hidden');
                         modal.classList.add('flex');
                         // ensure we don't attach duplicate handlers
@@ -316,6 +367,9 @@ $ctImage = static function ($key, $default = '') use ($projectViewContent) {
                     const modal = document.getElementById('projectModal');
                     modal.classList.remove('flex');
                     modal.classList.add('hidden');
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.hidden = true;
+                    modal.style.display = 'none';
                 }
 
                 async function appreciateProject(projectId) {

@@ -25,6 +25,7 @@ $footerText = static function ($key, $default = '') use ($footerContent) {
 };
 $footerPhoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
 $footerWhatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
+$hideFooterCta = !empty($HIDE_FOOTER_CTA);
 
 $currentYear = date('Y');
 ?>
@@ -34,7 +35,7 @@ $currentYear = date('Y');
     .site-footer .font-serif,
     .site-footer h2,
     .site-footer h3 {
-        font-family: 'Cormorant Garamond', serif !important;
+        font-family: var(--font-display, 'Bodoni Moda', serif) !important;
     }
 
     .site-footer .footer-cta-btn {
@@ -64,24 +65,26 @@ $currentYear = date('Y');
 
 <footer class="site-footer bg-foundation-grey text-white pt-16 pb-8 px-4 font-sans" role="contentinfo">
     <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-                <h2 class="text-3xl font-serif font-bold mb-4"><?php echo esc($footerText('cta_heading', 'Ready to build something Iconic?')); ?></h2>
-                <p class="text-gray-400 mb-8 max-w-lg">
-                    <?php echo esc($footerText('cta_description', "Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.")); ?>
-                </p>
-                     <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" 
-                         class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
-                   role="button">
-                    <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i class="bi bi-arrow-right ms-2"></i>
-                </a>
-            </div>
+        <div class="grid grid-cols-1 <?php echo $hideFooterCta ? 'md:grid-cols-1' : 'md:grid-cols-2'; ?> gap-12 items-center">
+            <?php if (!$hideFooterCta): ?>
+                <div>
+                    <h2 class="text-3xl font-serif font-bold mb-4"><?php echo esc($footerText('cta_heading', 'Ready to build something Iconic?')); ?></h2>
+                    <p class="text-gray-400 mb-8 max-w-lg">
+                        <?php echo esc($footerText('cta_description', "Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.")); ?>
+                    </p>
+                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" 
+                        class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
+                        role="button">
+                        <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i>
+                    </a>
+                </div>
+            <?php endif; ?>
 
             <div class="bg-black/20 p-8 border border-white/5">
                 <h3 class="text-xl font-serif text-gray-400 mb-6"><?php echo esc($footerText('contact_heading', 'Contact Us')); ?></h3>
                 <div class="space-y-4">
                     <div class="flex items-start gap-3">
-                        <i class="bi bi-geo-alt text-rajkot-rust shrink-0"></i>
+                        <i class="fa-solid fa-location-dot text-rajkot-rust shrink-0" aria-hidden="true"></i>
                         <address class="not-italic text-gray-400 text-sm">
                             <?php
                             if (function_exists('public_content_get_html')) {
@@ -93,13 +96,13 @@ $currentYear = date('Y');
                         </address>
                     </div>
                     <div class="flex items-center gap-3">
-                        <i class="bi bi-telephone text-rajkot-rust"></i>
+                        <i class="fa-solid fa-phone text-rajkot-rust" aria-hidden="true"></i>
                         <a href="<?php echo esc_attr($footerPhoneHref); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
                             <?php echo esc(PHONE_NUMBER); ?>
                         </a>
                     </div>
                     <div class="flex items-center gap-3">
-                        <i class="bi bi-envelope text-rajkot-rust"></i>
+                        <i class="fa-solid fa-envelope text-rajkot-rust" aria-hidden="true"></i>
                         <a href="mailto:<?php echo esc_attr($footerText('email', 'projects@ripaldesign.studio')); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
                             <?php echo esc($footerText('email', 'projects@ripaldesign.studio')); ?>
                         </a>
@@ -110,7 +113,12 @@ $currentYear = date('Y');
 
         <div class="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
             <div>&copy; <?php echo $currentYear; ?> <?php echo esc($footerText('copyright_brand', 'Ripal Design')); ?>. <?php echo esc($footerText('copyright_suffix', 'All rights reserved.')); ?></div>
-            <div class="flex gap-6 mt-4 md:mt-0">
+            <div class="flex flex-wrap gap-6 mt-4 md:mt-0 items-center justify-center">
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Home</a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Services</a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Projects</a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">About</a>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Contact</a>
                 <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/privacy.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
                 <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/terms.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
             </div>
@@ -118,14 +126,16 @@ $currentYear = date('Y');
     </div>
 </footer>
 
-<a href="<?php echo esc_attr($footerWhatsAppHref); ?>" class="whatsapp-fab d-md-none" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat">
-    <i class="bi bi-whatsapp"></i>
+<a href="<?php echo esc_attr($footerWhatsAppHref); ?>" class="whatsapp-fab md:hidden" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat">
+    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
 </a>
 
-<nav class="mobile-bottom-nav d-flex d-md-none" aria-label="Mobile navigation">
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>"><i class="bi bi-house"></i><span>Home</span></a>
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><i class="bi bi-grid"></i><span>Projects</span></a>
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><i class="bi bi-envelope"></i><span>Contact</span></a>
+<nav class="mobile-bottom-nav flex md:hidden" aria-label="Mobile navigation">
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Home</span></a>
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i><span>Services</span></a>
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><i class="fa-solid fa-th-large" aria-hidden="true"></i><span>Projects</span></a>
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>"><i class="fa-solid fa-users" aria-hidden="true"></i><span>About</span></a>
+    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
 </nav>
 
 <style>
@@ -139,9 +149,7 @@ $currentYear = date('Y');
 <div id="transition-orb" aria-hidden="true"></div>
 
 <?php
-// Include Bootstrap JavaScript (needed for footer and header)
-echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>' . "\n";
-// echo '<script src="js/bootstrap.bundle.min.js"></script>' . "\n";
+// Bootstrap JavaScript removed (migrated to Tailwind + lightweight JS where needed)
 
 // Include main application script if it exists
 if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {

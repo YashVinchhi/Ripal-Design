@@ -1,19 +1,21 @@
 :root {
-    --primary: #731209;
-    --primary-light: #94180C;
-    --bg-dark: #0a0a0a;
-    --bg-panel: #121212;
-    --text-muted: rgba(255, 255, 255, 0.6);
-    --blueprint-grid: rgba(255, 255, 255, 0.03);
+    --primary: #7a2f20;
+    --primary-light: #a04732;
+    --bg-dark: #0b0b0b;
+    --bg-panel: #141414;
+    --text-muted: rgba(245, 241, 235, 0.6);
+    --blueprint-grid: rgba(245, 241, 235, 0.04);
+    --font-display: "Bodoni Moda", "Playfair Display", serif;
+    --font-body: "Space Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 /* Base Aesthetics */
 html,
 body {
     background-color: var(--bg-dark);
-    color: #fff;
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
+    color: #f6f2ec;
+    font-family: var(--font-body);
+    line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     margin: 0;
@@ -53,16 +55,36 @@ body::before {
 
 /* Typography */
 h1, h2, h3, .font-serif {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
+    font-family: var(--font-display);
+    font-weight: 500;
     letter-spacing: -0.02em;
 }
 
 .tracking-architect {
-    letter-spacing: 0.3em;
-    font-size: 0.75rem;
+    letter-spacing: 0.32em;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
+}
+
+.hero-scroll-cue {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(246, 242, 236, 0.7);
+}
+
+.hero-scroll-cue i {
+    font-size: 0.85rem;
+    animation: hero-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes hero-bounce {
+    0%, 100% { transform: translateY(0); opacity: 0.7; }
+    50% { transform: translateY(6px); opacity: 1; }
 }
 
 /* Navigation */
@@ -119,8 +141,10 @@ nav.mixed-blend-mode {
 
 /* Hero */
 .hero-section {
-    height: 100vh;
-    background: url(Sample\ img-1.png) center/cover no-repeat;
+    min-height: 86vh;
+    background:
+        linear-gradient(180deg, rgba(8, 8, 8, 0.2), rgba(8, 8, 8, 0.86)),
+    url('/assets/Content/WhatsApp%20Image%202026-02-02%20at%205.02.50%20PM.jpeg') center/cover no-repeat;
 }
 
 .hero-overlay {
@@ -139,23 +163,23 @@ nav.mixed-blend-mode {
 }
 .story-section h2,
 .story-section .display-3 {
-    color: #ffffff !important;
-    text-shadow: 0 8px 26px rgba(0,0,0,0.8) !important;
-    font-weight: 600 !important;
+    color: #f6f2ec !important;
+    text-shadow: 0 12px 32px rgba(0,0,0,0.75) !important;
+    font-weight: 500 !important;
 }
 .story-section .tracking-architect {
     color: rgba(255,255,255,0.82) !important;
 }
 .story-section p.lead,
 .story-section p {
-    color: rgba(255,255,255,0.9) !important;
-    text-shadow: 0 6px 20px rgba(0,0,0,0.75) !important;
+    color: rgba(245, 241, 235, 0.8) !important;
+    text-shadow: 0 6px 20px rgba(0,0,0,0.6) !important;
 }
 
 /* Make story paragraphs gray as requested */
 .story-section .col-lg-7 p.lead.text-white-50,
 .story-section .col-lg-7 p.text-white-50 {
-    color: #6c757d !important;
+    color: rgba(245, 241, 235, 0.62) !important;
 }
 
 /* Ensure story paragraph backgrounds are transparent (override Bootstrap) */
@@ -177,24 +201,27 @@ nav.mixed-blend-mode {
     background: transparent !important;
 }
 .about-cta h2 {
-    color: #ffffff !important;
-    text-shadow: 0 8px 24px rgba(0,0,0,0.8) !important;
+    color: #f6f2ec !important;
+    text-shadow: 0 8px 24px rgba(0,0,0,0.75) !important;
     font-weight: 500 !important;
 }
 .about-cta p.lead {
-    color: rgba(255,255,255,0.86) !important;
+    color: rgba(245, 241, 235, 0.75) !important;
 }
 .about-cta .about-cta-btn {
     background: var(--primary) !important;
     border-color: var(--primary) !important;
     color: #ffffff !important;
     border-radius: 0 !important;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
 }
 
 /* Timeline (Measuring Tape) */
 .timeline-section {
     background: transparent !important;
-    color: #ffffff !important;
+    color: #f6f2ec !important;
     padding: var(--timeline-padding, 150px) 0;
     position: relative;
     z-index: 2;
@@ -202,8 +229,8 @@ nav.mixed-blend-mode {
 
 .timeline-section h2,
 .timeline-section .display-4 {
-    color: #ffffff !important;
-    text-shadow: 0 8px 24px rgba(0,0,0,0.8) !important;
+    color: #f6f2ec !important;
+    text-shadow: 0 8px 24px rgba(0,0,0,0.75) !important;
     font-weight: 500 !important;
 }
 
@@ -243,10 +270,10 @@ nav.mixed-blend-mode {
 
 /* Milestone Markers */
 .year-box {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(18, 18, 18, 0.76);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(246, 242, 236, 0.14);
     padding: var(--year-box-padding, 20px);
     text-align: center;
     transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);

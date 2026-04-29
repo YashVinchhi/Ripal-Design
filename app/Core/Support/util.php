@@ -215,12 +215,16 @@ if (!function_exists('render_flash')) {
             $message = h($flash['message'] ?? '');
             $type = h($flash['type'] ?? 'info');
             
-            // Map types to Bootstrap alert classes
-            $alertClass = 'alert-' . $type;
-            
-            echo '<div class="alert ' . $alertClass . ' alert-dismissible fade show" role="alert">';
+            // Map types to simple alert styling (Tailwind-friendly)
+            $baseClass = 'p-3 rounded';
+            $colorClass = 'bg-gray-800 text-white';
+            if ($type === 'success') $colorClass = 'bg-green-600 text-white';
+            if ($type === 'danger' || $type === 'error') $colorClass = 'bg-red-600 text-white';
+            if ($type === 'warning') $colorClass = 'bg-yellow-500 text-black';
+            if ($type === 'info') $colorClass = 'bg-blue-600 text-white';
+
+            echo '<div class="' . $baseClass . ' ' . $colorClass . '" role="alert">';
             echo $message;
-            echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
             echo '</div>';
             
             unset($_SESSION['flash']);

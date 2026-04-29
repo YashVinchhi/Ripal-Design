@@ -22,7 +22,7 @@
 
 body.auth-page {
     min-height: 100vh;
-    margin: 0;
+    font-family: var(--font-body);
     font-family: Inter, sans-serif;
     color: var(--text);
     background:
@@ -35,23 +35,27 @@ body.auth-page {
     background-repeat: no-repeat;
 }
 
-body.auth-page::before {
+    font-family: var(--font-display);
     content: "";
     position: fixed;
     inset: 0;
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.grain {
-    position: fixed;
+    background: linear-gradient(135deg, rgba(122, 47, 32, 0.92), rgba(122, 47, 32, 0.7));
+    width: 100%;
+    color: #fff;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.7rem;
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
     top: 0;
     left: 0;
-    width: 100%;
+    background: linear-gradient(135deg, rgba(160, 71, 50, 0.95), rgba(122, 47, 32, 0.82));
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.4);
     height: 100%;
     background: url('https://grainy-gradients.vercel.app/noise.svg');
     opacity: 0.05;
