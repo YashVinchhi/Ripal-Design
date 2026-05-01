@@ -67,20 +67,21 @@ $(document).ready(function () {
           }
         }
 
-        // Strong password validation (at least 8 chars, 1 upper, 1 lower, 1 number, 1 special)
+        // Strong password validation (at least 8 chars, 1 upper, 1 lower, 1 number)
         if (validationType.includes("strongPassword")) {
           const passwordRegex =
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d@$!%*?&]{8,}$/;
           if (!passwordRegex.test(value)) {
             errorMessage =
-              "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+              "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.";
           }
         }
 
         // Password confirmation validation
         if (validationType.includes("confirmPassword")) {
-          const confirmPassword = $("#" + field.attr("name") + "_confirm").val();
-          if (value !== confirmPassword) {
+          const passwordField = field.closest('form').find('input[name="password"]');
+          const passwordValue = passwordField.length ? passwordField.val() : '';
+          if (value !== passwordValue) {
             errorMessage = "Passwords do not match.";
           }
         }

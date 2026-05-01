@@ -1,7 +1,6 @@
 <?php
-
-require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
 require_once __DIR__ . '/../Common/public_shell.php';
+
 $resetContent = function_exists('public_content_page_values') ? public_content_page_values('reset_password') : [];
 $ct = static function ($key, $default = '') use ($resetContent) {
     return (string)($resetContent[$key] ?? $default);
@@ -42,103 +41,74 @@ if (!($db instanceof PDO)) {
         $showForm = false;
     }
 }
+
+rd_page_start([
+    'title' => $ct('page_title', 'Reset Password'),
+    'description' => $ct('meta_description', 'Create a new password for your Ripal Design account.'),
+    'url' => rd_public_url('reset_password.php'),
+]);
 ?>
-<!DOCTYPE html>
-<html lang="en">
+<main id="main" class="auth-wrap">
+    <section class="auth-layout">
+        <div class="hero-copy">
+            <p class="eyebrow">Password Reset</p>
+            <h1><?php echo esc($ct('hero_title', 'Create a new password.')); ?></h1>
+            <p><?php echo esc($ct('hero_subtitle', 'Enter a strong password to regain access to your account.')); ?></p>
+        </div>
+        <article class="auth-card" aria-labelledby="resetTitle">
+            <p class="eyebrow"><?php echo esc($ct('form_label', 'Reset Password')); ?></p>
+            <h2 id="resetTitle"><?php echo esc($ct('form_title', 'Reset Password')); ?></h2>
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title><?php echo esc($ct('page_title', 'Reset Password - Ripal Design')); ?></title>
-    <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/login.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="./js/validation.js"></script>
-</head>
-
-<body class="auth-page">
-    <div class="grain"></div>
-    <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
-
-    <main class="auth-main auth-main-public">
-        <section class="auth-card-wrap" aria-labelledby="resetTitle">
-            <div class="auth-card auth-card-compact">
-                <h1 class="auth-title" id="resetTitle"><?php echo esc($ct('heading', 'Reset Password')); ?></h1>
-                <p class="auth-subtitle"><?php echo esc($ct('subtitle', 'Create a strong new password for your account.')); ?></p>
-
-                <?php if ($message !== ''): ?>
-                    <p class="alert <?php echo ($type === 'success') ? 'alert-success' : 'alert-danger'; ?>">
-                        <?php echo htmlspecialchars($message); ?>
-                    </p>
-                    <?php if ($type === 'success'): ?>
-                        <p class="switch-auth"><a href="./login.php"><?php echo esc($ct('link_after_success', 'Go to Login Page')); ?></a></p>
-                    <?php endif; ?>
+            <?php if ($message !== ''): ?>
+                <p class="notice <?php echo ($type === 'success') ? 'notice-success' : 'notice-error'; ?>">
+                    <?php echo htmlspecialchars($message); ?>
+                </p>
+                <?php if ($type === 'success'): ?>
+                    <p class="switch-auth"><a href="<?php echo esc_attr(rd_public_url('login.php')); ?>"><?php echo esc($ct('link_after_success', 'Go to Login Page')); ?></a></p>
                 <?php endif; ?>
+            <?php endif; ?>
 
-                <?php if ($showForm): ?>
-                    <form method="post" action="./update_password.php" class="auth-form" novalidate>
-                        <?php echo csrf_token_field(); ?>
-                        <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
+            <?php if ($showForm): ?>
+                <form method="post" action="<?php echo esc_attr(rd_public_url('update_password.php')); ?>" class="auth-form" novalidate>
+                    <?php echo csrf_token_field(); ?>
+                    <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
 
-                        <div class="field">
-                            <label for="confirmPassword_confirm"><?php echo esc($ct('label_new_password', 'New Password')); ?></label>
-                            <div class="input-with-icon">
-                                <input id="confirmPassword_confirm" name="password" type="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_new_password', 'Enter your new password')); ?>" data-validation="required strongPassword" autocomplete="new-password">
-                                <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>" aria-pressed="false">
-                                    <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
-                                </button>
-                            </div>
-                            <small class="field-help"><?php echo esc($ct('password_help', 'Use at least 8 characters with 1 uppercase, 1 lowercase, and 1 number.')); ?></small>
-                            <span id="password_error" class="text-danger"></span>
+                    <div class="field">
+                        <label for="password"><?php echo esc($ct('label_new_password', 'New Password')); ?></label>
+                        <div class="password-wrap">
+                            <input id="password" type="password" name="password" required autocomplete="new-password" placeholder="<?php echo esc_attr($ct('placeholder_new_password', 'Enter your new password')); ?>" data-validation="required strongPassword">
+                            <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Show password')); ?>" aria-pressed="false"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
                         </div>
+                        <small class="text-muted"><?php echo esc($ct('password_help', 'Use at least 8 characters with 1 uppercase, 1 lowercase, and 1 number.')); ?></small>
+                        <span id="password_error" class="text-danger" role="alert"></span>
+                    </div>
 
-                        <div class="field">
-                            <label for="Password"><?php echo esc($ct('label_confirm_password', 'Confirm Password')); ?></label>
-                            <div class="input-with-icon">
-                                <input id="Password" name="confirmPassword" type="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_confirm_password', 'Confirm your password')); ?>" data-validation="required confirmPassword" autocomplete="new-password">
-                                <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>" aria-pressed="false">
-                                    <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" class="toggle-password" aria-hidden="true">
-                                </button>
-                            </div>
-                            <span id="confirmPassword_error" class="text-danger"></span>
+                    <div class="field">
+                        <label for="confirmPassword"><?php echo esc($ct('label_confirm_password', 'Confirm Password')); ?></label>
+                        <div class="password-wrap">
+                            <input id="confirmPassword" type="password" name="confirmPassword" required autocomplete="new-password" placeholder="<?php echo esc_attr($ct('placeholder_confirm_password', 'Confirm your password')); ?>" data-validation="required confirmPassword">
+                            <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Show password')); ?>" aria-pressed="false"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
                         </div>
+                        <span id="confirmPassword_error" class="text-danger" role="alert"></span>
+                    </div>
 
-                        <button type="submit" class="btn-1"><?php echo esc($ct('button_reset', 'Reset Password')); ?></button>
-                        <p class="switch-auth"><a href="./login.php"><?php echo esc($ct('link_back_login', 'Back to Login')); ?></a></p>
-                    </form>
-                <?php endif; ?>
-            </div>
-        </section>
-    </main>
-
-</body>
+                    <button class="button button-primary" type="submit"><?php echo esc($ct('button_reset', 'Reset Password')); ?></button>
+                    <p class="switch-auth"><a href="<?php echo esc_attr(rd_public_url('login.php')); ?>"><?php echo esc($ct('link_back_login', 'Back to login')); ?></a></p>
+                </form>
+            <?php endif; ?>
+        </article>
+    </section>
+</main>
+<script src="<?php echo esc_attr(rd_public_url('js/validation.js')); ?>" defer></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggleButtons = document.querySelectorAll('.toggle-password-btn');
-        if (!toggleButtons || toggleButtons.length === 0) return;
-        const openSrc = './css/eye/eye_open.svg';
-        const closeSrc = './css/eye/eye_close.svg';
-        const showLabel = <?php echo json_encode($ct('toggle_show_alt', 'Show password')); ?>;
-        const hideLabel = <?php echo json_encode($ct('toggle_hide_alt', 'Hide password')); ?>;
-
-        toggleButtons.forEach(function(toggleBtn){
-            const toggle = toggleBtn.querySelector('.toggle-password');
-            const container = toggleBtn.closest('.input-with-icon');
-            const input = container ? container.querySelector('input') : null;
-            if (!input || !toggle) return;
-
-            function doToggle(){
-                const showing = input.type === 'text';
-                input.type = showing ? 'password' : 'text';
-                toggle.src = showing ? closeSrc : openSrc;
-                toggle.alt = showing ? showLabel : hideLabel;
-                toggleBtn.setAttribute('aria-pressed', showing ? 'false' : 'true');
-            }
-
-            toggleBtn.addEventListener('click', doToggle);
+    document.querySelectorAll('.toggle-password-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var input = button.closest('.password-wrap').querySelector('input');
+            var showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            button.setAttribute('aria-pressed', showing ? 'false' : 'true');
+            button.setAttribute('aria-label', showing ? '<?php echo esc_attr($ct('toggle_aria_show', 'Show password')); ?>' : '<?php echo esc_attr($ct('toggle_aria_hide', 'Hide password')); ?>');
+            button.innerHTML = '<i class="fa-solid ' + (showing ? 'fa-eye' : 'fa-eye-slash') + '" aria-hidden="true"></i>';
         });
     });
 </script>
