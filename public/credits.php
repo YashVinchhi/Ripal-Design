@@ -34,17 +34,6 @@ $contributors = [
     ],
 ];
 
-$photoExists = static function (string $path): bool {
-    if ($path === '') {
-        return false;
-    }
-    if (preg_match('#^https?://#i', $path)) {
-        return true;
-    }
-    $relativePath = ltrim($path, '/');
-    return is_file(PROJECT_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath));
-};
-
 $initials = static function (string $name): string {
     $parts = preg_split('/\s+/', trim($name)) ?: [];
     $letters = '';
@@ -81,7 +70,7 @@ rd_page_start([
         <div class="credits-hero-panel" aria-label="Project creators">
             <?php foreach ($contributors as $contributor): ?>
                 <div class="credits-avatar-stack">
-                    <?php if ($photoExists((string)$contributor['photo_raw'])): ?>
+                    <?php if ((string)$contributor['photo'] !== ''): ?>
                         <img src="<?php echo esc_attr((string)$contributor['photo']); ?>" alt="<?php echo esc_attr((string)$contributor['name']); ?>"<?php echo rd_content_image_style_attr($content, 'contributor_' . (string)$contributor['index'] . '_photo'); ?>>
                     <?php else: ?>
                         <span aria-hidden="true"><?php echo esc($initials((string)$contributor['name'])); ?></span>
@@ -104,7 +93,7 @@ rd_page_start([
             <?php foreach ($contributors as $contributor): ?>
                 <article class="credit-card">
                     <div class="credit-photo">
-                        <?php if ($photoExists((string)$contributor['photo_raw'])): ?>
+                        <?php if ((string)$contributor['photo'] !== ''): ?>
                             <img src="<?php echo esc_attr((string)$contributor['photo']); ?>" alt="<?php echo esc_attr((string)$contributor['name']); ?>"<?php echo rd_content_image_style_attr($content, 'contributor_' . (string)$contributor['index'] . '_photo'); ?>>
                         <?php else: ?>
                             <span aria-hidden="true"><?php echo esc($initials((string)$contributor['name'])); ?></span>
