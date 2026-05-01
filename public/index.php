@@ -14,10 +14,10 @@ $featuredProjects = db_connected()
     : [];
 
 $fallbackProjects = [
-    ['id' => 0, 'name' => 'New Palace', 'location' => 'Rajkot'],
-    ['id' => 0, 'name' => 'Sish Gadh', 'location' => 'Jamkhambhalia'],
-    ['id' => 0, 'name' => 'Lanka Skyline Towers', 'location' => 'Rajkot'],
-    ['id' => 0, 'name' => 'Rameshwaram Sea View Retreat', 'location' => 'Coastal Residence'],
+    ['id' => 0, 'name' => $ct('fallback_project_1_name', 'New Palace'), 'location' => $ct('fallback_project_1_location', 'Rajkot')],
+    ['id' => 0, 'name' => $ct('fallback_project_2_name', 'Sish Gadh'), 'location' => $ct('fallback_project_2_location', 'Jamkhambhalia')],
+    ['id' => 0, 'name' => $ct('fallback_project_3_name', 'Lanka Skyline Towers'), 'location' => $ct('fallback_project_3_location', 'Rajkot')],
+    ['id' => 0, 'name' => $ct('fallback_project_4_name', 'Rameshwaram Sea View Retreat'), 'location' => $ct('fallback_project_4_location', 'Coastal Residence')],
 ];
 
 while (count($featuredProjects) < 4) {
@@ -26,10 +26,35 @@ while (count($featuredProjects) < 4) {
 
 $heroImage = $image('hero_image_src', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg');
 $heroVideo = trim($ct('hero_video_src', ''));
-$stats = [
-    ['value' => '50+', 'label' => 'completed projects'],
-    ['value' => max(1, (int)date('Y') - 2017) . '+', 'label' => 'years in practice'],
-    ['value' => '1', 'label' => 'team from design to site'],
+
+$carouselImages = [
+    ['src' => $image('carousel_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'), 'alt' => $ct('carousel_alt_1', 'Project image 1')],
+    ['src' => $image('carousel_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'), 'alt' => $ct('carousel_alt_2', 'Project image 2')],
+    ['src' => $image('carousel_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'), 'alt' => $ct('carousel_alt_3', 'Project image 3')],
+    ['src' => $image('carousel_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'), 'alt' => $ct('carousel_alt_4', 'Project image 4')],
+];
+
+$projectImages = [
+    ['src' => $image('featured_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'), 'alt' => $ct('featured_image_alt_1', 'Featured project image 1')],
+    ['src' => $image('featured_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'), 'alt' => $ct('featured_image_alt_2', 'Featured project image 2')],
+    ['src' => $image('featured_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'), 'alt' => $ct('featured_image_alt_3', 'Featured project image 3')],
+    ['src' => $image('featured_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'), 'alt' => $ct('featured_image_alt_4', 'Featured project image 4')],
+];
+
+$projectDescriptions = [
+    $ct('project_1_description', 'Design details aligned with structure, budgets, and on-site delivery for a smooth handover.'),
+    $ct('project_2_description', 'Every drawing is checked against site constraints, materials, and vendor timelines.'),
+    $ct('project_3_description', 'Design details aligned with structure, budgets, and on-site delivery for a smooth handover.'),
+    $ct('project_4_description', 'Every drawing is checked against site constraints, materials, and vendor timelines.'),
+];
+
+$companies = [
+    $ct('company_1_name', 'Shivam Developers'),
+    $ct('company_2_name', 'Rajkot Realty Group'),
+    $ct('company_3_name', 'Khambhalia Arts'),
+    $ct('company_4_name', 'Lanka Skyline'),
+    $ct('company_5_name', 'Rameshwaram Resorts'),
+    $ct('company_6_name', 'North Gate Schools'),
 ];
 
 rd_page_start([
@@ -57,16 +82,16 @@ rd_page_start([
             <?php endif; ?>
         </div>
         <div class="hero-content">
-            <p class="hero-eyebrow"><?php echo esc($ct('hero_established', 'Est. 2017')); ?> / Rajkot, Gujarat</p>
+            <p class="hero-eyebrow"><?php echo esc($ct('hero_established', 'Est. 2017')); ?> / <?php echo esc($ct('hero_location', 'Rajkot, Gujarat')); ?></p>
             <h1><?php echo esc($ct('hero_heading', 'Design that stays true from drawing to site.')); ?></h1>
             <p class="hero-lede"><?php echo esc($ct('hero_subheading', 'Architecture, interiors, and execution guided by one studio so nothing gets lost in translation.')); ?></p>
             <div class="hero-actions">
-                <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>">Start Your Project</a>
-                <a class="button button-secondary" href="<?php echo esc_attr(rd_public_url('project_view.php')); ?>">View Projects</a>
+                <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>"><?php echo esc($ct('hero_primary_cta_label', 'Start Your Project')); ?></a>
+                <a class="button button-secondary" href="<?php echo esc_attr(rd_public_url('project_view.php')); ?>"><?php echo esc($ct('hero_secondary_cta_label', 'View Projects')); ?></a>
             </div>
         </div>
         <div class="hero-scroll">
-            <span>Scroll</span>
+            <span><?php echo esc($ct('hero_scroll_label', 'Scroll')); ?></span>
             <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
         </div>
     </section>
@@ -74,52 +99,38 @@ rd_page_start([
     <section class="snap-section media-carousel" aria-label="Image carousel">
         <div class="carousel" data-carousel>
             <div class="carousel-track">
-                <?php
-                $carouselImages = [
-                    $image('carousel_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
-                    $image('carousel_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'),
-                    $image('carousel_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'),
-                    $image('carousel_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'),
-                ];
-                foreach ($carouselImages as $carouselImage):
-                ?>
+                <?php foreach ($carouselImages as $carouselImage): ?>
                     <div class="carousel-slide">
-                        <img src="<?php echo esc_attr($carouselImage); ?>" alt="Ripal Design project view">
+                        <img src="<?php echo esc_attr((string)$carouselImage['src']); ?>" alt="<?php echo esc_attr((string)$carouselImage['alt']); ?>">
                     </div>
                 <?php endforeach; ?>
             </div>
         </div>
         <div class="carousel-caption">
-            <p>Another view, another craft decision. Scroll to hold each frame in place.</p>
+            <p><?php echo esc($ct('carousel_caption', 'Another view, another craft decision. Scroll to hold each frame in place.')); ?></p>
         </div>
     </section>
 
     <section class="projects-section" aria-label="Latest projects">
         <?php
-        $projectImages = [
-            $image('featured_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
-            $image('featured_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'),
-            $image('featured_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'),
-            $image('featured_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'),
-        ];
         $projects = array_slice($featuredProjects, 0, 4);
         ?>
         <div class="projects-panel snap-section">
             <?php foreach (array_slice($projects, 0, 2) as $index => $project):
                 $href = ((int)($project['id'] ?? 0) > 0) ? rd_public_url('project_view.php?id=' . (int)$project['id']) : rd_public_url('project_view.php');
                 $isRight = $index % 2 === 1;
-                $imageSrc = $projectImages[$index] ?? $heroImage;
+                $imageData = $projectImages[$index] ?? ['src' => $heroImage, 'alt' => 'Featured project image'];
             ?>
                 <article class="project-row<?php echo $isRight ? ' is-right' : ''; ?>">
                     <div class="project-media">
-                        <img src="<?php echo esc_attr($imageSrc); ?>" alt="<?php echo esc_attr((string)$project['name']); ?>">
+                        <img src="<?php echo esc_attr((string)$imageData['src']); ?>" alt="<?php echo esc_attr((string)$imageData['alt']); ?>">
                     </div>
                     <div class="project-spacer" aria-hidden="true"></div>
                     <div class="project-content">
-                        <p class="project-eyebrow">Latest <?php echo str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT); ?> / <?php echo esc((string)($project['location'] ?? 'Gujarat')); ?></p>
+                        <p class="project-eyebrow"><?php echo esc($ct('projects_eyebrow_prefix', 'Latest')); ?> <?php echo str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT); ?> / <?php echo esc((string)($project['location'] ?? 'Gujarat')); ?></p>
                         <h2><?php echo esc((string)$project['name']); ?></h2>
-                        <p>Design details aligned with structure, budgets, and on-site delivery for a smooth handover.</p>
-                        <a class="project-link" href="<?php echo esc_attr($href); ?>">View project &rarr;</a>
+                        <p><?php echo esc($projectDescriptions[$index] ?? ''); ?></p>
+                        <a class="project-link" href="<?php echo esc_attr($href); ?>"><?php echo esc($ct('project_link_label', 'View project')); ?> &rarr;</a>
                     </div>
                 </article>
             <?php endforeach; ?>
@@ -129,18 +140,18 @@ rd_page_start([
                 $index = $offset + 2;
                 $href = ((int)($project['id'] ?? 0) > 0) ? rd_public_url('project_view.php?id=' . (int)$project['id']) : rd_public_url('project_view.php');
                 $isRight = $index % 2 === 1;
-                $imageSrc = $projectImages[$index] ?? $heroImage;
+                $imageData = $projectImages[$index] ?? ['src' => $heroImage, 'alt' => 'Featured project image'];
             ?>
                 <article class="project-row<?php echo $isRight ? ' is-right' : ''; ?>">
                     <div class="project-media">
-                        <img src="<?php echo esc_attr($imageSrc); ?>" alt="<?php echo esc_attr((string)$project['name']); ?>">
+                        <img src="<?php echo esc_attr((string)$imageData['src']); ?>" alt="<?php echo esc_attr((string)$imageData['alt']); ?>">
                     </div>
                     <div class="project-spacer" aria-hidden="true"></div>
                     <div class="project-content">
-                        <p class="project-eyebrow">Latest <?php echo str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT); ?> / <?php echo esc((string)($project['location'] ?? 'Gujarat')); ?></p>
+                        <p class="project-eyebrow"><?php echo esc($ct('projects_eyebrow_prefix', 'Latest')); ?> <?php echo str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT); ?> / <?php echo esc((string)($project['location'] ?? 'Gujarat')); ?></p>
                         <h2><?php echo esc((string)$project['name']); ?></h2>
-                        <p>Every drawing is checked against site constraints, materials, and vendor timelines.</p>
-                        <a class="project-link" href="<?php echo esc_attr($href); ?>">View project &rarr;</a>
+                        <p><?php echo esc($projectDescriptions[$index] ?? ''); ?></p>
+                        <a class="project-link" href="<?php echo esc_attr($href); ?>"><?php echo esc($ct('project_link_label', 'View project')); ?> &rarr;</a>
                     </div>
                 </article>
             <?php endforeach; ?>
@@ -149,31 +160,25 @@ rd_page_start([
 
     <section class="snap-section companies-section" aria-label="Companies we have worked with">
         <div class="section-intro">
-            <h2>Companies we have worked with</h2>
-            <p>Trusted partnerships across residential, institutional, and commercial work.</p>
+            <h2><?php echo esc($ct('companies_heading', 'Companies we have worked with')); ?></h2>
+            <p><?php echo esc($ct('companies_subheading', 'Trusted partnerships across residential, institutional, and commercial work.')); ?></p>
         </div>
         <div class="logo-marquee" aria-hidden="true">
             <div class="logo-track">
-                <span>Shivam Developers</span>
-                <span>Rajkot Realty Group</span>
-                <span>Khambhalia Arts</span>
-                <span>Lanka Skyline</span>
-                <span>Rameshwaram Resorts</span>
-                <span>North Gate Schools</span>
-                <span>Shivam Developers</span>
-                <span>Rajkot Realty Group</span>
-                <span>Khambhalia Arts</span>
-                <span>Lanka Skyline</span>
-                <span>Rameshwaram Resorts</span>
-                <span>North Gate Schools</span>
+                <?php foreach ($companies as $company): ?>
+                    <span><?php echo esc($company); ?></span>
+                <?php endforeach; ?>
+                <?php foreach ($companies as $company): ?>
+                    <span><?php echo esc($company); ?></span>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>
 
     <section class="snap-section testimonials-section" aria-label="Client testimonials">
         <div class="section-intro">
-            <h2>Client testimonials</h2>
-            <p>Short, clear communication that keeps expectations in sync with execution.</p>
+            <h2><?php echo esc($ct('testimonials_heading', 'Client testimonials')); ?></h2>
+            <p><?php echo esc($ct('testimonials_subheading', 'Short, clear communication that keeps expectations in sync with execution.')); ?></p>
         </div>
         <div class="testimonial-rotator" data-rotator>
             <article class="testimonial-card is-active">

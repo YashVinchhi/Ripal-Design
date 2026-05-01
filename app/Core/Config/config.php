@@ -356,7 +356,7 @@ if (!defined('UPLOAD_STORAGE_ROOT')) {
 }
 
 if (!defined('PHONE_NUMBER')) {
-    define('PHONE_NUMBER', env_value('PHONE_NUMBER', '+919426789012'));
+    define('PHONE_NUMBER', env_value('PHONE_NUMBER', '+918264271111'));
 }
 
 if (!defined('WHATSAPP_NUMBER')) {

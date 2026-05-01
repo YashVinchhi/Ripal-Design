@@ -95,7 +95,7 @@ rd_page_start([
                 <p class="eyebrow">Studio details</p>
                 <h2>Ripal Design Rajkot</h2>
                 <p><?php echo public_content_get_html('contact_us', 'address_html', '538 Jasal Complex,<br>Nanavati Chowk,<br>150ft Ring Road,<br>Rajkot, Gujarat, India'); ?></p>
-                <a href="tel:+919426789012"><?php echo esc($ct('contact_phone', '+91 94267 89012')); ?></a>
+                <a href="tel:+918264271111"><?php echo esc($ct('contact_phone', '+91 94267 89012')); ?></a>
                 <a href="mailto:<?php echo esc_attr($ct('contact_email', 'projects@ripaldesign.studio')); ?>"><?php echo esc($ct('contact_email', 'projects@ripaldesign.studio')); ?></a>
                 <div class="map-frame">
                     <iframe title="Ripal Design location map" src="<?php echo esc_attr($mapSrc); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>

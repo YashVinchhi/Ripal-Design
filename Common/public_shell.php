@@ -48,6 +48,10 @@ if (!function_exists('rd_page_start')) {
         $image = (string)($options['image'] ?? rd_asset_url('assets/Content/Logo.png'));
         $url = (string)($options['url'] ?? rd_public_url('index.php'));
         $active = (string)($options['active'] ?? '');
+        $shell = function_exists('public_content_page_values') ? public_content_page_values('public_shell') : [];
+        $shellText = static function ($key, $default = '') use ($shell) {
+            return (string)($shell[$key] ?? $default);
+        };
         ?>
 <!doctype html>
 <html lang="en">
@@ -78,7 +82,7 @@ if (!function_exists('rd_page_start')) {
     <header class="site-header" data-active="<?php echo esc_attr($active); ?>">
         <a class="brand" href="<?php echo esc_attr(rd_public_url('index.php')); ?>" aria-label="Ripal Design home">
             <img src="<?php echo esc_attr(rd_asset_url('assets/Content/Logo.png')); ?>" alt="" width="36" height="36">
-            <span>Ripal Design</span>
+            <span><?php echo esc($shellText('brand_name', 'Ripal Design')); ?></span>
         </a>
         <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="siteNav">
             <span class="hamburger-lines" aria-hidden="true">
@@ -90,11 +94,11 @@ if (!function_exists('rd_page_start')) {
         <nav class="site-nav" id="siteNav" aria-label="Primary navigation">
             <?php
             $links = [
-                'home' => ['href' => 'index.php', 'label' => 'Home'],
-                'services' => ['href' => 'services.php', 'label' => 'Services'],
-                'projects' => ['href' => 'project_view.php', 'label' => 'Projects'],
-                'about' => ['href' => 'about_us.php', 'label' => 'About'],
-                'contact' => ['href' => 'contact_us.php', 'label' => 'Contact'],
+                'home' => ['href' => 'index.php', 'label' => $shellText('nav_home_label', 'Home')],
+                'services' => ['href' => 'services.php', 'label' => $shellText('nav_services_label', 'Services')],
+                'projects' => ['href' => 'project_view.php', 'label' => $shellText('nav_projects_label', 'Projects')],
+                'about' => ['href' => 'about_us.php', 'label' => $shellText('nav_about_label', 'About')],
+                'contact' => ['href' => 'contact_us.php', 'label' => $shellText('nav_contact_label', 'Contact')],
             ];
             foreach ($links as $key => $link):
                 $isActive = $active === $key ? ' aria-current="page"' : '';
@@ -102,10 +106,10 @@ if (!function_exists('rd_page_start')) {
                 <a href="<?php echo esc_attr(rd_public_url($link['href'])); ?>"<?php echo $isActive; ?>><?php echo esc($link['label']); ?></a>
             <?php endforeach; ?>
             <div class="menu-actions" aria-label="Account actions">
-                <a class="button button-secondary" href="<?php echo esc_attr(rd_public_url('login.php')); ?>">Login</a>
-                <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('signup.php')); ?>">Sign Up</a>
+                <a class="button button-secondary" href="<?php echo esc_attr(rd_public_url('login.php')); ?>"><?php echo esc($shellText('nav_login_label', 'Login')); ?></a>
+                <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('signup.php')); ?>"><?php echo esc($shellText('nav_signup_label', 'Sign Up')); ?></a>
             </div>
-            <a class="menu-cta" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>">Start a Project</a>
+            <a class="menu-cta" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>"><?php echo esc($shellText('nav_cta_label', 'Start a Project')); ?></a>
         </nav>
     </header>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
@@ -123,43 +127,47 @@ if (!function_exists('rd_page_end')) {
     {
         $phoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
         $whatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
+        $shell = function_exists('public_content_page_values') ? public_content_page_values('public_shell') : [];
+        $shellText = static function ($key, $default = '') use ($shell) {
+            return (string)($shell[$key] ?? $default);
+        };
         ?>
     <footer class="site-footer">
         <?php if ($showCta): ?>
             <section class="footer-cta" aria-labelledby="footerCtaTitle">
                 <div>
-                    <p class="eyebrow">Next step</p>
-                    <h2 id="footerCtaTitle">Ready to make the site, budget, and design speak the same language?</h2>
+                    <p class="eyebrow"><?php echo esc($shellText('footer_cta_kicker', 'Next step')); ?></p>
+                    <h2 id="footerCtaTitle"><?php echo esc($shellText('footer_cta_heading', 'Ready to make the site, budget, and design speak the same language?')); ?></h2>
                 </div>
-                <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>">Request a Consultation</a>
+                <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>"><?php echo esc($shellText('footer_cta_button_label', 'Request a Consultation')); ?></a>
             </section>
         <?php endif; ?>
         <div class="footer-grid">
             <div>
                 <a class="brand footer-brand" href="<?php echo esc_attr(rd_public_url('index.php')); ?>">
                     <img src="<?php echo esc_attr(rd_asset_url('assets/Content/Logo.png')); ?>" alt="" width="36" height="36">
-                    <span>Ripal Design</span>
+                    <span><?php echo esc($shellText('brand_name', 'Ripal Design')); ?></span>
                 </a>
-                <p>Architecture, interiors, and execution support from Rajkot for homes, institutions, and commercial spaces.</p>
+                <p><?php echo esc($shellText('footer_brand_description', 'Architecture, interiors, and execution support from Rajkot for homes, institutions, and commercial spaces.')); ?></p>
             </div>
             <address>
-                <strong>Studio</strong>
-                <span>538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat</span>
+                <strong><?php echo esc($shellText('footer_studio_heading', 'Studio')); ?></strong>
+                <span><?php echo esc($shellText('footer_studio_address', '538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat')); ?></span>
                 <a href="<?php echo esc_attr($phoneHref); ?>"><?php echo esc(PHONE_NUMBER); ?></a>
-                <a href="mailto:projects@ripaldesign.studio">projects@ripaldesign.studio</a>
+                <a href="mailto:<?php echo esc_attr($shellText('footer_contact_email', 'projects@ripaldesign.studio')); ?>"><?php echo esc($shellText('footer_contact_email', 'projects@ripaldesign.studio')); ?></a>
             </address>
             <nav aria-label="Footer navigation">
-                <strong>Pages</strong>
-                <a href="<?php echo esc_attr(rd_public_url('services.php')); ?>">Services</a>
-                <a href="<?php echo esc_attr(rd_public_url('project_view.php')); ?>">Projects</a>
-                <a href="<?php echo esc_attr(rd_public_url('about_us.php')); ?>">About</a>
-                <a href="<?php echo esc_attr(rd_public_url('privacy.php')); ?>">Privacy</a>
-                <a href="<?php echo esc_attr(rd_public_url('terms.php')); ?>">Terms</a>
+                <strong><?php echo esc($shellText('footer_pages_heading', 'Pages')); ?></strong>
+                <a href="<?php echo esc_attr(rd_public_url('services.php')); ?>"><?php echo esc($shellText('nav_services_label', 'Services')); ?></a>
+                <a href="<?php echo esc_attr(rd_public_url('project_view.php')); ?>"><?php echo esc($shellText('nav_projects_label', 'Projects')); ?></a>
+                <a href="<?php echo esc_attr(rd_public_url('about_us.php')); ?>"><?php echo esc($shellText('nav_about_label', 'About')); ?></a>
+                <a href="<?php echo esc_attr(rd_public_url('privacy.php')); ?>"><?php echo esc($shellText('footer_privacy_label', 'Privacy')); ?></a>
+                <a href="<?php echo esc_attr(rd_public_url('terms.php')); ?>"><?php echo esc($shellText('footer_terms_label', 'Terms')); ?></a>
             </nav>
         </div>
         <div class="footer-bottom">
-            <span>&copy; <?php echo date('Y'); ?> Ripal Design. All rights reserved.</span>
-            <a href="<?php echo esc_attr($whatsAppHref); ?>" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            <span>&copy; <?php echo date('Y'); ?> <?php echo esc($shellText('brand_name', 'Ripal Design')); ?>. <?php echo esc($shellText('footer_copyright_suffix', 'All rights reserved.')); ?></span>
+            <a href="<?php echo esc_attr($whatsAppHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc($shellText('footer_whatsapp_label', 'WhatsApp')); ?></a>
         </div>
     </footer>
     <script>

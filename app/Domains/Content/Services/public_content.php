@@ -77,14 +77,45 @@ if (!function_exists('public_content_registry')) {
                     'terms_label' => ['label' => 'Footer Link: Terms', 'format' => 'plain', 'default' => 'Terms'],
                 ],
             ],
+            'public_shell' => [
+                'title' => 'Public Shell (Header + Footer)',
+                'preview_path' => 'public/index.php',
+                'fields' => [
+                    'brand_name' => ['label' => 'Brand Name', 'format' => 'plain', 'default' => 'Ripal Design'],
+                    'nav_home_label' => ['label' => 'Nav: Home Label', 'format' => 'plain', 'default' => 'Home'],
+                    'nav_services_label' => ['label' => 'Nav: Services Label', 'format' => 'plain', 'default' => 'Services'],
+                    'nav_projects_label' => ['label' => 'Nav: Projects Label', 'format' => 'plain', 'default' => 'Projects'],
+                    'nav_about_label' => ['label' => 'Nav: About Label', 'format' => 'plain', 'default' => 'About'],
+                    'nav_contact_label' => ['label' => 'Nav: Contact Label', 'format' => 'plain', 'default' => 'Contact'],
+                    'nav_login_label' => ['label' => 'Nav: Login Label', 'format' => 'plain', 'default' => 'Login'],
+                    'nav_signup_label' => ['label' => 'Nav: Sign Up Label', 'format' => 'plain', 'default' => 'Sign Up'],
+                    'nav_cta_label' => ['label' => 'Nav: CTA Label', 'format' => 'plain', 'default' => 'Start a Project'],
+                    'footer_cta_kicker' => ['label' => 'Footer CTA: Kicker', 'format' => 'plain', 'default' => 'Next step'],
+                    'footer_cta_heading' => ['label' => 'Footer CTA: Heading', 'format' => 'plain', 'default' => 'Ready to make the site, budget, and design speak the same language?'],
+                    'footer_cta_button_label' => ['label' => 'Footer CTA: Button Label', 'format' => 'plain', 'default' => 'Request a Consultation'],
+                    'footer_brand_description' => ['label' => 'Footer Brand Description', 'format' => 'plain', 'default' => 'Architecture, interiors, and execution support from Rajkot for homes, institutions, and commercial spaces.'],
+                    'footer_studio_heading' => ['label' => 'Footer: Studio Heading', 'format' => 'plain', 'default' => 'Studio'],
+                    'footer_studio_address' => ['label' => 'Footer: Studio Address', 'format' => 'plain', 'default' => '538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat'],
+                    'footer_contact_email' => ['label' => 'Footer: Contact Email', 'format' => 'plain', 'default' => 'projects@ripaldesign.studio'],
+                    'footer_pages_heading' => ['label' => 'Footer: Pages Heading', 'format' => 'plain', 'default' => 'Pages'],
+                    'footer_privacy_label' => ['label' => 'Footer: Privacy Label', 'format' => 'plain', 'default' => 'Privacy'],
+                    'footer_terms_label' => ['label' => 'Footer: Terms Label', 'format' => 'plain', 'default' => 'Terms'],
+                    'footer_copyright_suffix' => ['label' => 'Footer: Copyright Suffix', 'format' => 'plain', 'default' => 'All rights reserved.'],
+                    'footer_whatsapp_label' => ['label' => 'Footer: WhatsApp Label', 'format' => 'plain', 'default' => 'WhatsApp'],
+                ],
+            ],
             'index' => [
                 'title' => 'Home Page',
                 'preview_path' => 'public/index.php',
                 'fields' => [
                     'page_title' => ['label' => 'Browser Title', 'format' => 'plain', 'default' => 'Home | Ripal Design'],
                     'hero_established' => ['label' => 'Hero: Established Label', 'format' => 'plain', 'default' => 'Est. 2017'],
+                    'hero_location' => ['label' => 'Hero: Location Label', 'format' => 'plain', 'default' => 'Rajkot, Gujarat'],
                     'hero_heading' => ['label' => 'Hero: Heading', 'format' => 'plain', 'default' => 'About the Studio'],
                     'hero_subheading' => ['label' => 'Hero: Subheading', 'format' => 'plain', 'default' => 'A design-build partnership shaped by two brothers, rooted in Rajkot, trusted across Gujarat.'],
+                    'hero_primary_cta_label' => ['label' => 'Hero: Primary CTA Label', 'format' => 'plain', 'default' => 'Start Your Project'],
+                    'hero_secondary_cta_label' => ['label' => 'Hero: Secondary CTA Label', 'format' => 'plain', 'default' => 'View Projects'],
+                    'hero_scroll_label' => ['label' => 'Hero: Scroll Label', 'format' => 'plain', 'default' => 'Scroll'],
                     'hero_hint' => ['label' => 'Hero: Hint Label', 'format' => 'plain', 'default' => 'Discovery'],
                     'story_heading_line' => ['label' => 'Story Heading First Line', 'format' => 'plain', 'default' => 'Duality in'],
                     'story_heading_highlight' => ['label' => 'Story Heading Highlight', 'format' => 'plain', 'default' => 'Execution'],
@@ -92,6 +123,15 @@ if (!function_exists('public_content_registry')) {
                     'story_intro' => ['label' => 'Story Intro', 'format' => 'plain', 'default' => 'Founded by two brothers - A Designer and A Builder, we bridge creative ambition with practical delivery.'],
                     'story_body' => ['label' => 'Story Body', 'format' => 'plain', 'default' => 'Our combined experience across municipal, institutional, and private works ensures designs that stand up to real-world constraints while remaining beautiful and timeless. We eliminate the gap between concept and creation by controlling the measure of every detail.'],
                     'fallback_project_name' => ['label' => 'Fallback Project Name', 'format' => 'plain', 'default' => 'Project'],
+                    'fallback_project_1_name' => ['label' => 'Fallback Project 1 Name', 'format' => 'plain', 'default' => 'New Palace'],
+                    'fallback_project_1_location' => ['label' => 'Fallback Project 1 Location', 'format' => 'plain', 'default' => 'Rajkot'],
+                    'fallback_project_2_name' => ['label' => 'Fallback Project 2 Name', 'format' => 'plain', 'default' => 'Sish Gadh'],
+                    'fallback_project_2_location' => ['label' => 'Fallback Project 2 Location', 'format' => 'plain', 'default' => 'Jamkhambhalia'],
+                    'fallback_project_3_name' => ['label' => 'Fallback Project 3 Name', 'format' => 'plain', 'default' => 'Lanka Skyline Towers'],
+                    'fallback_project_3_location' => ['label' => 'Fallback Project 3 Location', 'format' => 'plain', 'default' => 'Rajkot'],
+                    'fallback_project_4_name' => ['label' => 'Fallback Project 4 Name', 'format' => 'plain', 'default' => 'Rameshwaram Sea View Retreat'],
+                    'fallback_project_4_location' => ['label' => 'Fallback Project 4 Location', 'format' => 'plain', 'default' => 'Coastal Residence'],
+                    'carousel_caption' => ['label' => 'Carousel Caption', 'format' => 'plain', 'default' => 'Another view, another craft decision. Scroll to hold each frame in place.'],
                     'carousel_image_1' => ['label' => 'Carousel Image 1', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
                     'carousel_image_2' => ['label' => 'Carousel Image 2', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'],
                     'carousel_image_3' => ['label' => 'Carousel Image 3', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
@@ -112,7 +152,16 @@ if (!function_exists('public_content_registry')) {
                     'featured_image_alt_2' => ['label' => 'Featured Image 2 Alt', 'format' => 'plain', 'default' => 'Featured project image 2'],
                     'featured_image_alt_3' => ['label' => 'Featured Image 3 Alt', 'format' => 'plain', 'default' => 'Featured project image 3'],
                     'featured_image_alt_4' => ['label' => 'Featured Image 4 Alt', 'format' => 'plain', 'default' => 'Featured project image 4'],
+                    'projects_eyebrow_prefix' => ['label' => 'Projects Eyebrow Prefix', 'format' => 'plain', 'default' => 'Latest'],
                     'project_link_label' => ['label' => 'Project Link Label', 'format' => 'plain', 'default' => 'View Project'],
+                    'companies_heading' => ['label' => 'Companies Section Heading', 'format' => 'plain', 'default' => 'Companies we have worked with'],
+                    'companies_subheading' => ['label' => 'Companies Section Subheading', 'format' => 'plain', 'default' => 'Trusted partnerships across residential, institutional, and commercial work.'],
+                    'company_1_name' => ['label' => 'Company 1 Name', 'format' => 'plain', 'default' => 'Shivam Developers'],
+                    'company_2_name' => ['label' => 'Company 2 Name', 'format' => 'plain', 'default' => 'Rajkot Realty Group'],
+                    'company_3_name' => ['label' => 'Company 3 Name', 'format' => 'plain', 'default' => 'Khambhalia Arts'],
+                    'company_4_name' => ['label' => 'Company 4 Name', 'format' => 'plain', 'default' => 'Lanka Skyline'],
+                    'company_5_name' => ['label' => 'Company 5 Name', 'format' => 'plain', 'default' => 'Rameshwaram Resorts'],
+                    'company_6_name' => ['label' => 'Company 6 Name', 'format' => 'plain', 'default' => 'North Gate Schools'],
                     'testimonials_heading' => ['label' => 'Testimonials Heading', 'format' => 'plain', 'default' => 'Client Perspectives'],
                     'testimonials_subheading' => ['label' => 'Testimonials Subheading', 'format' => 'plain', 'default' => 'Voices from our collaborative journey'],
                     'testimonial_1_quote' => ['label' => 'Testimonial 1 Quote', 'format' => 'plain', 'default' => 'The surgical precision of their design language transformed our site into a masterpiece of modern architecture.'],
@@ -1212,6 +1261,74 @@ if (!function_exists('public_content_seed_defaults')) {
                 } else {
                     $result['skipped']++;
                 }
+            }
+        }
+
+        public_content_clear_cache();
+        $result['ok'] = empty($result['errors']);
+
+        return $result;
+    }
+}
+
+if (!function_exists('public_content_sync_registry_defaults')) {
+    /**
+     * Sync registry defaults into public_page_content.
+     *
+     * @param int $updatedBy
+     * @param bool $overwriteExisting
+     * @return array
+     */
+    function public_content_sync_registry_defaults($updatedBy = 0, $overwriteExisting = false) {
+        $result = [
+            'ok' => false,
+            'updated' => 0,
+            'errors' => [],
+        ];
+
+        if (!public_content_table_exists()) {
+            $result['errors'][] = 'Content table is not available. Run the SQL migration first.';
+            return $result;
+        }
+
+        $authorId = (int)$updatedBy;
+        if ($authorId <= 0 && function_exists('current_user_id')) {
+            $authorId = (int)current_user_id();
+        }
+        if ($authorId <= 0) {
+            $authorId = null;
+        }
+
+        $registry = public_content_registry();
+        foreach ($registry as $pageSlug => $meta) {
+            $fields = $meta['fields'] ?? [];
+            if (!is_array($fields) || empty($fields)) {
+                continue;
+            }
+
+            foreach ($fields as $sectionKey => $fieldMeta) {
+                $fieldFormat = public_content_normalize_format((string)($fieldMeta['format'] ?? 'plain'));
+                $dbFormat = $fieldFormat === 'html' ? 'html' : 'plain';
+                $defaultValue = public_content_resolve_value($fieldFormat, (string)($fieldMeta['default'] ?? ''));
+
+                if ($overwriteExisting) {
+                    $stmt = db_query(
+                        'INSERT INTO public_page_content (page_slug, section_key, content_value, content_format, updated_by) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE content_value = VALUES(content_value), content_format = VALUES(content_format), updated_by = VALUES(updated_by), updated_at = CURRENT_TIMESTAMP',
+                        [(string)$pageSlug, (string)$sectionKey, $defaultValue, $dbFormat, $authorId]
+                    );
+                } else {
+                    $stmt = db_query(
+                        'INSERT IGNORE INTO public_page_content (page_slug, section_key, content_value, content_format, updated_by) VALUES (?, ?, ?, ?, ?)',
+                        [(string)$pageSlug, (string)$sectionKey, $defaultValue, $dbFormat, $authorId]
+                    );
+                }
+
+                if ($stmt === false) {
+                    $result['errors'][] = 'Failed to sync key: ' . (string)$pageSlug . '.' . (string)$sectionKey;
+                    continue;
+                }
+
+                $result['updated']++;
             }
         }
 
