@@ -2,7 +2,7 @@ name: CI Build, Test, and Publish Containers
 
 on:
   push:
-    branches: ['Prod', 'main', 'ripal-design']
+    branches: ['Prod', 'main', 'ripal-design', 'CSS']
   pull_request:
     branches: ['main', 'ripal-design']
 
