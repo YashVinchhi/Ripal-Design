@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
+require_once __DIR__ . '/../Common/public_shell.php';
 $resetContent = function_exists('public_content_page_values') ? public_content_page_values('reset_password') : [];
 $ct = static function ($key, $default = '') use ($resetContent) {
     return (string)($resetContent[$key] ?? $default);
@@ -113,7 +114,6 @@ if (!($db instanceof PDO)) {
         </section>
     </main>
 
-    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
 </body>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -142,5 +142,4 @@ if (!($db instanceof PDO)) {
         });
     });
 </script>
-
-</html>
+<?php rd_page_end(); ?>

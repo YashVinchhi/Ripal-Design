@@ -87,6 +87,14 @@
     --tape-height: 48px;
     --tape-half: calc(var(--tape-height) / 2);
     --year-box-gap: 10px;
+
+    /* ========================================================================
+       CORNER RADIUS
+       ======================================================================== */
+
+    --radius-ui: 0px;
+    --radius-ui-sm: 0px;
+    --radius-ui-lg: 0px;
     
     /* ========================================================================
        HEADER & NAVIGATION
@@ -145,4 +153,12 @@ body.light-theme,
     --text-base: #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.7);
     --text-muted: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-ui-radius="rounded"],
+body[data-ui-radius="rounded"],
+[data-ui-radius="rounded"] {
+   --radius-ui: 12px;
+   --radius-ui-sm: 8px;
+   --radius-ui-lg: 18px;
 }

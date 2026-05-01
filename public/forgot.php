@@ -1,6 +1,7 @@
 
 <?php
 require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
+require_once __DIR__ . '/../Common/public_shell.php';
 
 $message = '';
 $type = '';
@@ -67,7 +68,4 @@ $ct = static function ($key, $default = '') use ($forgotContent) {
             </div>
         </section>
     </main>
-    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
-</body>
-
-</html>
+<?php rd_page_end(); ?>

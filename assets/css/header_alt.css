@@ -14,7 +14,6 @@ nav.fixed-top {
   position: sticky;
   top: 0;
   z-index: 9999;
-  backdrop-filter: blur(6px) saturate(120%);
   /* keep nav visually transparent so page content shows through */
   background: transparent;
   box-shadow: var(--header-shadow);

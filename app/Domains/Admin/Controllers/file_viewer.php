@@ -2050,7 +2050,7 @@ $vrSettings = file_viewer_load_vr_settings();
       </div>
     </main>
 
-    <?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>
+    <?php if (!defined('HIDE_FOOTER_CTA')) define('HIDE_FOOTER_CTA', true); require_once PROJECT_ROOT . '/Common/footer.php'; ?>
   </div>
   <?php if ($viewerMode === '3d' && $previewUrl !== ''): ?>
     <div id="threeDModal" class="viewer-3d-modal" aria-hidden="true">

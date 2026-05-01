@@ -65,20 +65,19 @@ $currentYear = date('Y');
 
 <footer class="site-footer bg-foundation-grey text-white pt-16 pb-8 px-4 font-sans" role="contentinfo">
     <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 <?php echo $hideFooterCta ? 'md:grid-cols-1' : 'md:grid-cols-2'; ?> gap-12 items-center">
-            <?php if (!$hideFooterCta): ?>
-                <div>
-                    <h2 class="text-3xl font-serif font-bold mb-4"><?php echo esc($footerText('cta_heading', 'Ready to build something Iconic?')); ?></h2>
-                    <p class="text-gray-400 mb-8 max-w-lg">
-                        <?php echo esc($footerText('cta_description', "Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.")); ?>
-                    </p>
-                    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" 
-                        class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
-                        role="button">
-                        <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i>
-                    </a>
-                </div>
-            <?php endif; ?>
+        <?php if (!$hideFooterCta): ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h2 class="text-3xl font-serif font-bold mb-4"><?php echo esc($footerText('cta_heading', 'Ready to build something Iconic?')); ?></h2>
+                <p class="text-gray-400 mb-8 max-w-lg">
+                    <?php echo esc($footerText('cta_description', "Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.")); ?>
+                </p>
+                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" 
+                    class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
+                    role="button">
+                    <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i>
+                </a>
+            </div>
 
             <div class="bg-black/20 p-8 border border-white/5">
                 <h3 class="text-xl font-serif text-gray-400 mb-6"><?php echo esc($footerText('contact_heading', 'Contact Us')); ?></h3>
@@ -110,6 +109,7 @@ $currentYear = date('Y');
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
         <div class="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
             <div>&copy; <?php echo $currentYear; ?> <?php echo esc($footerText('copyright_brand', 'Ripal Design')); ?>. <?php echo esc($footerText('copyright_suffix', 'All rights reserved.')); ?></div>

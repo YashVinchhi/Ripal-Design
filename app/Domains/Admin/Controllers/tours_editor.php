@@ -503,7 +503,7 @@ try {
 			<?php endif; ?>
 		</main>
 
-		<?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>
+		<?php if (!defined('HIDE_FOOTER_CTA')) define('HIDE_FOOTER_CTA', true); require_once PROJECT_ROOT . '/Common/footer.php'; ?>
 	</div>
 
 	<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>

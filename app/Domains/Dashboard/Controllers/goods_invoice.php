@@ -911,4 +911,4 @@ if (function_exists('render_flash')) { render_flash(); }
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <?php endif; ?>
 
-<?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>
+<?php if (!defined('HIDE_FOOTER_CTA')) define('HIDE_FOOTER_CTA', true); require_once PROJECT_ROOT . '/Common/footer.php'; ?>

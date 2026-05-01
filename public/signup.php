@@ -1,164 +1,101 @@
-
 <?php
-
-require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
-
-if (session_status() === PHP_SESSION_NONE) {
-    @session_start();
-}
+require_once __DIR__ . '/../Common/public_shell.php';
 
 if (function_exists('redirect_authenticated_user_to_dashboard')) {
     redirect_authenticated_user_to_dashboard();
 }
 
-$errors = [
-    'login' => $_SESSION['login_error'] ?? '',
-    'signup' => $_SESSION['register_error'] ?? ''
-];
-$active_form = $_SESSION['active_form'] ?? 'login';
+// Ensure CSRF token is generated
+if (function_exists('generate_csrf_token')) {
+    generate_csrf_token();
+}
 
+$content = function_exists('public_content_page_values') ? public_content_page_values('signup') : [];
+$ct = static fn ($key, $default = '') => (string)($content[$key] ?? $default);
+$error = (string)($_SESSION['register_error'] ?? '');
 unset($_SESSION['login_error'], $_SESSION['register_error'], $_SESSION['active_form']);
 
-$signupContent = function_exists('public_content_page_values') ? public_content_page_values('signup') : [];
-$ct = static function ($key, $default = '') use ($signupContent) {
-    return (string)($signupContent[$key] ?? $default);
-};
-
-function showError($error)
-{
-    if (empty($error)) {
-        return '';
-    }
-    return "<p class='alert alert-danger'>" . htmlspecialchars((string)$error, ENT_QUOTES, 'UTF-8') . "</p>";
-}
-
-function showActive($form, $active_form)
-{
-    return $active_form === $form ? 'active' : '';
-}
+rd_page_start([
+    'title' => $ct('page_title', 'Create Account'),
+    'description' => $ct('meta_description', 'Create a Ripal Design client account.'),
+    'url' => rd_public_url('signup.php'),
+]);
 ?>
-
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-
-<?php
-// Use shared header for consistent head assets, title and meta
-$pageTitle = $ct('page_title', 'Sign Up - Ripal Design') . ' | Ripal Design';
-$metaDesc = $ct('meta_description', 'Create an account to start your design experience.');
-$HEADER_MODE = 'public';
-require_once __DIR__ . '/../app/Ui/header.php';
-?>
-
-<body class="auth-page">
-    <div class="grain"></div>
-    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/login.css'); ?>">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
-    <script src="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/js/validation.js'); ?>" defer></script>
-
-    <main class="auth-main auth-main-public">
-        <section class="auth-card-wrap" aria-labelledby="signupTitle">
-            <div class="auth-card auth-card-compact auth-card-signup">
-                <h1 class="auth-title" id="signupTitle"><?php echo esc($ct('form_title', 'Create Account')); ?></h1>
-                <p class="auth-subtitle"><?php echo esc($ct('form_subtitle', 'Start your design experience with a curated account setup.')); ?></p>
-
-                <form id="signupForm" method="post" action="<?= htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX . '/login_register.php', ENT_QUOTES, 'UTF-8'); ?>" novalidate class="auth-form <?= showActive('signup', $active_form) ? 'active' : '' ?>">
-                    <input type="hidden" name="csrf_token" value="<?= h($_SESSION['_csrf_token'] ?? '') ?>">
-                    <?= showError($errors['signup']); ?>
-
-                    <div class="field-grid">
-                        <div class="field">
-                            <label for="firstName"><?php echo esc($ct('label_first_name', 'First Name')); ?></label>
-                            <input type="text" class="form-control" id="firstName" name="firstName" placeholder="<?php echo esc_attr($ct('placeholder_first_name', 'Enter your first name')); ?>" data-validation="required min alphabetic" data-min="2" autocomplete="given-name">
-                            <span id="firstName_error" class="text-danger"></span>
-                        </div>
-                        <div class="field">
-                            <label for="lastName"><?php echo esc($ct('label_last_name', 'Last Name')); ?></label>
-                            <input type="text" class="form-control" id="lastName" name="lastName" placeholder="<?php echo esc_attr($ct('placeholder_last_name', 'Enter your last name')); ?>" data-validation="required min alphabetic" data-min="2" autocomplete="family-name">
-                            <span id="lastName_error" class="text-danger"></span>
-                        </div>
-                    </div>
-
+<main id="main" class="auth-wrap">
+    <section class="auth-layout">
+        <div class="hero-copy">
+            <p class="eyebrow">Create account</p>
+            <h1><?php echo esc($ct('form_title', 'Start with a clean account setup.')); ?></h1>
+            <p><?php echo esc($ct('form_subtitle', 'Use one account for project communication, approvals, files, and billing updates.')); ?></p>
+            <a class="button button-secondary" href="<?php echo esc_attr(rd_public_url('login.php')); ?>">Already registered?</a>
+        </div>
+        <article class="auth-card" aria-labelledby="signupTitle">
+            <p class="eyebrow">Signup</p>
+            <h1 id="signupTitle">Create account</h1>
+            <?php if ($error !== ''): ?><p class="notice notice-error"><?php echo esc($error); ?></p><?php endif; ?>
+            <form id="signupForm" class="auth-form" method="post" action="<?php echo esc_attr(rd_public_url('login_register.php')); ?>">
+                <input type="hidden" name="csrf_token" value="<?php echo h(generate_csrf_token()); ?>">
+                <div class="form-grid">
                     <div class="field">
-                        <label for="email"><?php echo esc($ct('label_email', 'Email Address')); ?></label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="<?php echo esc_attr($ct('placeholder_email', 'youremail@example.com')); ?>" data-validation="required email" autocomplete="email">
-                        <span id="email_error" class="text-danger"></span>
+                        <label for="firstName">First name</label>
+                        <input id="firstName" name="firstName" required autocomplete="given-name" data-validation="required min alphabetic" data-min="2">
+                        <span id="firstName_error" class="text-danger" role="alert"></span>
                     </div>
-
                     <div class="field">
-                        <label for="confirmPassword_confirm"><?php echo esc($ct('label_password', 'Password')); ?></label>
-                        <div class="input-with-icon">
-                            <input id="confirmPassword_confirm" name="password" type="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_password', 'Enter your password')); ?>" data-validation="required strongPassword" autocomplete="new-password">
-                            <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>" aria-pressed="false">
-                                <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" id="eyeicon" class="toggle-password" aria-hidden="true">
-                            </button>
-                        </div>
-                        <small class="field-help"><?php echo esc($ct('password_help', 'Use at least 8 characters and 1 number.')); ?></small>
-                        <span id="password_error" class="text-danger"></span>
+                        <label for="lastName">Last name</label>
+                        <input id="lastName" name="lastName" required autocomplete="family-name" data-validation="required min alphabetic" data-min="2">
+                        <span id="lastName_error" class="text-danger" role="alert"></span>
                     </div>
-
-                    <div class="field">
-                        <label for="Password"><?php echo esc($ct('label_confirm_password', 'Confirm Password')); ?></label>
-                        <div class="input-with-icon">
-                            <input id="Password" name="confirmPassword" type="password" class="form-control" placeholder="<?php echo esc_attr($ct('placeholder_confirm_password', 'Confirm your password')); ?>" data-validation="required confirmPassword" autocomplete="new-password">
-                            <button type="button" class="toggle-password-btn" aria-label="<?php echo esc_attr($ct('toggle_aria', 'Toggle password visibility')); ?>" aria-pressed="false">
-                                <img src="./css/eye/eye_close.svg" alt="<?php echo esc_attr($ct('toggle_show_alt', 'Show password')); ?>" id="eyeicon1" class="toggle-password" aria-hidden="true">
-                            </button>
-                        </div>
-                        <span id="confirmPassword_error" class="text-danger"></span>
+                </div>
+                <div class="field">
+                    <label for="email">Email address</label>
+                    <input id="email" type="email" name="email" required autocomplete="email" data-validation="required email">
+                    <span id="email_error" class="text-danger" role="alert"></span>
+                </div>
+                <div class="field">
+                    <label for="phone">Phone number</label>
+                    <input id="phone" type="tel" name="phoneNumber" required autocomplete="tel" data-validation="required number min max" data-min="10" data-max="10">
+                    <span id="phoneNumber_error" class="text-danger" role="alert"></span>
+                </div>
+                <div class="field">
+                    <label for="signupPassword">Password</label>
+                    <div class="password-wrap">
+                        <input id="signupPassword" type="password" name="password" required autocomplete="new-password" data-validation="required strongPassword">
+                        <button type="button" class="toggle-password-btn" aria-label="Show password" aria-pressed="false"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
                     </div>
-
-                    <div class="field">
-                        <label for="phone"><?php echo esc($ct('label_phone', 'Phone Number')); ?></label>
-                        <input type="tel" class="form-control" id="phone" name="phoneNumber" placeholder="<?php echo esc_attr($ct('placeholder_phone', 'Enter your phone number')); ?>" data-validation="required number min max" data-min="10" data-max="10" autocomplete="tel">
-                        <span id="phoneNumber_error" class="text-danger"></span>
+                    <p class="field-help">Use at least 8 characters with a number.</p>
+                    <span id="password_error" class="text-danger" role="alert"></span>
+                </div>
+                <div class="field">
+                    <label for="confirmPassword">Confirm password</label>
+                    <div class="password-wrap">
+                        <input id="confirmPassword" type="password" name="confirmPassword" required autocomplete="new-password" data-validation="required confirmPassword">
+                        <button type="button" class="toggle-password-btn" aria-label="Show password" aria-pressed="false"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
                     </div>
-
-                    <div class="meta-row">
-                        <div class="check-wrap">
-                            <input type="checkbox" id="remember" name="terms" class="form-check-input" data-validation="required">
-                            <label for="remember" class="form-check-label"><?php echo esc($ct('label_terms', 'I accept terms and conditions')); ?></label>
-                            <span id="terms_error" class="text-danger d-none"></span>
-                        </div>
-                    </div>
-
-                    <button type="submit" name="signup" class="btn-1"><?php echo esc($ct('button_signup', 'Create Account')); ?></button>
-                    <p class="switch-auth"><?php echo esc($ct('switch_prefix', 'Already have an account?')); ?> <a href="./login.php"><?php echo esc($ct('switch_link', 'Login')); ?></a></p>
-                </form>
-            </div>
-        </section>
-    </main>
-    <?php require_once __DIR__ . '/../Common/footer.php'; ?>
-
-</body>
+                    <span id="confirmPassword_error" class="text-danger" role="alert"></span>
+                </div>
+                <label class="check-wrap" for="terms">
+                    <input id="terms" type="checkbox" name="terms" required data-validation="required">
+                    I accept the <a href="<?php echo esc_attr(rd_public_url('terms.php')); ?>">terms</a> and <a href="<?php echo esc_attr(rd_public_url('privacy.php')); ?>">privacy policy</a>
+                </label>
+                <span id="terms_error" class="text-danger" role="alert"></span>
+                <button class="button button-primary" type="submit" name="signup">Create Account</button>
+                <p class="switch-auth">Already have an account? <a href="<?php echo esc_attr(rd_public_url('login.php')); ?>">Login</a></p>
+            </form>
+        </article>
+    </section>
+</main>
+<script src="<?php echo esc_attr(rd_public_url('js/validation.js')); ?>" defer></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggleButtons = document.querySelectorAll('.toggle-password-btn');
-        if (!toggleButtons || toggleButtons.length === 0) return;
-        const openSrc = './css/eye/eye_open.svg';
-        const closeSrc = './css/eye/eye_close.svg';
-        const showLabel = <?php echo json_encode($ct('toggle_show_alt', 'Show password')); ?>;
-        const hideLabel = <?php echo json_encode($ct('toggle_hide_alt', 'Hide password')); ?>;
-
-        toggleButtons.forEach(function(toggleBtn){
-            const toggle = toggleBtn.querySelector('.toggle-password');
-            const container = toggleBtn.closest('.input-with-icon');
-            const input = container ? container.querySelector('input') : null;
-            if (!input || !toggle) return;
-
-            function doToggle(){
-                const showing = input.type === 'text';
-                input.type = showing ? 'password' : 'text';
-                toggle.src = showing ? closeSrc : openSrc;
-                toggle.alt = showing ? showLabel : hideLabel;
-                toggleBtn.setAttribute('aria-pressed', showing ? 'false' : 'true');
-            }
-
-            toggleBtn.addEventListener('click', doToggle);
+    document.querySelectorAll('.toggle-password-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var input = button.closest('.password-wrap').querySelector('input');
+            var showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            button.setAttribute('aria-pressed', showing ? 'false' : 'true');
+            button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+            button.innerHTML = '<i class="fa-solid ' + (showing ? 'fa-eye' : 'fa-eye-slash') + '" aria-hidden="true"></i>';
         });
     });
 </script>
-
-</html>
+<?php rd_page_end(); ?>

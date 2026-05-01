@@ -15,7 +15,8 @@
 // Ensure application is bootstrapped
 require_once __DIR__ . '/../Core/Bootstrap/init.php';
 
-if (function_exists('webmcp_render_bootstrap_once')) {
+// Only load bootstrap for non-public header modes to keep public pages Tailwind-only
+if ((empty($HEADER_MODE) || $HEADER_MODE !== 'public') && function_exists('webmcp_render_bootstrap_once')) {
 	webmcp_render_bootstrap_once();
 }
 

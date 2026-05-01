@@ -16,7 +16,15 @@ $ct = static function ($key, $default = '') use ($errorContent) {
   <link rel="icon" href="<?php echo esc_attr(BASE_PATH); ?>/favicon.ico" type="image/x-icon">
 </head>
 <body class="bg-foundation-grey font-sans text-white min-h-screen overflow-hidden relative">
-  <?php $HEADER_MODE = 'public'; require_once __DIR__ . '/../app/Ui/header.php'; ?>
+  <?php
+  require_once __DIR__ . '/../Common/public_shell.php';
+  rd_page_start([
+      'title' => $ct('page_title', 'Lost in Space | Ripal Design'),
+      'description' => $ct('meta_description', 'Page not found.'),
+      'url' => rd_public_url('404.php'),
+  ]);
+
+  ?>
 
   <main class="relative z-10 min-h-[70vh] flex items-center justify-center px-4 py-16">
     <div class="max-w-2xl w-full text-center border border-white/10 bg-black/40 backdrop-blur-sm p-8 md:p-12 shadow-premium">
@@ -39,6 +47,4 @@ $ct = static function ($key, $default = '') use ($errorContent) {
     </div>
   </main>
 
-  <?php require_once __DIR__ . '/../Common/footer.php'; ?>
-</body>
-</html>
+  <?php rd_page_end(); ?>

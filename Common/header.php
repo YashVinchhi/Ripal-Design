@@ -51,6 +51,8 @@ $dashboardProfileUrl = function_exists('base_path')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
 $phoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
 $whatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
+$radiusMode = strtolower((string)(getenv('UI_RADIUS') ?: 'sharp'));
+$radiusMode = in_array($radiusMode, ['rounded', 'sharp'], true) ? $radiusMode : 'sharp';
 
 // Compute logo target: public pages always link to homepage.
 $logoHref = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php';
@@ -127,7 +129,7 @@ $isActiveNav = static function ($path) use ($currentPath) {
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<?php if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS): ?>
+<?php if ((empty($HEADER_MODE) || $HEADER_MODE !== 'public') && (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS)): ?>
 <?php
 $tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
 if (file_exists($tailwindBuiltPath)) {
@@ -138,9 +140,14 @@ if (file_exists($tailwindBuiltPath)) {
 $variablesCss = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/variables.css';
 $mainCss = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/main.css';
 echo '<link rel="stylesheet" href="' . esc_attr($variablesCss) . '">' . "\n";
+echo '<link rel="stylesheet" href="' . esc_attr(rtrim((string)BASE_PATH, '/') . '/assets/css/ui-radius.css') . '">' . "\n";
 echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 ?>
 <?php endif; ?>
+
+<script>
+    document.documentElement.setAttribute('data-ui-radius', <?php echo json_encode($radiusMode); ?>);
+</script>
 
 <!-- Favicons -->
 <link rel="icon" href="<?php echo esc_attr($faviconImage); ?>" type="image/x-icon">
@@ -149,9 +156,11 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 
 <!-- Header Navigation (Always loaded) -->
 <!-- Layout tokens for legacy CSS (variables: spacing, header height, container) -->
-<link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . '/assets/css/_layout.css'); ?>">
-<link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/header.css'); ?>">
-<?php if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } ?>
+<?php if (empty($HEADER_MODE) || $HEADER_MODE !== 'public'): ?>
+    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . '/assets/css/_layout.css'); ?>">
+    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/header.css'); ?>">
+<?php endif; ?>
+<?php if (empty($HEADER_MODE) || $HEADER_MODE !== 'public') { if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } } ?>
 <?php if ($headerMode === 'dashboard'): ?>
     <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/admin-responsive.css'); ?>">
 <?php endif; ?>

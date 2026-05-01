@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../app/Core/Bootstrap/init.php';
+require_once __DIR__ . '/../Common/public_shell.php';
 
 $tourId = (int)($_GET['tour_id'] ?? 0);
 $projectId = (int)($_GET['project_id'] ?? 0);
@@ -143,8 +144,6 @@ $apiUrl = base_path('api/public_tours.php');
     <p id="tourStatus">Loading tour...</p>
     <div id="sceneStrip" class="tour-scene-strip"></div>
 </div>
-<?php require_once __DIR__ . '/../Common/footer.php'; ?>
-
 <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 <script>
 (function () {
@@ -154,6 +153,7 @@ $apiUrl = base_path('api/public_tours.php');
 
     const titleEl = document.getElementById('tourTitle');
     const subtitleEl = document.getElementById('tourSubtitle');
+<?php rd_page_end(); ?>
     const statusEl = document.getElementById('tourStatus');
     const sceneSelect = document.getElementById('sceneSelect');
     const sceneStrip = document.getElementById('sceneStrip');

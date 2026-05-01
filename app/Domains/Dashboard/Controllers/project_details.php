@@ -1929,7 +1929,7 @@ if ($pdo instanceof PDO) {
         </div>
     </div>
 
-    <?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>
+    <?php if (!defined('HIDE_FOOTER_CTA')) define('HIDE_FOOTER_CTA', true); require_once PROJECT_ROOT . '/Common/footer.php'; ?>
 
     <!-- Milestone Modal -->
     <div id="milestoneModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">

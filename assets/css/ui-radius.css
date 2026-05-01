@@ -1,0 +1,11 @@
+:where(button, input, select, textarea, .button, .btn, .btn-alt, .btn-hero, .btn-1, .btn-outline, .menu-cta, .card, .panel, .modal, .dropdown-menu, .alert, .nav-link, .site-nav, .site-footer, .project-media, .project-card, .service-card, .feature-panel, .quote-card, .auth-card, .auth-card-wrap, .alt-panel, .alt-header, .stat-pill) {
+    border-radius: var(--radius-ui);
+}
+
+:where(img, video, iframe) {
+    border-radius: var(--radius-ui);
+}
+
+:where(.project-media, .hero-media img, .hero-media video) {
+    border-radius: var(--radius-ui-lg);
+}

@@ -58,7 +58,7 @@ if (db_connected() && $projectId > 0) {
       <?php endif; ?>
     </main>
 
-    <?php require_once PROJECT_ROOT . '/Common/footer.php'; ?>
+    <?php if (!defined('HIDE_FOOTER_CTA')) define('HIDE_FOOTER_CTA', true); require_once PROJECT_ROOT . '/Common/footer.php'; ?>
   </div>
 </body>
 </html>
