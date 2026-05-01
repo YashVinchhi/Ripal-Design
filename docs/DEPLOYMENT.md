@@ -17,7 +17,7 @@ Prerequisites (server)
 2. A working directory on the server where `docker-compose.prod.yml` will live (example: `/var/www/thefinal`).
 3. Environment variables on the server (or an `.env` in the same folder) for DB and mail credentials.
 4. A writable private upload path for `UPLOAD_STORAGE_ROOT` (default: `storage/private_uploads` under project root).
-5. A writable public upload path for CMS content images under `uploads/content` (the admin content manager stores page images there).
+5. The web server must be able to serve `public/content_image.php` so CMS images stored in `UPLOAD_STORAGE_ROOT/uploads/content` can be rendered on public pages.
 
 Required GitHub secrets
 
@@ -53,8 +53,8 @@ Next steps for you
 1. Create the required repository secrets (`GHCR_PAT`, `DEPLOY_*`).
 2. Place `docker-compose.prod.yml` on your server under `DEPLOY_PATH` (or clone this repo on the server in that path).
 3. Ensure the server environment (`.env`) contains DB and mail variables used by the app.
-4. Ensure the web server user can create and write to `uploads/content/<page>` for the public content manager.
-4. Push to `Prod` to run CI and then trigger the deploy.
+4. Ensure the web server user can create and write to `UPLOAD_STORAGE_ROOT/uploads/content/<page>` for the public content manager.
+5. Push to `Prod` to run CI and then trigger the deploy.
 
 Questions? I can:
 

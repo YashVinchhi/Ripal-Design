@@ -847,6 +847,12 @@ if (!function_exists('public_content_image_url')) {
             return '';
         }
 
+        $privateAbsolute = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        if (is_file($privateAbsolute)) {
+            $prefix = defined('PUBLIC_PATH_PREFIX') ? (string)PUBLIC_PATH_PREFIX : '/public';
+            return rtrim((string)BASE_PATH, '/') . $prefix . '/content_image.php?path=' . rawurlencode($relative);
+        }
+
         // Prepare encoded parts for safe URL generation
         $parts = array_values(array_filter(explode('/', $relative), static function ($part) {
             return $part !== '';
@@ -1105,7 +1111,7 @@ if (!function_exists('public_content_store_uploaded_image')) {
         $safeField = $safeField !== '' ? $safeField : 'image';
 
         $relativeDir = 'uploads/content/' . $safeSlug;
-        $absoluteDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+        $absoluteDir = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
         if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
             $result['error'] = 'Unable to create content image directory.';
             return $result;
@@ -1135,6 +1141,15 @@ if (!function_exists('public_content_store_uploaded_image')) {
             return $result;
         }
 
+        $publicDir = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+        if (!is_dir($publicDir)) {
+            @mkdir($publicDir, 0775, true);
+        }
+        $publicAbsolute = $publicDir . DIRECTORY_SEPARATOR . $storedName;
+        if (is_dir($publicDir) && is_writable($publicDir) && !is_file($publicAbsolute)) {
+            @copy($absolutePath, $publicAbsolute);
+        }
+
         $result['ok'] = true;
         $result['path'] = '/' . $relativeDir . '/' . $storedName;
         return $result;
@@ -1159,22 +1174,27 @@ if (!function_exists('public_content_delete_managed_image')) {
             return false;
         }
 
-        $absolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
-        if (!is_file($absolute)) {
-            return false;
+        $deleted = false;
+
+        $privateAbsolute = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        if (is_file($privateAbsolute)) {
+            $realPrivate = realpath($privateAbsolute);
+            $privateRoot = realpath(rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'content');
+            if ($realPrivate !== false && $privateRoot !== false && strpos($realPrivate, $privateRoot . DIRECTORY_SEPARATOR) === 0) {
+                $deleted = @unlink($realPrivate) || $deleted;
+            }
         }
 
-        $realFile = realpath($absolute);
-        $managedRoot = realpath(rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'content');
-        if ($realFile === false || $managedRoot === false) {
-            return false;
+        $publicAbsolute = rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        if (is_file($publicAbsolute)) {
+            $realPublic = realpath($publicAbsolute);
+            $publicRoot = realpath(rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'content');
+            if ($realPublic !== false && $publicRoot !== false && strpos($realPublic, $publicRoot . DIRECTORY_SEPARATOR) === 0) {
+                $deleted = @unlink($realPublic) || $deleted;
+            }
         }
 
-        if (strpos($realFile, $managedRoot . DIRECTORY_SEPARATOR) !== 0) {
-            return false;
-        }
-
-        return @unlink($realFile);
+        return $deleted;
     }
 }
 
