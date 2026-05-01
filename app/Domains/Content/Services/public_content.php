@@ -1110,6 +1110,10 @@ if (!function_exists('public_content_store_uploaded_image')) {
             $result['error'] = 'Unable to create content image directory.';
             return $result;
         }
+        if (!is_writable($absoluteDir)) {
+            $result['error'] = 'Upload directory is not writable: ' . $relativeDir . '.';
+            return $result;
+        }
 
         try {
             $random = bin2hex(random_bytes(16));
@@ -1121,7 +1125,13 @@ if (!function_exists('public_content_store_uploaded_image')) {
         $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
 
         if (!move_uploaded_file($tmpPath, $absolutePath)) {
-            $result['error'] = 'Failed to store uploaded image.';
+            $lastError = function_exists('error_get_last') ? (array)error_get_last() : [];
+            $lastMessage = trim((string)($lastError['message'] ?? ''));
+            if ($lastMessage !== '') {
+                $result['error'] = 'Failed to store uploaded image. ' . $lastMessage;
+            } else {
+                $result['error'] = 'Failed to store uploaded image. Check filesystem permissions for ' . $relativeDir . '.';
+            }
             return $result;
         }
 
