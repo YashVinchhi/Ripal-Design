@@ -130,6 +130,23 @@ if ($method === 'POST') {
     // ENDPOINT: POST /api/projects.php
     // Creates a new project
     // ============================================================
+    if (!function_exists('is_logged_in') || !is_logged_in()) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Authentication required']);
+        exit;
+    }
+    if (!function_exists('has_role') || !has_role('admin')) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden']);
+        exit;
+    }
+
+    if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Invalid CSRF token']);
+        exit;
+    }
+
     $input = json_decode(file_get_contents('php://input'), true);
 
     // Validate input

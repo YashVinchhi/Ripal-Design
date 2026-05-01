@@ -1,3 +1,6 @@
+# Disable directory listings everywhere under this document root.
+Options -Indexes
+
 # Apache per-directory PHP values (works with mod_php)
 <IfModule mod_php7.c>
     php_value upload_max_filesize 450M
@@ -5,6 +8,8 @@
     php_value memory_limit 1024M
     php_value max_execution_time 600
     php_value max_input_time 600
+    php_flag display_errors Off
+    php_flag expose_php Off
 </IfModule>
 <IfModule mod_php8.c>
     php_value upload_max_filesize 450M
@@ -12,7 +17,17 @@
     php_value memory_limit 1024M
     php_value max_execution_time 600
     php_value max_input_time 600
+    php_flag display_errors Off
+    php_flag expose_php Off
 </IfModule>
+
+<FilesMatch "^(\.env|\.git|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml(\.dist)?|.*\.(sql|bak|backup|old|orig|swp|log))$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "(^|/)(config|db|database|settings)\.php$">
+    Require all denied
+</FilesMatch>
 
 # Custom 404 Error Page
 # Note: The leading slash ensures it's absolute to the domain root or handled via rewrite
@@ -20,12 +35,18 @@ ErrorDocument 404 /public/404.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Block common database administration paths from the public site.
+    RewriteRule ^(phpmyadmin|pma|mysql|db)(/|$) - [F,L,NC]
     
     # If project is in a subfolder, you might need RewriteBase /Thefinal/
     
     # Prevent direct access to includes, app, sql, etc.
     RewriteRule ^(app|sql|Common|includes|scripts|logs|storage|stubs|tests|vendor)/ - [F,L]
-    
+
+    # Uploaded files are static assets only; never execute scripts from uploads.
+    RewriteRule ^uploads/.*\.(?:php[0-9]?|phtml|phar|pl|py|cgi|asp|aspx|jsp|sh|bash)$ - [F,L,NC]
+
     # If the requested filename does not exist, and it's not a directory
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
@@ -60,6 +81,15 @@ ErrorDocument 404 /public/404.php
 </IfModule>
 
 <IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    <If "%{HTTPS} == 'on'">
+        Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    </If>
+
     # Prevent caching for HTML (ensure always revalidated)
     <FilesMatch "\.(html|php)$">
         Header set Cache-Control "no-cache, no-store, must-revalidate"

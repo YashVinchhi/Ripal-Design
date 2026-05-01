@@ -25,20 +25,13 @@ if (!function_exists('apply_security_headers')) {
         // Permissions policy - restrict sensors
         header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
 
-        // Content Security Policy - adjust if your app needs additional sources
-        $csp = "default-src 'self' https: data: blob: 'unsafe-inline';";
-        $csp .= " script-src 'self' https: 'unsafe-inline' 'unsafe-eval';";
-        $csp .= " style-src 'self' https: 'unsafe-inline';";
-        $csp .= " img-src 'self' https: data: blob:;";
-        $csp .= " font-src 'self' https: data:;";
-        $csp .= " connect-src 'self' https: wss:;";
-        $csp .= " frame-src 'self' https:;";
-        $csp .= " media-src 'self' https: data: blob:;";
-        $csp .= " object-src 'none';";
-        header('Content-Security-Policy: ' . $csp);
+        if (!defined('SECURITY_ENABLE_CSP') || SECURITY_ENABLE_CSP) {
+            $csp = defined('SECURITY_CSP_POLICY') ? (string)SECURITY_CSP_POLICY : "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'";
+            header('Content-Security-Policy: ' . $csp);
+        }
 
         // HSTS when behind HTTPS (controlled by SECURITY_ENABLE_HSTS constant)
-        if (function_exists('app_is_https') && app_is_https() && defined('SECURITY_ENABLE_HSTS') && SECURITY_ENABLE_HSTS) {
+        if (function_exists('app_is_https') && app_is_https() && (!defined('SECURITY_ENABLE_HSTS') || SECURITY_ENABLE_HSTS)) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
         }
     }

@@ -1277,7 +1277,7 @@ function auth_set_remember_token($userId, $days = 365)
             'path' => '/',
             'secure' => $secure,
             'httponly' => true,
-            'samesite' => 'Lax',
+            'samesite' => 'Strict',
         ];
         $setOk = @setcookie('remember_me', $token, $cookieOptions);
         // Log for debugging persistent login issues (do not log token value)
@@ -1438,7 +1438,7 @@ function auth_clear_remember_cookie()
         'path' => '/',
         'secure' => $secure,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => 'Strict',
     ]);
 }
 

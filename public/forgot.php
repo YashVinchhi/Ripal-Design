@@ -10,8 +10,10 @@ if (isset($_COOKIE['flash_message'])) {
     $message = $_COOKIE['flash_message'];
     $type = $_COOKIE['flash_type'] ?? 'error';
 
-    setcookie('flash_message', '', time() - 3600, '/');
-    setcookie('flash_type', '', time() - 3600, '/');
+    $secure = function_exists('app_is_https') ? app_is_https() : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    $clearCookie = ['expires' => time() - 3600, 'path' => '/', 'secure' => $secure, 'httponly' => true, 'samesite' => 'Strict'];
+    setcookie('flash_message', '', $clearCookie);
+    setcookie('flash_type', '', $clearCookie);
 } else {
     $message = $_GET['message'] ?? '';
     $type = $_GET['type'] ?? '';
@@ -48,7 +50,7 @@ $ct = static function ($key, $default = '') use ($forgotContent) {
                 <h1 class="auth-title" id="forgotTitle"><?php echo esc($ct('form_title', 'Forgot Password')); ?></h1>
                 <p class="auth-note"><?php echo esc($ct('form_note', 'Enter your account email and we will send a secure reset link.')); ?></p>
 
-                <form id="forgotPasswordForm" method="post" action="./send_reset_password.php" class="auth-form" novalidate>
+                <form id="forgotPasswordForm" method="post" action="<?php echo esc_attr(rd_public_url('send_reset_password.php')); ?>" class="auth-form" novalidate>
                     <?php echo csrf_token_field(); ?>
                     <?php if ($message !== ''): ?>
                         <div class="auth-status <?php echo ($type === 'success') ? 'auth-status-success' : 'auth-status-error'; ?>">
@@ -63,7 +65,7 @@ $ct = static function ($key, $default = '') use ($forgotContent) {
                     </div>
 
                     <button type="submit" class="btn-1"><?php echo esc($ct('button_send_link', 'Send Reset Link')); ?></button>
-                    <p class="switch-auth"><a class="auth-inline-link" href="./login.php"><?php echo esc($ct('link_back_to_login', 'Back to login')); ?></a></p>
+                    <p class="switch-auth"><a class="auth-inline-link" href="<?php echo esc_attr(rd_public_url('login.php')); ?>"><?php echo esc($ct('link_back_to_login', 'Back to login')); ?></a></p>
                 </form>
             </div>
         </section>

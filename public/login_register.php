@@ -84,7 +84,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $redirectTarget = 'login.php';
         if (!empty($_SERVER['HTTP_REFERER']) && is_string($_SERVER['HTTP_REFERER'])) {
-            $redirectTarget = $_SERVER['HTTP_REFERER'];
+            $refHost = strtolower((string)(parse_url((string)$_SERVER['HTTP_REFERER'], PHP_URL_HOST) ?: ''));
+            $curHost = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+            if ($refHost !== '' && $curHost !== '' && $refHost === preg_replace('/:[0-9]+$/', '', $curHost)) {
+                $redirectTarget = $_SERVER['HTTP_REFERER'];
+            }
         }
         header('Location: ' . $redirectTarget);
         exit;
@@ -111,6 +115,17 @@ if (isset($_POST['signup'])) {
     $user_password = (string) ($_POST['password'] ?? '');
     $phone_number = trim((string) ($_POST['phoneNumber'] ?? ''));
     $confirm_password = (string) ($_POST['confirmPassword'] ?? '');
+    $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $signupIpLimit = function_exists('auth_rate_limit_consume')
+        ? auth_rate_limit_consume('signup:ip:' . $clientIp, 10, 3600, 3600)
+        : ['allowed' => true, 'retry_after' => 0];
+    $signupEmailLimit = ($email !== '' && function_exists('auth_rate_limit_consume'))
+        ? auth_rate_limit_consume('signup:email:' . strtolower($email), 3, 3600, 3600)
+        : ['allowed' => true, 'retry_after' => 0];
+
+    if (empty($signupIpLimit['allowed']) || empty($signupEmailLimit['allowed'])) {
+        signup_error_and_redirect($ct('signup_rate_limited', 'Too many signup attempts. Please try again later.'));
+    }
 
     if ($first_name === '' || $last_name === '' || $email === '' || $user_password === '') {
         signup_error_and_redirect($ct('signup_required_fields', 'Please fill all required fields.'));

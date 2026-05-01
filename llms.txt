@@ -5,7 +5,7 @@ SITE
 - name: Ripal Design
 - tagline: Where architecture vision meets execution precision
 - address: 538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat, India
-- phone: +91 94267 89012
+- phone: Available on request
 - email: projects@ripaldesign.studio
 
 DOMAIN
@@ -38,7 +38,7 @@ SUGGESTED META TITLES & DESCRIPTIONS (copy into each page <head>)
 - About meta description: Learn about Ripal Design — founded 2017, trusted municipal and private project delivery partner in Rajkot. Meet our team and view portfolio highlights.
 
 - Contact title: Contact — Ripal Design (Rajkot)
-- Contact meta description: Contact Ripal Design in Rajkot for architecture and design consultation. Phone +91 94267 89012 or email projects@ripaldesign.studio.
+- Contact meta description: Contact Ripal Design in Rajkot for architecture and design consultation via projects@ripaldesign.studio.
 
 JSON-LD (schema.org) — paste the following into your homepage <head>; replace URL placeholder
 <script type="application/ld+json">
@@ -48,7 +48,7 @@ JSON-LD (schema.org) — paste the following into your homepage <head>; replace 
   "name": "Ripal Design",
   "description": "Where architecture vision meets execution precision. Trusted municipal and private project delivery partner in Rajkot.",
   "url": "https://REPLACE_WITH_YOUR_DOMAIN",
-  "telephone": "+91 94267 89012",
+  "telephone": "Available on request",
   "email": "projects@ripaldesign.studio",
   "address": {
     "@type": "PostalAddress",

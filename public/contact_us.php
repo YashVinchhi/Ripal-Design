@@ -17,6 +17,16 @@ if (isset($_POST['submit'])) {
         exit;
     }
 
+    $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $contactLimit = function_exists('auth_rate_limit_consume')
+        ? auth_rate_limit_consume('contact:ip:' . $clientIp, 5, 900, 1800)
+        : ['allowed' => true, 'retry_after' => 0];
+    if (empty($contactLimit['allowed'])) {
+        $_SESSION['contact_form_error'] = $ct('rate_limited', 'Too many messages. Please try again later.');
+        header('Location: ' . $contactPageUrl);
+        exit;
+    }
+
     $source = trim((string)($_POST['source'] ?? ''));
     $first = trim((string)($_POST['first_name'] ?? ''));
     $last = trim((string)($_POST['last_name'] ?? ''));
@@ -95,7 +105,7 @@ rd_page_start([
                 <p class="eyebrow">Studio details</p>
                 <h2>Ripal Design Rajkot</h2>
                 <p><?php echo public_content_get_html('contact_us', 'address_html', '538 Jasal Complex,<br>Nanavati Chowk,<br>150ft Ring Road,<br>Rajkot, Gujarat, India'); ?></p>
-                <a href="tel:+918264271111"><?php echo esc($ct('contact_phone', '+91 94267 89012')); ?></a>
+                <?php echo rd_obfuscated_phone_link('', 'Call studio'); ?>
                 <a href="mailto:<?php echo esc_attr($ct('contact_email', 'projects@ripaldesign.studio')); ?>"><?php echo esc($ct('contact_email', 'projects@ripaldesign.studio')); ?></a>
                 <div class="map-frame">
                     <iframe title="Ripal Design location map" src="<?php echo esc_attr($mapSrc); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>

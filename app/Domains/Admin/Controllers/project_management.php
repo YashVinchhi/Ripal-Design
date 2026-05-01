@@ -53,7 +53,7 @@ $storeProjectImage = static function (int $projectId, array $uploadedFile): bool
         return false;
     }
 
-    $storedName = $safeBaseName . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+    $storedName = bin2hex(random_bytes(16)) . '.' . $ext;
 
     $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
     if (!move_uploaded_file($tmpPath, $absolutePath)) {

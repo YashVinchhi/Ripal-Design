@@ -25,10 +25,17 @@ if ($userId > 0 && function_exists('app_log')) {
 $_SESSION = [];
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
-    );
+    $cookieOptions = [
+        'expires' => time() - 42000,
+        'path' => $params['path'] ?? '/',
+        'secure' => (bool)($params['secure'] ?? false),
+        'httponly' => (bool)($params['httponly'] ?? true),
+        'samesite' => 'Strict',
+    ];
+    if (!empty($params['domain'])) {
+        $cookieOptions['domain'] = (string)$params['domain'];
+    }
+    setcookie(session_name(), '', $cookieOptions);
 }
 session_destroy();
 header('Location: ../public/index.php');

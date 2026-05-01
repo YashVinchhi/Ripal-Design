@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ripal-design-app:local
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-Ripal-Design}
+      DB_USER: ${DB_USER:-app}
+      DB_PASS: ${DB_PASS:-app_password}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_PORT: ${MAIL_PORT:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - uploads_data:/var/www/html/uploads
+      - storage_data:/var/www/html/storage
+      - logs_data:/var/www/html/logs
+    mem_limit: 384m
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+volumes:
+  uploads_data:
+  storage_data:
+  logs_data:

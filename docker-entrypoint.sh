@@ -1,10 +1,9 @@
 #!/bin/sh
 set -e
 
-# If $PORT is provided (Railway, Fly, etc.), adjust Apache to listen on it
+# If $PORT is provided (Railway, Fly, etc.), adjust nginx to listen on it.
 if [ -n "${PORT}" ] && [ "${PORT}" != "80" ]; then
-  sed -ri "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf
-  sed -ri "s/:80/:${PORT}/g" /etc/apache2/sites-available/*.conf || true
+  sed -ri "s/listen 80;/listen ${PORT};/g" /etc/nginx/http.d/default.conf || true
 fi
 
 # Create runtime symlinks under the document root so files outside the
@@ -37,5 +36,16 @@ if [ -d /var/www/html/public ]; then
     ln -s /var/www/html/api /var/www/html/public/api || true
   fi
 fi
-# Execute the container CMD (apache2-foreground)
+
+for path in /var/www/html/uploads /var/www/html/storage /var/www/html/logs; do
+  if [ -d "$path" ]; then
+    chown -R www-data:www-data "$path" || true
+  fi
+done
+
+if [ "$1" = "nginx-fpm" ]; then
+  php-fpm -D
+  exec nginx -g 'daemon off;'
+fi
+
 exec "$@"

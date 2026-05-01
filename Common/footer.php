@@ -23,7 +23,10 @@ $footerContent = function_exists('public_content_page_values') ? public_content_
 $footerText = static function ($key, $default = '') use ($footerContent) {
     return (string)($footerContent[$key] ?? $default);
 };
-$footerPhoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
+$footerPublicUrl = static function ($path) {
+    $path = ltrim((string)$path, '/');
+    return rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/' . $path;
+};
 $footerWhatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
 $hideFooterCta = !empty($HIDE_FOOTER_CTA);
 
@@ -72,7 +75,7 @@ $currentYear = date('Y');
                 <p class="text-gray-400 mb-8 max-w-lg">
                     <?php echo esc($footerText('cta_description', "Whether it's a private residence or a large-scale government infrastructure project, Ripal Design brings the expertise to make it happen.")); ?>
                 </p>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" 
+                <a href="<?php echo esc_attr($footerPublicUrl('contact_us.php')); ?>" 
                     class="footer-cta-btn inline-flex items-center bg-rajkot-rust hover:bg-red-700 text-white font-serif px-8 py-3 transition-colors duration-300 no-underline" 
                     role="button">
                     <?php echo esc($footerText('cta_button', 'Start Your Project')); ?> <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i>
@@ -96,9 +99,7 @@ $currentYear = date('Y');
                     </div>
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-phone text-rajkot-rust" aria-hidden="true"></i>
-                        <a href="<?php echo esc_attr($footerPhoneHref); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm">
-                            <?php echo esc(PHONE_NUMBER); ?>
-                        </a>
+                        <a href="#" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm" data-rd-phone="<?php echo esc_attr(base64_encode('tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER))); ?>" data-rd-phone-label="<?php echo esc_attr(base64_encode((string)PHONE_NUMBER)); ?>">Call studio</a>
                     </div>
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-envelope text-rajkot-rust" aria-hidden="true"></i>
@@ -114,13 +115,13 @@ $currentYear = date('Y');
         <div class="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
             <div>&copy; <?php echo $currentYear; ?> <?php echo esc($footerText('copyright_brand', 'Ripal Design')); ?>. <?php echo esc($footerText('copyright_suffix', 'All rights reserved.')); ?></div>
             <div class="flex flex-wrap gap-6 mt-4 md:mt-0 items-center justify-center">
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Home</a>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Services</a>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Projects</a>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">About</a>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Contact</a>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/privacy.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
-                <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/terms.php'); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
+                <a href="<?php echo esc_attr($footerPublicUrl('index.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Home</a>
+                <a href="<?php echo esc_attr($footerPublicUrl('services.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Services</a>
+                <a href="<?php echo esc_attr($footerPublicUrl('project_view.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Projects</a>
+                <a href="<?php echo esc_attr($footerPublicUrl('about_us.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">About</a>
+                <a href="<?php echo esc_attr($footerPublicUrl('contact_us.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Contact</a>
+                <a href="<?php echo esc_attr($footerPublicUrl('privacy.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
+                <a href="<?php echo esc_attr($footerPublicUrl('terms.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
             </div>
         </div>
     </div>
@@ -131,11 +132,11 @@ $currentYear = date('Y');
 </a>
 
 <nav class="mobile-bottom-nav flex md:hidden" aria-label="Mobile navigation">
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Home</span></a>
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i><span>Services</span></a>
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>"><i class="fa-solid fa-th-large" aria-hidden="true"></i><span>Projects</span></a>
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>"><i class="fa-solid fa-users" aria-hidden="true"></i><span>About</span></a>
-    <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
+    <a href="<?php echo esc_attr($footerPublicUrl('index.php')); ?>"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Home</span></a>
+    <a href="<?php echo esc_attr($footerPublicUrl('services.php')); ?>"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i><span>Services</span></a>
+    <a href="<?php echo esc_attr($footerPublicUrl('project_view.php')); ?>"><i class="fa-solid fa-th-large" aria-hidden="true"></i><span>Projects</span></a>
+    <a href="<?php echo esc_attr($footerPublicUrl('about_us.php')); ?>"><i class="fa-solid fa-users" aria-hidden="true"></i><span>About</span></a>
+    <a href="<?php echo esc_attr($footerPublicUrl('contact_us.php')); ?>"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
 </nav>
 
 <style>
@@ -188,6 +189,13 @@ if (function_exists('render_footer_scripts')) {
 ?>
 <script>
     (function(){
+        document.querySelectorAll('[data-rd-phone][data-rd-phone-label]').forEach(function (link) {
+            try {
+                link.href = atob(link.getAttribute('data-rd-phone') || '');
+                link.textContent = atob(link.getAttribute('data-rd-phone-label') || '');
+            } catch (e) {}
+        });
+
         function getRoot(){ return document.getElementById('phantom-ui-root') || document.querySelector('phantom-ui[loading]'); }
         function reveal(){
             var el = getRoot();

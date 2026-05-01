@@ -331,7 +331,7 @@ if (!defined('SECURITY_ALLOWED_UPLOAD_EXTS')) {
 }
 
 if (!defined('SECURITY_ENABLE_HSTS')) {
-    define('SECURITY_ENABLE_HSTS', env_bool('SECURITY_ENABLE_HSTS', false));
+    define('SECURITY_ENABLE_HSTS', env_bool('SECURITY_ENABLE_HSTS', APP_ENV !== 'development'));
 }
 
 if (!defined('SECURITY_ENABLE_CSP')) {

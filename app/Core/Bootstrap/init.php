@@ -182,7 +182,7 @@ if (session_status() === PHP_SESSION_NONE) {
         'path' => '/',
         'secure' => $secureCookie,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => 'Strict',
     ]);
     @session_start();
 }

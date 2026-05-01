@@ -4,10 +4,10 @@ This repository includes GitHub Actions workflows and Docker configs to build, p
 
 What was added
 
-- `Dockerfile` — builds a PHP-FPM image with Composer dependencies.
+- `Dockerfile` — builds a single Nginx + PHP-FPM image with Composer dependencies.
 - `.dockerignore` — excludes local files from the image.
 - `docker-compose.prod.yml` — production compose file referencing an image (`IMAGE_NAME`).
-- `docker/nginx/default.conf` — nginx config used by the production compose.
+- `docker/nginx/default.conf` — Nginx config copied into the application image.
 - `.github/workflows/ci.yml` — CI: installs deps, runs `php -l`, PHPStan, PHPUnit, and builds/pushes Docker image to GHCR.
 - `.github/workflows/deploy.yml` — CD: SSH deploy that pulls the published image and runs `docker compose` on your server.
 
@@ -50,7 +50,7 @@ IMAGE_NAME=thefinal:local docker compose -f docker-compose.prod.yml up -d
 Next steps for you
 
 1. Create the required repository secrets (`GHCR_PAT`, `DEPLOY_*`).
-2. Place `docker-compose.prod.yml` and `docker/nginx/default.conf` on your server under `DEPLOY_PATH` (or clone this repo on the server in that path).
+2. Place `docker-compose.prod.yml` on your server under `DEPLOY_PATH` (or clone this repo on the server in that path).
 3. Ensure the server environment (`.env`) contains DB and mail variables used by the app.
 4. Push to `Prod` to run CI and then trigger the deploy.
 

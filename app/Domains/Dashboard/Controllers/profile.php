@@ -280,8 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                         if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
                             // Directory creation failed; skip saving avatar
                         } else {
-                            $storedName = $safeBaseName . '_' . time() . '_' . bin2hex(random_bytes(4));
-                            if ($ext !== '') $storedName .= '.' . $ext;
+                            $storedName = bin2hex(random_bytes(16)) . '.' . $ext;
 
                             $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
                             if (move_uploaded_file($tmpPath, $absolutePath)) {

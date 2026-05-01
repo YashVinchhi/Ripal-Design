@@ -42,7 +42,7 @@ The project mixes composer-managed PHP backend components, Tailwind-based fronte
 - MySQL / MariaDB
 - Composer for PHP dependencies ([composer.json](composer.json))
 - Tailwind CSS for styling ([package.json](package.json))
-- Nginx / PHP-FPM or Apache (containerized images)
+- Nginx with PHP-FPM (containerized image)
 
 ## Quick start
 
@@ -99,7 +99,7 @@ php -S localhost:8000 -t public
 
 Notes:
 
-- For development it's fine to use the PHP built-in server. For production, point your webserver to the `public/` directory.
+- For development it's fine to use the PHP built-in server. For production, point Nginx to the `public/` directory and pass PHP requests to PHP-FPM.
 - The app will also detect a `.env` file and load environment variables via `includes/config.php`.
 
 ### Docker (recommended for full stack)
@@ -124,6 +124,10 @@ docker compose up -d --build
 ```
 
 For production compose, see [docker-compose.prod.yml](docker-compose.prod.yml) and the deployment notes in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+### Nginx migration
+
+For replacing Apache with Nginx on Ubuntu, start with [docs/NGINX_MIGRATION.md](docs/NGINX_MIGRATION.md). It includes a local Ubuntu test flow, a production droplet checklist, and an app-only Docker option for low-memory servers.
 
 ## Configuration
 

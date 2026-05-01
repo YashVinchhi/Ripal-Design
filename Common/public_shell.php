@@ -29,6 +29,20 @@ if (!function_exists('rd_content_image')) {
     }
 }
 
+if (!function_exists('rd_obfuscated_phone_link')) {
+    function rd_obfuscated_phone_link(string $class = '', string $label = 'Call studio'): string
+    {
+        $number = (string)PHONE_NUMBER;
+        $href = 'tel:' . preg_replace('/\s+/', '', $number);
+        return '<a href="#"'
+            . ($class !== '' ? ' class="' . esc_attr($class) . '"' : '')
+            . ' data-rd-phone="' . esc_attr(base64_encode($href)) . '"'
+            . ' data-rd-phone-label="' . esc_attr(base64_encode($number)) . '">'
+            . esc($label)
+            . '</a>';
+    }
+}
+
 if (!function_exists('rd_page_start')) {
     function rd_page_start(array $options): void
     {
@@ -125,7 +139,6 @@ if (!function_exists('rd_page_start')) {
 if (!function_exists('rd_page_end')) {
     function rd_page_end(bool $showCta = true): void
     {
-        $phoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
         $whatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
         $shell = function_exists('public_content_page_values') ? public_content_page_values('public_shell') : [];
         $shellText = static function ($key, $default = '') use ($shell) {
@@ -153,7 +166,7 @@ if (!function_exists('rd_page_end')) {
             <address>
                 <strong><?php echo esc($shellText('footer_studio_heading', 'Studio')); ?></strong>
                 <span><?php echo esc($shellText('footer_studio_address', '538 Jasal Complex, Nanavati Chowk, 150ft Ring Road, Rajkot, Gujarat')); ?></span>
-                <a href="<?php echo esc_attr($phoneHref); ?>"><?php echo esc(PHONE_NUMBER); ?></a>
+                <?php echo rd_obfuscated_phone_link('', 'Call studio'); ?>
                 <a href="mailto:<?php echo esc_attr($shellText('footer_contact_email', 'projects@ripaldesign.studio')); ?>"><?php echo esc($shellText('footer_contact_email', 'projects@ripaldesign.studio')); ?></a>
             </address>
             <nav aria-label="Footer navigation">
@@ -171,6 +184,13 @@ if (!function_exists('rd_page_end')) {
         </div>
     </footer>
     <script>
+        document.querySelectorAll('[data-rd-phone][data-rd-phone-label]').forEach(function (link) {
+            try {
+                link.href = atob(link.getAttribute('data-rd-phone') || '');
+                link.textContent = atob(link.getAttribute('data-rd-phone-label') || '');
+            } catch (e) {}
+        });
+
         document.querySelectorAll('.nav-toggle').forEach(function (button) {
             button.addEventListener('click', function () {
                 var nav = document.getElementById(button.getAttribute('aria-controls'));

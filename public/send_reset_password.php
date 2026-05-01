@@ -8,6 +8,11 @@ $ct = static function ($key, $default = '') {
 	return (string)$default;
 };
 
+function reset_generic_message(): string
+{
+	return 'If an account exists for that email, a reset link has been sent.';
+}
+
 $renderTemplate = static function ($template, array $vars = []) {
 	return strtr((string)$template, $vars);
 };
@@ -21,11 +26,13 @@ function redirect_with_message($message, $type = 'error')
 
 function redirect_with_flash_cookie($message, $type = 'error')
 {
+	$secure = function_exists('app_is_https') ? app_is_https() : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 	$cookieOptions = [
 		'expires' => time() + 5,
 		'path' => '/',
+		'secure' => $secure,
 		'httponly' => true,
-		'samesite' => 'Lax'
+		'samesite' => 'Strict'
 	];
 
 	setcookie('flash_message', $message, $cookieOptions);
@@ -69,7 +76,7 @@ $resetEmailLimit = function_exists('auth_rate_limit_consume')
 	: ['allowed' => true, 'retry_after' => 0];
 
 if (empty($resetIpLimit['allowed']) || empty($resetEmailLimit['allowed'])) {
-	redirect_with_message($ct('rate_limited', 'Too many reset requests. Please try again later.'));
+	redirect_with_flash_cookie(reset_generic_message(), 'success');
 }
 
 $token = bin2hex(random_bytes(16));
@@ -144,13 +151,13 @@ if ($stmt->rowCount() > 0) {
 		: (bool)@$mail->send();
 
 	if ($sent) {
-		redirect_with_flash_cookie($ct('flash_sent_success', 'Reset link sent. Please check your email.'), 'success');
+		redirect_with_flash_cookie(reset_generic_message(), 'success');
 	} else {
 		if (function_exists('app_log')) {
 			app_log('error', 'PHPMailer reset email send failed', ['mailer_error' => $mail->ErrorInfo ?? '', 'email' => $email]);
 		}
-		redirect_with_flash_cookie($ct('flash_sent_failed', 'Failed to send reset link.'), 'error');
+		redirect_with_flash_cookie(reset_generic_message(), 'success');
 	}
 } else {
-	redirect_with_message($ct('email_not_found', 'Email not found.'));
+	redirect_with_flash_cookie(reset_generic_message(), 'success');
 }

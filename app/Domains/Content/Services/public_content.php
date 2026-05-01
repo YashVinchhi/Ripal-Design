@@ -300,7 +300,7 @@ if (!function_exists('public_content_registry')) {
                     'address_heading' => ['label' => 'Address Heading', 'format' => 'plain', 'default' => 'Ripal Design Rajkot'],
                     'address_html' => ['label' => 'Address (HTML allowed)', 'format' => 'html', 'default' => '538 Jasal Complex,<br>Nanavati Chowk,<br>150ft Ring Road,<br>Rajkot, Gujarat, India'],
                     'contact_heading' => ['label' => 'Contact Heading', 'format' => 'plain', 'default' => 'Contact'],
-                    'contact_phone' => ['label' => 'Phone Number', 'format' => 'plain', 'default' => '+91 94267 89012'],
+                    'contact_phone' => ['label' => 'Phone Number', 'format' => 'plain', 'default' => 'Call studio'],
                     'contact_email' => ['label' => 'Contact Email', 'format' => 'plain', 'default' => 'projects@ripaldesign.studio'],
                     'social_heading' => ['label' => 'Social Heading', 'format' => 'plain', 'default' => 'Social'],
                     'social_instagram_label' => ['label' => 'Social Label: Instagram', 'format' => 'plain', 'default' => 'Instagram'],
@@ -453,8 +453,8 @@ if (!function_exists('public_content_registry')) {
                     'mail_body_html' => ['label' => 'Reset Mail: HTML Body (use {{reset_link}}, {{user_name}})', 'format' => 'html', 'default' => 'Hello {{user_name}},<br><br>Click <a href="{{reset_link}}">here</a> to reset your password. This link will expire in 30 minutes.'],
                     'mail_body_text' => ['label' => 'Reset Mail: Text Body (use {{reset_link}}, {{user_name}})', 'format' => 'plain', 'default' => 'Hello {{user_name}}, reset link: {{reset_link}}'],
                     'flash_sent_success' => ['label' => 'Success Flash Message', 'format' => 'plain', 'default' => 'Reset link sent. Please check your email.'],
-                    'flash_sent_failed' => ['label' => 'Failure Flash Message', 'format' => 'plain', 'default' => 'Failed to send reset link.'],
-                    'email_not_found' => ['label' => 'Email Not Found Message', 'format' => 'plain', 'default' => 'Email not found.'],
+                    'flash_sent_failed' => ['label' => 'Failure Flash Message', 'format' => 'plain', 'default' => 'If an account exists for that email, a reset link has been sent.'],
+                    'email_not_found' => ['label' => 'Email Not Found Message', 'format' => 'plain', 'default' => 'If an account exists for that email, a reset link has been sent.'],
                 ],
             ],
             'update_password' => [
@@ -959,12 +959,12 @@ if (!function_exists('public_content_store_uploaded_image')) {
         }
 
         try {
-            $random = bin2hex(random_bytes(4));
+            $random = bin2hex(random_bytes(16));
         } catch (Throwable $e) {
-            $random = (string)mt_rand(100000, 999999);
+            $random = hash('sha256', uniqid('', true) . mt_rand());
         }
 
-        $storedName = $safeField . '_' . time() . '_' . $random . '.' . $ext;
+        $storedName = $random . '.' . $ext;
         $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
 
         if (!move_uploaded_file($tmpPath, $absolutePath)) {

@@ -46,16 +46,19 @@ $headerImage = static function ($key, $default = '') use ($headerContent) {
 };
 $brandLogoImage = $headerImage('brand_logo_image', '/assets/Content/Logo.png');
 $faviconImage = $headerImage('favicon_image', '/favicon.ico');
+$headerPublicUrl = static function ($path) {
+    $path = ltrim((string)$path, '/');
+    return rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/' . $path;
+};
 $dashboardProfileUrl = function_exists('base_path')
     ? base_path('dashboard/profile.php')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
-$phoneHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER);
 $whatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
 $radiusMode = strtolower((string)(getenv('UI_RADIUS') ?: 'sharp'));
 $radiusMode = in_array($radiusMode, ['rounded', 'sharp'], true) ? $radiusMode : 'sharp';
 
 // Compute logo target: public pages always link to homepage.
-$logoHref = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php';
+$logoHref = $headerPublicUrl('index.php');
 if (!$isPublicHeader && function_exists('current_user')) {
     $cu = current_user();
     $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
@@ -175,7 +178,7 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
     <?php if ($headerMode === 'public'): ?>
     <!-- Contact (small-screen friendly) -->
     <div class="hidden" aria-hidden="true">
-        <a href="<?php echo esc_attr($phoneHref); ?>" class="inline-flex items-center px-2 py-1 border border-white/30 text-white rounded ml-2 text-sm no-underline">
+        <a href="#" data-rd-phone="<?php echo esc_attr(base64_encode('tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER))); ?>" data-rd-phone-label="<?php echo esc_attr(base64_encode('Call')); ?>" class="inline-flex items-center px-2 py-1 border border-white/30 text-white rounded ml-2 text-sm no-underline">
             <i class="fa-solid fa-phone" aria-hidden="true"></i>&nbsp;Call
         </a>
         <a href="<?php echo esc_attr($whatsAppHref); ?>" class="inline-flex items-center px-2 py-1 bg-approval-green text-white rounded ml-1 no-underline" target="_blank" rel="noopener noreferrer">
@@ -275,11 +278,11 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
                     <a href="<?php echo htmlspecialchars((string)($link['href'] ?? '')); ?>"><?php echo htmlspecialchars((string)($link['label'] ?? '')); ?></a>
                 <?php endforeach; ?>
             <?php else: ?>
-                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/index.php'); ?>" class="nav-link<?php echo $isActiveNav('index.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_home', 'Home')); ?></a>
-                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/services.php'); ?>" class="nav-link<?php echo $isActiveNav('services.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_services', 'Services')); ?></a>
-                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/project_view.php'); ?>" class="nav-link<?php echo $isActiveNav('project_view.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_projects', 'Projects')); ?></a>
-                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/about_us.php'); ?>" class="nav-link<?php echo $isActiveNav('about_us.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_about', 'About')); ?></a>
-                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" class="nav-link<?php echo $isActiveNav('contact_us.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_contact', 'Contact')); ?></a>
+                <a href="<?php echo htmlspecialchars($headerPublicUrl('index.php')); ?>" class="nav-link<?php echo $isActiveNav('index.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_home', 'Home')); ?></a>
+                <a href="<?php echo htmlspecialchars($headerPublicUrl('services.php')); ?>" class="nav-link<?php echo $isActiveNav('services.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_services', 'Services')); ?></a>
+                <a href="<?php echo htmlspecialchars($headerPublicUrl('project_view.php')); ?>" class="nav-link<?php echo $isActiveNav('project_view.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_projects', 'Projects')); ?></a>
+                <a href="<?php echo htmlspecialchars($headerPublicUrl('about_us.php')); ?>" class="nav-link<?php echo $isActiveNav('about_us.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_about', 'About')); ?></a>
+                <a href="<?php echo htmlspecialchars($headerPublicUrl('contact_us.php')); ?>" class="nav-link<?php echo $isActiveNav('contact_us.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_contact', 'Contact')); ?></a>
             <?php endif; ?>
         </nav>
   
@@ -310,13 +313,13 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
                         color: #374151 !important;
                     }
                 </style>
-                <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/logout.php'); ?>" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo htmlspecialchars($headerText('btn_logout', 'Logout')); ?></a>
+                    <a href="<?php echo htmlspecialchars($headerPublicUrl('logout.php')); ?>" class="btn-alt <?php echo $headerMode === 'dashboard' ? 'btn-login w-full text-center' : 'btn-signup'; ?>"><?php echo htmlspecialchars($headerText('btn_logout', 'Logout')); ?></a>
             <?php else: ?>
                 <?php if ($isPublicHeader): ?>
-                    <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/contact_us.php'); ?>" class="btn-alt btn-signup"><?php echo htmlspecialchars($headerText('btn_contact', 'Start Your Project')); ?></a>
+                    <a href="<?php echo htmlspecialchars($headerPublicUrl('contact_us.php')); ?>" class="btn-alt btn-signup"><?php echo htmlspecialchars($headerText('btn_contact', 'Start Your Project')); ?></a>
                 <?php else: ?>
-                    <a href="<?php echo htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/login.php" class="btn-alt btn-login"><?php echo htmlspecialchars($headerText('btn_login', 'Login')); ?></a>
-                    <a href="<?php echo htmlspecialchars(BASE_PATH . PUBLIC_PATH_PREFIX); ?>/signup.php" class="btn-alt btn-signup"><?php echo htmlspecialchars($headerText('btn_signup', 'Sign Up')); ?></a>
+                    <a href="<?php echo htmlspecialchars($headerPublicUrl('login.php')); ?>" class="btn-alt btn-login"><?php echo htmlspecialchars($headerText('btn_login', 'Login')); ?></a>
+                    <a href="<?php echo htmlspecialchars($headerPublicUrl('signup.php')); ?>" class="btn-alt btn-signup"><?php echo htmlspecialchars($headerText('btn_signup', 'Sign Up')); ?></a>
                 <?php endif; ?>
             <?php endif; ?>
         </div>

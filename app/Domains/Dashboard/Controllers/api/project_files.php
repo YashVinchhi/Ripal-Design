@@ -472,10 +472,7 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
         api_json(['success' => false, 'message' => 'Unable to create upload directory.'], 500);
     }
 
-    $storedName = $safeBaseName . '_' . time() . '_' . bin2hex(random_bytes(4));
-    if ($ext !== '') {
-        $storedName .= '.' . $ext;
-    }
+    $storedName = bin2hex(random_bytes(16)) . ($ext !== '' ? '.' . $ext : '');
 
     $absolutePath = $absoluteDir . DIRECTORY_SEPARATOR . $storedName;
     if (!move_uploaded_file($tmpPath, $absolutePath)) {
