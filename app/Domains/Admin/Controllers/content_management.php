@@ -73,7 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $removeImages = [];
   }
 
-  $save = public_content_upsert_page($postedPage, $payload, current_user_id(), $imageUploads, $removeImages);
+  $imageSettings = $_POST['image_settings'][$postedPage] ?? [];
+  if (!is_array($imageSettings)) {
+    $imageSettings = [];
+  }
+
+  $save = public_content_upsert_page($postedPage, $payload, current_user_id(), $imageUploads, $removeImages, $imageSettings);
   if (!empty($save['ok'])) {
     set_flash('Content updated successfully. Saved fields: ' . (int)($save['saved'] ?? 0), 'success');
   } else {
@@ -89,6 +94,26 @@ $currentMeta = $registry[$activePage] ?? ['fields' => [], 'title' => 'Content'];
 $currentFields = $currentMeta['fields'] ?? [];
 $currentValues = public_content_page_values($activePage);
 $previewPath = (string)($currentMeta['preview_path'] ?? '');
+$imageFitOptions = [
+  'auto' => 'Auto',
+  'cover' => 'Cover',
+  'contain' => 'Contain',
+  'fill' => 'Fill',
+  'none' => 'None',
+  'scale-down' => 'Scale down',
+];
+$imagePositionOptions = [
+  'auto' => 'Auto',
+  'left top' => 'Left top',
+  'center top' => 'Center top',
+  'right top' => 'Right top',
+  'left center' => 'Left center',
+  'center center' => 'Center center',
+  'right center' => 'Right center',
+  'left bottom' => 'Left bottom',
+  'center bottom' => 'Center bottom',
+  'right bottom' => 'Right bottom',
+];
 ?>
 <!DOCTYPE html>
 <html lang="en" class="bg-canvas-white">
@@ -162,6 +187,7 @@ $previewPath = (string)($currentMeta['preview_path'] ?? '');
             $format = $rawFormat === 'html' ? 'html' : ($rawFormat === 'image' ? 'image' : 'plain');
             $default = (string)($meta['default'] ?? '');
             $value = (string)($currentValues[$fieldKey] ?? $default);
+            $rows = max(2, min(12, (int)($meta['rows'] ?? ($format === 'html' ? 4 : 2))));
 
             $safeActive = preg_replace('/[^a-z0-9_-]/i', '_', $activePage);
             $safeField = preg_replace('/[^a-z0-9_-]/i', '_', $fieldKey);
@@ -180,6 +206,8 @@ $previewPath = (string)($currentMeta['preview_path'] ?? '');
                 $imagePreview = function_exists('public_content_image_url')
                   ? (string)public_content_image_url($value, $default)
                   : (string)$value;
+                $imageFitValue = (string)($currentValues[$fieldKey . '__fit'] ?? 'auto');
+                $imagePositionValue = (string)($currentValues[$fieldKey . '__position'] ?? 'auto');
                 ?>
                 <div class="cms-image-shell border border-[#94180c] bg-white p-3">
                   <?php if ($imagePreview !== ''): ?>
@@ -215,6 +243,29 @@ $previewPath = (string)($currentMeta['preview_path'] ?? '');
                     Remove image
                   </label>
 
+                  <div class="cms-image-settings mt-4">
+                    <div class="cms-image-settings-grid">
+                      <div>
+                        <label class="block text-[11px] uppercase tracking-widest font-bold text-gray-500 mb-1">Image Fit</label>
+                        <select name="image_settings[<?php echo esc_attr($activePage); ?>][<?php echo esc_attr($fieldKey); ?>][fit]" class="cms-image-select w-full">
+                          <?php foreach ($imageFitOptions as $fitValue => $fitLabel): ?>
+                            <option value="<?php echo esc_attr($fitValue); ?>" <?php echo $imageFitValue === $fitValue ? 'selected' : ''; ?>><?php echo esc($fitLabel); ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] uppercase tracking-widest font-bold text-gray-500 mb-1">Image Position</label>
+                        <select name="image_settings[<?php echo esc_attr($activePage); ?>][<?php echo esc_attr($fieldKey); ?>][position]" class="cms-image-select w-full">
+                          <?php foreach ($imagePositionOptions as $positionValue => $positionLabel): ?>
+                            <option value="<?php echo esc_attr($positionValue); ?>" <?php echo $imagePositionValue === $positionValue ? 'selected' : ''; ?>><?php echo esc($positionLabel); ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                    </div>
+                    <p class="text-[11px] text-gray-500">Auto keeps the page's current image styling. Use Cover to crop, Contain to show the full image, and Position to move the focal point inside the frame.</p>
+                  </div>
+
                   <?php
                   $imageMaxLabel = function_exists('public_content_format_bytes') && function_exists('public_content_image_upload_max_bytes')
                     ? public_content_format_bytes(public_content_image_upload_max_bytes())
@@ -245,7 +296,7 @@ $previewPath = (string)($currentMeta['preview_path'] ?? '');
                   <textarea
                     id="<?php echo esc_attr($editorId); ?>"
                     name="content[<?php echo esc_attr($activePage); ?>][<?php echo esc_attr($fieldKey); ?>]"
-                    rows="<?php echo $format === 'html' ? '4' : '2'; ?>"
+                    rows="<?php echo $rows; ?>"
                     class="cms-editor-input w-full p-3 border border-gray-200 bg-white outline-none focus:border-rajkot-rust text-sm font-medium"><?php echo esc($value); ?></textarea>
                 </div>
               <?php endif; ?>
@@ -454,18 +505,21 @@ $previewPath = (string)($currentMeta['preview_path'] ?? '');
     .cms-image-shell,
     .cms-image-input,
     .cms-image-file,
+    .cms-image-select,
     .cms-image-remove-check {
       border-radius: 0 !important;
     }
 
     .cms-image-input,
-    .cms-image-file {
+    .cms-image-file,
+    .cms-image-select {
       border: 1px solid #94180c;
       color: #2d2d2d;
     }
 
     .cms-image-input:focus,
-    .cms-image-file:focus {
+    .cms-image-file:focus,
+    .cms-image-select:focus {
       border-color: #94180c;
       outline: none;
       box-shadow: none;
@@ -491,6 +545,23 @@ $previewPath = (string)($currentMeta['preview_path'] ?? '');
       background: #ffffff;
       box-shadow: none;
       z-index: 5;
+    }
+
+    .cms-image-settings {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .cms-image-settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 767px) {
+      .cms-image-settings-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .cms-editor-shell:focus-within .cms-rich-toolbar {

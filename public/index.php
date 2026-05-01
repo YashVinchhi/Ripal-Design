@@ -78,7 +78,7 @@ rd_page_start([
                     <source src="<?php echo esc_attr($heroVideo); ?>" type="video/mp4">
                 </video>
             <?php else: ?>
-                <img src="<?php echo esc_attr($heroImage); ?>" alt="<?php echo esc_attr($ct('hero_image_alt', 'Contemporary residence designed by Ripal Design')); ?>">
+                <img src="<?php echo esc_attr($heroImage); ?>" alt="<?php echo esc_attr($ct('hero_image_alt', 'Contemporary residence designed by Ripal Design')); ?>"<?php echo rd_content_image_style_attr($content, 'hero_image_src'); ?>>
             <?php endif; ?>
         </div>
         <div class="hero-content">
@@ -99,9 +99,9 @@ rd_page_start([
     <section class="snap-section media-carousel" aria-label="Image carousel">
         <div class="carousel" data-carousel>
             <div class="carousel-track">
-                <?php foreach ($carouselImages as $carouselImage): ?>
+                <?php foreach ($carouselImages as $carouselIndex => $carouselImage): ?>
                     <div class="carousel-slide">
-                        <img src="<?php echo esc_attr((string)$carouselImage['src']); ?>" alt="<?php echo esc_attr((string)$carouselImage['alt']); ?>">
+                        <img src="<?php echo esc_attr((string)$carouselImage['src']); ?>" alt="<?php echo esc_attr((string)$carouselImage['alt']); ?>"<?php echo rd_content_image_style_attr($content, 'carousel_image_' . ($carouselIndex + 1)); ?>>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -123,7 +123,7 @@ rd_page_start([
             ?>
                 <article class="project-row<?php echo $isRight ? ' is-right' : ''; ?>">
                     <div class="project-media">
-                        <img src="<?php echo esc_attr((string)$imageData['src']); ?>" alt="<?php echo esc_attr((string)$imageData['alt']); ?>">
+                        <img src="<?php echo esc_attr((string)$imageData['src']); ?>" alt="<?php echo esc_attr((string)$imageData['alt']); ?>"<?php echo rd_content_image_style_attr($content, 'featured_image_' . ($index + 1)); ?>>
                     </div>
                     <div class="project-spacer" aria-hidden="true"></div>
                     <div class="project-content">
@@ -144,7 +144,7 @@ rd_page_start([
             ?>
                 <article class="project-row<?php echo $isRight ? ' is-right' : ''; ?>">
                     <div class="project-media">
-                        <img src="<?php echo esc_attr((string)$imageData['src']); ?>" alt="<?php echo esc_attr((string)$imageData['alt']); ?>">
+                        <img src="<?php echo esc_attr((string)$imageData['src']); ?>" alt="<?php echo esc_attr((string)$imageData['alt']); ?>"<?php echo rd_content_image_style_attr($content, 'featured_image_' . ($index + 1)); ?>>
                     </div>
                     <div class="project-spacer" aria-hidden="true"></div>
                     <div class="project-content">

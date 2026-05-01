@@ -53,6 +53,7 @@ $headerPublicUrl = static function ($path) {
 $dashboardProfileUrl = function_exists('base_path')
     ? base_path('dashboard/profile.php')
     : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
+$roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php';
 $whatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
 $radiusMode = strtolower((string)(getenv('UI_RADIUS') ?: 'sharp'));
 $radiusMode = in_array($radiusMode, ['rounded', 'sharp'], true) ? $radiusMode : 'sharp';
@@ -170,7 +171,7 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 <nav class="alt-header">
     <div class="alt-logo">
         <a href="<?php echo esc_attr($logoHref); ?>" class="flex items-center gap-3 no-underline">
-            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
+            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10"<?php echo function_exists('rd_content_image_style_attr') ? rd_content_image_style_attr($headerContent, 'brand_logo_image') : ''; ?> onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
             <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo htmlspecialchars($headerText('brand_name', 'Ripal Design')); ?></span>
         </a>
     </div>
@@ -227,7 +228,6 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
                     }
 
                     // Role-aware dashboard link: clients should land on client dashboard
-                    $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php';
                     if ($sessionRole === 'client') {
                         $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
                     }
@@ -282,6 +282,7 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
                 <a href="<?php echo htmlspecialchars($headerPublicUrl('services.php')); ?>" class="nav-link<?php echo $isActiveNav('services.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_services', 'Services')); ?></a>
                 <a href="<?php echo htmlspecialchars($headerPublicUrl('project_view.php')); ?>" class="nav-link<?php echo $isActiveNav('project_view.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_projects', 'Projects')); ?></a>
                 <a href="<?php echo htmlspecialchars($headerPublicUrl('about_us.php')); ?>" class="nav-link<?php echo $isActiveNav('about_us.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_about', 'About')); ?></a>
+                <a href="<?php echo htmlspecialchars($headerPublicUrl('credits.php')); ?>" class="nav-link<?php echo $isActiveNav('credits.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_credits', 'Credits')); ?></a>
                 <a href="<?php echo htmlspecialchars($headerPublicUrl('contact_us.php')); ?>" class="nav-link<?php echo $isActiveNav('contact_us.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_contact', 'Contact')); ?></a>
             <?php endif; ?>
         </nav>

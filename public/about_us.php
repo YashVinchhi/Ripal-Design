@@ -23,13 +23,13 @@ rd_page_start([
             <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>">Talk to the Studio</a>
         </div>
         <div class="hero-media">
-            <figure><img src="<?php echo esc_attr($heroImage); ?>" alt="Ripal Design studio work"></figure>
+            <figure><img src="<?php echo esc_attr($heroImage); ?>" alt="Ripal Design studio work"<?php echo rd_content_image_style_attr($content, 'team_1_image'); ?>></figure>
         </div>
     </section>
 
     <section class="page-section">
         <div class="feature-panel">
-            <img class="feature-image" src="<?php echo esc_attr($image('team_2_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="Project execution detail">
+            <img class="feature-image" src="<?php echo esc_attr($image('team_2_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="Project execution detail"<?php echo rd_content_image_style_attr($content, 'team_2_image'); ?>>
             <div class="feature-copy">
                 <p class="eyebrow"><?php echo esc($ct('story_kicker', 'The Ripal Approach')); ?></p>
                 <h2><?php echo esc($ct('story_heading_line', 'Duality in')); ?> <?php echo esc($ct('story_heading_highlight', 'execution')); ?></h2>
@@ -61,7 +61,7 @@ rd_page_start([
         </div>
         <div class="split-grid">
             <article class="team-card">
-                <img src="<?php echo esc_attr($image('team_1_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('team_1_name', 'Ripal Vinchhi')); ?>" style="aspect-ratio: 4 / 3;">
+                <img src="<?php echo esc_attr($image('team_1_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="<?php echo esc_attr($ct('team_1_name', 'Ripal Vinchhi')); ?>" style="aspect-ratio: 4 / 3;"<?php echo rd_content_image_style_attr($content, 'team_1_image'); ?>>
                 <div class="feature-copy">
                     <p class="eyebrow"><?php echo esc($ct('team_1_role', 'Design Director')); ?></p>
                     <h3><?php echo esc($ct('team_1_name', 'Ripal Vinchhi')); ?></h3>
@@ -69,7 +69,7 @@ rd_page_start([
                 </div>
             </article>
             <article class="team-card">
-                <img src="<?php echo esc_attr($image('team_2_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('team_2_name', 'Mayank Vinchhi')); ?>" style="aspect-ratio: 4 / 3;">
+                <img src="<?php echo esc_attr($image('team_2_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg')); ?>" alt="<?php echo esc_attr($ct('team_2_name', 'Mayank Vinchhi')); ?>" style="aspect-ratio: 4 / 3;"<?php echo rd_content_image_style_attr($content, 'team_2_image'); ?>>
                 <div class="feature-copy">
                     <p class="eyebrow"><?php echo esc($ct('team_2_role', 'Execution Lead')); ?></p>
                     <h3><?php echo esc($ct('team_2_name', 'Mayank Vinchhi')); ?></h3>

@@ -28,7 +28,7 @@ rd_page_start([
             <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>">Discuss a Similar Project</a>
         </div>
         <div class="hero-media">
-            <figure><img src="<?php echo esc_attr($fallbackCards[0]['image']); ?>" alt="Featured Ripal Design project"></figure>
+            <figure><img src="<?php echo esc_attr($fallbackCards[0]['image']); ?>" alt="Featured Ripal Design project"<?php echo rd_content_image_style_attr($content, 'card_1_image'); ?>></figure>
         </div>
     </section>
 

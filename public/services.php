@@ -12,24 +12,32 @@ $services = [
         'title' => $ct('service_1_title', 'Architectural Planning'),
         'body' => $ct('service_1_description', 'Site strategy, layouts, elevations, drawings, and approvals guidance for homes and commercial spaces.'),
         'image' => $image('service_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
+        'fit' => $content['service_image_1__fit'] ?? 'auto',
+        'position' => $content['service_image_1__position'] ?? 'auto',
     ],
     [
         'icon' => 'fa-couch',
         'title' => $ct('service_2_title', 'Interior Design'),
         'body' => $ct('service_2_description', 'Room-by-room interior direction, furniture planning, lighting, finishes, and material palettes.'),
         'image' => $image('service_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'),
+        'fit' => $content['service_image_2__fit'] ?? 'auto',
+        'position' => $content['service_image_2__position'] ?? 'auto',
     ],
     [
         'icon' => 'fa-seedling',
         'title' => $ct('service_3_title', 'Landscape Architecture'),
         'body' => $ct('service_3_description', 'Outdoor spaces that connect structure, climate, maintenance, and daily use.'),
         'image' => $image('service_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
+        'fit' => $content['service_image_3__fit'] ?? 'auto',
+        'position' => $content['service_image_3__position'] ?? 'auto',
     ],
     [
         'icon' => 'fa-list-check',
         'title' => $ct('service_4_title', 'Project Management'),
         'body' => $ct('service_4_description', 'Execution planning, vendor coordination, site checks, and progress communication.'),
         'image' => $image('service_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'),
+        'fit' => $content['service_image_4__fit'] ?? 'auto',
+        'position' => $content['service_image_4__position'] ?? 'auto',
     ],
 ];
 
@@ -56,7 +64,7 @@ rd_page_start([
             </div>
         </div>
         <div class="hero-media">
-            <figure><img src="<?php echo esc_attr($heroImage); ?>" alt="Architecture service preview"></figure>
+            <figure><img src="<?php echo esc_attr($heroImage); ?>" alt="Architecture service preview"<?php echo rd_content_image_style_attr($content, 'hero_image_src'); ?>></figure>
         </div>
     </section>
 
@@ -71,7 +79,7 @@ rd_page_start([
                 </div>
                 <div class="service-list">
                     <?php foreach ($services as $index => $service): ?>
-                        <article class="service-card<?php echo $index === 0 ? ' is-active' : ''; ?>" data-service-image="<?php echo esc_attr($service['image']); ?>" data-service-title="<?php echo esc_attr($service['title']); ?>" tabindex="0">
+                        <article class="service-card<?php echo $index === 0 ? ' is-active' : ''; ?>" data-service-image="<?php echo esc_attr($service['image']); ?>" data-service-title="<?php echo esc_attr($service['title']); ?>" data-service-fit="<?php echo esc_attr((string)$service['fit']); ?>" data-service-position="<?php echo esc_attr((string)$service['position']); ?>" tabindex="0">
                             <i class="fa-solid <?php echo esc_attr($service['icon']); ?>" aria-hidden="true"></i>
                             <h3><?php echo esc($service['title']); ?></h3>
                             <p><?php echo esc($service['body']); ?></p>
@@ -80,7 +88,7 @@ rd_page_start([
                 </div>
             </div>
             <div class="service-visual">
-                <img id="serviceVisualImage" src="<?php echo esc_attr($initialServiceImage); ?>" alt="<?php echo esc_attr($initialServiceTitle . ' service preview'); ?>">
+                <img id="serviceVisualImage" src="<?php echo esc_attr($initialServiceImage); ?>" alt="<?php echo esc_attr($initialServiceTitle . ' service preview'); ?>"<?php echo rd_content_image_style_attr($content, 'service_image_1'); ?>>
             </div>
         </div>
     </section>
@@ -143,6 +151,7 @@ rd_page_start([
         var cards = document.querySelectorAll('.service-card[data-service-image]');
         var visualImage = document.getElementById('serviceVisualImage');
         var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var nextCard = cards[0] || null;
 
         if (!cards.length || !visualImage) {
             return;
@@ -157,7 +166,19 @@ rd_page_start([
             preload.src = src;
         });
 
+        function applyCardStyle(card) {
+            if (!visualImage || !card) {
+                return;
+            }
+
+            var fit = card.getAttribute('data-service-fit') || '';
+            var position = card.getAttribute('data-service-position') || '';
+            visualImage.style.objectFit = fit === 'auto' ? '' : fit;
+            visualImage.style.objectPosition = position === 'auto' ? '' : position;
+        }
+
         function animateImageSwap(nextImage, nextTitle) {
+            applyCardStyle(nextCard);
             if (!nextImage || visualImage.getAttribute('src') === nextImage) {
                 visualImage.setAttribute('alt', nextTitle + ' service preview');
                 return;
@@ -166,6 +187,7 @@ rd_page_start([
             if (!window.gsap || reducedMotion) {
                 visualImage.setAttribute('src', nextImage);
                 visualImage.setAttribute('alt', nextTitle + ' service preview');
+                applyCardStyle(nextCard);
                 return;
             }
 
@@ -179,6 +201,7 @@ rd_page_start([
                 onComplete: function () {
                     visualImage.setAttribute('src', nextImage);
                     visualImage.setAttribute('alt', nextTitle + ' service preview');
+                    applyCardStyle(nextCard);
                     window.gsap.fromTo(visualImage, {
                         autoAlpha: 0,
                         scale: 0.985
@@ -196,6 +219,7 @@ rd_page_start([
         function activateCard(card) {
             var nextImage = card.getAttribute('data-service-image') || '';
             var nextTitle = card.getAttribute('data-service-title') || 'Service';
+            nextCard = card;
             animateImageSwap(nextImage, nextTitle);
 
             cards.forEach(function (item) {
@@ -214,6 +238,8 @@ rd_page_start([
                 activateCard(card);
             });
         });
+
+        applyCardStyle(nextCard);
     })();
 </script>
 <?php rd_page_end(); ?>

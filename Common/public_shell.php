@@ -29,6 +29,18 @@ if (!function_exists('rd_content_image')) {
     }
 }
 
+if (!function_exists('rd_content_image_style_attr')) {
+    function rd_content_image_style_attr(array $content, string $key, array $defaults = []): string
+    {
+        if (!function_exists('public_content_image_setting_style')) {
+            return '';
+        }
+
+        $style = (string)public_content_image_setting_style($content, $key, $defaults);
+        return $style !== '' ? ' style="' . esc_attr($style) . '"' : '';
+    }
+}
+
 if (!function_exists('rd_obfuscated_phone_link')) {
     function rd_obfuscated_phone_link(string $class = '', string $label = 'Call studio'): string
     {
@@ -112,6 +124,7 @@ if (!function_exists('rd_page_start')) {
                 'services' => ['href' => 'services.php', 'label' => $shellText('nav_services_label', 'Services')],
                 'projects' => ['href' => 'project_view.php', 'label' => $shellText('nav_projects_label', 'Projects')],
                 'about' => ['href' => 'about_us.php', 'label' => $shellText('nav_about_label', 'About')],
+                'credits' => ['href' => 'credits.php', 'label' => $shellText('nav_credits_label', 'Credits')],
                 'contact' => ['href' => 'contact_us.php', 'label' => $shellText('nav_contact_label', 'Contact')],
             ];
             foreach ($links as $key => $link):
@@ -174,6 +187,7 @@ if (!function_exists('rd_page_end')) {
                 <a href="<?php echo esc_attr(rd_public_url('services.php')); ?>"><?php echo esc($shellText('nav_services_label', 'Services')); ?></a>
                 <a href="<?php echo esc_attr(rd_public_url('project_view.php')); ?>"><?php echo esc($shellText('nav_projects_label', 'Projects')); ?></a>
                 <a href="<?php echo esc_attr(rd_public_url('about_us.php')); ?>"><?php echo esc($shellText('nav_about_label', 'About')); ?></a>
+                <a href="<?php echo esc_attr(rd_public_url('credits.php')); ?>"><?php echo esc($shellText('footer_credits_label', 'Credits')); ?></a>
                 <a href="<?php echo esc_attr(rd_public_url('privacy.php')); ?>"><?php echo esc($shellText('footer_privacy_label', 'Privacy')); ?></a>
                 <a href="<?php echo esc_attr(rd_public_url('terms.php')); ?>"><?php echo esc($shellText('footer_terms_label', 'Terms')); ?></a>
             </nav>

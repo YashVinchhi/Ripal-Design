@@ -36,6 +36,7 @@ if (!function_exists('public_content_registry')) {
                     'menu_services' => ['label' => 'Menu: Services', 'format' => 'plain', 'default' => 'Services'],
                     'menu_projects' => ['label' => 'Menu: Projects', 'format' => 'plain', 'default' => 'Projects'],
                     'menu_about' => ['label' => 'Menu: About', 'format' => 'plain', 'default' => 'About'],
+                    'menu_credits' => ['label' => 'Menu: Credits', 'format' => 'plain', 'default' => 'Credits'],
                     'menu_contact' => ['label' => 'Menu: Contact', 'format' => 'plain', 'default' => 'Contact'],
                     'btn_login' => ['label' => 'Button: Login', 'format' => 'plain', 'default' => 'Login'],
                     'btn_signup' => ['label' => 'Button: Sign Up', 'format' => 'plain', 'default' => 'Sign Up'],
@@ -74,6 +75,7 @@ if (!function_exists('public_content_registry')) {
                     'copyright_brand' => ['label' => 'Copyright Brand Name', 'format' => 'plain', 'default' => 'Ripal Design'],
                     'copyright_suffix' => ['label' => 'Copyright Suffix', 'format' => 'plain', 'default' => 'All rights reserved.'],
                     'privacy_label' => ['label' => 'Footer Link: Privacy', 'format' => 'plain', 'default' => 'Privacy'],
+                    'credits_label' => ['label' => 'Footer Link: Credits', 'format' => 'plain', 'default' => 'Credits'],
                     'terms_label' => ['label' => 'Footer Link: Terms', 'format' => 'plain', 'default' => 'Terms'],
                 ],
             ],
@@ -86,6 +88,7 @@ if (!function_exists('public_content_registry')) {
                     'nav_services_label' => ['label' => 'Nav: Services Label', 'format' => 'plain', 'default' => 'Services'],
                     'nav_projects_label' => ['label' => 'Nav: Projects Label', 'format' => 'plain', 'default' => 'Projects'],
                     'nav_about_label' => ['label' => 'Nav: About Label', 'format' => 'plain', 'default' => 'About'],
+                    'nav_credits_label' => ['label' => 'Nav: Credits Label', 'format' => 'plain', 'default' => 'Credits'],
                     'nav_contact_label' => ['label' => 'Nav: Contact Label', 'format' => 'plain', 'default' => 'Contact'],
                     'nav_login_label' => ['label' => 'Nav: Login Label', 'format' => 'plain', 'default' => 'Login'],
                     'nav_signup_label' => ['label' => 'Nav: Sign Up Label', 'format' => 'plain', 'default' => 'Sign Up'],
@@ -99,6 +102,7 @@ if (!function_exists('public_content_registry')) {
                     'footer_contact_email' => ['label' => 'Footer: Contact Email', 'format' => 'plain', 'default' => 'projects@ripaldesign.studio'],
                     'footer_pages_heading' => ['label' => 'Footer: Pages Heading', 'format' => 'plain', 'default' => 'Pages'],
                     'footer_privacy_label' => ['label' => 'Footer: Privacy Label', 'format' => 'plain', 'default' => 'Privacy'],
+                    'footer_credits_label' => ['label' => 'Footer: Credits Label', 'format' => 'plain', 'default' => 'Credits'],
                     'footer_terms_label' => ['label' => 'Footer: Terms Label', 'format' => 'plain', 'default' => 'Terms'],
                     'footer_copyright_suffix' => ['label' => 'Footer: Copyright Suffix', 'format' => 'plain', 'default' => 'All rights reserved.'],
                     'footer_whatsapp_label' => ['label' => 'Footer: WhatsApp Label', 'format' => 'plain', 'default' => 'WhatsApp'],
@@ -236,6 +240,36 @@ if (!function_exists('public_content_registry')) {
                     'team_2_image' => ['label' => 'Team Member 2 Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
                 ],
             ],
+            'credits' => [
+                'title' => 'Credits Page',
+                'preview_path' => 'public/credits.php',
+                'fields' => [
+                    'page_title' => ['label' => 'Browser Title', 'format' => 'plain', 'default' => 'Credits'],
+                    'meta_description' => ['label' => 'Meta Description', 'format' => 'plain', 'default' => 'Meet the creators of this project and the skills and technologies behind the build.'],
+                    'hero_kicker' => ['label' => 'Hero: Kicker', 'format' => 'plain', 'default' => 'Project Credits'],
+                    'hero_heading' => ['label' => 'Hero: Heading', 'format' => 'plain', 'default' => 'Built with care by our team.'],
+                    'hero_subheading' => ['label' => 'Hero: Subheading', 'format' => 'plain', 'default' => 'This project was created through shared effort, practical learning, and hands-on development across design, frontend, backend, and database work.'],
+                    'hero_primary_cta' => ['label' => 'Hero: Primary Button', 'format' => 'plain', 'default' => 'Meet the Creators'],
+                    'hero_secondary_cta' => ['label' => 'Hero: Secondary Button', 'format' => 'plain', 'default' => 'View Projects'],
+                    'section_kicker' => ['label' => 'Creators Section: Kicker', 'format' => 'plain', 'default' => 'Creators'],
+                    'section_heading' => ['label' => 'Creators Section: Heading', 'format' => 'plain', 'default' => 'The people behind the build.'],
+                    'section_description' => ['label' => 'Creators Section: Description', 'format' => 'plain', 'default' => 'Each contributor brought their own strengths to the project, from interface design and usability to backend logic and database structure.'],
+                    'skills_heading' => ['label' => 'Skills Heading', 'format' => 'plain', 'default' => 'Skills'],
+                    'technologies_heading' => ['label' => 'Technologies Heading', 'format' => 'plain', 'default' => 'Technologies'],
+                    'contributor_1_name' => ['label' => 'Contributor 1: Name', 'format' => 'plain', 'default' => 'Your Name'],
+                    'contributor_1_role' => ['label' => 'Contributor 1: Role', 'format' => 'plain', 'default' => 'Co-Creator & Developer'],
+                    'contributor_1_photo' => ['label' => 'Contributor 1: Photo', 'format' => 'image', 'default' => ''],
+                    'contributor_1_summary' => ['label' => 'Contributor 1: Summary', 'format' => 'plain', 'rows' => 3, 'default' => 'Focused on building reliable project features, clean user flows, and practical frontend experiences for the platform.'],
+                    'contributor_1_skills' => ['label' => 'Contributor 1: Skills (one per line)', 'format' => 'plain', 'rows' => 6, 'default' => "Frontend page development\nBackend feature implementation\nDatabase planning\nAuthentication and user workflows\nTesting and debugging"],
+                    'contributor_1_technologies' => ['label' => 'Contributor 1: Technologies (one per line)', 'format' => 'plain', 'rows' => 6, 'default' => "HTML\nCSS\nJavaScript\nPHP\nMySQL\nGit"],
+                    'contributor_2_name' => ['label' => 'Contributor 2: Name', 'format' => 'plain', 'default' => "Friend's Name"],
+                    'contributor_2_role' => ['label' => 'Contributor 2: Role', 'format' => 'plain', 'default' => 'Co-Creator & Developer'],
+                    'contributor_2_photo' => ['label' => 'Contributor 2: Photo', 'format' => 'image', 'default' => ''],
+                    'contributor_2_summary' => ['label' => 'Contributor 2: Summary', 'format' => 'plain', 'rows' => 3, 'default' => 'Focused on design details, feature refinement, content organization, and making the platform easier to use.'],
+                    'contributor_2_skills' => ['label' => 'Contributor 2: Skills (one per line)', 'format' => 'plain', 'rows' => 6, 'default' => "UI planning\nResponsive layout work\nProject feature testing\nContent management\nProblem solving and optimization"],
+                    'contributor_2_technologies' => ['label' => 'Contributor 2: Technologies (one per line)', 'format' => 'plain', 'rows' => 6, 'default' => "HTML\nCSS\nBootstrap\nJavaScript\nPHP\nMySQL"],
+                ],
+            ],
             'services' => [
                 'title' => 'Services Page',
                 'preview_path' => 'public/services.php',
@@ -297,6 +331,7 @@ if (!function_exists('public_content_registry')) {
                     'left_kicker' => ['label' => 'Left Kicker', 'format' => 'plain', 'default' => 'Get in touch'],
                     'left_heading_line_1' => ['label' => 'Left Heading Line 1', 'format' => 'plain', 'default' => "Let's Discuss"],
                     'left_heading_line_2' => ['label' => 'Left Heading Line 2', 'format' => 'plain', 'default' => 'Your Vision.'],
+                    'left_image' => ['label' => 'Left Hero Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
                     'address_heading' => ['label' => 'Address Heading', 'format' => 'plain', 'default' => 'Ripal Design Rajkot'],
                     'address_html' => ['label' => 'Address (HTML allowed)', 'format' => 'html', 'default' => '538 Jasal Complex,<br>Nanavati Chowk,<br>150ft Ring Road,<br>Rajkot, Gujarat, India'],
                     'contact_heading' => ['label' => 'Contact Heading', 'format' => 'plain', 'default' => 'Contact'],
@@ -628,6 +663,124 @@ if (!function_exists('public_content_normalize_format')) {
         }
 
         return 'plain';
+    }
+}
+
+if (!function_exists('public_content_normalize_image_fit')) {
+    /**
+     * Normalize image fit values.
+     *
+     * @param string $value
+     * @return string
+     */
+    function public_content_normalize_image_fit($value) {
+        $allowed = ['auto', 'cover', 'contain', 'fill', 'none', 'scale-down'];
+        $normalized = strtolower(trim((string)$value));
+
+        return in_array($normalized, $allowed, true) ? $normalized : 'auto';
+    }
+}
+
+if (!function_exists('public_content_normalize_image_position')) {
+    /**
+     * Normalize image object-position values.
+     *
+     * @param string $value
+     * @return string
+     */
+    function public_content_normalize_image_position($value) {
+        $allowed = [
+            'auto',
+            'left top',
+            'center top',
+            'right top',
+            'left center',
+            'center center',
+            'right center',
+            'left bottom',
+            'center bottom',
+            'right bottom',
+        ];
+        $normalized = strtolower(trim(preg_replace('/\s+/', ' ', (string)$value)));
+
+        return in_array($normalized, $allowed, true) ? $normalized : 'auto';
+    }
+}
+
+if (!function_exists('public_content_normalize_image_setting')) {
+    /**
+     * Normalize a specific image setting.
+     *
+     * @param string $setting
+     * @param string $value
+     * @return string
+     */
+    function public_content_normalize_image_setting($setting, $value) {
+        $settingKey = strtolower(trim((string)$setting));
+        if ($settingKey === 'fit') {
+            return public_content_normalize_image_fit($value);
+        }
+        if ($settingKey === 'position') {
+            return public_content_normalize_image_position($value);
+        }
+
+        return trim((string)$value);
+    }
+}
+
+if (!function_exists('public_content_image_setting_value')) {
+    /**
+     * Read a normalized image setting for a content array.
+     *
+     * @param array $content
+     * @param string $fieldKey
+     * @param string $setting
+     * @param string $fallback
+     * @return string
+     */
+    function public_content_image_setting_value(array $content, $fieldKey, $setting, $fallback = 'auto') {
+        $key = (string)$fieldKey . '__' . (string)$setting;
+        $raw = array_key_exists($key, $content) ? (string)$content[$key] : (string)$fallback;
+
+        return public_content_normalize_image_setting($setting, $raw);
+    }
+}
+
+if (!function_exists('public_content_image_setting_style')) {
+    /**
+     * Convert stored image settings to an inline style fragment.
+     *
+     * @param array $content
+     * @param string $fieldKey
+     * @param array $defaults
+     * @return string
+     */
+    function public_content_image_setting_style(array $content, $fieldKey, array $defaults = []) {
+        $fit = public_content_image_setting_value($content, $fieldKey, 'fit', (string)($defaults['fit'] ?? 'auto'));
+        $position = public_content_image_setting_value($content, $fieldKey, 'position', (string)($defaults['position'] ?? 'auto'));
+
+        $styles = [];
+        if ($fit !== 'auto') {
+            $styles[] = 'object-fit: ' . $fit;
+        }
+        if ($position !== 'auto') {
+            $styles[] = 'object-position: ' . $position;
+        }
+
+        return implode('; ', $styles);
+    }
+}
+
+if (!function_exists('public_content_image_setting_key')) {
+    /**
+     * Build the stored key for a synthetic image setting.
+     *
+     * @param string $fieldKey
+     * @param string $setting
+     * @return string
+     */
+    function public_content_image_setting_key($fieldKey, $setting) {
+        return (string)$fieldKey . '__' . (string)$setting;
     }
 }
 
@@ -1079,6 +1232,13 @@ if (!function_exists('public_content_page_values')) {
 
         $values = public_content_defaults_for_page($slug);
 
+        foreach ($fields as $key => $meta) {
+            if (public_content_normalize_format((string)($meta['format'] ?? 'plain')) === 'image') {
+                $values[public_content_image_setting_key($key, 'fit')] = 'auto';
+                $values[public_content_image_setting_key($key, 'position')] = 'auto';
+            }
+        }
+
         if (!public_content_table_exists()) {
             $GLOBALS['__public_content_cache'][$slug] = $values;
             return $values;
@@ -1087,7 +1247,18 @@ if (!function_exists('public_content_page_values')) {
         $rows = db_fetch_all('SELECT section_key, content_value, content_format FROM public_page_content WHERE page_slug = ?', [$slug]);
         foreach ($rows as $row) {
             $key = (string)($row['section_key'] ?? '');
-            if ($key === '' || !isset($fields[$key])) {
+            if ($key === '') {
+                continue;
+            }
+
+            if (!isset($fields[$key])) {
+                if (preg_match('/^(.+)__(fit|position)$/', $key, $matches)) {
+                    $baseKey = (string)($matches[1] ?? '');
+                    $setting = (string)($matches[2] ?? '');
+                    if ($baseKey !== '' && isset($fields[$baseKey]) && public_content_normalize_format((string)($fields[$baseKey]['format'] ?? 'plain')) === 'image') {
+                        $values[$key] = public_content_normalize_image_setting($setting, (string)($row['content_value'] ?? ''));
+                    }
+                }
                 continue;
             }
 
@@ -1149,9 +1320,10 @@ if (!function_exists('public_content_upsert_page')) {
      * @param int $updatedBy
      * @param array $uploadedImages
      * @param array $removeImages
+     * @param array $imageSettings
      * @return array
      */
-    function public_content_upsert_page($pageSlug, $incoming, $updatedBy = 0, $uploadedImages = [], $removeImages = []) {
+    function public_content_upsert_page($pageSlug, $incoming, $updatedBy = 0, $uploadedImages = [], $removeImages = [], $imageSettings = []) {
         $slug = strtolower(trim((string)$pageSlug));
         $result = [
             'ok' => false,
@@ -1173,6 +1345,9 @@ if (!function_exists('public_content_upsert_page')) {
         }
         if (!is_array($removeImages)) {
             $removeImages = [];
+        }
+        if (!is_array($imageSettings)) {
+            $imageSettings = [];
         }
 
         $fields = public_content_field_meta($slug);
@@ -1259,6 +1434,27 @@ if (!function_exists('public_content_upsert_page')) {
 
                 $existingValues[$fieldKey] = $cleanValue;
                 $result['saved']++;
+
+                $postedSettings = isset($imageSettings[$fieldKey]) && is_array($imageSettings[$fieldKey]) ? $imageSettings[$fieldKey] : [];
+                foreach (['fit', 'position'] as $settingName) {
+                    if (!array_key_exists($settingName, $postedSettings)) {
+                        continue;
+                    }
+
+                    $settingValue = public_content_normalize_image_setting($settingName, (string)$postedSettings[$settingName]);
+                    $settingKey = public_content_image_setting_key($fieldKey, $settingName);
+                    $settingOk = db_query(
+                        'INSERT INTO public_page_content (page_slug, section_key, content_value, content_format, updated_by) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE content_value = VALUES(content_value), content_format = VALUES(content_format), updated_by = VALUES(updated_by), updated_at = CURRENT_TIMESTAMP',
+                        [$slug, $settingKey, $settingValue, 'plain', $authorId]
+                    );
+
+                    if ($settingOk === false) {
+                        $result['errors'][] = 'Failed to save image setting: ' . $fieldKey . '.' . $settingName;
+                        continue;
+                    }
+
+                    $result['saved']++;
+                }
                 continue;
             }
 

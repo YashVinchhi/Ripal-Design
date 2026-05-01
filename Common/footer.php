@@ -119,6 +119,7 @@ $currentYear = date('Y');
                 <a href="<?php echo esc_attr($footerPublicUrl('services.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Services</a>
                 <a href="<?php echo esc_attr($footerPublicUrl('project_view.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Projects</a>
                 <a href="<?php echo esc_attr($footerPublicUrl('about_us.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">About</a>
+                <a href="<?php echo esc_attr($footerPublicUrl('credits.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('credits_label', 'Credits')); ?></a>
                 <a href="<?php echo esc_attr($footerPublicUrl('contact_us.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline">Contact</a>
                 <a href="<?php echo esc_attr($footerPublicUrl('privacy.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('privacy_label', 'Privacy')); ?></a>
                 <a href="<?php echo esc_attr($footerPublicUrl('terms.php')); ?>" class="footer-legal-link hover:text-white transition-colors no-underline"><?php echo esc($footerText('terms_label', 'Terms')); ?></a>
@@ -136,6 +137,7 @@ $currentYear = date('Y');
     <a href="<?php echo esc_attr($footerPublicUrl('services.php')); ?>"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i><span>Services</span></a>
     <a href="<?php echo esc_attr($footerPublicUrl('project_view.php')); ?>"><i class="fa-solid fa-th-large" aria-hidden="true"></i><span>Projects</span></a>
     <a href="<?php echo esc_attr($footerPublicUrl('about_us.php')); ?>"><i class="fa-solid fa-users" aria-hidden="true"></i><span>About</span></a>
+    <a href="<?php echo esc_attr($footerPublicUrl('credits.php')); ?>"><i class="fa-solid fa-code" aria-hidden="true"></i><span><?php echo esc($footerText('credits_label', 'Credits')); ?></span></a>
     <a href="<?php echo esc_attr($footerPublicUrl('contact_us.php')); ?>"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
 </nav>
 

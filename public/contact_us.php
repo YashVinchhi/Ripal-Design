@@ -95,7 +95,7 @@ rd_page_start([
             <p>Share the site, scope, timeline, and current stage. We will respond with the clearest next step instead of a vague sales call.</p>
         </div>
         <div class="hero-media">
-            <figure><img src="<?php echo esc_attr($image('left_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="Ripal Design contact"></figure>
+            <figure><img src="<?php echo esc_attr($image('left_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg')); ?>" alt="Ripal Design contact"<?php echo rd_content_image_style_attr($content, 'left_image'); ?>></figure>
         </div>
     </section>
 
