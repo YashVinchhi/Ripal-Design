@@ -109,6 +109,9 @@ if (!function_exists('public_content_registry')) {
                 'preview_path' => 'public/index.php',
                 'fields' => [
                     'page_title' => ['label' => 'Browser Title', 'format' => 'plain', 'default' => 'Home | Ripal Design'],
+                    'hero_image_src' => ['label' => 'Hero: Background Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
+                    'hero_image_alt' => ['label' => 'Hero: Background Image Alt', 'format' => 'plain', 'default' => 'Contemporary residence designed by Ripal Design'],
+                    'hero_video_src' => ['label' => 'Hero: Background Video URL', 'format' => 'plain', 'default' => ''],
                     'hero_established' => ['label' => 'Hero: Established Label', 'format' => 'plain', 'default' => 'Est. 2017'],
                     'hero_location' => ['label' => 'Hero: Location Label', 'format' => 'plain', 'default' => 'Rajkot, Gujarat'],
                     'hero_heading' => ['label' => 'Hero: Heading', 'format' => 'plain', 'default' => 'About the Studio'],
