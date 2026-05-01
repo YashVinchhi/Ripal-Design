@@ -793,6 +793,78 @@ if (!function_exists('public_content_uploaded_image_for_field')) {
     }
 }
 
+if (!function_exists('public_content_parse_size_to_bytes')) {
+    /**
+     * Convert PHP shorthand size values like 450M to bytes.
+     *
+     * @param string $value
+     * @return int
+     */
+    function public_content_parse_size_to_bytes($value) {
+        $raw = trim((string)$value);
+        if ($raw === '') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($raw, -1));
+        $number = (float)$raw;
+        if ($number <= 0) {
+            return 0;
+        }
+
+        if ($unit === 'g') {
+            $number *= 1024;
+        }
+        if ($unit === 'g' || $unit === 'm') {
+            $number *= 1024;
+        }
+        if ($unit === 'g' || $unit === 'm' || $unit === 'k') {
+            $number *= 1024;
+        }
+
+        return (int)$number;
+    }
+}
+
+if (!function_exists('public_content_image_upload_max_bytes')) {
+    /**
+     * Return the CMS image limit, aligned with PHP upload/post size limits.
+     *
+     * @return int
+     */
+    function public_content_image_upload_max_bytes() {
+        $limits = array_filter([
+            public_content_parse_size_to_bytes((string)ini_get('upload_max_filesize')),
+            public_content_parse_size_to_bytes((string)ini_get('post_max_size')),
+        ], static fn ($bytes) => (int)$bytes > 0);
+
+        return !empty($limits) ? min($limits) : 10 * 1024 * 1024;
+    }
+}
+
+if (!function_exists('public_content_format_bytes')) {
+    /**
+     * Human-readable file size for admin messages.
+     *
+     * @param int $bytes
+     * @return string
+     */
+    function public_content_format_bytes($bytes) {
+        $size = max(0, (int)$bytes);
+        if ($size >= 1024 * 1024 * 1024) {
+            return rtrim(rtrim(number_format($size / (1024 * 1024 * 1024), 2), '0'), '.') . ' GB';
+        }
+        if ($size >= 1024 * 1024) {
+            return rtrim(rtrim(number_format($size / (1024 * 1024), 2), '0'), '.') . ' MB';
+        }
+        if ($size >= 1024) {
+            return rtrim(rtrim(number_format($size / 1024, 2), '0'), '.') . ' KB';
+        }
+
+        return $size . ' bytes';
+    }
+}
+
 if (!function_exists('public_content_store_uploaded_image')) {
     /**
      * Validate and store uploaded image in uploads/content/{pageSlug}.
@@ -846,8 +918,9 @@ if (!function_exists('public_content_store_uploaded_image')) {
         }
 
         $size = (int)($uploaded['size'] ?? 0);
-        if ($size <= 0 || $size > 10 * 1024 * 1024) {
-            $result['error'] = 'Image must be less than or equal to 10 MB.';
+        $maxBytes = public_content_image_upload_max_bytes();
+        if ($size <= 0 || $size > $maxBytes) {
+            $result['error'] = 'Image must be less than or equal to ' . public_content_format_bytes($maxBytes) . '.';
             return $result;
         }
 

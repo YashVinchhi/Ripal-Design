@@ -215,7 +215,12 @@ $previewPath = (string)($currentMeta['preview_path'] ?? '');
                     Remove image
                   </label>
 
-                  <p class="text-[11px] text-gray-500 mt-2">Upload replaces the current image. Supported: JPG, JPEG, PNG, WEBP, GIF (max 10 MB).</p>
+                  <?php
+                  $imageMaxLabel = function_exists('public_content_format_bytes') && function_exists('public_content_image_upload_max_bytes')
+                    ? public_content_format_bytes(public_content_image_upload_max_bytes())
+                    : '10 MB';
+                  ?>
+                  <p class="text-[11px] text-gray-500 mt-2">Upload replaces the current image. Supported: JPG, JPEG, PNG, WEBP, GIF (max <?php echo esc($imageMaxLabel); ?>).</p>
                 </div>
               <?php else: ?>
                 <div class="cms-editor-shell relative">
