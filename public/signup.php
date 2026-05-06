@@ -29,7 +29,7 @@ rd_page_start([
             <p><?php echo esc($ct('form_subtitle', 'Use one account for project communication, approvals, files, and billing updates.')); ?></p>
             <a class="button button-secondary" href="<?php echo esc_attr(rd_public_url('login.php')); ?>">Already registered?</a>
         </div>
-        <article class="auth-card" aria-labelledby="signupTitle">
+        <article class="auth-card width" aria-labelledby="signupTitle">
             <p class="eyebrow">Signup</p>
             <h1 id="signupTitle">Create account</h1>
             <?php if ($error !== ''): ?><p class="notice notice-error"><?php echo esc($error); ?></p><?php endif; ?>
@@ -74,9 +74,9 @@ rd_page_start([
                     </div>
                     <span id="confirmPassword_error" class="text-danger" role="alert"></span>
                 </div>
-                <label class="check-wrap" for="terms">
+                <label class="check-wrap check-wrap-terms" for="terms">
                     <input id="terms" type="checkbox" name="terms" required data-validation="required">
-                    I accept the <a href="<?php echo esc_attr(rd_public_url('terms.php')); ?>">terms</a> and <a href="<?php echo esc_attr(rd_public_url('privacy.php')); ?>">privacy policy</a>
+                    <span>I accept the <a href="<?php echo esc_attr(rd_public_url('terms.php')); ?>">terms</a> and <a href="<?php echo esc_attr(rd_public_url('privacy.php')); ?>">privacy policy</a></span>
                 </label>
                 <span id="terms_error" class="text-danger" role="alert"></span>
                 <button class="button button-primary" type="submit" name="signup">Create Account</button>

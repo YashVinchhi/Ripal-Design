@@ -36,7 +36,7 @@ rd_page_start([
             <h1><?php echo esc($ct('hero_title', 'Reset your password.')); ?></h1>
             <p><?php echo esc($ct('hero_subtitle', 'Enter your email address and we\'ll send you a link to reset your password.')); ?></p>
         </div>
-        <article class="auth-card" aria-labelledby="forgotTitle">
+        <article class="auth-card space" aria-labelledby="forgotTitle">
             <p class="eyebrow"><?php echo esc($ct('form_label', 'Forgot Password')); ?></p>
             <h2 id="forgotTitle"><?php echo esc($ct('form_title', 'Forgot Password')); ?></h2>
             

@@ -134,9 +134,9 @@ if (!function_exists('rd_page_start')) {
             <?php endforeach; ?>
             <div class="menu-actions" aria-label="Account actions">
                 <a class="button button-secondary" href="<?php echo esc_attr(rd_public_url('login.php')); ?>"><?php echo esc($shellText('nav_login_label', 'Login')); ?></a>
-                <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('signup.php')); ?>"><?php echo esc($shellText('nav_signup_label', 'Sign Up')); ?></a>
+                <a class="button button-primary"  style="color:#eee7dc" href="<?php echo esc_attr(rd_public_url('signup.php')); ?>"><?php echo esc($shellText('nav_signup_label', 'Sign Up')); ?></a>
             </div>
-            <a class="menu-cta" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>"><?php echo esc($shellText('nav_cta_label', 'Start a Project')); ?></a>
+            <a class="menu-cta"  style="color:#eee7dc" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>"><?php echo esc($shellText('nav_cta_label', 'Start a Project')); ?></a>
         </nav>
     </header>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
@@ -205,6 +205,18 @@ if (!function_exists('rd_page_end')) {
             } catch (e) {}
         });
 
+        // Close menu when clicking outside
+        function closeMenus() {
+            document.querySelectorAll('.nav-toggle').forEach(function (button) {
+                if (button.getAttribute('aria-expanded') === 'true') {
+                    var nav = document.getElementById(button.getAttribute('aria-controls'));
+                    button.setAttribute('aria-expanded', 'false');
+                    button.setAttribute('aria-label', 'Open navigation');
+                    if (nav) nav.classList.remove('is-open');
+                }
+            });
+        }
+
         document.querySelectorAll('.nav-toggle').forEach(function (button) {
             button.addEventListener('click', function () {
                 var nav = document.getElementById(button.getAttribute('aria-controls'));
@@ -213,6 +225,14 @@ if (!function_exists('rd_page_end')) {
                 button.setAttribute('aria-label', open ? 'Open navigation' : 'Close navigation');
                 if (nav) nav.classList.toggle('is-open', !open);
             });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function (event) {
+            var isClickInsideNav = event.target.closest('.site-nav, .nav-toggle');
+            if (!isClickInsideNav) {
+                closeMenus();
+            }
         });
 
         (function () {
