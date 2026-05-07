@@ -142,7 +142,7 @@ if (db_connected() && db_table_exists('projects')) {
               COALESCE(NULLIF(p.address,\'\'), NULLIF(p.location,\'\'), \'\') AS address, p.latitude, p.longitude
              FROM project_assignments pa
              INNER JOIN projects p ON p.id = pa.project_id
-             WHERE pa.worker_id = ?
+             WHERE pa.worker_id = ?' . projects_soft_delete_sql('p', ' AND ') . '
              ORDER BY pa.assigned_at DESC
              LIMIT 25',
       [$sessionUserId]
@@ -152,7 +152,7 @@ if (db_connected() && db_table_exists('projects')) {
   if (empty($projects)) {
     $limit = $useWorkerProjectView ? 12 : 200;
     $projects = db_fetch_all("SELECT id, name, status, COALESCE(progress,0) AS progress, COALESCE(due,'1970-01-01') AS due, COALESCE(location,'') AS location,
-      COALESCE(NULLIF(address,''), NULLIF(location,''), '') AS address, latitude, longitude, budget FROM projects ORDER BY id DESC LIMIT {$limit}");
+      COALESCE(NULLIF(address,''), NULLIF(location,''), '') AS address, latitude, longitude, budget FROM projects" . projects_soft_delete_sql('projects', ' WHERE ') . " ORDER BY id DESC LIMIT {$limit}");
   }
 }
 
@@ -175,7 +175,7 @@ if ($isAdmin && db_connected() && db_table_exists('users')) {
   $kpis['users_total'] = (int)($row['c'] ?? 0);
 }
 if ($isAdmin && db_connected() && db_table_exists('projects')) {
-  $row = db_fetch('SELECT COUNT(*) AS c FROM projects');
+  $row = db_fetch('SELECT COUNT(*) AS c FROM projects' . projects_soft_delete_sql('projects', ' WHERE '));
   $kpis['projects_total'] = (int)($row['c'] ?? 0);
 }
 if ($isAdmin && db_connected() && db_table_exists('leave_requests')) {
@@ -258,6 +258,7 @@ $actionCards = [
     $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-text'];
     $actionCards[] = ['label' => 'Contact Manager', 'href' => base_path('admin/contact_messages.php'), 'icon' => 'mail'];
     $actionCards[] = ['label' => 'Vendors', 'href' => base_path('admin/entities.php?tab=vendors'), 'icon' => 'truck'];
+    $actionCards[] = ['label' => 'Materials Studio', 'href' => base_path('admin/materials_studio.php'), 'icon' => 'package'];
     $actionCards[] = ['label' => 'Workers', 'href' => base_path('admin/entities.php?tab=workers'), 'icon' => 'users'];
   }
 

@@ -18,7 +18,7 @@ if ($pdo instanceof PDO && function_exists('db_table_exists') && db_table_exists
     try { return db_column_exists('projects', 'slug') ? 'COALESCE(slug, "") AS slug' : '"" AS slug'; } catch (Throwable $e) { return '"" AS slug'; }
   })();
 
-  $sql = 'SELECT ' . implode(', ', $select) . ' FROM projects ORDER BY id DESC';
+  $sql = 'SELECT ' . implode(', ', $select) . ' FROM projects' . projects_soft_delete_sql('projects', ' WHERE ') . ' ORDER BY id DESC';
   try {
     $stmt = $pdo->query($sql);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];

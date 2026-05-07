@@ -50,6 +50,9 @@ if ($yearTo > 0) {
     $params[':year_to'] = $yearTo;
 }
 
+// Exclude soft-deleted projects
+$sql .= projects_soft_delete_sql('projects', ' AND ');
+
 $sql .= ' ORDER BY created_at DESC LIMIT 200';
 
 $stmt = get_db()->prepare($sql);

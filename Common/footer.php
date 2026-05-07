@@ -29,6 +29,8 @@ $footerPublicUrl = static function ($path) {
 };
 $footerWhatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
 $hideFooterCta = !empty($HIDE_FOOTER_CTA);
+// Suppress full footer for authenticated users (remove footer after login)
+$suppressFooter = (function_exists('is_logged_in') && is_logged_in());
 
 $currentYear = date('Y');
 ?>
@@ -66,6 +68,7 @@ $currentYear = date('Y');
     }
 </style>
 
+<?php if (!$suppressFooter): ?>
 <footer class="site-footer bg-foundation-grey text-white pt-16 pb-8 px-4 font-sans" role="contentinfo">
     <div class="max-w-7xl mx-auto">
         <?php if (!$hideFooterCta): ?>
@@ -147,6 +150,7 @@ $currentYear = date('Y');
         .mobile-bottom-nav, .whatsapp-fab { display: none !important; }
     }
 </style>
+<?php endif; ?>
 
 <div id="transition-curtain" aria-hidden="true"></div>
 <div id="transition-orb" aria-hidden="true"></div>

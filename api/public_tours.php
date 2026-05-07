@@ -81,7 +81,7 @@ try {
     if ($tourId > 0) {
         $sql = 'SELECT t.id, t.project_id, t.title, t.description, ' . $startSceneSelect . ', p.name AS project_name '
             . 'FROM project_tours t '
-            . 'LEFT JOIN projects p ON p.id = t.project_id '
+            . 'LEFT JOIN projects p ON p.id = t.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . ' '
             . 'WHERE t.id = ? AND t.is_active = 1 '
             . 'LIMIT 1';
         $stmt = $db->prepare($sql);
@@ -89,7 +89,7 @@ try {
     } else {
         $sql = 'SELECT t.id, t.project_id, t.title, t.description, ' . $startSceneSelect . ', p.name AS project_name '
             . 'FROM project_tours t '
-            . 'LEFT JOIN projects p ON p.id = t.project_id '
+            . 'LEFT JOIN projects p ON p.id = t.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . ' '
             . 'WHERE t.project_id = ? AND t.is_active = 1 '
             . 'ORDER BY t.updated_at DESC, t.id DESC '
             . 'LIMIT 1';

@@ -149,7 +149,7 @@ if (!function_exists('wmcp_resolve_project_identifier')) {
             return intval($identifier);
         }
 
-        $rows = db_fetch_all('SELECT id, name FROM projects ORDER BY id ASC');
+        $rows = db_fetch_all('SELECT id, name FROM projects' . projects_soft_delete_sql('projects', ' WHERE ') . ' ORDER BY id ASC');
         foreach ($rows as $row) {
             $id = intval($row['id'] ?? 0);
             $name = (string)($row['name'] ?? '');

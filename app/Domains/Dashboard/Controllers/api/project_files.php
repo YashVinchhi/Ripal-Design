@@ -209,9 +209,8 @@ if ($projectId <= 0) {
 }
 
 try {
-    $checkProject = $db->prepare('SELECT id FROM projects WHERE id = ? LIMIT 1');
-    $checkProject->execute([$projectId]);
-    if (!$checkProject->fetch(PDO::FETCH_ASSOC)) {
+    $projectCheck = get_project_by_id($projectId, 'id');
+    if (!$projectCheck) {
         api_json(['success' => false, 'message' => 'Project not found.'], 404);
     }
 } catch (Exception $e) {
@@ -277,7 +276,7 @@ if ($action === 'add_team_member') {
 
         if ($assignmentInserted) {
             $actorId = current_user_id();
-            $project = db_fetch('SELECT name, client_id FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $project = get_project_by_id($projectId, 'name, client_id');
             $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
 
             notifications_insert(
@@ -501,7 +500,7 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
 
             $participants = notifications_get_project_participants($projectId);
             $clientId = (int)($participants['client_id'] ?? 0);
-            $project = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $project = get_project_by_id($projectId, 'name');
             $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
             if ($clientId > 0) {
                 notifications_insert(
@@ -601,7 +600,7 @@ if ($action === 'upload_file' || $action === 'upload_drawing' || $action === 'up
                 [(int)($participants['client_id'] ?? 0)],
                 array_map('intval', (array)($participants['worker_ids'] ?? []))
             ))));
-            $project = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $project = get_project_by_id($projectId, 'name');
             $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
             notifications_insert_bulk(
                 $recipientIds,

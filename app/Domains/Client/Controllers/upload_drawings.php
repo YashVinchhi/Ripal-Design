@@ -4,7 +4,7 @@ if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bo
 require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 require_login();
 
-$projectOptions = db_connected() ? db_fetch_all('SELECT id, name FROM projects ORDER BY id DESC LIMIT 200') : [];
+$projectOptions = db_connected() ? db_fetch_all('SELECT id, name FROM projects' . projects_soft_delete_sql('projects', ' WHERE ') . ' ORDER BY id DESC LIMIT 200') : [];
 
 if (!function_exists('client_uuid_v4')) {
   /**

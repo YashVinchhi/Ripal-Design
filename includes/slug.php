@@ -21,7 +21,8 @@ function make_unique_project_slug(PDO $pdo, string $baseSlug, int $projectId = 0
     $slug = $baseSlug;
     $i = 2;
     while (true) {
-        $sql = 'SELECT COUNT(1) FROM projects WHERE slug = ?' . ($projectId > 0 ? ' AND id != ?' : '');
+        $softCond = function_exists('projects_soft_delete_sql') ? projects_soft_delete_sql('projects', ' AND ') : '';
+        $sql = 'SELECT COUNT(1) FROM projects WHERE slug = ?' . ($projectId > 0 ? ' AND id != ?' : '') . $softCond;
         $stmt = $pdo->prepare($sql);
         $params = [$slug];
         if ($projectId > 0) { $params[] = $projectId; }

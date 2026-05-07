@@ -39,7 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // load project and goods
 $project = ['id'=>$project_id,'name'=>'Project '.$project_id];
 if (isset($pdo) && $pdo instanceof PDO) {
-    $s = $pdo->prepare('SELECT id,name FROM projects WHERE id = :id LIMIT 1'); $s->execute(['id'=>$project_id]); $r=$s->fetch(PDO::FETCH_ASSOC); if($r) $project=$r;
+    $p = get_project_by_id($project_id, 'id, name');
+    if ($p) $project = $p;
     $gq = $pdo->prepare('SELECT * FROM project_goods WHERE project_id = :pid ORDER BY created_at DESC'); $gq->execute(['pid'=>$project_id]); $goods = $gq->fetchAll(PDO::FETCH_ASSOC);
 } else { $goods = []; }
 ?>

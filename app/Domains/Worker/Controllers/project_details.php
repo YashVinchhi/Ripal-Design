@@ -11,7 +11,7 @@ $projectId = 0;
 if (!empty($_GET['slug'])) {
     $slugParam = trim((string)$_GET['slug']);
     if ($slugParam !== '') {
-        $row = db_fetch('SELECT id FROM projects WHERE slug = ? LIMIT 1', [$slugParam]);
+        $row = db_fetch('SELECT id FROM projects WHERE slug = ?' . projects_soft_delete_sql('projects', ' AND ') . ' LIMIT 1', [$slugParam]);
         if ($row && !empty($row['id'])) {
             $projectId = (int)$row['id'];
         }

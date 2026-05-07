@@ -29,7 +29,7 @@ if ($billingReady) {
     $invoiceRows = db_fetch_all(
         'SELECT bi.*, p.name AS project_name
          FROM billing_invoices bi
-         LEFT JOIN projects p ON p.id = bi.project_id
+         LEFT JOIN projects p ON p.id = bi.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . '
          WHERE (p.client_id = ?)
             OR (LOWER(COALESCE(bi.client_email,\'\')) = ?)
             OR (LOWER(COALESCE(p.owner_email,\'\')) = ?)
@@ -59,12 +59,12 @@ if ($paymentsReady) {
         'SELECT pay.*, bi.invoice_code, p.name AS project_name
          FROM payments pay
          LEFT JOIN billing_invoices bi ON bi.id = pay.invoice_id
-         LEFT JOIN projects p ON p.id = pay.project_id
+         LEFT JOIN projects p ON p.id = pay.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . '
          WHERE (pay.user_id = ?)
             OR (bi.id IN (
                 SELECT bi2.id
                 FROM billing_invoices bi2
-                LEFT JOIN projects p2 ON p2.id = bi2.project_id
+                LEFT JOIN projects p2 ON p2.id = bi2.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p2', '') ? ' AND ' . projects_soft_delete_sql('p2', '') : '') . '
                 WHERE (p2.client_id = ?)
                    OR (LOWER(COALESCE(bi2.client_email,\'\')) = ?)
                    OR (LOWER(COALESCE(p2.owner_email,\'\')) = ?)

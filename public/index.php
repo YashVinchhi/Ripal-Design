@@ -10,7 +10,7 @@ $ct = static fn ($key, $default = '') => (string)($content[$key] ?? $default);
 $image = static fn ($key, $default) => rd_content_image($content, $key, $default);
 
 $featuredProjects = db_connected()
-    ? db_fetch_all("SELECT id, name, COALESCE(location, '') AS location FROM projects WHERE LOWER(name) NOT LIKE '%test%' ORDER BY created_at DESC LIMIT 6")
+    ? db_fetch_all("SELECT id, name, COALESCE(location, '') AS location FROM projects WHERE LOWER(name) NOT LIKE '%test%'" . projects_soft_delete_sql('projects', ' AND ') . " ORDER BY created_at DESC LIMIT 6")
     : [];
 
 $fallbackProjects = [

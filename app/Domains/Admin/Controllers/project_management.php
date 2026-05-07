@@ -1,7 +1,6 @@
 <?php
 if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php'; }
 // Project Management (Redesigned UI)
-require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 require_login();
 require_role('admin');
 
@@ -169,6 +168,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_publish'])) {
     exit;
 }
 
+// Batch delete projects (soft-delete) and restore endpoints
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['delete_projects']) || isset($_POST['restore_projects']))) {
+    require_csrf();
+    $isRestore = isset($_POST['restore_projects']);
+    $raw = $_POST['project_ids'] ?? [];
+    if (!is_array($raw)) {
+        $raw = array_filter(array_map('trim', explode(',', (string)$raw)));
+    }
+    $ids = array_values(array_filter(array_map('intval', $raw), static function ($v) { return $v > 0; }));
+
+    if (empty($ids)) {
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'No projects selected.']);
+            exit;
+        }
+        set_flash('No projects selected.', 'warning');
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $db = get_db();
+    if (!($db instanceof PDO)) {
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Database unavailable.']);
+            exit;
+        }
+        set_flash('Database connection unavailable. Cannot complete request.', 'danger');
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $method = 'unknown';
+
+    try {
+        $db->beginTransaction();
+
+        // Determine soft-delete strategy
+        $hasDeletedAt = function_exists('db_column_exists') && db_column_exists('projects', 'deleted_at');
+        $hasIsDeleted = function_exists('db_column_exists') && db_column_exists('projects', 'is_deleted');
+
+        if ($isRestore) {
+            if ($hasDeletedAt) {
+                db_query('UPDATE projects SET deleted_at = NULL WHERE id IN (' . $placeholders . ')', $ids);
+                $method = 'deleted_at_restore';
+            } elseif ($hasIsDeleted) {
+                db_query('UPDATE projects SET is_deleted = 0 WHERE id IN (' . $placeholders . ')', $ids);
+                $method = 'is_deleted_restore';
+            } else {
+                // No soft-delete column exists — nothing to restore
+                $method = 'no_soft_column';
+            }
+            $db->commit();
+
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'restored_ids' => $ids, 'method' => $method]);
+                exit;
+            }
+            set_flash('Selected projects restored.', 'success');
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+
+        // Soft-delete path
+        if ($hasDeletedAt) {
+            db_query('UPDATE projects SET deleted_at = NOW() WHERE id IN (' . $placeholders . ')', $ids);
+            $method = 'deleted_at';
+        } elseif ($hasIsDeleted) {
+            db_query('UPDATE projects SET is_deleted = 1 WHERE id IN (' . $placeholders . ')', $ids);
+            $method = 'is_deleted';
+        } else {
+            // Attempt to add a deleted_at column and use it
+            try {
+                db_query('ALTER TABLE projects ADD COLUMN deleted_at DATETIME NULL DEFAULT NULL');
+                db_query('UPDATE projects SET deleted_at = NOW() WHERE id IN (' . $placeholders . ')', $ids);
+                $method = 'deleted_at_added';
+            } catch (Throwable $e) {
+                // As a last resort, fall back to permanent delete (best-effort)
+                foreach (['project_files','project_activity','review_requests','project_drawings','project_team','project_invoices'] as $t) {
+                    if (function_exists('db_table_exists') && db_table_exists($t)) {
+                        db_query('DELETE FROM ' . $t . ' WHERE project_id IN (' . $placeholders . ')', $ids);
+                    }
+                }
+                db_query('DELETE FROM projects WHERE id IN (' . $placeholders . ')', $ids);
+                $method = 'hard_delete_fallback';
+            }
+        }
+
+        $db->commit();
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'deleted_ids' => $ids, 'method' => $method]);
+            exit;
+        }
+
+        set_flash('Selected projects deleted (soft) successfully.', 'success');
+    } catch (Throwable $e) {
+        if ($db instanceof PDO && $db->inTransaction()) $db->rollBack();
+        if (function_exists('app_log')) app_log('error', 'Failed to delete/restore projects', ['exception' => $e->getMessage(), 'ids' => $ids]);
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Failed to process request.']);
+            exit;
+        }
+        set_flash('Failed to process request. Check logs.', 'danger');
+    }
+
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
 $search = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
 $statusFilter = isset($_GET['status']) ? strtolower(trim((string)$_GET['status'])) : 'all';
 $allowedStatuses = ['all', 'planning', 'ongoing', 'paused', 'completed'];
@@ -207,6 +321,14 @@ if ($db instanceof PDO) {
     if ($statusFilter !== 'all') {
         $where[] = 'LOWER(p.status) = ?';
         $params[] = $statusFilter;
+    }
+
+    // Exclude soft-deleted projects by default using central helper
+    if (function_exists('projects_soft_delete_sql')) {
+        $softCond = projects_soft_delete_sql('p', '');
+        if ($softCond !== '') {
+            $where[] = $softCond;
+        }
     }
 
     if (!empty($where)) {
@@ -330,6 +452,10 @@ $resolveRegion = static function (string $location): string {
           opacity: 0;
           transition: opacity 0.3s ease;
       }
+
+      /* Selection checkbox overlay on project covers */
+      .project-select { display: inline-flex; align-items: center; justify-content: center; }
+      .project-select input[type="checkbox"] { width: 18px; height: 18px; }
 
       .project-card-media:hover .project-cover-dots {
           opacity: 1;
@@ -605,6 +731,12 @@ $resolveRegion = static function (string $location): string {
                 <button id="exportProjectsBtn" type="button" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i> Export Report
                 </button>
+                <button id="selectAllBtn" type="button" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="check-square" class="w-4 h-4"></i> Select All
+                </button>
+                <button id="deleteSelectedBtn" type="button" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-4 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
+                    <i data-lucide="trash" class="w-4 h-4"></i> Delete Selected
+                </button>
                 <button id="newProjectBtn" type="button" class="w-full sm:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95" data-create-url="<?php echo esc_attr($newProjectUrl); ?>">
                     <i data-lucide="plus" class="w-4 h-4"></i> New Project
                 </button>
@@ -652,6 +784,9 @@ $resolveRegion = static function (string $location): string {
             <?php $pStatus = strtolower((string)($p['status'] ?? 'planning')); ?>
             <div class="project-card group bg-white border border-gray-100 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden flex flex-col" data-region="Global" data-status="<?php echo htmlspecialchars($pStatus); ?>">
                 <div class="project-card-media h-56 bg-foundation-grey relative overflow-hidden">
+                    <label class="project-select absolute top-3 left-3 z-30 bg-white/90 p-1 rounded-md shadow-sm" title="Select project">
+                        <input type="checkbox" class="project-select-checkbox" data-project-id="<?php echo (int)$p['id']; ?>" aria-label="Select project <?php echo esc_attr((string)$p['name']); ?>">
+                    </label>
                     <?php $coverImages = $p['cover_images_list'] ?? (!empty($p['cover_image']) ? [(string)$p['cover_image']] : []); ?>
                     <?php if (!empty($coverImages)): ?>
                         <?php foreach ($coverImages as $idx => $coverPath): ?>
@@ -991,6 +1126,100 @@ $resolveRegion = static function (string $location): string {
                 }
             });
         });
+        // Select-all and bulk-delete handlers
+        (function () {
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener('click', function () {
+                    const boxes = Array.from(document.querySelectorAll('.project-select-checkbox'));
+                    if (!boxes.length) return;
+                    const anyUnchecked = boxes.some(cb => !cb.checked);
+                    boxes.forEach(cb => cb.checked = anyUnchecked);
+                    try { selectAllBtn.textContent = anyUnchecked ? 'Unselect All' : 'Select All'; } catch (e) {}
+                });
+            }
+
+            const deleteBtn = document.getElementById('deleteSelectedBtn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function () {
+                    const boxes = Array.from(document.querySelectorAll('.project-select-checkbox:checked'));
+                    const ids = boxes.map(cb => cb.getAttribute('data-project-id')).filter(Boolean);
+                    if (!ids.length) {
+                        alert('Please select at least one project to move to trash.');
+                        return;
+                    }
+                    if (!confirm('Move the selected projects to trash? You can undo this action.')) return;
+
+                    const fd = new FormData();
+                    fd.append('delete_projects', '1');
+                    ids.forEach(id => fd.append('project_ids[]', id));
+
+                    // CSRF: try meta tag then hidden input
+                    let token = '';
+                    const meta = document.querySelector('meta[name="csrf-token"]');
+                    if (meta) token = meta.getAttribute('content') || '';
+                    if (!token) {
+                        const hid = document.querySelector('input[name="csrf_token"]');
+                        if (hid) token = hid.value || '';
+                    }
+                    if (token) fd.append('csrf_token', token);
+
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        body: fd,
+                        credentials: 'same-origin',
+                        headers: Object.assign({'X-Requested-With': 'XMLHttpRequest'}, token ? {'X-CSRF-TOKEN': token} : {})
+                    }).then(function (resp) { return resp.json().catch(function(){ return null; }); }).then(function (json) {
+                        if (!json || !json.success) {
+                            alert((json && json.error) ? json.error : 'Failed to move projects to trash');
+                            return;
+                        }
+
+                        // Hide removed cards in UI immediately
+                        boxes.forEach(function (cb) {
+                            const card = cb.closest('.project-card');
+                            if (card) card.classList.add('hidden');
+                        });
+
+                        // Show temporary undo toast
+                        (function showUndoToast(deletedIds) {
+                            // Remove existing toast if any
+                            const existing = document.getElementById('rd-undo-toast');
+                            if (existing) existing.remove();
+
+                            const toast = document.createElement('div');
+                            toast.id = 'rd-undo-toast';
+                            toast.setAttribute('role', 'status');
+                            toast.className = 'fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded shadow-lg z-50';
+                            toast.style.minWidth = '220px';
+                            toast.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div>Projects moved to trash</div><div style="display:flex;gap:8px"><button id="rdUndoBtn" style="background:#fff;color:#000;border:none;padding:6px 10px;border-radius:4px;cursor:pointer">Undo</button><button id="rdCloseBtn" style="background:transparent;border:1px solid #fff;color:#fff;padding:6px 8px;border-radius:4px;cursor:pointer">Close</button></div></div>';
+                            document.body.appendChild(toast);
+
+                            document.getElementById('rdUndoBtn').addEventListener('click', function () {
+                                const fd2 = new FormData();
+                                fd2.append('restore_projects', '1');
+                                deletedIds.forEach(id => fd2.append('project_ids[]', id));
+                                if (token) fd2.append('csrf_token', token);
+                                fetch(window.location.href, { method: 'POST', body: fd2, credentials: 'same-origin', headers: {'X-Requested-With': 'XMLHttpRequest'} })
+                                    .then(r => r.json().catch(function(){ return null; })).then(function (res) {
+                                        if (res && res.success) {
+                                            toast.remove();
+                                            window.location.reload();
+                                        } else {
+                                            alert('Failed to restore projects');
+                                        }
+                                    }).catch(function () { alert('Network error while restoring'); });
+                            });
+
+                            document.getElementById('rdCloseBtn').addEventListener('click', function () { toast.remove(); });
+
+                            // Auto-dismiss after 12s
+                            setTimeout(function () { if (toast && toast.parentNode) toast.parentNode.removeChild(toast); }, 12000);
+                        })(json.deleted_ids || ids);
+                    }).catch(function () { alert('Network error while deleting projects'); });
+                });
+            }
+        })();
     </script>
   </div>
 

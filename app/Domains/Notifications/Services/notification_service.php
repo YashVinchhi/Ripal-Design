@@ -151,7 +151,7 @@ if (!function_exists('notifications_get_project_participants')) {
         }
 
         if (db_table_exists('projects')) {
-            $p = db_fetch('SELECT client_id, created_by FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $p = get_project_by_id($projectId, 'client_id, created_by');
             if ($p) {
                 $out['client_id'] = (int)($p['client_id'] ?? 0);
                 $out['created_by'] = (int)($p['created_by'] ?? 0);

@@ -20,6 +20,12 @@ if (db_connected()) {
     try {
         $db = get_db();
         $stmt = $db->query("
+        SELECT rr.*, p.name as project_name, u.username as submitted_by
+        FROM review_requests rr
+        LEFT JOIN projects p ON p.id = rr.project_id" . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . "
+        LEFT JOIN users u ON u.id = rr.submitted_by
+        ORDER BY FIELD(rr.urgency, 'critical', 'high', 'normal', 'low'), rr.created_at DESC
+    ");
             SELECT rr.*, p.name as project_name, u.username as submitted_by
             FROM review_requests rr
             LEFT JOIN projects p ON p.id = rr.project_id

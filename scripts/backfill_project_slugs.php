@@ -28,7 +28,13 @@ if (!($db instanceof PDO)) {
 }
 
 // Fetch projects
-$stmt = $db->prepare('SELECT id, name, slug FROM projects');
+// Optionally include application helpers to respect soft-delete columns
+if (file_exists(__DIR__ . '/../app/Core/Support/util.php')) {
+    require_once __DIR__ . '/../app/Core/Support/util.php';
+}
+
+$sql = 'SELECT id, name, slug FROM projects' . (function_exists('projects_soft_delete_sql') ? projects_soft_delete_sql('projects', ' WHERE ') : '');
+$stmt = $db->prepare($sql . ' ORDER BY id ASC');
 $stmt->execute();
 $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

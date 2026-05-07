@@ -1,6 +1,5 @@
 <?php
 if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bootstrap/init.php'; }
-require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 
 require_login();
 require_role('admin');
@@ -178,7 +177,8 @@ $projectFiles = [];
 $selectedTour = null;
 
 try {
-	$projects = $db->query('SELECT id, name FROM projects ORDER BY id DESC LIMIT 250')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+	$projSql = 'SELECT id, name FROM projects' . projects_soft_delete_sql('projects', ' WHERE ') . ' ORDER BY id DESC LIMIT 250';
+	$projects = $db->query($projSql)->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
 	if ($projectId > 0) {
 		$startSceneSelect = $projectToursHasStartScene ? 't.start_scene_id AS start_scene_id' : 'NULL AS start_scene_id';

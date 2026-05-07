@@ -3,7 +3,6 @@ if (!defined('PROJECT_ROOT')) { require_once dirname(__DIR__, 4) . '/app/Core/Bo
 /**
  * Unified Billing & Collections Workspace
  */
-require_once PROJECT_ROOT . '/app/Core/Bootstrap/init.php';
 require_login();
 require_role('admin');
 
@@ -209,14 +208,14 @@ if ($billingReady) {
         COALESCE((SELECT SUM(bi.total_amount) FROM billing_invoices bi WHERE bi.project_id = p.id AND bi.status <> 'cancelled'), 0) AS total_invoiced,
         COALESCE((SELECT SUM(bi.amount_paid) FROM billing_invoices bi WHERE bi.project_id = p.id AND bi.status <> 'cancelled'), 0) AS total_collected,
         COALESCE((SELECT COUNT(*) FROM billing_invoices bi WHERE bi.project_id = p.id), 0) AS invoice_count
-        FROM projects p
+        FROM projects p" . projects_soft_delete_sql('p', ' WHERE ') . "
         ORDER BY p.id DESC
         LIMIT 300");
 
     $invoiceRows = db_fetch_all("SELECT
         bi.*, p.name AS project_name
         FROM billing_invoices bi
-        LEFT JOIN projects p ON p.id = bi.project_id
+        LEFT JOIN projects p ON p.id = bi.project_id" . (projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . "
         ORDER BY bi.id DESC
         LIMIT 120");
 }
@@ -237,7 +236,7 @@ if ($paymentsReady) {
         p.name AS project_name
         FROM payments pay
         LEFT JOIN billing_invoices bi ON bi.id = pay.invoice_id
-        LEFT JOIN projects p ON p.id = pay.project_id
+        LEFT JOIN projects p ON p.id = pay.project_id" . (projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . "
         ORDER BY pay.id DESC
         LIMIT 80");
 }

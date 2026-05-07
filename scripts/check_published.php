@@ -7,8 +7,7 @@ if (!$pdo) {
     exit(1);
 }
 
-echo "Querying DB for published projects...\n";
-$stmt = $pdo->prepare('SELECT id, name, is_published, published_at FROM projects WHERE is_published = 1 ORDER BY published_at DESC LIMIT 100');
+$stmt = $pdo->prepare('SELECT id, name, is_published, published_at FROM projects WHERE is_published = 1' . projects_soft_delete_sql('projects', ' AND ') . ' ORDER BY published_at DESC LIMIT 100');
 $stmt->execute();
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 echo json_encode($rows, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n\n";

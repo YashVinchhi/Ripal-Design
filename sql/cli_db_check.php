@@ -7,7 +7,7 @@ var_export(db_connected());
 echo "\n";
 
 if (db_connected()) {
-    $rows = db_fetch_all('SELECT id, name FROM projects LIMIT 2');
+    $rows = db_fetch_all('SELECT id, name FROM projects' . (function_exists('projects_soft_delete_sql') ? projects_soft_delete_sql('projects', ' WHERE ') : '') . ' LIMIT 2');
     echo "Sample rows:\n";
     var_export($rows);
 } else {

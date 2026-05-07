@@ -72,7 +72,7 @@ try{
     $stmt->execute(['project_id' => $project_id, 'worker_id' => $worker_id]);
 
     $actorId = current_user_id();
-    $project = db_fetch('SELECT name, client_id FROM projects WHERE id = ? LIMIT 1', [$project_id]);
+    $project = get_project_by_id($project_id, 'name, client_id');
     $projectName = (string)($project['name'] ?? ('Project #' . $project_id));
 
     notifications_insert(

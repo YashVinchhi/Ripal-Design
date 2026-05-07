@@ -746,7 +746,7 @@ if (!function_exists('auth_user_can_access_project')) {
             return false;
         }
 
-        $project = db_fetch('SELECT id, client_id, owner_email, owner_name, created_by FROM projects WHERE id = ? LIMIT 1', [$pid]);
+        $project = get_project_by_id($pid, 'id, client_id, owner_email, owner_name, created_by');
         if (!$project) {
             return false;
         }

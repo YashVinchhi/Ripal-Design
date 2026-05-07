@@ -49,9 +49,8 @@ if ($variant === 'main') {
     if (db_connected() && db_table_exists('project_assignments')) {
         $assignments = db_fetch_all("SELECT a.project_id, p.name AS project_name, u.username AS worker_name, a.assigned_at
             FROM project_assignments a
-            LEFT JOIN projects p ON p.id = a.project_id
-            LEFT JOIN users u ON u.id = a.worker_id
-            ORDER BY a.assigned_at DESC LIMIT 20");
+        LEFT JOIN projects p ON p.id = a.project_id
+        LEFT JOIN users u ON u.id = a.worker_id" . projects_soft_delete_sql('p', ' WHERE ') . "\n            ORDER BY a.assigned_at DESC LIMIT 20");
     }
 
     if (db_connected() && db_table_exists('review_requests')) {
@@ -75,9 +74,8 @@ if ($variant === 'worker') {
     $projects = db_fetch_all("SELECT DISTINCT p.id, p.name, p.status, COALESCE(p.progress,0) AS progress, COALESCE(p.due,'1970-01-01') AS due, COALESCE(p.location,'') AS location,
       {$mapLinkSelect},
       COALESCE(NULLIF(p.address,''), NULLIF(p.location,''), '') AS address, p.latitude, p.longitude
-            FROM projects p
-            LEFT JOIN project_assignments pa ON pa.project_id = p.id
-            ORDER BY p.id DESC LIMIT 200");
+          FROM projects p
+          LEFT JOIN project_assignments pa ON pa.project_id = p.id" . projects_soft_delete_sql('p', ' WHERE ') . "\n            ORDER BY p.id DESC LIMIT 200");
     }
 }
 
@@ -90,7 +88,7 @@ if ($variant === 'admin') {
     }
 
     if (db_connected() && db_table_exists('projects')) {
-        $row = db_fetch('SELECT COUNT(*) AS c FROM projects', []);
+      $row = db_fetch('SELECT COUNT(*) AS c FROM projects' . projects_soft_delete_sql('projects', ' WHERE '), []);
         if (isset($row['c'])) {
             $kpis['projects_total'] = (int)$row['c'];
         }
@@ -216,6 +214,15 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
                   <div class="mt-1 font-bold text-foundation-grey">File Viewer</div>
                 </div>
                 <i data-lucide="file-search" class="w-5 h-5 text-rajkot-rust"></i>
+              </div>
+            </a>
+            <a href="<?php echo esc_attr(base_path('admin/materials_studio.php')); ?>" class="group border border-gray-100 hover:border-slate-accent p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Administration</div>
+                  <div class="mt-1 font-bold text-foundation-grey">Materials Studio</div>
+                </div>
+                <i data-lucide="package" class="w-5 h-5 text-slate-accent"></i>
               </div>
             </a>
             <a href="<?php echo esc_attr(base_path('worker/dashboard.php')); ?>" class="group border border-gray-100 hover:border-approval-green p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white">
@@ -373,7 +380,7 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
           <p class="text-gray-400 mt-2">Welcome back, <span class="text-rajkot-rust font-semibold"><?php echo esc($displayName); ?></span>. Here is your project overview.</p>
         </div>
         <div class="flex gap-3">
-          <button class="bg-rajkot-rust hover:bg-red-700 text-white px-6 py-2.5 flex items-center gap-2 transition-all shadow-lg active:scale-95" onclick="location.href='<?php echo esc_attr($isAdmin ? base_path('admin/new_projects.php') : base_path('dashboard/project_details.php')); ?>'" type="button">
+          <button class="bg-rajkot-rust hover:bg-red-700 text-white px-6 py-2.5 flex items-center gap-2 transition-all shadow-lg active:scale-95" onclick="location.href='<?php echo esc_attr(($variant === 'admin') ? base_path('admin/new_projects.php') : base_path('dashboard/project_details.php')); ?>'" type="button">
             <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Project
           </button>
           <a href="<?php echo esc_attr(base_path('dashboard/profile.php')); ?>" class="bg-white/10 border border-white/20 text-white px-6 py-2.5 flex items-center gap-2 hover:bg-white/20 transition-all no-underline">

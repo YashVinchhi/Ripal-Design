@@ -7,7 +7,7 @@ $projectName = 'Project';
 $revisions = [];
 
 if (db_connected() && $projectId > 0) {
-    $p = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+    $p = get_project_by_id($projectId, 'name');
     if ($p) {
         $projectName = (string)$p['name'];
     }

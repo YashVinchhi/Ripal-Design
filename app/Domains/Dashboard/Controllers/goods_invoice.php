@@ -77,13 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Load project and goods to compute invoice totals (needed for PDF/email)
-        $project = ['id'=>$project_id,'name'=>'Project '.$project_id,'owner_name'=>'Client','owner_contact'=>''];
-        if (isset($pdo) && $pdo instanceof PDO) {
-            $stmt = $pdo->prepare("SELECT id,name,owner_name,owner_contact,location,COALESCE(map_link, '') AS map_link, COALESCE(address, '') AS address FROM projects WHERE id = :id LIMIT 1");
-            $stmt->execute(['id'=>$project_id]);
-            $r = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($r) $project = $r;
-        }
+        $project = get_project_by_id($project_id, 'id, name, owner_name, owner_contact, location, COALESCE(map_link, "") AS map_link, COALESCE(address, "") AS address') ?: ['id'=>$project_id,'name'=>'Project '.$project_id,'owner_name'=>'Client','owner_contact'=>''];
 
         $goods = [];
         $subtotal = 0.0;
@@ -285,12 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Load project
 $project = ['id'=>$project_id,'name'=>'Project '.$project_id,'owner_name'=>'Client','owner_contact'=>''];
-if (isset($pdo) && $pdo instanceof PDO) {
-    $stmt = $pdo->prepare("SELECT id,name,owner_name,owner_contact,location,COALESCE(map_link, '') AS map_link, COALESCE(address, '') AS address FROM projects WHERE id = :id LIMIT 1");
-    $stmt->execute(['id'=>$project_id]);
-    $r = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($r) $project = $r;
-}
+    $project = get_project_by_id($project_id, 'id, name, owner_name, owner_contact, location, COALESCE(map_link, "") AS map_link, COALESCE(address, "") AS address') ?: $project;
 
 // Load goods
 $goods = [];
@@ -374,7 +363,7 @@ if (function_exists('render_flash')) { render_flash(); }
                     <div>
                         <h2 class="text-xl font-serif font-bold text-foundation-grey">Ripal Design</h2>
                         <p class="text-xs uppercase tracking-widest text-gray-400 font-bold">Architects & Interior Design</p>
-                        <p class="text-[11px] text-gray-500 mt-1">contact@ripaldesign.example | +91 12345 67890</p>
+                        <p class="text-[11px] text-gray-500 mt-1">contact@ripaldesign.studio | +918264271111</p>
                     </div>
                 </div>
                 <div class="text-left">

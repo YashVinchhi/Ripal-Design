@@ -17,7 +17,8 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'GET') {
     $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     if ($id > 0) {
-        $stmt = $db->prepare('SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE id = ? AND is_published = 1 LIMIT 1');
+        $sql = 'SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE id = ? AND is_published = 1' . projects_soft_delete_sql('projects', ' AND ') . ' LIMIT 1';
+        $stmt = $db->prepare($sql);
         $stmt->execute([$id]);
         $project = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$project) {
@@ -44,7 +45,8 @@ if ($method === 'GET') {
     // list published projects
     $limit = isset($_GET['limit']) ? min(200, (int)$_GET['limit']) : 50;
     $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
-    $stmt = $db->prepare("SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE is_published = 1 AND LOWER(name) NOT LIKE '%test%' ORDER BY published_at DESC LIMIT ? OFFSET ?");
+    $sql = "SELECT id, name, status, COALESCE(progress,0) AS progress, budget, location, owner_name, is_published, published_at FROM projects WHERE is_published = 1 AND LOWER(name) NOT LIKE '%test%'" . projects_soft_delete_sql('projects', ' AND ') . " ORDER BY published_at DESC LIMIT ? OFFSET ?";
+    $stmt = $db->prepare($sql);
     $stmt->bindValue(1, $limit, PDO::PARAM_INT);
     $stmt->bindValue(2, $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -210,7 +212,7 @@ if ($rawId !== '') {
         wmcp_error('Project not found.', 404, true);
     }
 
-    $project = db_fetch('SELECT * FROM projects WHERE id = ? LIMIT 1', [$resolvedId]);
+    $project = get_project_by_id($resolvedId);
     if (!$project) {
         wmcp_error('Project not found.', 404, true);
     }
@@ -280,7 +282,7 @@ if (!in_array($category, $allowedCategories, true)) {
     $category = 'all';
 }
 
-$rows = db_fetch_all('SELECT id, name, project_type, location, address, created_at FROM projects ORDER BY id DESC LIMIT 500');
+$rows = db_fetch_all('SELECT id, name, project_type, location, address, created_at FROM projects' . projects_soft_delete_sql('projects', ' WHERE ') . ' ORDER BY id DESC LIMIT 500');
 $output = [];
 
 foreach ($rows as $row) {

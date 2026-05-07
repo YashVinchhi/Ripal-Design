@@ -501,6 +501,50 @@ if (!function_exists('db_column_exists')) {
     }
 }
 
+if (!function_exists('projects_soft_delete_sql')) {
+    /**
+     * Return SQL condition to exclude soft-deleted projects.
+     *
+     * @param string $alias Table alias or table name to prefix column with (e.g. 'p' or 'projects')
+     * @param string $prefix  SQL prefix to prepend (defaults to ' AND ')
+     * @return string SQL fragment (possibly empty)
+     */
+    function projects_soft_delete_sql($alias = 'p', $prefix = ' AND ')
+    {
+        if (!function_exists('db_column_exists')) return '';
+        if (db_column_exists('projects', 'deleted_at')) {
+            return $prefix . $alias . '.deleted_at IS NULL';
+        }
+        if (db_column_exists('projects', 'is_deleted')) {
+            return $prefix . 'COALESCE(' . $alias . '.is_deleted,0) = 0';
+        }
+        return '';
+    }
+}
+
+if (!function_exists('get_project_by_id')) {
+    /**
+     * Fetch a project by id while respecting soft-delete columns.
+     *
+     * @param int $projectId
+     * @param string $columns Columns to select (default '*')
+     * @return array|null Row array or null if not found / soft-deleted
+     */
+    function get_project_by_id($projectId, $columns = '*') {
+        $projectId = (int)$projectId;
+        if ($projectId <= 0) return null;
+
+        // Build SQL with soft-delete condition using table name
+        $sql = 'SELECT ' . $columns . ' FROM projects WHERE id = ?';
+        $cond = projects_soft_delete_sql('projects', ' AND ');
+        if ($cond !== '') $sql .= $cond;
+        $sql .= ' LIMIT 1';
+
+        $row = db_fetch($sql, [$projectId]);
+        return $row ?: null;
+    }
+}
+
 if (!function_exists('is_valid_google_maps_url')) {
     /**
      * Validate if a URL points to a Google Maps domain.
@@ -808,7 +852,17 @@ if (!function_exists('get_projects_basic')) {
             $sql .= ", NULL AS cover_image";
         }
 
-        $sql .= " FROM projects p ORDER BY p.id DESC LIMIT {$limit}";
+        // Exclude soft-deleted projects when possible
+        $softWhere = '';
+        if (function_exists('db_column_exists')) {
+            if (db_column_exists('projects', 'deleted_at')) {
+                $softWhere = ' WHERE p.deleted_at IS NULL';
+            } elseif (db_column_exists('projects', 'is_deleted')) {
+                $softWhere = ' WHERE COALESCE(p.is_deleted,0) = 0';
+            }
+        }
+
+        $sql .= " FROM projects p" . $softWhere . " ORDER BY p.id DESC LIMIT {$limit}";
         return db_fetch_all($sql);
     }
 }
@@ -826,7 +880,7 @@ if (!function_exists('get_project_full_data')) {
             return null;
         }
 
-        $project = db_fetch('SELECT * FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+        $project = get_project_by_id($projectId);
         if (!$project) {
             return null;
         }
@@ -889,7 +943,7 @@ if (!function_exists('get_project_full_data')) {
                 return 0;
             }
 
-            $proj = db_fetch('SELECT name, location, address, map_link, owner_name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $proj = get_project_by_id($projectId, 'name, location, address, map_link, owner_name');
             if (!$proj) return 0;
 
             $progress = 0;
@@ -936,7 +990,7 @@ if (!function_exists('get_project_full_data')) {
             $progress = max(0, min(100, (int)$progress));
 
             // Persist only if changed
-            $cur = db_fetch('SELECT COALESCE(progress,0) AS progress FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+            $cur = get_project_by_id($projectId, 'COALESCE(progress,0) AS progress');
             $curVal = (int)($cur['progress'] ?? 0);
             if ($curVal !== $progress) {
                 db_query('UPDATE projects SET progress = ? WHERE id = ?', [$progress, $projectId]);

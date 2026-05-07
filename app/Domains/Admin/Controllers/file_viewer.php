@@ -812,7 +812,7 @@ if (db_connected() && $projectId > 0) {
 } elseif (db_connected() && $projectId <= 0) {
   $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(pf.revision_group, \'\') AS revision_group' : "'' AS revision_group";
   $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(pf.revision_no, 1) AS revision_no' : '1 AS revision_no';
-  $globalFiles = db_fetch_all('SELECT pf.id, pf.project_id, pf.name, pf.type, pf.uploaded_at, p.name AS project_name, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files pf LEFT JOIN projects p ON p.id = pf.project_id ORDER BY pf.uploaded_at DESC LIMIT 200');
+  $globalFiles = db_fetch_all('SELECT pf.id, pf.project_id, pf.name, pf.type, pf.uploaded_at, p.name AS project_name, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files pf LEFT JOIN projects p ON p.id = pf.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . ' ORDER BY pf.uploaded_at DESC LIMIT 200');
   foreach ($globalFiles as $item) {
     $projectLibrary[] = [
       'kind' => 'file',
@@ -829,7 +829,7 @@ if (db_connected() && $projectId > 0) {
     ];
   }
 
-  $globalDrawings = db_fetch_all('SELECT pd.id, pd.project_id, pd.name, pd.version, pd.status, pd.file_path, pd.uploaded_at, p.name AS project_name FROM project_drawings pd LEFT JOIN projects p ON p.id = pd.project_id ORDER BY pd.uploaded_at DESC LIMIT 200');
+  $globalDrawings = db_fetch_all('SELECT pd.id, pd.project_id, pd.name, pd.version, pd.status, pd.file_path, pd.uploaded_at, p.name AS project_name FROM project_drawings pd LEFT JOIN projects p ON p.id = pd.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . ' ORDER BY pd.uploaded_at DESC LIMIT 200');
   foreach ($globalDrawings as $item) {
     $projectLibrary[] = [
       'kind' => 'drawing',
@@ -1206,14 +1206,14 @@ if (db_connected()) {
       $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
       $row = db_fetch("SELECT pf.id, pf.project_id, pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . ", " . $revisionGroupSelect . ", " . $revisionNoSelect . "
             FROM project_files pf
-            LEFT JOIN projects p ON p.id = pf.project_id
+            LEFT JOIN projects p ON p.id = pf.project_id" . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . "
             WHERE pf.id = ? " . $projectFilterSql . "
             ORDER BY pf.uploaded_at DESC LIMIT 1", [$resourceId]);
     } else {
       $projectFilterSql = $projectId > 0 ? ' AND pd.project_id = ' . (int)$projectId . ' ' : ' ';
       $row = db_fetch("SELECT pd.name, pd.version, pd.status, pd.uploaded_at, p.name AS project_name, pd.file_path
             FROM project_drawings pd
-            LEFT JOIN projects p ON p.id = pd.project_id
+            LEFT JOIN projects p ON p.id = pd.project_id" . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . "
             WHERE pd.id = ? " . $projectFilterSql . "
             ORDER BY pd.uploaded_at DESC LIMIT 1", [$resourceId]);
     }
@@ -1282,7 +1282,7 @@ if (db_connected()) {
     $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(pf.revision_no, 1) AS revision_no' : '1 AS revision_no';
     $row = db_fetch("SELECT pf.id, pf.project_id, pf.name, pf.uploaded_at, p.name AS project_name, pf.file_path, " . $storageSelect . ", " . $revisionGroupSelect . ", " . $revisionNoSelect . "
           FROM project_files pf
-          LEFT JOIN projects p ON p.id = pf.project_id
+          LEFT JOIN projects p ON p.id = pf.project_id" . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . "
           WHERE pf.name = ? OR pf.file_path = ? " . $storageWhere . "
       " . $projectFilterSql . "
           ORDER BY pf.uploaded_at DESC LIMIT 1", $params);
@@ -1291,7 +1291,7 @@ if (db_connected()) {
       $projectFilterSql = $projectId > 0 ? ' AND pd.project_id = ' . (int)$projectId . ' ' : ' ';
       $row = db_fetch("SELECT pd.name, pd.version, pd.status, pd.uploaded_at, p.name AS project_name, pd.file_path
               FROM project_drawings pd
-              LEFT JOIN projects p ON p.id = pd.project_id
+              LEFT JOIN projects p ON p.id = pd.project_id" . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . "
               WHERE pd.file_path = ? OR pd.name = ?
         " . $projectFilterSql . "
               ORDER BY pd.uploaded_at DESC LIMIT 1", [$file, $file]);

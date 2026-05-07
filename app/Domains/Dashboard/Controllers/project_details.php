@@ -130,9 +130,7 @@ function collapse_project_file_revisions(array $files): array
 $project = null;
 if ($projectId && isset($pdo) && $pdo instanceof PDO) {
     try {
-        $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
-        $stmt->execute(['id' => $projectId]);
-        $project = $stmt->fetch(PDO::FETCH_ASSOC);
+        $project = get_project_by_id($projectId, '*');
 
         if ($project) {
             // Load workers
@@ -670,9 +668,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO) {
 $project = null;
 if ($projectId && $pdo instanceof PDO) {
     try {
-        $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = :id');
-        $stmt->execute(['id' => $projectId]);
-        $project = $stmt->fetch(PDO::FETCH_ASSOC);
+        $project = get_project_by_id($projectId, '*');
 
         if ($project) {
             // Load workers

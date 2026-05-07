@@ -29,7 +29,7 @@ if ($resolvedId <= 0) {
     wmcp_error('Project not found.', 404, true);
 }
 
-$project = db_fetch('SELECT id, name FROM projects WHERE id = ? LIMIT 1', [$resolvedId]);
+$project = get_project_by_id($resolvedId, 'id, name');
 if (!$project) {
     wmcp_error('Project not found.', 404, true);
 }

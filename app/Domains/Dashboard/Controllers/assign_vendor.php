@@ -68,7 +68,7 @@ try{
     $stmt->execute(['project_id' => $project_id, 'vendor_id' => $vendor_id, 'assigned_by' => current_user_username()]);
 
     $actorId = current_user_id();
-    $project = db_fetch('SELECT name, client_id FROM projects WHERE id = ? LIMIT 1', [$project_id]);
+    $project = get_project_by_id($project_id, 'name, client_id');
     $projectName = (string)($project['name'] ?? ('Project #' . $project_id));
 
     // Notify vendor contact if vendor has email in vendors table

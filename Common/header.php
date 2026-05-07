@@ -104,6 +104,8 @@ $isActiveNav = static function ($path) use ($currentPath) {
     ?>
     <link rel="canonical" href="<?php echo esc_attr($canonical); ?>">
 
+    <?php if (function_exists('csrf_meta_tag')) { echo csrf_meta_tag(); } ?>
+
     <!-- Analytics include (GA4 + Clarity placeholders) - disabled in development -->
     <?php if (!defined('APP_ENV') || APP_ENV !== 'development') {
         if (file_exists(__DIR__ . '/analytics.php')) { include __DIR__ . '/analytics.php'; }
@@ -465,3 +467,16 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 <script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/header-nav.js" defer></script>
 <script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/auto-hide-alerts.js" defer></script>
 <script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/ajax-forms.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Fallback: if Phantom-UI doesn't initialize (CDN blocked), ensure content is visible
+  setTimeout(function(){
+    try {
+      var root = document.getElementById('phantom-ui-root') || document.querySelector('phantom-ui[loading]');
+      if (root && root.hasAttribute && root.hasAttribute('loading')) {
+        root.removeAttribute('loading');
+      }
+    } catch(e){}
+  }, 600);
+});
+</script>

@@ -125,7 +125,7 @@ if (db_connected() && $user_id > 0) {
 
         // Build dynamic project list based on profile role.
         if (($user_data['role'] ?? '') === 'client') {
-            $projectStmt = $db->prepare("\n                SELECT p.id, p.name, p.status, p.progress, p.due,\n                       COUNT(DISTINCT pa.worker_id) AS member_count\n                FROM projects p\n                LEFT JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE p.owner_email = :email\n                   OR p.owner_name = :full_name\n                   OR p.owner_name = :username\n                GROUP BY p.id, p.name, p.status, p.progress, p.due\n                ORDER BY p.created_at DESC, p.id DESC\n            ");
+            $projectStmt = $db->prepare("\n                SELECT p.id, p.name, p.status, p.progress, p.due,\n                       COUNT(DISTINCT pa.worker_id) AS member_count\n                FROM projects p\n                LEFT JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE (p.owner_email = :email\n                   OR p.owner_name = :full_name\n                   OR p.owner_name = :username)" . projects_soft_delete_sql('p', ' AND ') . "\n                GROUP BY p.id, p.name, p.status, p.progress, p.due\n                ORDER BY p.created_at DESC, p.id DESC\n            ");
             $projectStmt->execute([
                 ':email' => (string)($user_data['email'] ?? ''),
                 ':full_name' => (string)($user_data['full_name'] ?? ''),
@@ -134,7 +134,7 @@ if (db_connected() && $user_id > 0) {
             $userProjects = $projectStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
             if ($isOwnClientProfile) {
-                $targetsStmt = $db->prepare("\n                    SELECT DISTINCT u.id, u.username, u.full_name, u.role, p.name AS project_name\n                    FROM projects p\n                    INNER JOIN project_assignments pa ON pa.project_id = p.id\n                    INNER JOIN users u ON u.id = pa.worker_id\n                    WHERE (p.owner_email = :email OR p.owner_name = :full_name OR p.owner_name = :username)\n                      AND u.id <> :self_id\n                    ORDER BY p.name ASC, u.username ASC\n                ");
+                $targetsStmt = $db->prepare("\n                    SELECT DISTINCT u.id, u.username, u.full_name, u.role, p.name AS project_name\n                    FROM projects p\n                    INNER JOIN project_assignments pa ON pa.project_id = p.id\n                    INNER JOIN users u ON u.id = pa.worker_id\n                    WHERE (p.owner_email = :email OR p.owner_name = :full_name OR p.owner_name = :username)" . projects_soft_delete_sql('p', ' AND ') . "\n                      AND u.id <> :self_id\n                    ORDER BY p.name ASC, u.username ASC\n                ");
                 $targetsStmt->execute([
                     ':email' => (string)($user_data['email'] ?? ''),
                     ':full_name' => (string)($user_data['full_name'] ?? ''),
@@ -144,7 +144,7 @@ if (db_connected() && $user_id > 0) {
                 $clientRateTargets = $targetsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
             }
         } else {
-            $projectStmt = $db->prepare("\n                SELECT p.id, p.name, p.status, p.progress, p.due,\n                       COUNT(DISTINCT pa2.worker_id) AS member_count\n                FROM projects p\n                LEFT JOIN project_assignments pa2 ON pa2.project_id = p.id\n                LEFT JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE pa.worker_id = :user_id\n                   OR p.owner_email = :email\n                   OR p.owner_name = :full_name\n                   OR p.owner_name = :username\n                GROUP BY p.id, p.name, p.status, p.progress, p.due\n                ORDER BY p.created_at DESC, p.id DESC\n            ");
+            $projectStmt = $db->prepare("\n                SELECT p.id, p.name, p.status, p.progress, p.due,\n                       COUNT(DISTINCT pa2.worker_id) AS member_count\n                FROM projects p\n                LEFT JOIN project_assignments pa2 ON pa2.project_id = p.id\n                LEFT JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE (pa.worker_id = :user_id\n                   OR p.owner_email = :email\n                   OR p.owner_name = :full_name\n                   OR p.owner_name = :username)" . projects_soft_delete_sql('p', ' AND ') . "\n                GROUP BY p.id, p.name, p.status, p.progress, p.due\n                ORDER BY p.created_at DESC, p.id DESC\n            ");
             $projectStmt->execute([
                 ':user_id' => (int)$user_id,
                 ':email' => (string)($user_data['email'] ?? ''),
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_client_rating'
     } elseif (db_connected()) {
         try {
             $db = get_db();
-            $allowedStmt = $db->prepare("\n                SELECT 1\n                FROM projects p\n                INNER JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE pa.worker_id = :member_id\n                  AND (p.owner_email = :email OR p.owner_name = :full_name OR p.owner_name = :username)\n                LIMIT 1\n            ");
+                $allowedStmt = $db->prepare("\n                SELECT 1\n                FROM projects p\n                INNER JOIN project_assignments pa ON pa.project_id = p.id\n                WHERE pa.worker_id = :member_id\n                  AND (p.owner_email = :email OR p.owner_name = :full_name OR p.owner_name = :username)" . projects_soft_delete_sql('p', ' AND ') . "\n                LIMIT 1\n            ");
             $allowedStmt->execute([
                 ':member_id' => $member_id,
                 ':email' => (string)($user_data['email'] ?? ''),

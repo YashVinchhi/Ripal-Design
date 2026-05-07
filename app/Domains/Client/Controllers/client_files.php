@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['drawing_id'], $_POST[
 
         $actorId = current_user_id();
         $participants = notifications_get_project_participants($projectId);
-        $project = db_fetch('SELECT name FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+        $project = get_project_by_id($projectId, 'name');
         $projectName = (string)($project['name'] ?? ('Project #' . $projectId));
 
         if ($clientAction === 'authorize') {

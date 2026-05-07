@@ -61,11 +61,7 @@ if (!function_exists('billing_get_project_financials')) {
             return null;
         }
 
-        $project = db_fetch(
-            'SELECT id, name, COALESCE(budget,0) AS budget, COALESCE(owner_name,\'Client\') AS owner_name, COALESCE(owner_contact,\'\') AS owner_contact, COALESCE(owner_email,\'\') AS owner_email
-             FROM projects WHERE id = ? LIMIT 1',
-            [$projectId]
-        );
+        $project = get_project_by_id($projectId, 'id, name, COALESCE(budget,0) AS budget, COALESCE(owner_name,\'Client\') AS owner_name, COALESCE(owner_contact,\'\') AS owner_contact, COALESCE(owner_email,\'\') AS owner_email');
         if (!$project) {
             return null;
         }
@@ -156,7 +152,7 @@ if (!function_exists('billing_user_can_access_invoice')) {
         $row = db_fetch(
             'SELECT bi.id, LOWER(COALESCE(bi.client_email,\'\')) AS invoice_email, p.client_id, LOWER(COALESCE(p.owner_email,\'\')) AS owner_email
              FROM billing_invoices bi
-             LEFT JOIN projects p ON p.id = bi.project_id
+             LEFT JOIN projects p ON p.id = bi.project_id' . (projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . '
              WHERE bi.id = ? LIMIT 1',
             [$invoiceId]
         );
@@ -198,7 +194,7 @@ if (!function_exists('billing_get_invoice_context')) {
         }
 
         $projectId = (int)($invoice['project_id'] ?? 0);
-        $project = db_fetch('SELECT id, name, owner_name, owner_contact, owner_email, location, map_link, address FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+        $project = get_project_by_id($projectId, 'id, name, owner_name, owner_contact, owner_email, location, map_link, address');
         if (!$project) {
             $project = [
                 'id' => $projectId,
@@ -483,8 +479,7 @@ if (!function_exists('billing_user_can_access_invoice')) {
         $row = db_fetch(
             'SELECT bi.id, LOWER(COALESCE(bi.client_email,\'\')) AS invoice_email, p.client_id, LOWER(COALESCE(p.owner_email,\'\')) AS owner_email
              FROM billing_invoices bi
-             LEFT JOIN projects p ON p.id = bi.project_id
-             WHERE bi.id = ? LIMIT 1',
+             LEFT JOIN projects p ON p.id = bi.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . '\n             WHERE bi.id = ? LIMIT 1',
             [$invoiceId]
         );
 
@@ -525,7 +520,7 @@ if (!function_exists('billing_get_invoice_context')) {
         }
 
         $projectId = (int)($invoice['project_id'] ?? 0);
-        $project = db_fetch('SELECT id, name, owner_name, owner_contact, owner_email, location, map_link, address FROM projects WHERE id = ? LIMIT 1', [$projectId]);
+        $project = get_project_by_id($projectId, 'id, name, owner_name, owner_contact, owner_email, location, map_link, address');
         if (!$project) {
             $project = [
                 'id' => $projectId,

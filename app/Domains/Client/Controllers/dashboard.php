@@ -93,6 +93,13 @@ if (function_exists('db_connected') && db_connected()) {
   }
 
   if (!empty($where)) {
+      // Exclude soft-deleted projects when supported by DB schema
+     if (function_exists('projects_soft_delete_sql')) {
+       $softCond = projects_soft_delete_sql('p', '');
+       if ($softCond !== '') {
+         $where[] = $softCond;
+       }
+     }
     $select = "SELECT p.id, p.name, COALESCE(p.description,'') AS description, COALESCE(p.status,'') AS status, COALESCE(p.budget,'') AS budget, COALESCE(p.owner_email,'') AS owner_email, COALESCE(p.owner_contact,'') AS owner_contact";
     if (function_exists('db_table_exists') && db_table_exists('project_files')) {
       $select .= ", (SELECT pf.file_path FROM project_files pf WHERE pf.project_id = p.id AND pf.type IN ('JPG','JPEG','PNG','WEBP') ORDER BY pf.uploaded_at DESC LIMIT 1) AS cover_image";
@@ -130,7 +137,11 @@ if (function_exists('db_connected') && db_connected()) {
         } else {
           $fsql .= ", NULL AS cover_image";
         }
-        $fsql .= " FROM projects WHERE (" . implode(' OR ', $fallbackWhere) . ") ORDER BY id DESC";
+        $fsql .= " FROM projects WHERE (" . implode(' OR ', $fallbackWhere) . ")";
+        if (function_exists('projects_soft_delete_sql')) {
+          $fsql .= projects_soft_delete_sql('projects', ' AND ');
+        }
+        $fsql .= " ORDER BY id DESC";
         $projects = db_fetch_all($fsql, $fallbackParams) ?: [];
         if (!empty($projects) && function_exists('app_log')) {
           app_log('debug', 'Client dashboard fallback match succeeded', ['user_id' => (int)$uid]);
@@ -165,7 +176,7 @@ if (function_exists('db_connected') && db_connected()) {
         } else {
           $fsql .= ", NULL AS cover_image";
         }
-        $fsql .= " FROM projects WHERE (" . implode(' OR ', $fallbackWhere) . ") ORDER BY id DESC";
+        $fsql .= " FROM projects WHERE (" . implode(' OR ', $fallbackWhere) . ")" . projects_soft_delete_sql('projects', ' AND ') . " ORDER BY id DESC";
         $projects = db_fetch_all($fsql, $fallbackParams) ?: [];
         if (!empty($projects) && function_exists('app_log')) {
           app_log('debug', 'Client dashboard fallback match succeeded', ['user_id' => (int)$uid]);
