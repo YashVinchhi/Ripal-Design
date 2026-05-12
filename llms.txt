@@ -9,7 +9,7 @@ SITE
 - email: projects@ripaldesign.studio
 
 DOMAIN
-- Replace occurrences of REPLACE_WITH_YOUR_DOMAIN with your canonical domain, e.g. https://ripaldesign.in
+- Replace occurrences of www.ripaldesign.studio with your canonical domain, e.g. https://ripaldesign.in
 
 PRIMARY KEYWORDS (geo-targeted)
 - architecture in Rajkot
@@ -47,7 +47,7 @@ JSON-LD (schema.org) — paste the following into your homepage <head>; replace 
   "@type": "ProfessionalService",
   "name": "Ripal Design",
   "description": "Where architecture vision meets execution precision. Trusted municipal and private project delivery partner in Rajkot.",
-  "url": "https://REPLACE_WITH_YOUR_DOMAIN",
+  "url": "https://www.ripaldesign.studio",
   "telephone": "Available on request",
   "email": "projects@ripaldesign.studio",
   "address": {
@@ -74,7 +74,7 @@ SITEMAP & ROBOTS
 - robots.txt updated to reference sitemap and disallow typical private paths.
 
 DEPLOYMENT CHECKLIST (quick)
-1) Replace REPLACE_WITH_YOUR_DOMAIN in `sitemap.xml`, `robots.txt`, and JSON-LD snippet.
+1) Replace www.ripaldesign.studio in `sitemap.xml`, `robots.txt`, and JSON-LD snippet.
 2) Add canonical link tags to each page pointing to the absolute canonical URL.
 3) Ensure public/ is the webserver document root; adjust paths if not.
 4) Submit `https://YOUR_DOMAIN/sitemap.xml` to Google Search Console and Bing Webmaster Tools.

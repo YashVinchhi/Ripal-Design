@@ -754,6 +754,8 @@ $fileVersionSelectedId = 0;
 $hasProjectFilesRevisionGroup = false;
 $hasProjectFilesRevisionNo = false;
 
+$db = function_exists('get_db') ? get_db() : null;
+
 if (db_connected()) {
   $hasProjectFilesRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
   $hasProjectFilesRevisionNo = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_no') : false;
