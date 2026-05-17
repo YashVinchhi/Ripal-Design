@@ -44,14 +44,9 @@ if (!function_exists('rd_content_image_style_attr')) {
 if (!function_exists('rd_obfuscated_phone_link')) {
     function rd_obfuscated_phone_link(string $class = '', string $label = 'Call studio'): string
     {
-        $number = (string)PHONE_NUMBER;
-        $href = 'tel:' . preg_replace('/\s+/', '', $number);
-        return '<a href="#"'
-            . ($class !== '' ? ' class="' . esc_attr($class) . '"' : '')
-            . ' data-rd-phone="' . esc_attr(base64_encode($href)) . '"'
-            . ' data-rd-phone-label="' . esc_attr(base64_encode($number)) . '">'
-            . esc($label)
-            . '</a>';
+            $number = (string)PHONE_NUMBER;
+            $href = 'tel:' . preg_replace('/\s+/', '', $number);
+            return '<a href="' . esc_attr($href) . '"' . ($class !== '' ? ' class="' . esc_attr($class) . '"' : '') . '>' . esc($label) . '</a>';
     }
 }
 

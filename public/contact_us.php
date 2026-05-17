@@ -80,7 +80,7 @@ $old = $_SESSION['contact_form_old'] ?? [];
 unset($_SESSION['contact_form_success'], $_SESSION['contact_form_error']);
 
 rd_page_start([
-    'title' => $ct('page_title', 'Contact'),
+    'title' => $ct('page_title', 'Contact Rajkot Architect | Ripal Design Studio'),
     'description' => $ct('meta_description', 'Contact Ripal Design for architecture, interiors, and execution support.'),
     'image' => $image('left_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'),
     'url' => rd_public_url('contact_us.php'),

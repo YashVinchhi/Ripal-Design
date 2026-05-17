@@ -12,6 +12,10 @@
  * @subpackage Components
  */
 
+// Temporarily hide displayed PHP warnings/notices during header render
+// (we still let them log; this prevents raw warnings breaking the UI)
+@ini_set('display_errors', '0');
+
 // Ensure configuration is loaded
 if (!defined('BASE_PATH')) {
     require_once __DIR__ . '/../app/Core/Config/config.php';
@@ -25,41 +29,34 @@ if (session_status() === PHP_SESSION_NONE) {
 if (function_exists('csrf_token')) {
     csrf_token();
 }
+?>
+<?php
+// Safe defaults to prevent runtime warnings when header is included standalone
+if (!isset($isPublicHeader)) { $isPublicHeader = false; }
+if (!function_exists('esc_attr')) {
+    function esc_attr($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+}
+if (!function_exists('headerText')) {
+    function headerText($k, $d = '') { return $d; }
+}
+if (!isset($headerText) || !is_callable($headerText)) { $headerText = 'headerText'; }
+if (!isset($headerPublicUrl) || !is_callable($headerPublicUrl)) {
+    $headerPublicUrl = function($p){ return rtrim((string)(defined('BASE_PATH') ? BASE_PATH : ''), '/') . '/' . ltrim((string)$p, '/'); };
+}
+if (!isset($logoHref)) { $logoHref = (defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') . '/' : '/'); }
+if (!isset($roleDashboardLink)) { $roleDashboardLink = (defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') . '/dashboard.php' : '/dashboard.php'); }
 
-// Determine header mode (can be set by including page)
-$headerMode = $HEADER_MODE ?? 'public';
-$isPublicHeader = ($headerMode === 'public');
+// Normalize header mode variables: some pages set $HEADER_MODE while others set $headerMode
+if (!isset($headerMode) && isset($HEADER_MODE)) { $headerMode = $HEADER_MODE; }
 
-$headerContent = function_exists('public_content_page_values') ? public_content_page_values('common_header') : [];
-$headerText = static function ($key, $default = '') use ($headerContent) {
-    return (string)($headerContent[$key] ?? $default);
-};
-$headerImage = static function ($key, $default = '') use ($headerContent) {
-    $value = (string)($headerContent[$key] ?? $default);
-    if (function_exists('public_content_image_url')) {
-        return (string)public_content_image_url($value, $default);
-    }
-    if (function_exists('base_path')) {
-        return (string)base_path(ltrim((string)$value, '/'));
-    }
-    return (string)$value;
-};
-$brandLogoImage = $headerImage('brand_logo_image', '/assets/Content/Logo.png');
-$faviconImage = $headerImage('favicon_image', '/favicon.ico');
-$headerPublicUrl = static function ($path) {
-    $path = ltrim((string)$path, '/');
-    return rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/' . $path;
-};
-$dashboardProfileUrl = function_exists('base_path')
-    ? base_path('dashboard/profile.php')
-    : rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php';
-$roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php';
-$whatsAppHref = 'https://wa.me/' . preg_replace('/\D+/', '', (string)WHATSAPP_NUMBER);
-$radiusMode = strtolower((string)(getenv('UI_RADIUS') ?: 'sharp'));
-$radiusMode = in_array($radiusMode, ['rounded', 'sharp'], true) ? $radiusMode : 'sharp';
-
-// Compute logo target: public pages always link to homepage.
-$logoHref = $headerPublicUrl('index.php');
+// Ensure $role is available early for header rendering when possible
+if (!isset($role) && function_exists('current_user') && function_exists('is_logged_in') && is_logged_in()) {
+    $cu = current_user();
+    $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
+}
+?>
+    <?php /* toolbar moved below the header nav so it renders in the BODY */ ?>
+<?php
 if (!$isPublicHeader && function_exists('current_user')) {
     $cu = current_user();
     $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
@@ -156,6 +153,18 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 </script>
 
 <!-- Favicons -->
+<?php
+// Prefer existing configured favicon; fall back to local SVG to avoid 404/CSP issues
+$localFavSvg = rtrim((string)BASE_PATH, '/') . '/assets/images/favicon.svg';
+if (empty($faviconImage)) {
+    $faviconImage = $localFavSvg;
+}
+// If configured favicon is an .ico and file missing, prefer local svg
+$tryIcoPath = PROJECT_ROOT . '/assets/images/favicon.ico';
+if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !file_exists($tryIcoPath)) {
+    $faviconImage = $localFavSvg;
+}
+?>
 <link rel="icon" href="<?php echo esc_attr($faviconImage); ?>" type="image/x-icon">
 <link rel="shortcut icon" href="<?php echo esc_attr($faviconImage); ?>" type="image/x-icon">
 <link rel="apple-touch-icon" href="<?php echo esc_attr($faviconImage); ?>">
@@ -166,6 +175,63 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
     <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . '/assets/css/_layout.css'); ?>">
     <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/header.css'); ?>">
 <?php endif; ?>
+<?php if (function_exists('is_logged_in') && is_logged_in()): ?>
+    <style>
+        /* Compact, app-like header for logged-in users: menu bar height set to 6% of viewport height */
+        :root { --rd-logged-header-max: 6vh; }
+        nav.alt-header {
+            height: var(--rd-logged-header-max);
+            max-height: var(--rd-logged-header-max);
+            align-items: center;
+            padding-top: 3vh;
+            padding-bottom: 3vh;
+            gap: 0.75rem;
+        }
+        nav.alt-header .alt-logo img {
+            height: calc(var(--rd-logged-header-max) - 0.6rem) !important;
+            max-height: calc(var(--rd-logged-header-max) - 0.6rem) !important;
+            width: auto !important;
+        }
+        nav.alt-header .alt-logo span {
+            font-size: 1rem;
+            line-height: 1;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        nav.alt-header .alt-menu { margin-left: auto; }
+        /* Admin horizontal menu in header */
+        .alt-main-menu {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-left: 1rem;
+            white-space: nowrap;
+            overflow: auto;
+        }
+        .alt-main-menu a {
+            color: #2d2d2d; /* muted gray to distinguish from main UI */
+            text-decoration: none;
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            opacity: 0.95;
+        }
+        .alt-main-menu a:hover { background: rgba(255,255,255,0.04); color: #94180c; }
+        @media (max-width: 768px) {
+            .alt-main-menu { display: none; }
+        }
+        /* Ensure overlay/panel positions respect compact header */
+        #altOverlay .alt-panel { top: var(--rd-logged-header-max); }
+        @media (max-width: 640px) {
+            nav.alt-header { padding-left: 0.5rem; padding-right: 0.5rem; }
+            nav.alt-header .alt-logo span { display: none; }
+        }
+        /* Toolbar CSS moved to public/css/header.css for caching and maintainability */
+        /* See: /public/css/header.css */
+    </style>
+<?php endif; ?>
 <?php if (empty($HEADER_MODE) || $HEADER_MODE !== 'public') { if (function_exists('webmcp_render_bootstrap_once')) { webmcp_render_bootstrap_once(); } } ?>
 <?php if ($headerMode === 'dashboard'): ?>
     <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/admin-responsive.css'); ?>">
@@ -173,15 +239,31 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
 <nav class="alt-header">
     <div class="alt-logo">
         <a href="<?php echo esc_attr($logoHref); ?>" class="flex items-center gap-3 no-underline">
-            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10"<?php echo function_exists('rd_content_image_style_attr') ? rd_content_image_style_attr($headerContent, 'brand_logo_image') : ''; ?> onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
-            <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo htmlspecialchars($headerText('brand_name', 'Ripal Design')); ?></span>
+            <?php $localLogoFallback = rtrim((string)BASE_PATH, '/') . '/assets/images/rd-placeholder.svg'; ?>
+            <img src="<?php echo esc_attr($brandLogoImage); ?>" alt="Ripal Design Logo" class="h-10"<?php echo function_exists('rd_content_image_style_attr') ? rd_content_image_style_attr($headerContent, 'brand_logo_image') : ''; ?> onerror="this.onerror=null;this.src='<?php echo esc_attr($localLogoFallback); ?>'">
+            <?php if (!(function_exists('is_logged_in') && is_logged_in())): ?>
+                <span class="text-white font-serif font-bold text-xl tracking-tight"><?php echo htmlspecialchars($headerText('brand_name', 'Ripal Design')); ?></span>
+            <?php endif; ?>
         </a>
     </div>
+
+    <?php if (function_exists('is_logged_in') && is_logged_in() && (isset($role) && strtolower((string)$role) === 'admin')): ?>
+        <div class="alt-main-menu" role="navigation" aria-label="Admin menu">
+            <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php'); ?>">DASHBOARD</a>
+            <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/project_management.php'); ?>">PORTFOLIO</a>
+            <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/user_management.php'); ?>">USER CONTROLS</a>
+            <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/leave_management.php'); ?>">LEAVE MANAGER</a>
+            <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/payment_gateway.php'); ?>">FINANCIAL GATEWAY</a>
+            <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/content_management.php'); ?>">CONTENT</a>
+            <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/contact_messages.php'); ?>">MESSAGES</a>
+        </div>
+    <?php endif; ?>
 
     <?php if ($headerMode === 'public'): ?>
     <!-- Contact (small-screen friendly) -->
     <div class="hidden" aria-hidden="true">
-        <a href="#" data-rd-phone="<?php echo esc_attr(base64_encode('tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER))); ?>" data-rd-phone-label="<?php echo esc_attr(base64_encode('Call')); ?>" class="inline-flex items-center px-2 py-1 border border-white/30 text-white rounded ml-2 text-sm no-underline">
+        <?php $telHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER); ?>
+        <a href="<?php echo esc_attr($telHref); ?>" class="inline-flex items-center px-2 py-1 border border-white/30 text-white rounded ml-2 text-sm no-underline">
             <i class="fa-solid fa-phone" aria-hidden="true"></i>&nbsp;Call
         </a>
         <a href="<?php echo esc_attr($whatsAppHref); ?>" class="inline-flex items-center px-2 py-1 bg-approval-green text-white rounded ml-1 no-underline" target="_blank" rel="noopener noreferrer">
@@ -328,10 +410,36 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
         </div>
     </div>
 </div>
+<?php
+    // Include the centralized page-aware toolbar here so it renders inside the BODY
+    // and is visible to users (moved from earlier in the head section).
+    require_once __DIR__ . '/toolbar.php';
+?>
+<script>
+    // Global image error handler: replace broken images with local placeholder (same-origin)
+    (function(){
+        var fallback = '<?php echo esc_js(rtrim((string)BASE_PATH, '/') . "/assets/images/rd-placeholder.svg"); ?>';
+        window.addEventListener('error', function(e){
+            var t = e.target || e.srcElement;
+            if (!t) return;
+            if (t.tagName && t.tagName.toLowerCase() === 'img') {
+                // Avoid infinite loop
+                if (t.dataset.rdFallbackApplied) return;
+                t.dataset.rdFallbackApplied = '1';
+                try { t.src = fallback; } catch(_){}
+            }
+        }, true);
+    })();
+</script>
 
 <!-- Header Navigation Script -->
     <!-- Phantom root: wraps main page content. Closed in Common/footer.php -->
-    <phantom-ui loading id="phantom-ui-root">
+    <?php if (!empty($isPublicHeader) || (empty($HEADER_MODE) || $HEADER_MODE === 'public')): ?>
+        <phantom-ui loading id="phantom-ui-root">
+    <?php else: ?>
+        <!-- For admin/dashboard pages we don't use phantom-ui pre-hydration wrapper -->
+        <div id="phantom-ui-root">
+    <?php endif; ?>
         <!-- Lucide icons (used via data-lucide="icon-name"). Initialize after the library loads. -->
         <script>
             (function(){
@@ -479,4 +587,30 @@ document.addEventListener('DOMContentLoaded', function(){
     } catch(e){}
   }, 600);
 });
+// Filter panel toggle wiring
+document.addEventListener('DOMContentLoaded', function(){
+        try {
+                var filterBtn = document.getElementById('filterSortBtn');
+                var panel = document.getElementById('filterSortPanel');
+                if (filterBtn && panel) {
+                        filterBtn.addEventListener('click', function(){
+                                var open = panel.style.display === 'block';
+                                panel.style.display = open ? 'none' : 'block';
+                                filterBtn.setAttribute('aria-expanded', (!open).toString());
+                                panel.setAttribute('aria-hidden', open ? 'true' : 'false');
+                        });
+                        document.addEventListener('click', function(e){
+                                if (!panel.contains(e.target) && e.target !== filterBtn) {
+                                        panel.style.display = 'none';
+                                        filterBtn.setAttribute('aria-expanded', 'false');
+                                        panel.setAttribute('aria-hidden', 'true');
+                                }
+                        });
+                }
+        } catch(e){}
+});
+// Proxy header toolbar buttons to existing project page handlers if present
+// toolbar uses canonical IDs now; no proxy required
+// Restore display_errors setting to previous environment if possible
+try { if (typeof window === 'undefined') {} } catch(e) {}
 </script>

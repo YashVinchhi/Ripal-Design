@@ -71,7 +71,8 @@ foreach ($candidates as $c) {
             }
         ?>
         <a href="<?php echo htmlspecialchars($logoHref, ENT_QUOTES, 'UTF-8'); ?>" class="flex items-center gap-3 no-underline">
-            <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='https://placehold.co/160x60/b91c1c/ffffff?text=RD'">
+            <?php $localLogoFallbackAlt = rtrim((string)BASE_PATH, '/') . '/assets/images/rd-placeholder.svg'; ?>
+            <img src="<?php echo BASE_PATH; ?>/assets/Content/Logo.png" alt="Ripal Design Logo" class="h-10" onerror="this.onerror=null;this.src='<?php echo esc_attr($localLogoFallbackAlt); ?>'">
             <span class="text-white font-serif font-bold text-xl tracking-tight">Ripal Design</span>
         </a>
     </div>

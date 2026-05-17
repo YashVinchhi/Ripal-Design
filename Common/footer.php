@@ -1,5 +1,9 @@
 <!-- Footer / CTA -->
+<?php if (!empty($isPublicHeader) || (empty($HEADER_MODE) || $HEADER_MODE === 'public')): ?>
 </phantom-ui>
+<?php else: ?>
+</div>
+<?php endif; ?>
 <?php
 /**
  * Common Footer Component
@@ -102,7 +106,8 @@ $currentYear = date('Y');
                     </div>
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-phone text-rajkot-rust" aria-hidden="true"></i>
-                        <a href="#" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm" data-rd-phone="<?php echo esc_attr(base64_encode('tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER))); ?>" data-rd-phone-label="<?php echo esc_attr(base64_encode((string)PHONE_NUMBER)); ?>">Call studio</a>
+                        <?php $telHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER); ?>
+                        <a href="<?php echo esc_attr($telHref); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm"><?php echo esc((string)PHONE_NUMBER); ?></a>
                     </div>
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-envelope text-rajkot-rust" aria-hidden="true"></i>

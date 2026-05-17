@@ -155,8 +155,7 @@ main {
   top: 0;
   z-index: 100;
   display: grid;
-  grid-template-columns: auto auto;
-  justify-content: space-between;
+  grid-template-columns: 1fr auto; /* left filler, right controls */
   align-items: center;
   gap: 1rem;
   min-height: 72px;
@@ -325,6 +324,36 @@ body.public-immersive .button-secondary {
   cursor: pointer;
 }
 
+/* Ensure nav toggle and site-nav live in the right column so the
+   hamburger stays on the right even when `.brand` is hidden. */
+.site-header .brand { grid-column: 1; }
+.site-header .nav-toggle { grid-column: 2; justify-self: end; }
+.site-header .site-nav { grid-column: 2; }
+
+@media (max-width: 640px) {
+  .site-header { grid-template-columns: auto 48px; }
+  .site-header .nav-toggle { justify-self: center; }
+}
+
+/* Place the hamburger 5% from the right edge of the viewport */
+.site-header .nav-toggle {
+  margin-right: 5% !important;
+}
+
+/* Strong absolute placement to avoid grid/parent layout interference */
+.site-header { position: sticky; }
+.site-header .nav-toggle {
+  position: absolute !important;
+  right: 2% !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 2000 !important;
+}
+
+@media (max-width: 900px) {
+  .site-header .nav-toggle { right: 5% !important; }
+}
+
 body.public-immersive .nav-toggle {
   border-color: rgba(247, 242, 234, 0.22);
   background: rgba(10, 10, 10, 0.5);
@@ -444,6 +473,25 @@ body.public-immersive .project-card .eyebrow {
   font-size: clamp(1rem, 1.4vw, 1.18rem);
 }
 
+
+/* Strong override: make public site header fully transparent and remove blur/backdrop effects.
+   This ensures pages like `index.php` show the hero/media without a blurred header overlay. */
+.site-header,
+body.public-immersive .site-header {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Hide duplicated header brand on immersive public pages where the
+   hero provides its own logo overlay. This removes both the logo
+   and the 'Ripal Design' text when the page uses immersive classes. */
+body.public-immersive .site-header .brand,
+body.home-immersive .site-header .brand {
+  display: none !important;
+}
 .hero-actions,
 .button-row {
   display: flex;

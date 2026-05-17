@@ -58,8 +58,8 @@ $companies = [
 ];
 
 rd_page_start([
-    'title' => $ct('page_title', 'Architecture that reaches the site intact'),
-    'description' => $ct('meta_description', 'Ripal Design connects architecture, interiors, and execution for buildable projects in Gujarat.'),
+    'title' => $ct('page_title', 'Architect in Rajkot | Ripal Design – Architecture & Interiors'),
+    'description' => $ct('meta_description', "Ripal Design is Rajkot's trusted architectural firm. We deliver architectural planning, interior design, and project execution for residential and commercial projects across Gujarat. Est. 2017 | Call for a free consultation."),
     'image' => $heroImage,
     'url' => rd_public_url('index.php'),
     'active' => 'home',
@@ -84,6 +84,7 @@ rd_page_start([
         <div class="hero-content">
             <p class="hero-eyebrow"><?php echo esc($ct('hero_established', 'Est. 2017')); ?> / <?php echo esc($ct('hero_location', 'Rajkot, Gujarat')); ?></p>
             <h1><?php echo esc($ct('hero_heading', 'Design that stays true from drawing to site.')); ?></h1>
+            <h2>Rajkot's Architecture & Interior Design Studio</h2>
             <p class="hero-lede"><?php echo esc($ct('hero_subheading', 'Architecture, interiors, and execution guided by one studio so nothing gets lost in translation.')); ?></p>
             <div class="hero-actions">
                 <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>"><?php echo esc($ct('hero_primary_cta_label', 'Start Your Project')); ?></a>

@@ -749,6 +749,27 @@ $statusColors = [
     'completed' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
 ];
 $statusClass = $statusColors[$project['status']] ?? $statusColors['ongoing'];
+$projectProgress = max(0, min(100, (int)($project['progress'] ?? 0)));
+$projectStatusLabel = ucwords(str_replace('_', ' ', (string)($project['status'] ?? 'ongoing')));
+$projectDueRaw = trim((string)($project['due'] ?? ''));
+$projectDueLabel = ($projectDueRaw !== '' && $projectDueRaw !== '1970-01-01') ? formatDate($projectDueRaw) : 'No due date';
+$projectDueTime = ($projectDueRaw !== '' && $projectDueRaw !== '1970-01-01') ? strtotime($projectDueRaw) : false;
+$projectDueState = 'Not scheduled';
+if ($projectDueTime) {
+    $todayStart = strtotime(date('Y-m-d'));
+    if ($projectDueTime < $todayStart && strtolower((string)($project['status'] ?? '')) !== 'completed') {
+        $projectDueState = 'Overdue';
+    } elseif ($projectDueTime <= strtotime('+14 days', $todayStart)) {
+        $projectDueState = 'Due soon';
+    } else {
+        $projectDueState = 'On track';
+    }
+}
+$projectTeamCount = count($project['workers'] ?? []);
+$projectFileCount = count($project['files'] ?? []);
+$projectMilestoneCount = count($project['milestones'] ?? []);
+$projectActivityCount = count($project['activities'] ?? []);
+$projectDrawingCount = count($project['drawings'] ?? []);
 // Load registered users with role 'worker' for quick assignment picker
 $workerUsers = [];
 if ($pdo instanceof PDO) {
@@ -826,7 +847,7 @@ if ($pdo instanceof PDO) {
     ]);
     ?>
     <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+        href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <?php
@@ -856,8 +877,8 @@ if ($pdo instanceof PDO) {
                             "pending-amber": "#B45309",
                         },
                         fontFamily: {
-                            serif: ["Playfair Display", "serif"],
-                            sans: ["Inter", "sans-serif"],
+                            serif: ["Bodoni Moda", "serif"],
+                            sans: ["Space Grotesk", "Inter", "sans-serif"],
                         },
                         boxShadow: {
                             "premium": "0 10px 30px rgba(0, 0, 0, 0.05)",
@@ -873,9 +894,15 @@ if ($pdo instanceof PDO) {
     <?php endif; ?>
     <style>
         :root {
-            --bg-dark: #050505;
-            --bg-panel: #111;
-            /* Override Bootstrap primary color */
+            --rd-ink: var(--color-ink, #0b0b0b);
+            --rd-muted: var(--color-brand-muted, #9c948b);
+            --rd-line: rgba(11, 11, 11, 0.14);
+            --rd-soft: var(--color-brand-light, #f6f2ec);
+            --rd-paper: #ffffff;
+            --rd-brand: var(--color-brand-primary, #7a2f20);
+            --rd-brand-dark: var(--primary-dark, #5b1f14);
+            --rd-green: #15803D;
+            --rd-amber: #B45309;
             --bs-primary: #731209;
             --bs-primary-rgb: 115, 18, 9;
             --bs-link-color: #731209;
@@ -883,23 +910,35 @@ if ($pdo instanceof PDO) {
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.35;
+            font-family: var(--font-body, "Space Grotesk", "Inter", system-ui, sans-serif);
+            line-height: 1.45;
         }
 
         .font-serif {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display, "Bodoni Moda", "Playfair Display", serif);
         }
 
         .tab-content {
             display: none;
+            scroll-margin-top: 7.5rem;
         }
 
         .tab-content.active {
             display: block;
+            animation: projectSectionIn 180ms ease-out;
         }
 
-        /* Override Bootstrap primary color (#0d6efd) with brand color (#731209) */
+        @keyframes projectSectionIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .btn-primary,
         .btn-primary:hover,
         .btn-primary:focus,
@@ -913,197 +952,354 @@ if ($pdo instanceof PDO) {
             --bs-primary-rgb: 115, 18, 9 !important;
         }
 
+        .text-primary,
+        main a {
+            color: var(--rd-brand-dark) !important;
+        }
+
+        .bg-primary,
         .btn-primary {
-            background-color: #731209 !important;
-            border-color: #731209 !important;
+            background-color: var(--rd-brand-dark) !important;
         }
 
-        .btn-primary:hover,
-        .btn-primary:focus,
-        .btn-primary:active {
-            background-color: #5a0e07 !important;
-            border-color: #5a0e07 !important;
+        .border-primary,
+        .btn-primary {
+            border-color: var(--rd-brand-dark) !important;
         }
 
-        .btn-outline-primary {
-            color: #731209 !important;
-            border-color: #731209 !important;
+        .project-details-sharp {
+            background:
+                linear-gradient(180deg, var(--rd-soft) 0, #ffffff 360px, var(--rd-soft) 100%) !important;
+            color: var(--rd-ink) !important;
         }
 
-        .btn-outline-primary:hover {
-            background-color: #731209 !important;
-            border-color: #731209 !important;
+        .project-details-sharp,
+        .project-details-sharp * {
+            color: var(--rd-ink) !important;
+            border-radius: 0 !important;
+        }
+
+        .project-details-sharp header,
+        .project-details-sharp main,
+        .project-details-sharp section,
+        .project-details-sharp form,
+        .project-details-sharp div,
+        .project-details-sharp span,
+        .project-details-sharp button,
+        .project-details-sharp a,
+        .project-details-sharp input,
+        .project-details-sharp select,
+        .project-details-sharp textarea {
+            letter-spacing: 0 !important;
+        }
+
+        .project-hero {
+            background: var(--rd-ink);
+            color: #fff;
+            padding: 4.6rem 1rem 0.95rem;
+            border-bottom: 3px solid var(--rd-brand);
+            box-shadow: none;
+        }
+
+        .project-hero * {
+            color: inherit !important;
+        }
+
+        .project-hero-shell,
+        .project-shell {
+            width: min(1180px, calc(100vw - 2rem));
+            margin-inline: auto;
+        }
+
+        .project-crumb {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255,255,255,0.74) !important;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .project-hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1.25rem;
+            align-items: center;
+            margin-top: 0.55rem;
+        }
+
+        .project-title {
+            max-width: 820px;
+            font-size: clamp(1.55rem, 2.35vw, 2.25rem);
+            line-height: 1.12;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.55rem;
+        }
+
+        .project-meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            min-height: 2rem;
+            padding: 0.35rem 0.6rem;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.86) !important;
+            font-size: 0.82rem;
+        }
+
+        .project-command-card {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff !important;
+            box-shadow: none;
+            padding: 0.6rem;
+            min-width: 430px;
+        }
+
+        .project-command-card * {
             color: #fff !important;
         }
 
-        .text-primary {
-            color: #731209 !important;
+        #ownerContactModal,
+        #ownerContactModal * {
+            color: var(--rd-ink) !important;
         }
 
-        .bg-primary {
-            background-color: #731209 !important;
+        .project-command-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .border-primary {
-            border-color: #731209 !important;
+        .project-command-stat {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.16);
+            padding: 0.45rem 0.6rem;
+            min-height: 2.5rem;
         }
 
-        main a {
-            color: #731209;
+        .project-action-row {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.45rem;
         }
 
-        main a:hover {
-            color: #5a0e07;
+        .project-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            min-height: 2.5rem;
+            padding: 0.45rem 0.8rem;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: transparent;
+            color: #fff !important;
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-decoration: none !important;
+            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
         }
 
-        /* Make project details inputs use a readable light-gray surface.
-           Applied for both light and dark modes so fields remain consistent. */
-        #projectDetailsForm input[type="text"],
-        #projectDetailsForm input[type="number"],
-        #projectDetailsForm input[type="date"],
+        .project-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: none;
+        }
+
+        .project-btn-primary {
+            background: var(--rd-brand) !important;
+            border-color: var(--rd-brand) !important;
+            color: #fff !important;
+        }
+
+        .project-workspace {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 2rem;
+            align-items: start;
+            padding: 2rem 0 4rem;
+        }
+
+        .workflow-rail {
+            position: sticky;
+            top: 5.5rem;
+            border-left: 3px solid var(--rd-brand);
+            background: #fff;
+            border-top: 1px solid var(--rd-line);
+            border-right: 1px solid var(--rd-line);
+            border-bottom: 1px solid var(--rd-line);
+            padding: 1rem;
+        }
+
+        .workflow-rail-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--rd-muted) !important;
+            margin-bottom: 0.85rem;
+        }
+
+        .project-tabs-wrap {
+            display: grid !important;
+            gap: 0.35rem;
+        }
+
+        .tab-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            min-height: 2.9rem;
+            padding: 0.75rem 0.85rem !important;
+            border: 1px solid transparent !important;
+            color: var(--rd-muted) !important;
+            font-weight: 800 !important;
+            text-decoration: none !important;
+            white-space: nowrap;
+        }
+
+        .tab-link.active {
+            background: var(--rd-soft) !important;
+            border-color: var(--rd-line) !important;
+            color: var(--rd-ink) !important;
+            box-shadow: none;
+        }
+
+        .tab-link.active * {
+            color: var(--rd-ink) !important;
+        }
+
+        .project-card,
+        .project-details-sharp .bg-white {
+            background: var(--rd-paper) !important;
+            border: 1px solid var(--rd-line) !important;
+            box-shadow: none !important;
+        }
+
+        .workstream {
+            min-width: 0;
+        }
+
+        .workstream .tab-content {
+            min-height: 58vh;
+            padding: 1.25rem;
+            border: 1px solid var(--rd-line);
+            background: #fff;
+        }
+
+        .workstream h2 {
+            font-family: var(--font-display, "Bodoni Moda", serif) !important;
+            font-weight: 600 !important;
+        }
+
+        #projectDetailsForm input,
         #projectDetailsForm select,
-        #projectDetailsForm textarea {
-            background-color: #f8fafc !important;
-            /* light gray */
-            border-color: #e6e6e6 !important;
-            color: #0f172a !important;
-            /* dark readable text */
+        #projectDetailsForm textarea,
+        #addTeamMemberForm input {
+            min-height: 2.75rem;
+            background-color: #fff !important;
+            border: 1px solid #d9d5ce !important;
+            color: var(--rd-ink) !important;
+            padding: 0.65rem 0.75rem !important;
         }
 
-        #projectDetailsForm ::placeholder {
-            color: #94a3b8 !important;
+        #projectDetailsForm input:focus,
+        #projectDetailsForm select:focus,
+        #projectDetailsForm textarea:focus {
+            outline: 2px solid rgba(148,24,12,0.20) !important;
+            border-color: var(--rd-brand) !important;
+            box-shadow: none !important;
         }
 
-        /* Keep the same light surface even when global .dark styles are present */
-        .dark #projectDetailsForm input[type="text"],
-        .dark #projectDetailsForm input[type="number"],
-        .dark #projectDetailsForm input[type="date"],
-        .dark #projectDetailsForm select,
-        .dark #projectDetailsForm textarea {
-            background-color: #f8fafc !important;
-            border-color: #e6e6e6 !important;
-            color: #0f172a !important;
+        .project-file-card {
+            align-items: stretch;
         }
 
-        .dark #projectDetailsForm ::placeholder {
-            color: #94a3b8 !important;
+        .file-actions a,
+        .file-actions button {
+            min-height: 2.15rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Apply .text-sm style padding specifically inside project details inputs */
-        #projectDetailsForm input.text-sm,
-        #projectDetailsForm select.text-sm,
-        #projectDetailsForm textarea.text-sm {
-            font-size: 0.875rem !important;
-            padding: 0.2rem !important;
-            line-height: 1.25rem !important;
+        @media (max-width: 900px) {
+            .project-hero-grid {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+
+            .project-command-card {
+                min-width: 0;
+            }
+
+            .project-details-sharp .project-command-stats,
+            .project-command-stats {
+                flex-wrap: wrap;
+            }
+
+            .project-details-sharp .project-command-card {
+                min-width: 0 !important;
+            }
+
+            .project-workspace {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .workflow-rail {
+                position: sticky;
+                top: 4.5rem;
+                z-index: 30;
+                overflow-x: auto;
+            }
+
+            .project-tabs-wrap {
+                display: flex !important;
+            }
         }
 
-
-        @media (prefers-color-scheme: dark) {
-
-            /* for project overview */
-            .dark\:bg-slate-800\/50 {
-                background-color: rgb(255 212 212) !important;
+        @media (max-width: 640px) {
+            .project-hero {
+                padding-top: 6rem;
             }
 
-            .dark\:text-slate-100 {
-                --tw-text-opacity: 1;
-                color: rgb(0 0 0 / 86%) !important;
+            .project-command-stats {
+                flex-wrap: wrap;
             }
 
-            .dark\:text-slate-200 {
-                --tw-text-opacity: 1;
-                color: rgb(117 124 135) !important;
+            .project-file-card {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
             }
 
-            .dark\:hover\:bg-slate-800:hover {
-                --tw-bg-opacity: 1;
-                background-color: rgb(197 170 170) !important;
+            .project-file-card .flex-grow {
+                min-width: 0 !important;
+                word-break: break-word !important;
             }
 
-            .dark\:bg-slate-800 {
-                --tw-bg-opacity: 1;
-                background-color: rgb(218 218 218) !important;
+            .project-file-card .file-actions {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+                width: 100% !important;
             }
 
-            /* for files */
-
-            .dark\:text-slate-300 {
-                --tw-text-opacity: 1;
-                color: rgb(0 0 0) !important;
+            .project-file-card .file-actions a,
+            .project-file-card .file-actions button {
+                width: 100% !important;
             }
-
-            .dark\:text-red-300 {
-                --tw-text-opacity: 1;
-                color: rgb(255 0 0) !important;
-            }
-
-            .dark\:bg-yellow-900\/30 {
-                background-color: rgb(113 63 18) !important;
-            }
-
-            /* for status badges: */
-
-            .dark\:bg-blue-900\/30 {
-                background-color: rgb(30 58 138 / 90%) !important;
-            }
-
-            .dark\:bg-orange-900\/30 {
-                background-color: rgb(124 45 18) !important;
-            }
-
-            .dark\:bg-green-900\/30 {
-                background-color: rgb(20 83 45) !important;
-            }
-
-            /* Mobile-specific adjustments to improve stacking and button behavior */
-            @media (max-width: 640px) {
-
-                /* File cards should stack vertically on small screens */
-                .project-file-card {
-                    flex-direction: column !important;
-                    align-items: flex-start !important;
-                    gap: 0.75rem !important;
-                }
-
-                /* Ensure the metadata area can wrap and not overflow */
-                .project-file-card .flex-grow {
-                    min-width: 0 !important;
-                    word-break: break-word !important;
-                }
-
-                /* Actions should take full width and stack nicely */
-                .project-file-card .file-actions {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    gap: 0.5rem !important;
-                    width: 100% !important;
-                }
-
-                .project-file-card .file-actions a,
-                .project-file-card .file-actions button {
-                    width: 100% !important;
-                    justify-content: center !important;
-                }
-
-                header h1 {
-                    font-size: 1.5rem !important;
-                    line-height: 1.2 !important;
-                }
-
-                /* Slightly reduce horizontal tab padding on very small screens */
-                .tab-link {
-                    padding-left: 0.6rem !important;
-                    padding-right: 0.6rem !important;
-                }
-            }
-
-            /* Make all corners sharp to match UI theme */
-            *,
-            *::before,
-            *::after {
-                border-radius: 0 !important;
-            }
+        }
     </style>
 </head>
 
@@ -1118,11 +1314,98 @@ if ($pdo instanceof PDO) {
     require_once PROJECT_ROOT . '/Common/header.php';
     ?>
     <style>
-        /* Force sharp corners on project details page (applies after header styles) */
-        .project-details-sharp *,
-        .project-details-sharp *::before,
-        .project-details-sharp *::after {
-            border-radius: 0 !important;
+        .project-details-sharp .owner-card .w-12 { width: 48px; height: 48px; }
+        .project-details-sharp .owner-card p { margin: 0; }
+        .project-details-sharp .action-row { display: flex; justify-content: flex-end; gap: 0.75rem; align-items: center; }
+        .project-details-sharp .btn-discard { background: transparent; border: 1px solid rgba(0,0,0,0.08); color: #374151; }
+        .project-details-sharp .btn-save { background: #94180C; color: #fff; box-shadow: 0 8px 20px rgba(148,24,12,0.18); }
+        .project-details-sharp .project-hero {
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 4.6rem 1rem 0.95rem !important;
+            background: rgba(246, 242, 236, 0.96) !important;
+            border-bottom: 1px solid rgba(11, 11, 11, 0.14) !important;
+            color: var(--rd-ink, #0b0b0b) !important;
+        }
+        .project-details-sharp .project-hero *,
+        .project-details-sharp .project-hero a,
+        .project-details-sharp .project-hero span,
+        .project-details-sharp .project-hero div {
+            color: var(--rd-ink, #0b0b0b) !important;
+        }
+        .project-details-sharp .project-hero .project-crumb,
+        .project-details-sharp .project-hero .project-crumb * {
+            color: rgba(11, 11, 11, 0.72) !important;
+        }
+        .project-details-sharp .project-meta-pill {
+            background: #ffffff !important;
+            border: 1px solid rgba(11, 11, 11, 0.12) !important;
+            color: var(--rd-ink, #0b0b0b) !important;
+        }
+        .project-details-sharp .project-command-card {
+            background: #ffffff !important;
+            border: 1px solid rgba(11, 11, 11, 0.14) !important;
+            color: var(--rd-ink, #0b0b0b) !important;
+        }
+        .project-details-sharp .project-command-card *,
+        .project-details-sharp .project-command-stat * {
+            color: var(--rd-ink, #0b0b0b) !important;
+        }
+        .project-details-sharp .project-command-stat {
+            background: var(--rd-soft, #f6f2ec) !important;
+            border: 1px solid rgba(11, 11, 11, 0.12) !important;
+        }
+        .project-details-sharp .project-btn {
+            border-color: rgba(11, 11, 11, 0.18) !important;
+            background: #ffffff !important;
+            color: var(--rd-ink, #0b0b0b) !important;
+        }
+        .project-details-sharp .project-btn-primary {
+            background: var(--rd-brand, #7a2f20) !important;
+            border-color: var(--rd-brand, #7a2f20) !important;
+            color: #ffffff !important;
+        }
+        .project-details-sharp .project-btn-primary * {
+            color: #ffffff !important;
+        }
+        .project-details-sharp .project-hero-grid {
+            align-items: center !important;
+        }
+        .project-details-sharp .project-title {
+            font-size: clamp(1.55rem, 2.35vw, 2.25rem) !important;
+            line-height: 1.12 !important;
+        }
+        .project-details-sharp .project-command-stats {
+            align-items: stretch !important;
+        }
+        .project-details-sharp .project-command-stat {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.35rem !important;
+            white-space: nowrap !important;
+        }
+        .project-details-sharp .project-command-card {
+            min-width: min(430px, 100%) !important;
+        }
+        .project-details-sharp main.project-shell {
+            padding-top: 0 !important;
+        }
+        .project-details-sharp .project-workspace {
+            padding-top: 1rem !important;
+        }
+        .project-details-sharp .project-title,
+        .project-details-sharp h1,
+        .project-details-sharp h2,
+        .project-details-sharp h3 {
+            font-family: var(--font-display, "Bodoni Moda", "Playfair Display", serif) !important;
+        }
+        .project-details-sharp,
+        .project-details-sharp input,
+        .project-details-sharp select,
+        .project-details-sharp textarea,
+        .project-details-sharp button {
+            font-family: var(--font-body, "Space Grotesk", "Inter", system-ui, sans-serif) !important;
         }
     </style>
     <?php
@@ -1144,9 +1427,9 @@ if ($pdo instanceof PDO) {
     <?php endif; ?>
 
     <!-- Unified Dark Portal Header -->
-    <header class="bg-foundation-grey text-white pt-24 pb-12 px-4 shadow-lg">
-        <div class="max-w-7xl mx-auto flex flex-col">
-            <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">
+    <header class="project-hero">
+        <div class="project-hero-shell flex flex-col">
+            <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">
                 <a href="dashboard.php" class="hover:text-rajkot-rust transition-colors flex items-center gap-1">
                     <i data-lucide="layout-grid" class="w-3 h-3"></i> Dashboard
                 </a>
@@ -1154,9 +1437,62 @@ if ($pdo instanceof PDO) {
                 <span class="text-rajkot-rust">Project Details</span>
             </div>
 
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="project-hero-grid">
+                <div class="flex-1 min-w-0">
+                    <div class="pt-1">
+                        <div>
+                            <h1 class="project-title font-serif"><?php echo htmlspecialchars($project['name']); ?></h1>
+                            <div class="project-meta-row" aria-label="Project status summary">
+                                <span class="project-meta-pill">
+                                    <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                                    <?php echo htmlspecialchars($projectDueLabel); ?> &middot; <?php echo htmlspecialchars($projectDueState); ?>
+                                </span>
+                                <span class="project-meta-pill">
+                                    <i data-lucide="folder-open" class="w-4 h-4"></i>
+                                    <?php echo (int)$projectFileCount; ?> files
+                                </span>
+                            </div>
+                            <div class="mt-2 text-sm truncate">
+                                <span class="mr-1 opacity-80">Control Room</span>
+                                <span class="mx-1">•</span>
+                                <span class="opacity-90"><?php echo htmlspecialchars($projectLocationText); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-command-card">
+                    <div class="project-command-stats">
+                        <div class="project-command-stat">
+                            <span class="text-[10px] uppercase opacity-70">Budget</span>
+                            <strong class="text-sm"><?php echo htmlspecialchars($budgetFormatted); ?></strong>
+                        </div>
+                        <div class="project-command-stat flex items-center gap-3">
+                            <span class="text-xs font-bold uppercase"><?php echo htmlspecialchars($projectStatusLabel); ?></span>
+                            <div class="flex items-center gap-2">
+                                <svg width="34" height="34" viewBox="0 0 36 36" class="shrink-0" aria-label="<?php echo $projectProgress; ?> percent complete">
+                                    <path d="M18 2.0845a15.9155 15.9155 0 1 0 0 31.831A15.9155 15.9155 0 1 0 18 2.0845" fill="#f1f5f9"/>
+                                    <path stroke="#94180C" stroke-width="2.8" stroke-linecap="round" fill="none" stroke-dasharray="<?php echo $projectProgress; ?>,100" d="M18 2.0845a15.9155 15.9155 0 1 0 0 31.831A15.9155 15.9155 0 1 0 18 2.0845" />
+                                    <text x="18" y="20" font-size="8" font-family="Space Grotesk, sans-serif" fill="#111" text-anchor="middle"><?php echo $projectProgress; ?>%</text>
+                                </svg>
+                            </div>
+                        </div>
+                        <?php if (!$isClientReadOnly): ?>
+                            <button
+                                id="editProjectBtn"
+                                type="button"
+                                class="project-btn">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i> Edit
+                            </button>
+                        <?php endif; ?>
+                        <button
+                            id="shareProjectBtn"
+                            type="button"
+                            class="project-btn project-btn-primary">
+                            <i data-lucide="share-2" class="w-4 h-4"></i> Share
+                        </button>
+                    </div>
+                </div>
+            </div>
                     <!-- Owner Contact Modal -->
                     <div id="ownerContactModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
                         <div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800">
@@ -1190,54 +1526,41 @@ if ($pdo instanceof PDO) {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Modal for Adding Team Member -->
-                    <p class="text-gray-400 mt-2 flex items-center gap-1">
-                        <i data-lucide="map-pin" class="w-4 h-4 text-rajkot-rust"></i>
-                        <?php if ($projectDirectionHref !== ''): ?>
-                            <a href="<?php echo htmlspecialchars($projectDirectionHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo htmlspecialchars($projectLocationText); ?></a>
-                        <?php else: ?>
-                            <?php echo htmlspecialchars($projectLocationText); ?>
-                        <?php endif; ?>
-                    </p>
-                </div>
-                <div class="flex gap-2">
-                    <?php if (!$isClientReadOnly): ?>
-                        <button
-                            id="editProjectBtn"
-                            type="button"
-                            class="px-6 py-2.5 bg-white/10 border border-white/20 text-white rounded text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2">
-                            <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Project
-                        </button>
-                    <?php endif; ?>
-                    <button
-                        id="shareProjectBtn"
-                        type="button"
-                        class="px-6 py-2.5 bg-rajkot-rust text-white rounded text-sm font-semibold hover:bg-red-700 transition-all shadow-lg flex items-center gap-2 active:scale-95">
-                        <i data-lucide="share-2" class="w-4 h-4"></i> Share
-                    </button>
-                </div>
-            </div>
-        </div>
     </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+    <main class="project-shell flex-grow py-0 w-full">
+        <div class="project-workspace">
+            <aside class="workflow-rail" aria-label="Project workflow">
+                <div class="workflow-rail-title">Workflow</div>
 
         <!-- Tab Navigation -->
-        <div class="flex border-b border-slate-200 dark:border-slate-800 mb-8 overflow-x-auto">
+        <div class="project-tabs-wrap flex gap-1">
             <a class="tab-link px-6 py-3 border-b-2 border-primary text-primary font-medium text-sm whitespace-nowrap cursor-pointer active"
-                data-tab="overview">Overview</a>
+                data-tab="overview"><i data-lucide="clipboard-list" class="w-4 h-4"></i> Project Brief</a>
             <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
-                data-tab="team">Team</a>
+                data-tab="team"><i data-lucide="hard-hat" class="w-4 h-4"></i> Execution Crew</a>
             <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
-                data-tab="files">Files</a>
+                data-tab="files"><i data-lucide="archive" class="w-4 h-4"></i> Document Vault</a>
             <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
-                data-tab="activity">Activity</a>
+                data-tab="activity"><i data-lucide="list-checks" class="w-4 h-4"></i> Site Log</a>
             <?php if (!empty($SHOW_DRAWINGS_TAB)): ?>
                 <a class="tab-link px-6 py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap cursor-pointer"
-                    data-tab="drawings">Drawings</a>
+                    data-tab="drawings"><i data-lucide="drafting-compass" class="w-4 h-4"></i> Drawing Board</a>
             <?php endif; ?>
         </div>
+                <div class="mt-6 border-t border-slate-200 pt-4 text-sm text-slate-600">
+                    <div class="flex items-center justify-between py-2">
+                        <span>Team</span><strong><?php echo (int)$projectTeamCount; ?></strong>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <span>Files</span><strong><?php echo (int)$projectFileCount; ?></strong>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <span>Milestones</span><strong><?php echo (int)$projectMilestoneCount; ?></strong>
+                    </div>
+                </div>
+            </aside>
+            <div class="workstream">
         <script>
             (function(){
                 var ta = document.getElementById('metaDescription');
@@ -1295,7 +1618,7 @@ if ($pdo instanceof PDO) {
                     <div
                         class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div class="p-6 border-b border-slate-200 dark:border-slate-800">
-                            <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Details</h2>
+                            <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Brief</h2>
                         </div>
                         <form id="projectDetailsForm" method="post">
                             <?php echo csrf_token_field(); ?>
@@ -1416,11 +1739,10 @@ if ($pdo instanceof PDO) {
                     <!-- Project Owner Card -->
                     <div
                         class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Project Owner</h3>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Decision Owner</h3>
                         <?php if (!empty($project['owner']['name'])): ?>
-                            <div class="flex items-center gap-4 mb-4">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                            <div class="flex items-center gap-4 mb-3">
+                                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">
                                     <?php
                                     $initials = '';
                                     $nameParts = explode(' ', $project['owner']['name']);
@@ -1434,7 +1756,7 @@ if ($pdo instanceof PDO) {
                                 </div>
                                 <div>
                                     <p class="font-semibold text-slate-800 dark:text-slate-100"><?php echo htmlspecialchars($project['owner']['name']); ?></p>
-                                    <p class="text-sm text-slate-500">Client</p>
+                                    <p class="text-sm text-slate-500">Client • Client since <?php echo htmlspecialchars(date('Y', strtotime($project['created_at'] ?? '2024-01-01'))); ?></p>
                                 </div>
                             </div>
                             <div class="space-y-3">
@@ -1477,7 +1799,7 @@ if ($pdo instanceof PDO) {
                     <!-- Upcoming Milestones -->
                     <div id="milestonesCard"
                         class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Upcoming Milestones</h3>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Next Site Moves</h3>
 
                         <?php if (!empty($project['milestones'])): ?>
                             <div id="milestonesList" class="space-y-4">
@@ -1496,11 +1818,26 @@ if ($pdo instanceof PDO) {
                                 <?php endforeach; ?>
                             </div>
                         <?php else: ?>
-                            <div id="milestonesEmpty"
-                                class="bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-400 p-6 cursor-pointer"
-                                role="button" tabindex="0" onclick="openMilestoneModal()">
-                                <span class="material-icons text-3xl mb-2">event_busy</span>
-                                <p class="text-sm">No milestones yet</p>
+                            <?php
+                                // Provide a helpful default set of milestones to avoid an empty state
+                                $defaultMilestones = [
+                                    ['title' => 'Site Survey', 'target_date' => '', 'status' => 'completed'],
+                                    ['title' => 'Draft Review', 'target_date' => '', 'status' => 'planned'],
+                                    ['title' => 'Client Call', 'target_date' => '', 'status' => 'planned']
+                                ];
+                            ?>
+                            <div id="milestonesList" class="space-y-3">
+                                <?php foreach ($defaultMilestones as $milestone):
+                                    $dotColor = ($milestone['status'] === 'completed') ? 'bg-green-500' : (($milestone['status'] === 'active') ? 'bg-primary' : 'bg-slate-300');
+                                ?>
+                                    <div class="flex gap-3 p-2 rounded hover:bg-slate-50" role="button" tabindex="0">
+                                        <div class="mt-1 w-2 h-2 rounded-full <?php echo htmlspecialchars($dotColor); ?> shrink-0"></div>
+                                        <div>
+                                            <p class="text-sm font-medium"><?php echo htmlspecialchars($milestone['title']); ?></p>
+                                            <p class="text-xs text-slate-500"><?php echo $milestone['status'] === 'completed' ? 'Completed' : 'Planned'; ?></p>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
 
@@ -1517,7 +1854,8 @@ if ($pdo instanceof PDO) {
         <!-- Team Tab -->
         <div class="tab-content" id="team-tab">
             <div class="mb-6 flex justify-between items-center">
-                <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Team Members</h2>
+                <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Execution Crew</h2>
+                    <?php if (!$isClientReadOnly): ?>
                     <div class="flex items-center gap-3">
                         <button onclick="showAddTeamMemberModal()"
                             class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
@@ -1528,6 +1866,7 @@ if ($pdo instanceof PDO) {
                             <span class="material-icons text-sm">local_shipping</span> Assign Vendor
                         </button>
                     </div>
+                    <?php endif; ?>
             </div>
 
             <?php if (!empty($project['workers'])): ?>
@@ -1562,10 +1901,12 @@ if ($pdo instanceof PDO) {
                                     class="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                     View Profile
                                 </button>
-                                <button onclick="deleteTeamMember(<?php echo (int)($member['id'] ?? 0); ?>)"
-                                    class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                                    <span class="material-icons text-sm">delete</span>
-                                </button>
+                                <?php if (!$isClientReadOnly): ?>
+                                    <button onclick="deleteTeamMember(<?php echo (int)($member['id'] ?? 0); ?>)"
+                                        class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                        <span class="material-icons text-sm">delete</span>
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1576,10 +1917,12 @@ if ($pdo instanceof PDO) {
                     <span class="material-icons text-6xl text-slate-300 mb-4">group_off</span>
                     <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Team Members</h3>
                     <p class="text-slate-500 dark:text-slate-400 mb-6">Start building your team by adding members.</p>
-                    <button onclick="showAddTeamMemberModal()"
-                        class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
-                        <span class="material-icons text-sm">add</span> Add First Member
-                    </button>
+                    <?php if (!$isClientReadOnly): ?>
+                        <button onclick="showAddTeamMemberModal()"
+                            class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
+                            <span class="material-icons text-sm">add</span> Add First Member
+                        </button>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -1587,11 +1930,13 @@ if ($pdo instanceof PDO) {
         <!-- Files Tab -->
         <div class="tab-content" id="files-tab">
             <div class="mb-6 flex justify-between items-center">
-                <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Project Files</h2>
-                <button onclick="document.getElementById('fileUploadInput').click()"
-                    class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-                    <span class="material-icons text-sm">upload</span> Upload File
-                </button>
+                <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Document Vault</h2>
+                <?php if (!$isClientReadOnly): ?>
+                    <button onclick="document.getElementById('fileUploadInput').click()"
+                        class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                        <span class="material-icons text-sm">upload</span> Upload File
+                    </button>
+                <?php endif; ?>
             </div>
 
             <?php
@@ -1638,19 +1983,23 @@ if ($pdo instanceof PDO) {
                                         class="w-full sm:w-auto px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:opacity-90 transition-opacity no-underline text-center">
                                         View
                                     </a>
-                                    <button type="button" onclick="openRevisionUpload(<?php echo (int)$file['id']; ?>)"
-                                        class="w-full sm:w-auto px-3 py-1.5 border border-amber-300 text-amber-700 rounded text-xs font-medium hover:bg-amber-50 transition-colors text-center">
-                                        Revision
-                                    </button>
+                                    <?php if (!$isClientReadOnly): ?>
+                                        <button type="button" onclick="openRevisionUpload(<?php echo (int)$file['id']; ?>)"
+                                            class="w-full sm:w-auto px-3 py-1.5 border border-amber-300 text-amber-700 rounded text-xs font-medium hover:bg-amber-50 transition-colors text-center">
+                                            Revision
+                                        </button>
+                                    <?php endif; ?>
                                     <a href="<?php echo htmlspecialchars($fileUrl); ?>" download
                                         class="w-full sm:w-auto px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center">
                                         Download
                                     </a>
                                 <?php endif; ?>
-                                <button onclick="deleteFile(<?php echo (int)$file['id']; ?>)"
-                                    class="w-full sm:w-auto px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                                    <span class="material-icons text-sm">delete</span>
-                                </button>
+                                <?php if (!$isClientReadOnly): ?>
+                                    <button onclick="deleteFile(<?php echo (int)$file['id']; ?>)"
+                                        class="w-full sm:w-auto px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                        <span class="material-icons text-sm">delete</span>
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1660,17 +2009,19 @@ if ($pdo instanceof PDO) {
                     <span class="material-icons text-6xl text-slate-300 mb-4">folder_open</span>
                     <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Files Yet</h3>
                     <p class="text-slate-500 dark:text-slate-400 mb-6">Upload files related to this project.</p>
-                    <button onclick="document.getElementById('fileUploadInput').click()"
-                        class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
-                        <span class="material-icons text-sm">upload</span> Upload First File
-                    </button>
+                    <?php if (!$isClientReadOnly): ?>
+                        <button onclick="document.getElementById('fileUploadInput').click()"
+                            class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
+                            <span class="material-icons text-sm">upload</span> Upload First File
+                        </button>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
 
         <!-- Activity Tab -->
         <div class="tab-content" id="activity-tab">
-            <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-6">Recent Activity</h2>
+            <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-6">Site Log</h2>
 
             <?php
             // Function to get activity icon and color based on action
@@ -1735,11 +2086,13 @@ if ($pdo instanceof PDO) {
         <?php if (!empty($SHOW_DRAWINGS_TAB)): ?>
             <div class="tab-content" id="drawings-tab">
                 <div class="mb-6 flex justify-between items-center">
-                    <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Technical Drawings</h2>
-                    <button onclick="document.getElementById('drawingUploadInput').click()"
-                        class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-                        <span class="material-icons text-sm">add</span> Upload Drawing
-                    </button>
+                    <h2 class="text-xl font-serif text-slate-800 dark:text-slate-100">Drawing Board</h2>
+                    <?php if (!$isClientReadOnly): ?>
+                        <button onclick="document.getElementById('drawingUploadInput').click()"
+                            class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                            <span class="material-icons text-sm">add</span> Upload Drawing
+                        </button>
+                    <?php endif; ?>
                 </div>
 
                 <?php
@@ -1785,10 +2138,12 @@ if ($pdo instanceof PDO) {
                                                 View
                                             </button>
                                         <?php endif; ?>
-                                        <button onclick="deleteDrawing(<?php echo (int)$drawing['id']; ?>)"
-                                            class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                                            <span class="material-icons text-sm">delete</span>
-                                        </button>
+                                        <?php if (!$isClientReadOnly): ?>
+                                            <button onclick="deleteDrawing(<?php echo (int)$drawing['id']; ?>)"
+                                                class="px-3 py-1.5 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                                <span class="material-icons text-sm">delete</span>
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -1799,15 +2154,18 @@ if ($pdo instanceof PDO) {
                         <span class="material-icons text-6xl text-slate-300 mb-4">architecture</span>
                         <h3 class="text-xl font-serif text-slate-800 dark:text-slate-100 mb-2">No Drawings Yet</h3>
                         <p class="text-slate-500 dark:text-slate-400 mb-6">Upload technical drawings for this project.</p>
-                        <button onclick="document.getElementById('drawingUploadInput').click()"
-                            class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
-                            <span class="material-icons text-sm">add</span> Upload First Drawing
-                        </button>
+                        <?php if (!$isClientReadOnly): ?>
+                            <button onclick="document.getElementById('drawingUploadInput').click()"
+                                class="px-6 py-3 bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto">
+                                <span class="material-icons text-sm">add</span> Upload First Drawing
+                            </button>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
-
+            </div>
+        </div>
     </main>
 
     <!-- Owner Assign Modal -->
@@ -2081,7 +2439,7 @@ if ($pdo instanceof PDO) {
         // Client-side upload guard: 450 MB limit (450 * 1024 * 1024 bytes)
         const MAX_UPLOAD_BYTES = 450 * 1024 * 1024;
 
-        // Tab switching functionality
+        // Workflow rail navigation
         document.querySelectorAll('.tab-link').forEach(tab => {
             tab.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -2097,9 +2455,9 @@ if ($pdo instanceof PDO) {
                 this.classList.remove('border-transparent', 'text-slate-500');
                 this.classList.add('active', 'border-primary', 'text-primary');
 
-                // Show corresponding content
                 const tabName = this.getAttribute('data-tab');
-                document.getElementById(tabName + '-tab').classList.add('active');
+                const target = document.getElementById(tabName + '-tab');
+                if (target) target.classList.add('active');
                 try{ if(typeof gtag === 'function'){ gtag('event','section_view', {'section': tabName}); } }catch(e){}
             });
         });
@@ -2164,15 +2522,9 @@ if ($pdo instanceof PDO) {
                     overviewContent.classList.add('active');
                 }
 
-                const top = Math.max(0, projectDetailsForm.getBoundingClientRect().top + window.pageYOffset - 100);
-                window.scrollTo({
-                    top,
-                    behavior: 'smooth'
-                });
-
                 const firstInput = projectDetailsForm.querySelector('input[name="name"]');
                 if (firstInput) {
-                    setTimeout(() => firstInput.focus(), 350);
+                    setTimeout(() => firstInput.focus(), 80);
                 }
             });
         }

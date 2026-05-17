@@ -919,7 +919,7 @@ if (!function_exists('public_content_image_url')) {
         }
 
         // Last resort: return an external placeholder so the UI still shows something
-        return 'https://placehold.co/240x60/ffffff/000000?text=No+Image';
+        return rtrim((string)BASE_PATH, '/') . '/assets/images/rd-placeholder.svg';
     }
 }
 

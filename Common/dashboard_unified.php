@@ -292,29 +292,10 @@ if ($useWorkerProjectView) {
 <body class="font-sans text-foundation-grey bg-canvas-white">
 
   <div class="min-h-screen flex flex-col">
-    <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
-      <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-serif font-bold">Project Command Center</h1>
-          <p class="text-gray-300 mt-2 text-sm">Manage projects, teams, and progress.</p>
-        </div>
-        <a href="<?php echo esc_attr($profileUrl); ?>" aria-label="Open profile settings" title="Open Profile" class="no-underline">
-          <?php if ($sessionAvatar !== ''): ?>
-            <div class="w-12 h-12 rounded-none overflow-hidden shadow-inner" style="display:inline-block;">
-              <img src="<?php echo esc_attr($sessionAvatar); ?>" alt="Avatar" class="w-12 h-12 object-cover block" onerror="this.style.display='none'; document.getElementById('dashProfileInitials').style.display='flex';">
-              <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-none flex items-center justify-center font-bold text-lg text-white" style="display:none;"><?php echo esc($userInitials); ?></div>
-            </div>
-          <?php else: ?>
-            <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-none flex items-center justify-center font-bold text-lg shadow-inner no-underline text-white hover:bg-[#7f140a] transition-colors">
-              <?php echo esc($userInitials); ?>
-            </div>
-          <?php endif; ?>
-        </a>
-      </div>
-    </header>
+    <!-- Dashboard hero header removed to conserve vertical space -->
 
     <main class="dashboard-main flex-grow px-4 sm:px-6 lg:px-8 pb-10">
-      <div class="<?php echo $statGridClasses; ?>" data-stats-group>
+      <div class="<?php echo $statGridClasses; ?>" data-stats-group style="margin-top:10vh;">
         <?php foreach ($statCards as $card): ?>
           <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden" data-stat-card>
             <div class="flex items-start justify-between gap-4">
@@ -328,6 +309,7 @@ if ($useWorkerProjectView) {
         <?php endforeach; ?>
       </div>
 
+      <?php if (!$isAdmin): ?>
       <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8 mb-8" data-quick-actions>
         <h2 class="text-xl md:text-2xl font-serif font-bold mb-5">Quick Actions</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -341,6 +323,7 @@ if ($useWorkerProjectView) {
           <?php endforeach; ?>
         </div>
       </section>
+      <?php endif; ?>
 
       <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8">
         <div class="flex items-center justify-between mb-5">

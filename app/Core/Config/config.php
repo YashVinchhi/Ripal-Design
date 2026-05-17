@@ -221,19 +221,27 @@ function getBaseUrl()
     // Normalize path separators to forward slashes
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
+    if ($scriptPath === '.' || $scriptPath === '\\' || $scriptPath === '/') {
+        $scriptPath = '';
+    }
 
-    // Detect if we're in a subdirectory (public/dashboard/admin/client/worker/api)
-    // Remove trailing app folders to get the application root path.
+    // Detect the first application folder in the path and trim everything after it.
+    // This keeps the base URL anchored at the project root even for nested pages
+    // like /public/blog/post.php.
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
         $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
 
-        while (!empty($parts)) {
-            $lastPart = $parts[count($parts) - 1];
-            if (!in_array($lastPart, $appFolders, true)) {
+        $appIndex = null;
+        foreach ($parts as $index => $part) {
+            if (in_array($part, $appFolders, true)) {
+                $appIndex = $index;
                 break;
             }
-            array_pop($parts);
+        }
+
+        if ($appIndex !== null) {
+            $parts = array_slice($parts, 0, $appIndex);
         }
 
         $appPath = !empty($parts) ? '/' . implode('/', $parts) : '';
@@ -268,18 +276,25 @@ function getBasePath()
     // Normalize path separators to forward slashes
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
+    if ($scriptPath === '.' || $scriptPath === '\\' || $scriptPath === '/') {
+        $scriptPath = '';
+    }
 
-    // Detect if we're in a subdirectory and remove trailing app folders
+    // Detect the first application folder in the path and trim everything after it.
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
         $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
 
-        while (!empty($parts)) {
-            $lastPart = $parts[count($parts) - 1];
-            if (!in_array($lastPart, $appFolders, true)) {
+        $appIndex = null;
+        foreach ($parts as $index => $part) {
+            if (in_array($part, $appFolders, true)) {
+                $appIndex = $index;
                 break;
             }
-            array_pop($parts);
+        }
+
+        if ($appIndex !== null) {
+            $parts = array_slice($parts, 0, $appIndex);
         }
 
         $basePath = !empty($parts) ? '/' . implode('/', $parts) : '';

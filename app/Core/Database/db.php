@@ -56,6 +56,7 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::ATTR_TIMEOUT => 2,
     ];
 
     // PHP 8.5 deprecates PDO::MYSQL_ATTR_INIT_COMMAND in favor of Pdo\Mysql::ATTR_INIT_COMMAND.
@@ -68,11 +69,8 @@ try {
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
 } catch (PDOException $e) {
     // Log the error securely (don't expose credentials in logs)
-    app_log('error', 'Database connection failed', ['exception' => $e->getMessage()]);
-
-    // In development, you might want to see the error
-    if (getenv('APP_ENV') === 'development') {
-        trigger_error('Database Error: ' . $e->getMessage(), E_USER_WARNING);
+    if (function_exists('app_log')) {
+        app_log('error', 'Database connection failed', ['exception' => $e->getMessage()]);
     }
 
     // Set $pdo to null so pages can fall back to demo/offline data
