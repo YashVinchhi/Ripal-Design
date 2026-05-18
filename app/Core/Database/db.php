@@ -57,9 +57,19 @@ $dbConnectionInfo = [
     'database' => (string)$DB_NAME,
     'user' => (string)$DB_USER,
     'driver_loaded' => extension_loaded('pdo_mysql'),
+    'pdo_loaded' => extension_loaded('pdo'),
+    'available_drivers' => class_exists('PDO') ? PDO::getAvailableDrivers() : [],
 ];
 
 try {
+    if (!class_exists('PDO')) {
+        throw new RuntimeException('PDO extension is not loaded.');
+    }
+
+    if (!extension_loaded('pdo_mysql') || !in_array('mysql', PDO::getAvailableDrivers(), true)) {
+        throw new RuntimeException('PDO MySQL driver is not loaded for this PHP runtime.');
+    }
+
     $dsn = "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4";
 
     $options = [
@@ -95,6 +105,10 @@ try {
 
     // Set $pdo to null so pages can fall back to demo/offline data
     $pdo = null;
+}
+
+if (!$pdo instanceof PDO && $dbLastError === null) {
+    $dbLastError = 'PDO connection was not established, but no exception was captured. Restart PHP-FPM/Apache and check OPcache or duplicate db.php includes.';
 }
 
 /**
@@ -135,7 +149,14 @@ function db_connection_diagnostics(): array
             'database' => (string)(getenv('DB_NAME') ?: (getenv('DB_DATABASE') ?: 'Ripal-Design')),
             'user' => (string)(getenv('DB_USER') ?: (getenv('DB_USERNAME') ?: 'root')),
             'driver_loaded' => extension_loaded('pdo_mysql'),
+            'pdo_loaded' => extension_loaded('pdo'),
+            'available_drivers' => class_exists('PDO') ? PDO::getAvailableDrivers() : [],
         ];
+    }
+
+    $availableDrivers = $dbConnectionInfo['available_drivers'] ?? [];
+    if (is_array($availableDrivers)) {
+        $availableDrivers = implode(',', $availableDrivers);
     }
 
     return [
@@ -144,7 +165,9 @@ function db_connection_diagnostics(): array
         'port' => (string)($dbConnectionInfo['port'] ?? ''),
         'database' => (string)($dbConnectionInfo['database'] ?? ''),
         'user' => (string)($dbConnectionInfo['user'] ?? ''),
+        'pdo_loaded' => (bool)($dbConnectionInfo['pdo_loaded'] ?? extension_loaded('pdo')),
         'pdo_mysql_loaded' => (bool)($dbConnectionInfo['driver_loaded'] ?? false),
+        'pdo_available_drivers' => (string)$availableDrivers,
         'last_error' => $dbLastError,
     ];
 }
