@@ -54,6 +54,7 @@ if (file_exists($autoload)) {
 if (file_exists($envPath) && is_readable($envPath)) {
     $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if (is_array($lines)) {
+        $loadedFromFile = [];
         foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '' || strpos($line, '#') === 0) continue;
@@ -62,10 +63,11 @@ if (file_exists($envPath) && is_readable($envPath)) {
             $name = trim((string)$name);
             $value = trim((string)$value);
             $value = trim($value, "\"'");
-            if (getenv($name) === false) {
+            if (isset($loadedFromFile[$name]) || getenv($name) === false) {
                 putenv($name . '=' . $value);
                 $_ENV[$name] = $value;
                 $_SERVER[$name] = $value;
+                $loadedFromFile[$name] = true;
             }
         }
     }

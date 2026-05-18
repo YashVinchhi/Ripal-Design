@@ -40,6 +40,8 @@ function load_project_env_file()
         return;
     }
 
+    $loadedFromFile = [];
+
     foreach ($lines as $line) {
         $line = trim((string)$line);
         if ($line === '' || strpos($line, '#') === 0) {
@@ -57,8 +59,9 @@ function load_project_env_file()
             continue;
         }
 
-        // Do not override env vars already provided by OS/web server.
-        if (getenv($key) !== false) {
+        // Do not override env vars already provided by OS/web server, but allow
+        // later entries in the same .env file to replace earlier duplicate keys.
+        if (!isset($loadedFromFile[$key]) && getenv($key) !== false) {
             continue;
         }
 
@@ -69,6 +72,7 @@ function load_project_env_file()
         putenv($key . '=' . $value);
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
+        $loadedFromFile[$key] = true;
     }
 }
 
