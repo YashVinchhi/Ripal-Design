@@ -48,6 +48,33 @@ function signup_error_and_redirect(string $message): void
     exit();
 }
 
+function append_db_diagnostics_for_testing(string $message): string
+{
+    $env = defined('APP_ENV') ? strtolower((string)APP_ENV) : strtolower((string)(getenv('APP_ENV') ?: 'production'));
+    $debug = defined('APP_DEBUG') ? (bool)APP_DEBUG : in_array(strtolower((string)(getenv('APP_DEBUG') ?: 'false')), ['1', 'true', 'yes', 'on'], true);
+    if ($env === 'production' && !$debug) {
+        return $message;
+    }
+
+    if (!function_exists('db_connection_diagnostics')) {
+        return $message;
+    }
+
+    $diagnostics = db_connection_diagnostics();
+    $parts = [];
+    foreach (['host', 'port', 'database', 'user', 'pdo_mysql_loaded', 'last_error'] as $key) {
+        $value = $diagnostics[$key] ?? null;
+        if (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        } elseif ($value === null || $value === '') {
+            $value = '(none)';
+        }
+        $parts[] = $key . '=' . (string)$value;
+    }
+
+    return $message . ' DB diagnostics: ' . implode('; ', $parts);
+}
+
 function generate_unique_username(PDO $db, string $firstName, string $lastName): string
 {
     $base = strtolower(trim($firstName . '.' . $lastName));
@@ -97,11 +124,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $db = get_db();
 if (!($db instanceof PDO)) {
+    $dbUnavailableMessage = append_db_diagnostics_for_testing($ct('db_unavailable', 'Database connection unavailable. Please try later.'));
     if (isset($_POST['signup'])) {
-        signup_error_and_redirect($ct('db_unavailable', 'Database connection unavailable. Please try later.'));
+        signup_error_and_redirect($dbUnavailableMessage);
     }
     if (isset($_POST['login'])) {
-        login_error_and_redirect($ct('db_unavailable', 'Database connection unavailable. Please try later.'));
+        login_error_and_redirect($dbUnavailableMessage);
     }
     header('Location: login.php');
     exit();
