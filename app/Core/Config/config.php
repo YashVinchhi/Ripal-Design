@@ -238,7 +238,7 @@ function getBaseUrl()
     // like /public/blog/post.php.
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
-        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
+        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api', 'pages'];
 
         $appIndex = null;
         foreach ($parts as $index => $part) {
@@ -291,7 +291,7 @@ function getBasePath()
     // Detect the first application folder in the path and trim everything after it.
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
-        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
+        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api', 'pages'];
 
         $appIndex = null;
         foreach ($parts as $index => $part) {
