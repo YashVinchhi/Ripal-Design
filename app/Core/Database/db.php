@@ -50,6 +50,14 @@ if (file_exists($sqlConfigPath)) {
 
 // Initialize PDO connection
 $pdo = null;
+$dbLastError = null;
+$dbConnectionInfo = [
+    'host' => (string)$DB_HOST,
+    'port' => (string)$DB_PORT,
+    'database' => (string)$DB_NAME,
+    'user' => (string)$DB_USER,
+    'driver_loaded' => extension_loaded('pdo_mysql'),
+];
 
 try {
     $dsn = "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4";
@@ -71,9 +79,18 @@ try {
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
     \App\Core\Database\QueryLogger::init();
 } catch (PDOException $e) {
+    $dbLastError = $e->getMessage();
+
     // Log the error securely (don't expose credentials in logs)
     if (function_exists('app_log')) {
-        app_log('error', 'Database connection failed', ['exception' => $e->getMessage()]);
+        app_log('error', 'Database connection failed', [
+            'exception' => $e->getMessage(),
+            'host' => $dbConnectionInfo['host'],
+            'port' => $dbConnectionInfo['port'],
+            'database' => $dbConnectionInfo['database'],
+            'user' => $dbConnectionInfo['user'],
+            'driver_loaded' => $dbConnectionInfo['driver_loaded'],
+        ]);
     }
 
     // Set $pdo to null so pages can fall back to demo/offline data
@@ -100,4 +117,24 @@ function get_db()
 {
     global $pdo;
     return $pdo;
+}
+
+/**
+ * Get masked database connection diagnostics for CLI/server checks.
+ *
+ * @return array<string, mixed>
+ */
+function db_connection_diagnostics(): array
+{
+    global $dbConnectionInfo, $dbLastError;
+
+    return [
+        'connected' => db_connected(),
+        'host' => (string)($dbConnectionInfo['host'] ?? ''),
+        'port' => (string)($dbConnectionInfo['port'] ?? ''),
+        'database' => (string)($dbConnectionInfo['database'] ?? ''),
+        'user' => (string)($dbConnectionInfo['user'] ?? ''),
+        'pdo_mysql_loaded' => (bool)($dbConnectionInfo['driver_loaded'] ?? false),
+        'last_error' => $dbLastError,
+    ];
 }
