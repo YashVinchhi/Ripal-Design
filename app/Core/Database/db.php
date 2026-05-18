@@ -20,9 +20,9 @@ require_once __DIR__ . '/QueryLogger.php';
 // Load database credentials from environment or sql/config.php, with sensible defaults
 $envHost = getenv('DB_HOST');
 $DB_HOST = $envHost ?: 'localhost';
-$DB_NAME = getenv('DB_NAME') ?: 'Ripal-Design';
-$DB_USER = getenv('DB_USER') ?: 'root';
-$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_NAME = getenv('DB_NAME') ?: (getenv('DB_DATABASE') ?: 'Ripal-Design');
+$DB_USER = getenv('DB_USER') ?: (getenv('DB_USERNAME') ?: 'root');
+$DB_PASS = getenv('DB_PASS') ?: (getenv('DB_PASSWORD') ?: '');
 $DB_PORT = getenv('DB_PORT') ?: '3306';
 
 $projectRoot = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : dirname(__DIR__, 3);

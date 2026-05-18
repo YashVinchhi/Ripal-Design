@@ -1,9 +1,9 @@
 <?php
 // Prefer environment variables, fall back to sensible defaults for local dev
 $host = getenv('DB_HOST') ?: 'localhost';
-$username = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASS') ?: '';
-$database = getenv('DB_NAME') ?: 'Ripal-Design';
+$username = getenv('DB_USER') ?: (getenv('DB_USERNAME') ?: 'root');
+$password = getenv('DB_PASS') ?: (getenv('DB_PASSWORD') ?: '');
+$database = getenv('DB_NAME') ?: (getenv('DB_DATABASE') ?: 'Ripal-Design');
 $port = (int) (getenv('DB_PORT') ?: 3306);
 
 function sql_get_connection()
