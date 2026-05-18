@@ -72,13 +72,13 @@ try {
     // PHP 8.5 deprecates PDO::MYSQL_ATTR_INIT_COMMAND in favor of Pdo\Mysql::ATTR_INIT_COMMAND.
     if (class_exists('Pdo\\Mysql') && defined('Pdo\\Mysql::ATTR_INIT_COMMAND')) {
         $options[\Pdo\Mysql::ATTR_INIT_COMMAND] = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci";
-    } else {
+    } elseif (defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
         $options[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci";
     }
 
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
     \App\Core\Database\QueryLogger::init();
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     $dbLastError = $e->getMessage();
 
     // Log the error securely (don't expose credentials in logs)
@@ -127,6 +127,16 @@ function get_db()
 function db_connection_diagnostics(): array
 {
     global $dbConnectionInfo, $dbLastError;
+
+    if (!is_array($dbConnectionInfo ?? null) || empty($dbConnectionInfo)) {
+        $dbConnectionInfo = [
+            'host' => (string)(getenv('DB_HOST') ?: 'localhost'),
+            'port' => (string)(getenv('DB_PORT') ?: '3306'),
+            'database' => (string)(getenv('DB_NAME') ?: (getenv('DB_DATABASE') ?: 'Ripal-Design')),
+            'user' => (string)(getenv('DB_USER') ?: (getenv('DB_USERNAME') ?: 'root')),
+            'driver_loaded' => extension_loaded('pdo_mysql'),
+        ];
+    }
 
     return [
         'connected' => db_connected(),
