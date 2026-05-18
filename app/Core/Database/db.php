@@ -15,6 +15,8 @@ if (file_exists(__DIR__ . '/logger.php')) {
     require_once __DIR__ . '/logger.php';
 }
 
+require_once __DIR__ . '/QueryLogger.php';
+
 // Load database credentials from environment or sql/config.php, with sensible defaults
 $envHost = getenv('DB_HOST');
 $DB_HOST = $envHost ?: 'localhost';
@@ -67,6 +69,7 @@ try {
     }
 
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
+    \App\Core\Database\QueryLogger::init();
 } catch (PDOException $e) {
     // Log the error securely (don't expose credentials in logs)
     if (function_exists('app_log')) {

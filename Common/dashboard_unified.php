@@ -281,15 +281,94 @@ if ($useWorkerProjectView) {
   <?php $HEADER_MODE = 'dashboard';
   require_once __DIR__ . '/header.php'; ?>
   <style>
+    html,
+    body {
+      background: #f7f4ef !important;
+      color: #24211f !important;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
     /* Dashboard desktop: center main content with 10% side margins */
-    .dashboard-main { width: 100%; max-width: none !important; }
+    .dashboard-main {
+      width: 100%;
+      max-width: none !important;
+      padding-top: clamp(96px, 12vh, 150px) !important;
+    }
+
     @media (min-width: 1024px) {
       .dashboard-main { width: 80% !important; margin-left: 10% !important; margin-right: 10% !important; }
+    }
+
+    [data-stats-group] {
+      margin-top: 0 !important;
+    }
+
+    [data-stat-card],
+    [data-quick-actions],
+    [data-project-card],
+    .dashboard-main > section {
+      background: rgba(255, 255, 255, 0.96) !important;
+      color: #24211f !important;
+      border: 1px solid rgba(36, 33, 31, 0.08) !important;
+      box-shadow: 0 18px 50px rgba(36, 33, 31, 0.08) !important;
+    }
+
+    [data-stat-card] {
+      min-height: 128px;
+    }
+
+    [data-stat-card] span,
+    [data-project-card] span,
+    [data-project-card] h3,
+    [data-project-card] div,
+    .dashboard-main h2,
+    .dashboard-main a {
+      color: inherit;
+    }
+
+    [data-stats-group] [data-countup],
+    .stat-number {
+      color: #24211f !important;
+      font-size: clamp(1.75rem, 2.2vw, 2.4rem) !important;
+      line-height: 1 !important;
+    }
+
+    [data-stat-card] .text-gray-400,
+    [data-project-card] .text-gray-400,
+    [data-project-card] .text-gray-600 {
+      color: #6f6861 !important;
+    }
+
+    [data-project-card] h3 {
+      color: #24211f !important;
+      font-size: 1.15rem !important;
+    }
+
+    [data-project-card] a.bg-foundation-grey,
+    [data-project-card] a.hover\:bg-black {
+      background: #24211f !important;
+      color: #ffffff !important;
+      border-color: #24211f !important;
+    }
+
+    [data-project-card] a.border {
+      color: #24211f !important;
+      background: #fffaf3 !important;
+    }
+
+    .alt-header {
+      background: rgba(22, 20, 18, 0.92) !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
     }
   </style>
 </head>
 
-<body class="font-sans text-foundation-grey bg-canvas-white">
+<body class="font-sans text-foundation-grey bg-canvas-white dashboard-page">
 
   <div class="min-h-screen flex flex-col">
     <!-- Dashboard hero header removed to conserve vertical space -->

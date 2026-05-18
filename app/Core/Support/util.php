@@ -38,6 +38,12 @@ if (!function_exists('h')) {
     }
 }
 
+if (!function_exists('request_id')) {
+    function request_id(): string {
+        return (string)($_SERVER['X_REQUEST_ID'] ?? 'no-id');
+    }
+}
+
 if (!function_exists('esc_attr')) {
     /**
      * Escape HTML attribute value
@@ -270,8 +276,11 @@ if (!function_exists('db_fetch')) {
      * @return array|false Row data or false
      */
     function db_fetch($sql, $params = []) {
-        $stmt = db_query($sql, $params);
-        return $stmt ? $stmt->fetch() : false;
+        global $pdo;
+        if (empty($pdo)) return false;
+
+        $stmt = \App\Core\Database\QueryLogger::wrap($pdo, $sql, $params);
+        return $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : false;
     }
 }
 
@@ -284,8 +293,11 @@ if (!function_exists('db_fetch_all')) {
      * @return array Array of rows
      */
     function db_fetch_all($sql, $params = []) {
-        $stmt = db_query($sql, $params);
-        return $stmt ? $stmt->fetchAll() : [];
+        global $pdo;
+        if (empty($pdo)) return [];
+
+        $stmt = \App\Core\Database\QueryLogger::wrap($pdo, $sql, $params);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 }
 

@@ -20,6 +20,7 @@ if (!function_exists('require_login')) {
     wmcp_error('Authentication is unavailable.', 503, false);
 }
 require_login();
+require_csrf();
 
 $rawBody = file_get_contents('php://input');
 $payload = json_decode((string)$rawBody, true);

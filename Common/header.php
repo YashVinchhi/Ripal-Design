@@ -20,6 +20,9 @@
 if (!defined('BASE_PATH')) {
     require_once __DIR__ . '/../app/Core/Config/config.php';
 }
+if (file_exists(__DIR__ . '/../app/Core/Support/assets.php')) {
+    require_once __DIR__ . '/../app/Core/Support/assets.php';
+}
 
 // Ensure session is started
 if (session_status() === PHP_SESSION_NONE) {
@@ -45,6 +48,15 @@ if (!isset($headerPublicUrl) || !is_callable($headerPublicUrl)) {
 }
 if (!isset($logoHref)) { $logoHref = (defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') . '/' : '/'); }
 if (!isset($roleDashboardLink)) { $roleDashboardLink = (defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') . '/dashboard.php' : '/dashboard.php'); }
+if (!isset($dashboardProfileUrl)) { $dashboardProfileUrl = (defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') . '/dashboard/profile.php' : '/dashboard/profile.php'); }
+if (!isset($headerContent) || !is_array($headerContent)) { $headerContent = []; }
+if (!isset($radiusMode)) {
+    $radiusMode = strtolower((string)(getenv('UI_RADIUS') ?: 'sharp'));
+    $radiusMode = in_array($radiusMode, ['rounded', 'sharp'], true) ? $radiusMode : 'sharp';
+}
+if (!isset($brandLogoImage) || (string)$brandLogoImage === '') {
+    $brandLogoImage = (defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') : '') . '/assets/images/rd-placeholder.svg';
+}
 
 // Normalize header mode variables: some pages set $HEADER_MODE while others set $headerMode
 if (!isset($headerMode) && isset($HEADER_MODE)) { $headerMode = $HEADER_MODE; }
@@ -60,15 +72,17 @@ if (!isset($role) && function_exists('current_user') && function_exists('is_logg
 if (!$isPublicHeader && function_exists('current_user')) {
     $cu = current_user();
     $role = is_array($cu) ? strtolower(trim((string)($cu['role'] ?? ''))) : '';
-    if ($role === 'client') {
-        $logoHref = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
-    } elseif ($role === 'worker') {
-        $logoHref = rtrim((string)BASE_PATH, '/') . '/worker/dashboard.php';
-    } elseif ($role === 'admin') {
-        $logoHref = rtrim((string)BASE_PATH, '/') . '/admin/dashboard.php';
-    } elseif (function_exists('auth_dashboard_url')) {
-        $logoHref = auth_dashboard_url();
-    }
+    render_if('dashboard', 'nav.logo_href', static function () use (&$logoHref, $role): void {
+        if ($role === 'client') {
+            $logoHref = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
+        } elseif ($role === 'worker') {
+            $logoHref = rtrim((string)BASE_PATH, '/') . '/worker/dashboard.php';
+        } elseif ($role === 'admin') {
+            $logoHref = rtrim((string)BASE_PATH, '/') . '/admin/dashboard.php';
+        } elseif (function_exists('auth_dashboard_url')) {
+            $logoHref = auth_dashboard_url();
+        }
+    });
 } elseif (!$isPublicHeader && function_exists('is_logged_in') && is_logged_in() && function_exists('auth_dashboard_url')) {
     $logoHref = auth_dashboard_url();
 }
@@ -135,16 +149,21 @@ $isActiveNav = static function ($path) use ($currentPath) {
 <?php if ((empty($HEADER_MODE) || $HEADER_MODE !== 'public') && (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS)): ?>
 <?php
 $tailwindBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'tailwind.css';
+$stylesBuiltPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'styles.css';
 if (file_exists($tailwindBuiltPath)) {
-    $tailwindHref = rtrim((string)BASE_PATH, '/') . '/assets/css/tailwind.css';
-    echo '<link rel="stylesheet" href="' . esc_attr($tailwindHref) . '">' . "\n";
+    echo '<link rel="stylesheet" href="' . esc_attr(asset('assets/css/tailwind.css')) . '">' . "\n";
+}
+if (file_exists($stylesBuiltPath)) {
+    echo '<link rel="stylesheet" href="' . esc_attr(asset('assets/css/styles.css')) . '">' . "\n";
 }
 
+$variablesCssPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'variables.css';
+$mainCssPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'main.css';
 $variablesCss = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/variables.css';
 $mainCss = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/main.css';
-echo '<link rel="stylesheet" href="' . esc_attr($variablesCss) . '">' . "\n";
-echo '<link rel="stylesheet" href="' . esc_attr(rtrim((string)BASE_PATH, '/') . '/assets/css/ui-radius.css') . '">' . "\n";
-echo '<link rel="stylesheet" href="' . esc_attr($mainCss) . '">' . "\n";
+echo '<link rel="stylesheet" href="' . esc_attr(asset('assets/css/ui-radius.css')) . '">' . "\n";
+echo '<link rel="stylesheet" href="' . esc_attr($variablesCss . asset_version_suffix_for_file($variablesCssPath)) . '">' . "\n";
+echo '<link rel="stylesheet" href="' . esc_attr($mainCss . asset_version_suffix_for_file($mainCssPath)) . '">' . "\n";
 ?>
 <?php endif; ?>
 
@@ -172,8 +191,8 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
 <!-- Header Navigation (Always loaded) -->
 <!-- Layout tokens for legacy CSS (variables: spacing, header height, container) -->
 <?php if (empty($HEADER_MODE) || $HEADER_MODE !== 'public'): ?>
-    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . '/assets/css/_layout.css'); ?>">
-    <link rel="stylesheet" href="<?php echo esc_attr(rtrim((string) BASE_PATH, '/') . PUBLIC_PATH_PREFIX . '/css/header.css'); ?>">
+    <link rel="stylesheet" href="<?php echo esc_attr(asset('assets/css/_layout.css')); ?>">
+    <link rel="stylesheet" href="<?php echo esc_attr(asset('public/css/header.css')); ?>">
 <?php endif; ?>
 <?php if (function_exists('is_logged_in') && is_logged_in()): ?>
     <style>
@@ -247,7 +266,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
         </a>
     </div>
 
-    <?php if (function_exists('is_logged_in') && is_logged_in() && (isset($role) && strtolower((string)$role) === 'admin')): ?>
+    <?php render_if('dashboard', 'nav.admin.topmenu', static function (): void { ?>
         <div class="alt-main-menu" role="navigation" aria-label="Admin menu">
             <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php'); ?>">DASHBOARD</a>
             <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/project_management.php'); ?>">PORTFOLIO</a>
@@ -257,7 +276,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
             <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/content_management.php'); ?>">CONTENT</a>
             <a href="<?php echo esc_attr(rtrim((string)BASE_PATH, '/') . '/admin/contact_messages.php'); ?>">MESSAGES</a>
         </div>
-    <?php endif; ?>
+    <?php }); ?>
 
     <?php if ($headerMode === 'public'): ?>
     <!-- Contact (small-screen friendly) -->
@@ -299,9 +318,11 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
                     } elseif (function_exists('current_user')) {
                         $fallbackUser = current_user();
                         $fallbackRole = is_array($fallbackUser) ? strtolower((string)($fallbackUser['role'] ?? '')) : '';
-                        if ($fallbackRole === 'admin' || $fallbackRole === 'worker') {
-                            $navRole = $fallbackRole;
-                        }
+                        render_if('dashboard', 'nav.resolve_role', static function () use (&$navRole, $fallbackRole): void {
+                            if ($fallbackRole === 'admin' || $fallbackRole === 'worker') {
+                                $navRole = $fallbackRole;
+                            }
+                        });
                     }
 
 
@@ -312,55 +333,75 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
                     }
 
                     // Role-aware dashboard link: clients should land on client dashboard
-                    if ($sessionRole === 'client') {
-                        $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
-                    }
+                    render_if('dashboard', 'nav.client.dashboard_link', static function () use (&$roleDashboardLink, $sessionRole): void {
+                        if ($sessionRole === 'client') {
+                            $roleDashboardLink = rtrim((string)BASE_PATH, '/') . '/client/dashboard.php';
+                        }
+                    });
 
-                    $menuSections = [
-                        'dashboard' => [
-                            'title' => $headerText('dashboard_section_title', 'Dashboard'),
-                            'links' => [
-                                ['href' => $roleDashboardLink, 'label' => $headerText('dashboard_link_home', 'Dashboard Home')],
-                                ['href' => BASE_PATH . '/worker/project_details.php', 'label' => $headerText('dashboard_link_project_details', 'Project Details')],
-                                ['href' => $dashboardProfileUrl, 'label' => $headerText('dashboard_link_profile', 'Profile Settings')],
-                                ['href' => BASE_PATH . '/dashboard/review_requests.php', 'label' => $headerText('dashboard_link_reviews', 'Review Requests')],
-                            ],
-                        ],
-                        'worker' => [
-                            'title' => $headerText('worker_section_title', 'Worker Portal'),
-                            'links' => [
-                                ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('worker_link_dashboard', 'Worker Dashboard')],
-                                ...($sessionRole === 'client' ? [] : [
-                                    ['href' => BASE_PATH . '/worker/assigned_projects.php', 'label' => $headerText('worker_link_assigned_projects', 'Assigned Projects')],
-                                ]),
-                                ['href' => BASE_PATH . '/dashboard/project_details.php', 'label' => $headerText('worker_link_project_details', 'Project Details')],
-                                ['href' => BASE_PATH . '/worker/worker_rating.php', 'label' => $headerText('worker_link_ratings', 'My Ratings')],
-                            ],
-                        ],
-                        'admin' => [
-                            'title' => $headerText('admin_section_title', 'Administration'),
-                            'links' => [
-                                ['href' => BASE_PATH . '/dashboard/dashboard.php', 'label' => $headerText('admin_link_dashboard', 'Admin Dashboard')],
-                                ['href' => BASE_PATH . '/admin/project_management.php', 'label' => $headerText('admin_link_project_portfolio', 'Project Portfolio')],
-                                ['href' => BASE_PATH . '/admin/user_management.php', 'label' => $headerText('admin_link_user_controls', 'User Controls')],
-                                ['href' => BASE_PATH . '/admin/leave_management.php', 'label' => $headerText('admin_link_leave_manager', 'Leave Manager')],
-                                ['href' => BASE_PATH . '/admin/payment_gateway.php', 'label' => $headerText('admin_link_financial_gateway', 'Financial Gateway')],
-                                ['href' => BASE_PATH . '/admin/content_management.php', 'label' => $headerText('admin_link_content_manager', 'Content Manager')],
-                                ['href' => BASE_PATH . '/admin/entities.php?tab=vendors', 'label' => 'Vendors'],
-                                ['href' => BASE_PATH . '/admin/entities.php?tab=workers', 'label' => 'Workers'],
-                                ['href' => BASE_PATH . '/admin/contact_messages.php', 'label' => $headerText('admin_link_contact_messages', 'Contact Messages')],
-                            ],
-                        ],
-                    ];
-
-                    $activeSection = $menuSections[$navRole] ?? $menuSections['dashboard'];
+                    $activeSection = $navRole;
                 ?>
-                <?php if (!empty($activeSection['title'])): ?>
-                    <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo htmlspecialchars((string)$activeSection['title']); ?></strong>
+                <?php if ($activeSection === 'dashboard'): ?>
+                    <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo htmlspecialchars((string)$headerText('dashboard_section_title', 'Dashboard')); ?></strong>
+                    <?php render_if('dashboard', 'nav.dashboard.home', static function () use ($roleDashboardLink, $headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars($roleDashboardLink); ?>"><?php echo htmlspecialchars((string)$headerText('dashboard_link_home', 'Dashboard Home')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.dashboard.project_details', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/worker/project_details.php'); ?>"><?php echo htmlspecialchars((string)$headerText('dashboard_link_project_details', 'Project Details')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.dashboard.profile', static function () use ($dashboardProfileUrl, $headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars($dashboardProfileUrl); ?>"><?php echo htmlspecialchars((string)$headerText('dashboard_link_profile', 'Profile Settings')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.dashboard.reviews', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/dashboard/review_requests.php'); ?>"><?php echo htmlspecialchars((string)$headerText('dashboard_link_reviews', 'Review Requests')); ?></a>
+                    <?php }); ?>
+                <?php elseif ($activeSection === 'worker'): ?>
+                    <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo htmlspecialchars((string)$headerText('worker_section_title', 'Worker Portal')); ?></strong>
+                    <?php render_if('dashboard', 'nav.worker.dashboard', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php'); ?>"><?php echo htmlspecialchars((string)$headerText('worker_link_dashboard', 'Worker Dashboard')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.worker.assigned_projects', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/worker/assigned_projects.php'); ?>"><?php echo htmlspecialchars((string)$headerText('worker_link_assigned_projects', 'Assigned Projects')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.worker.project_details', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/dashboard/project_details.php'); ?>"><?php echo htmlspecialchars((string)$headerText('worker_link_project_details', 'Project Details')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.worker.ratings', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/worker/worker_rating.php'); ?>"><?php echo htmlspecialchars((string)$headerText('worker_link_ratings', 'My Ratings')); ?></a>
+                    <?php }); ?>
+                <?php elseif ($activeSection === 'admin'): ?>
+                    <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo htmlspecialchars((string)$headerText('admin_section_title', 'Administration')); ?></strong>
+                    <?php render_if('dashboard', 'nav.admin.dashboard', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_dashboard', 'Admin Dashboard')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.admin.projects', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/project_management.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_project_portfolio', 'Project Portfolio')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.users.list', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/user_management.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_user_controls', 'User Controls')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.settings', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/pages/settings/permissions.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_settings', 'Settings')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.admin.leave', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/leave_management.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_leave_manager', 'Leave Manager')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.admin.billing', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/payment_gateway.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_financial_gateway', 'Financial Gateway')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.admin.content', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/content_management.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_content_manager', 'Content Manager')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.vendors', static function (): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/entities.php?tab=vendors'); ?>">Vendors</a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.admin.workers', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/entities.php?tab=workers'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_workers', 'Workers')); ?></a>
+                    <?php }); ?>
+                    <?php render_if('dashboard', 'nav.admin.contacts', static function () use ($headerText): void { ?>
+                        <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/admin/contact_messages.php'); ?>"><?php echo htmlspecialchars((string)$headerText('admin_link_contact_messages', 'Contact Messages')); ?></a>
+                    <?php }); ?>
                 <?php endif; ?>
-                <?php foreach (($activeSection['links'] ?? []) as $link): ?>
-                    <a href="<?php echo htmlspecialchars((string)($link['href'] ?? '')); ?>"><?php echo htmlspecialchars((string)($link['label'] ?? '')); ?></a>
-                <?php endforeach; ?>
             <?php else: ?>
                 <a href="<?php echo htmlspecialchars($headerPublicUrl('index.php')); ?>" class="nav-link<?php echo $isActiveNav('index.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_home', 'Home')); ?></a>
                 <a href="<?php echo htmlspecialchars($headerPublicUrl('services.php')); ?>" class="nav-link<?php echo $isActiveNav('services.php') ? ' nav-link-active' : ''; ?>"><?php echo htmlspecialchars($headerText('menu_services', 'Services')); ?></a>
@@ -418,7 +459,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
 <script>
     // Global image error handler: replace broken images with local placeholder (same-origin)
     (function(){
-        var fallback = '<?php echo esc_js(rtrim((string)BASE_PATH, '/') . "/assets/images/rd-placeholder.svg"); ?>';
+        var fallback = <?php echo esc_js(rtrim((string)BASE_PATH, '/') . "/assets/images/rd-placeholder.svg"); ?>;
         window.addEventListener('error', function(e){
             var t = e.target || e.srcElement;
             if (!t) return;
@@ -445,7 +486,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
             (function(){
                 var lucideScript = document.createElement('script');
                 // Prefer local copy to avoid CORB/CSP/CDN issues. Fallback to CDN if not present.
-                var localPath = '<?php echo esc_attr(rtrim((string)BASE_PATH, "/") . "/assets/js/lucide.min.js"); ?>';
+                var localPath = '<?php echo esc_attr(asset('assets/js/lucide.min.js')); ?>';
                 // server-side: if local file exists, use it. Otherwise use CDN.
                 var useLocal = false;
                 try {
@@ -569,12 +610,12 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
             })();
         </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
-<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/gsap-core-init.js" defer></script>
-<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/gsap-motion-presets.js" defer></script>
-<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/header-nav.js" defer></script>
-<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/auto-hide-alerts.js" defer></script>
-<script src="<?php echo htmlspecialchars(BASE_PATH); ?>/assets/js/ajax-forms.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+    <script src="<?php echo esc_attr(asset('assets/js/gsap-core-init.js')); ?>" defer></script>
+    <script src="<?php echo esc_attr(asset('assets/js/gsap-motion-presets.js')); ?>" defer></script>
+    <script src="<?php echo esc_attr(asset('assets/js/header-nav.js')); ?>" defer></script>
+    <script src="<?php echo esc_attr(asset('assets/js/auto-hide-alerts.js')); ?>" defer></script>
+    <script src="<?php echo esc_attr(asset('assets/js/ajax-forms.js')); ?>" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
   // Fallback: if Phantom-UI doesn't initialize (CDN blocked), ensure content is visible

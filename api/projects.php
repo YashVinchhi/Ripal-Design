@@ -92,6 +92,9 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
+    require_login();
+    require_csrf();
+
     $action = $_POST['action'] ?? '';
     if ($action === 'appreciate') {
         require_login();

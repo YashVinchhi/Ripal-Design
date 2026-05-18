@@ -22,6 +22,9 @@
 if (!defined('BASE_PATH')) {
     require_once __DIR__ . '/../app/Core/Config/config.php';
 }
+if (file_exists(__DIR__ . '/../app/Core/Support/assets.php')) {
+    require_once __DIR__ . '/../app/Core/Support/assets.php';
+}
 
 $footerContent = function_exists('public_content_page_values') ? public_content_page_values('common_footer') : [];
 $footerText = static function ($key, $default = '') use ($footerContent) {
@@ -176,7 +179,7 @@ if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {
         if (file_exists($filePath)) {
             $publicRemoved = preg_replace('~^/public~i', '', $script);
             $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
-            echo '<script defer src="' . esc_attr($href) . '"></script>' . "\n";
+            echo '<script defer src="' . esc_attr($href . asset_version_suffix_for_file($filePath)) . '"></script>' . "\n";
             break;
         }
     }
@@ -185,12 +188,12 @@ if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {
 // Include global tab persistence script if present
 $persistPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'persist-tabs.js';
 if (file_exists($persistPath)) {
-    echo '<script defer src="' . esc_attr(rtrim(BASE_PATH, '/') . '/assets/js/persist-tabs.js') . '"></script>' . "\n";
+    echo '<script defer src="' . esc_attr(asset('assets/js/persist-tabs.js')) . '"></script>' . "\n";
 }
 
 $pageTransitionPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'page-transitions.js';
 if (file_exists($pageTransitionPath)) {
-    echo '<script defer src="' . esc_attr(rtrim(BASE_PATH, '/') . '/assets/js/page-transitions.js') . '"></script>' . "\n";
+    echo '<script defer src="' . esc_attr(asset('assets/js/page-transitions.js')) . '"></script>' . "\n";
 }
 
 // Render any enqueued scripts from util.php

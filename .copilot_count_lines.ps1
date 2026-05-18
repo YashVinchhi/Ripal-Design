@@ -1,0 +1,19 @@
+$files=@(
+'d:\WP\laragon\www\Thefinal\database\migrations\create_ui_permissions_table.sql',
+'d:\WP\laragon\www\Thefinal\database\seeds\ui_permissions_seed.sql',
+'d:\WP\laragon\www\Thefinal\app\Core\Permissions\PermissionService.php',
+'d:\WP\laragon\www\Thefinal\app\Core\Permissions\gate.php',
+'d:\WP\laragon\www\Thefinal\app\Shared\View.php',
+'d:\WP\laragon\www\Thefinal\Common\partials\data-table.php',
+'d:\WP\laragon\www\Thefinal\Common\layout\header.php',
+'d:\WP\laragon\www\Thefinal\Common\layout\footer.php',
+'d:\WP\laragon\www\Thefinal\pages\dashboard.php',
+'d:\WP\laragon\www\Thefinal\pages\partials\dashboard-body.php',
+'d:\WP\laragon\www\Thefinal\pages\projects\list.php',
+'d:\WP\laragon\www\Thefinal\pages\projects\partials\list-body.php',
+'d:\WP\laragon\www\Thefinal\pages\files\index.php',
+'d:\WP\laragon\www\Thefinal\pages\settings\permissions.php',
+'d:\WP\laragon\www\Thefinal\api\permissions-update.php',
+'d:\WP\laragon\www\Thefinal\app\Config\permissions_cache.php'
+)
+foreach($f in $files){ if(Test-Path $f){ try{ $c = Get-Content -LiteralPath $f -Raw -ErrorAction Stop; $l = ($c -split "\n").Count } catch{ $l = 0 } ; Write-Output ("$f|$l") } else { Write-Output ("$f|MISSING") } }

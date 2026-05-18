@@ -285,6 +285,7 @@ if (isset($_POST['signup'])) {
 
 if (isset($_POST['login'])) {
     $email = trim((string)($_POST['email'] ?? ''));
+    $email_attempted = $email !== '' ? $email : null;
     $user_password = (string)($_POST['password'] ?? '');
 
     if ($email === '' || $user_password === '') {
@@ -403,7 +404,7 @@ if (isset($_POST['login'])) {
 
     if (function_exists('app_log')) {
         $clientIp = function_exists('auth_request_ip') ? auth_request_ip() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
-        app_log('warning', 'Failed login attempt', ['email' => $email, 'ip' => $clientIp, 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '']);
+        app_log('warning', 'Login failed', ['ip' => $clientIp, 'email' => $email_attempted ?? 'unknown']);
     }
     login_error_and_redirect($ct('login_invalid_credentials', 'Invalid email or password.'));
 }// End of login/register processor

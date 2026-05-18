@@ -103,6 +103,10 @@ if (!function_exists('env_value')) {
     }
 }
 
+if (!defined('ALLOWED_ORIGINS')) {
+    define('ALLOWED_ORIGINS', env_value('ALLOWED_ORIGINS', 'http://localhost,https://yourdomain.com'));
+}
+
 if (!function_exists('app_is_https')) {
     /**
      * Best-effort HTTPS detection including reverse-proxy headers.
@@ -309,6 +313,9 @@ function getBasePath()
 define('BASE_URL', getBaseUrl());
 define('BASE_PATH', getBasePath());
 define('PROJECT_ROOT', dirname(__DIR__, 3));
+if (!defined('APP_URL')) {
+    define('APP_URL', env_value('APP_URL', BASE_URL));
+}
 
 // Public entry path prefix:
 // - '' when Apache DocumentRoot points to /public

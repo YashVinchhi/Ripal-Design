@@ -34,9 +34,13 @@ $envPath = rtrim((string)defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR_
 if (file_exists($autoload)) {
     try {
         require_once $autoload;
+        if (defined('PROJECT_ROOT') && file_exists(rtrim((string)PROJECT_ROOT, '/\\') . '/includes/autoload_shim.php')) {
+            require_once rtrim((string)PROJECT_ROOT, '/\\') . '/includes/autoload_shim.php';
+        }
         if (class_exists('\\Dotenv\\Dotenv')) {
             try {
-                $dot = \Dotenv\Dotenv::createImmutable(rtrim((string)PROJECT_ROOT, '/\\'));
+                $dotenvClass = '\\Dotenv\\Dotenv';
+                $dot = $dotenvClass::createImmutable(rtrim((string)PROJECT_ROOT, '/\\'));
                 $dot->safeLoad();
             } catch (Throwable $e) {
                 // ignore dotenv failures and fall back to manual loader below
@@ -123,9 +127,19 @@ require_once __DIR__ . '/../Database/db.php';
 // Load authentication helpers
 require_once __DIR__ . '/../Security/auth.php';
 
+if (!defined('APP_ROOT')) {
+    define('APP_ROOT', PROJECT_ROOT);
+}
+
+// Permission gate will be loaded after session is started (moved down).
+
 // Load utility functions (depends on config and db)
 if (file_exists(__DIR__ . '/../Support/util.php')) {
     require_once __DIR__ . '/../Support/util.php';
+}
+
+if (file_exists(__DIR__ . '/../Support/assets.php')) {
+    require_once __DIR__ . '/../Support/assets.php';
 }
 
 $commonFunctionsPath = rtrim((string)PROJECT_ROOT, '/\\') . '/Common/functions.php';
@@ -185,9 +199,42 @@ if (session_status() === PHP_SESSION_NONE) {
         'samesite' => 'Strict',
     ]);
     @session_start();
+
+    $requestId = bin2hex(random_bytes(8));
+    $_SERVER['X_REQUEST_ID'] = $requestId;
+    if (!headers_sent()) {
+        header('X-Request-ID: ' . $requestId);
+    }
+}
+
+// Load permission gate after session is started and auth helpers are available
+if (file_exists(APP_ROOT . '/app/Core/Permissions/gate.php')) {
+    require_once APP_ROOT . '/app/Core/Permissions/gate.php';
+} else {
+    require_once __DIR__ . '/../Permissions/gate.php';
+}
+
+// Preload permission cache when a current user exists (depends on session)
+if (function_exists('current_user')) {
+    $bootstrapCurrentUser = current_user();
+    if (is_array($bootstrapCurrentUser)) {
+        \App\Core\Permissions\PermissionService::preload();
+    }
 }
 
 apply_security_headers();
+
+if (!headers_sent()) {
+    header("Content-Security-Policy: " . implode('; ', [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+        "img-src 'self' data: https:",
+        "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+        "frame-ancestors 'none'"
+    ]));
+}
 
 // Polyfill for mbstring functions when the extension is not available.
 if (!function_exists('mb_substr')) {
@@ -210,6 +257,8 @@ if (!function_exists('mb_strlen')) {
 if (function_exists('auth_try_auto_login')) {
     auth_try_auto_login();
 }
+
+
 
 // Global login guard for protected routes.
 if (function_exists('enforce_protected_route_login')) {

@@ -15,6 +15,8 @@ if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
     wmcp_error('Method not allowed.', 405, true);
 }
 
+require_login();
+
 if (!db_connected() || !db_table_exists('projects')) {
     wmcp_error('Projects data source is unavailable.', 503, true);
 }
