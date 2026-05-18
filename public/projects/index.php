@@ -123,7 +123,12 @@ $schema = [
     'projectType' => (string)($project['project_type'] ?? ''),
 ];
 if ($images) {
-    $schema['image'] = array_map(function($i){ return (strpos($i['file_path'],'/')===0? rtrim((string)BASE_PATH,'/').$i['file_path']:$i['file_path']; }, $images);
+    $schema['image'] = array_map(function ($i) {
+        $filePath = (string)($i['file_path'] ?? '');
+        return strpos($filePath, '/') === 0
+            ? rtrim((string)BASE_PATH, '/') . $filePath
+            : $filePath;
+    }, $images);
 }
 echo "<script type=\"application/ld+json\">\n" . json_encode($schema, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) . "\n</script>\n";
 
