@@ -438,7 +438,10 @@ if (!function_exists('auth_dashboard_url')) {
             }
         }
 
-        return $basePath . ($routeByRole[$navRole] ?? '/dashboard/dashboard.php');
+        // Return an absolute URL (including base URL and any subpath)
+        $baseUrl = defined('BASE_URL') ? rtrim((string)BASE_URL, '/') : '';
+        $route = ($routeByRole[$navRole] ?? '/dashboard/dashboard.php');
+        return $baseUrl . $route;
     }
 }
 

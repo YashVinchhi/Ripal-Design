@@ -120,10 +120,10 @@ if ($_scriptName === 'user_management.php'):
 <!-- Admin toolbar for User Management (page-styled, not fixed) -->
 <div class="user-management-toolbar bg-white shadow-premium border border-gray-100 p-4 md:p-6 mb-8 flex flex-col lg:flex-row justify-between items-center gap-4 md:gap-6" role="region" aria-label="User management tools">
     <div class="flex items-center gap-3">
-        <button id="addUserBtn" type="button" class="bg-rajkot-rust text-white px-4 py-2 rounded font-bold text-sm" title="Add New User" onclick="location.href='add_user.php'">
+        <button id="addUserBtn" type="button" class="toolbar-btn toolbar-cta" title="Add New User" onclick="location.href='add_user.php'">
             <i class="fa-solid fa-user-plus" aria-hidden="true"></i>&nbsp;Add User
         </button>
-        <button id="addTempUserBtn" type="button" class="bg-foundation-grey text-white px-4 py-2 rounded font-bold text-sm" title="Add Temp User" onclick="location.href='provision_temp_user.php'">
+        <button id="addTempUserBtn" type="button" class="toolbar-btn toolbar-secondary" title="Add Temp User" onclick="location.href='provision_temp_user.php'">
             <i class="fa-solid fa-user-clock" aria-hidden="true"></i>&nbsp;Temp User
         </button>
     </div>
@@ -140,8 +140,8 @@ if ($_scriptName === 'user_management.php'):
             <option value="worker" <?php echo (isset($role) && $role === 'worker') ? 'selected' : ''; ?>>Field Tech</option>
             <option value="client" <?php echo (isset($role) && $role === 'client') ? 'selected' : ''; ?>>Clients</option>
         </select>
-        <button id="applyFiltersBtn" type="button" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center shadow-lg">Apply</button>
-        <button id="clearFiltersBtn" type="button" class="bg-gray-50 text-gray-600 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all">Clear</button>
+        <button id="applyFiltersBtn" type="button" class="toolbar-btn toolbar-cta">Apply</button>
+        <button id="clearFiltersBtn" type="button" class="toolbar-btn toolbar-secondary">Clear</button>
     </div>
 </div>
 
@@ -154,13 +154,13 @@ if ($_scriptName === 'payment_gateway.php'):
 <!-- Admin toolbar for Payment/Gateway (billing tools) -->
 <div class="payment-toolbar user-management-toolbar bg-white shadow-premium border border-gray-100 p-4 md:p-6 mb-8 flex flex-col lg:flex-row justify-between items-center gap-4 md:gap-6" role="region" aria-label="Billing tools">
     <div class="flex items-center gap-3">
-        <button id="createInvoiceBtn" type="button" class="bg-rajkot-rust text-white px-4 py-2 rounded font-bold text-sm" title="Create Invoice">
+        <button id="createInvoiceBtn" type="button" class="toolbar-btn toolbar-cta" title="Create Invoice">
             <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>&nbsp;Create invoice
         </button>
-        <button id="recordPaymentBtn" type="button" class="bg-foundation-grey text-white px-4 py-2 rounded font-bold text-sm" title="Record Payment">
+        <button id="recordPaymentBtn" type="button" class="toolbar-btn toolbar-secondary" title="Record Payment">
             <i class="fa-solid fa-receipt" aria-hidden="true"></i>&nbsp;Record payment
         </button>
-        <button id="sendInvoiceEmailBtn" type="button" class="bg-foundation-grey text-white px-4 py-2 rounded font-bold text-sm" title="Send Invoice">
+        <button id="sendInvoiceEmailBtn" type="button" class="toolbar-btn toolbar-secondary" title="Send Invoice">
             <i class="fa-solid fa-envelope" aria-hidden="true"></i>&nbsp;Send invoice
         </button>
     </div>
@@ -169,7 +169,7 @@ if ($_scriptName === 'payment_gateway.php'):
         <input id="projectSearchHeader" type="search" placeholder="Search project..." class="w-full pl-12 pr-6 py-3 md:py-4 bg-gray-50 border border-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium" aria-label="Search projects (header)">
     </div>
     <div class="flex items-center gap-3 w-auto">
-        <button id="exportCsvBtn" type="button" class="bg-gray-50 text-gray-600 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all">Export CSV</button>
+        <button id="exportCsvBtn" type="button" class="toolbar-btn toolbar-secondary">Export CSV</button>
     </div>
 </div>
 

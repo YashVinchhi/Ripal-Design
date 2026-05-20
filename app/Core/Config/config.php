@@ -211,6 +211,24 @@ function getBaseUrl()
 
     $configuredBaseUrl = trim((string)(getenv('APP_BASE_URL') ?: ''));
     if ($configuredBaseUrl !== '') {
+        $configuredParts = parse_url($configuredBaseUrl);
+        $configuredHost = strtolower((string)($configuredParts['host'] ?? ''));
+        $requestHost = (string)($_SERVER['HTTP_HOST'] ?? '');
+        if (!preg_match('/^[a-z0-9.-]+(?::[0-9]{1,5})?$/i', $requestHost)) {
+            $requestHost = '';
+        }
+        $requestHostName = strtolower((string)(parse_url('//' . $requestHost, PHP_URL_HOST) ?: ''));
+
+        // In local dev it is common to switch between http://localhost and
+        // https://localhost. Follow the active request origin when it targets
+        // the same host so secure session cookies survive login redirects.
+        if ($requestHost !== '' && $configuredHost !== '' && $configuredHost === $requestHostName) {
+            $scheme = app_is_https() ? 'https' : 'http';
+            $path = (string)($configuredParts['path'] ?? '');
+            $baseUrl = rtrim($scheme . '://' . $requestHost . rtrim($path, '/'), '/');
+            return $baseUrl;
+        }
+
         $baseUrl = rtrim($configuredBaseUrl, '/');
         return $baseUrl;
     }
@@ -368,7 +386,7 @@ if (!defined('SECURITY_CSP_POLICY')) {
     $tailwindCdn = (defined('APP_ENV') && APP_ENV === 'development') ? ' https://cdn.tailwindcss.com' : '';
         // Allow Microsoft Clarity and analytics where necessary. Keep list conservative.
         // Note: fonts.googleapis.com needed in font-src for font file loading (not just CSS)
-        $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://www.google.com https://maps.google.com https://www.googleusercontent.com https://maps.gstatic.com https://api.razorpay.com; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com" . $tailwindCdn . " https://code.jquery.com https://cdnjs.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms https://www.googletagmanager.com https://www.google-analytics.com https://checkout.razorpay.com https://static.cloudflareinsights.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://www.clarity.ms https://scripts.clarity.ms https://v.clarity.ms https://d.clarity.ms https://www.google-analytics.com https://www.googletagmanager.com https://www.google.com https://api.razorpay.com https://checkout.razorpay.com https://cloudflareinsights.com; form-action 'self'";
+        $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://www.google.com https://maps.google.com https://www.googleusercontent.com https://maps.gstatic.com https://api.razorpay.com; object-src 'none'; img-src 'self' data: blob:; media-src 'self' data: blob: https:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.babylonjs.com" . $tailwindCdn . " https://code.jquery.com https://cdnjs.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms https://www.googletagmanager.com https://www.google-analytics.com https://checkout.razorpay.com https://static.cloudflareinsights.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.babylonjs.com https://www.clarity.ms https://scripts.clarity.ms https://v.clarity.ms https://d.clarity.ms https://www.google-analytics.com https://www.googletagmanager.com https://www.google.com https://api.razorpay.com https://checkout.razorpay.com https://cloudflareinsights.com; form-action 'self'";
     define('SECURITY_CSP_POLICY', (string)(getenv('SECURITY_CSP_POLICY') ?: $defaultCsp));
 }
 

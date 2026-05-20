@@ -27,6 +27,13 @@ if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/../Config/config.php';
 }
 
+// Temporary mitigant: enable output buffering early to avoid "headers already sent"
+// warnings while we locate the root cause. This is safe for local debugging
+// and will be removed once the underlying early-output source is fixed.
+if (PHP_SAPI !== 'cli' && !ob_get_level()) {
+    @ob_start();
+}
+
 // Load .env into environment if present. Prefer vlucas/phpdotenv when available,
 // otherwise fall back to a lightweight parser that sets getenv()/$_ENV/$_SERVER.
 $autoload = rtrim((string)defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3), '/\\') . '/vendor/autoload.php';
@@ -229,11 +236,13 @@ apply_security_headers();
 if (!headers_sent()) {
     header("Content-Security-Policy: " . implode('; ', [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://cdn.babylonjs.com",
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-        "img-src 'self' data: https:",
-        "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+        "img-src 'self' data: blob: https:",
+        "media-src 'self' data: blob: https:",
+        "worker-src 'self' blob:",
+        "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://cdn.babylonjs.com",
         "frame-ancestors 'none'"
     ]));
 }

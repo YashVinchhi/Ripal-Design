@@ -60,9 +60,12 @@ $dbConnectionInfo = [
     'driver_loaded' => extension_loaded('pdo_mysql'),
 ];
 
-try {
-    $dsn = "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4";
-
+/**
+ * Attempt to create a PDO connection with retries/fallbacks for local development.
+ */
+function db_try_connect(string $host, string $port, string $dbName, string $user, string $pass)
+{
+    $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -70,32 +73,64 @@ try {
         PDO::ATTR_TIMEOUT => 2,
     ];
 
-    // PHP 8.5 deprecates PDO::MYSQL_ATTR_INIT_COMMAND in favor of Pdo\Mysql::ATTR_INIT_COMMAND.
     if (class_exists('Pdo\\Mysql') && defined('Pdo\\Mysql::ATTR_INIT_COMMAND')) {
         $options[\Pdo\Mysql::ATTR_INIT_COMMAND] = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci";
     } elseif (defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
         $options[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci";
     }
 
-    $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
+    return new PDO($dsn, $user, $pass, $options);
+}
+
+$attempts = [];
+try {
+    // Primary attempt using configured values
+    $attempts[] = ['host' => $DB_HOST, 'port' => $DB_PORT, 'user' => $DB_USER];
+    $pdo = db_try_connect($DB_HOST, $DB_PORT, $DB_NAME, $DB_USER, $DB_PASS);
     \App\Core\Database\QueryLogger::init();
 } catch (PDOException $e) {
     $dbLastError = $e->getMessage();
+    $attempts[count($attempts)-1]['error'] = $dbLastError;
 
-    // Log the error securely (don't expose credentials in logs)
-    if (function_exists('app_log')) {
-        app_log('error', 'Database connection failed', [
-            'exception' => $e->getMessage(),
-            'host' => $dbConnectionInfo['host'],
-            'port' => $dbConnectionInfo['port'],
-            'database' => $dbConnectionInfo['database'],
-            'user' => $dbConnectionInfo['user'],
-            'driver_loaded' => $dbConnectionInfo['driver_loaded'],
-        ]);
+    // If the primary host appears non-local, try local fallbacks useful for dev (127.0.0.1, localhost)
+    $fallbackHosts = ['127.0.0.1', 'localhost'];
+    $connected = false;
+    foreach ($fallbackHosts as $fh) {
+        if ($fh === $DB_HOST) continue;
+        try {
+            $attempts[] = ['host' => $fh, 'port' => $DB_PORT, 'user' => $DB_USER];
+            $pdo = db_try_connect($fh, $DB_PORT, $DB_NAME, $DB_USER, $DB_PASS);
+            \App\Core\Database\QueryLogger::init();
+            $connected = true;
+            break;
+        } catch (PDOException $e2) {
+            $attempts[count($attempts)-1]['error'] = $e2->getMessage();
+            // try next
+        }
     }
 
-    // Set $pdo to null so pages can fall back to demo/offline data
-    $pdo = null;
+    // As a last resort for local dev environments (Laragon/XAMPP), try root@localhost with empty password
+    if (!$connected) {
+        try {
+            $attempts[] = ['host' => '127.0.0.1', 'port' => $DB_PORT, 'user' => 'root', 'note' => 'fallback-no-pass'];
+            $pdo = db_try_connect('127.0.0.1', $DB_PORT, $DB_NAME, 'root', '');
+            \App\Core\Database\QueryLogger::init();
+            $connected = true;
+        } catch (PDOException $e3) {
+            $attempts[count($attempts)-1]['error'] = $e3->getMessage();
+        }
+    }
+
+    if (function_exists('app_log')) {
+        app_log('error', 'Database connection failed', array_merge([
+            'initial' => $dbConnectionInfo,
+            'attempts' => $attempts,
+        ], []));
+    }
+
+    if (!$connected) {
+        $pdo = null;
+    }
 }
 
 /**

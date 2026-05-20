@@ -675,3 +675,67 @@ header.site-header {
     -webkit-backdrop-filter: none !important;
     filter: none !important;
 }
+
+/* Unified toolbar variables and consistent CTA/button styles
+   Ensures all admin toolbars use the same font, spacing and primary color */
+:root {
+    --toolbar-font: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    --toolbar-btn-bg: #ffffff;
+    --toolbar-btn-color: #374151; /* neutral text for secondary actions */
+    --toolbar-btn-border: rgba(15,23,42,0.06);
+    --toolbar-cta-bg: #7a2f20; /* primary brand color (Rajkot rust) */
+    --toolbar-cta-bg-alt: #b85c3b; /* accent gradient fallback */
+    --toolbar-btn-radius: 8px;
+    --toolbar-btn-padding: 0.55rem 0.9rem;
+}
+
+/* Base toolbar button used across all toolbars */
+.toolbar-btn,
+.alt-toolbar .toolbar-btn,
+.user-management-toolbar .toolbar-btn,
+.payment-toolbar .toolbar-btn,
+.toolbar-actions .toolbar-btn {
+    font-family: var(--toolbar-font);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--toolbar-btn-color);
+    background: var(--toolbar-btn-bg);
+    border: 1px solid var(--toolbar-btn-border);
+    padding: var(--toolbar-btn-padding);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--toolbar-btn-radius);
+    box-shadow: 0 2px 6px rgba(15,23,42,0.06);
+    text-transform: none;
+    cursor: pointer;
+}
+
+/* Primary CTA variant */
+.toolbar-cta {
+    background: linear-gradient(90deg, var(--toolbar-cta-bg-alt), var(--toolbar-cta-bg));
+    color: #fff !important;
+    border: none;
+}
+
+/* Secondary / muted variant */
+.toolbar-secondary {
+    background: transparent;
+    color: var(--toolbar-btn-color);
+    border: 1px solid var(--toolbar-btn-border);
+}
+
+/* Small adjustments for compact controls inside toolbars */
+.alt-toolbar .styled-select,
+.alt-toolbar .styled-input,
+.user-management-toolbar .styled-select,
+.user-management-toolbar .styled-input {
+    height: calc(2.6rem + 0px);
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+    .toolbar-btn { padding: .45rem .6rem; font-size: .85rem }
+}

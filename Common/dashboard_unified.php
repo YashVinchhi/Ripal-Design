@@ -257,6 +257,7 @@ $actionCards = [
     $actionCards[] = ['label' => 'Portfolio', 'href' => base_path('admin/project_management.php'), 'icon' => 'folder'];
     $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-text'];
     $actionCards[] = ['label' => 'Contact Manager', 'href' => base_path('admin/contact_messages.php'), 'icon' => 'mail'];
+    $actionCards[] = ['label' => '3D Walkthroughs', 'href' => base_path('admin/walkthroughs.php'), 'icon' => 'box'];
     $actionCards[] = ['label' => 'Vendors', 'href' => base_path('admin/entities.php?tab=vendors'), 'icon' => 'truck'];
     $actionCards[] = ['label' => 'Materials Studio', 'href' => base_path('admin/materials_studio.php'), 'icon' => 'package'];
     $actionCards[] = ['label' => 'Workers', 'href' => base_path('admin/entities.php?tab=workers'), 'icon' => 'users'];
@@ -387,6 +388,55 @@ if ($useWorkerProjectView) {
           </div>
         <?php endforeach; ?>
       </div>
+
+      <?php if ($isAdmin): ?>
+      <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8 mb-8" data-admin-tools>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+          <div>
+            <h2 class="text-xl md:text-2xl font-serif font-bold">Admin Tools</h2>
+            <p class="text-gray-500 text-sm mt-1">Manage portfolio assets, 3D walkthroughs, users, billing, and content.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <a href="<?php echo esc_attr(base_path('admin/project_management.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Portfolio</div>
+                <div class="mt-1 font-bold text-foundation-grey">Projects</div>
+              </div>
+              <i data-lucide="folder" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+          <a href="<?php echo esc_attr(base_path('admin/walkthroughs.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">3D Models</div>
+                <div class="mt-1 font-bold text-foundation-grey">Walkthroughs</div>
+              </div>
+              <i data-lucide="box" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+          <a href="<?php echo esc_attr(base_path('admin/file_viewer.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Files</div>
+                <div class="mt-1 font-bold text-foundation-grey">File Viewer</div>
+              </div>
+              <i data-lucide="file-search" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+          <a href="<?php echo esc_attr(base_path('admin/materials_studio.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Materials</div>
+                <div class="mt-1 font-bold text-foundation-grey">Studio</div>
+              </div>
+              <i data-lucide="package" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+        </div>
+      </section>
+      <?php endif; ?>
 
       <?php if (!$isAdmin): ?>
       <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8 mb-8" data-quick-actions>

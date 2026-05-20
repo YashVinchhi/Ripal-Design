@@ -18,6 +18,8 @@ if (!function_exists('upload_allowed_mime_map')) {
             'png' => 'image/png',
             'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'doc' => 'application/msword',
+            'glb' => 'model/gltf-binary',
+            'gltf' => 'model/gltf+json',
         ];
     }
 }
@@ -86,6 +88,11 @@ if (!function_exists('store_uploaded_file_array')) {
         } else {
             $storageRoot = rtrim((string)(getenv('UPLOAD_STORAGE_ROOT') ?: ($PROJECT_ROOT . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'private_uploads')), '/\\');
         }
+        $subdir = trim((string)($opts['subdir'] ?? ''), '/\\');
+        if ($subdir !== '') {
+            $subdir = preg_replace('/[^A-Za-z0-9._\/\\\\-]/', '_', $subdir);
+            $storageRoot .= DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $subdir);
+        }
 
         if (empty($file) || empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
             return ['ok' => false, 'error' => 'No uploaded file', 'stored_name' => null];
@@ -101,8 +108,32 @@ if (!function_exists('store_uploaded_file_array')) {
         }
 
         $mime = detect_file_mime($file['tmp_name']);
+        $originalExt = strtolower((string)pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+        $allowedExtensions = $opts['allowed_extensions'] ?? [];
+        if (is_string($allowedExtensions)) {
+            $allowedExtensions = [$allowedExtensions];
+        }
+        $allowedExtensions = array_values(array_filter(array_map(static function ($ext) {
+            return strtolower(trim((string)$ext, ". \t\n\r\0\x0B"));
+        }, is_array($allowedExtensions) ? $allowedExtensions : [])));
+
+        $allowedMimes = $opts['allowed_mimes'] ?? [];
+        if (is_string($allowedMimes)) {
+            $allowedMimes = [$allowedMimes];
+        }
+        $allowedMimes = array_values(array_filter(array_map('strval', is_array($allowedMimes) ? $allowedMimes : [])));
+
         $ext = mime_to_extension($mime);
-        if ($ext === null) {
+        $mimeAllowed = empty($allowedMimes) || in_array($mime, $allowedMimes, true);
+        $extensionAllowed = empty($allowedExtensions) || in_array($originalExt, $allowedExtensions, true);
+
+        // Some servers detect binary GLB uploads as application/octet-stream.
+        if ($ext === null && $extensionAllowed && in_array($mime, ['application/octet-stream', 'model/gltf-binary', 'model/gltf+json'], true)) {
+            $ext = $originalExt;
+            $mimeAllowed = true;
+        }
+
+        if ($ext === null || !$mimeAllowed || !$extensionAllowed) {
             return ['ok' => false, 'error' => 'Disallowed file type: ' . $mime, 'detected_mime' => $mime];
         }
 

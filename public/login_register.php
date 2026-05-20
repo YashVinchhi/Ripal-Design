@@ -301,7 +301,13 @@ if (isset($_POST['signup'])) {
             }
         }
 
-        header('Location: ' . post_login_redirect_url($_SESSION['user']));
+        $redirectTarget = post_login_redirect_url($_SESSION['user']);
+        if (function_exists('app_log')) { app_log('info', 'Redirect after signup', ['target' => $redirectTarget]); }
+        header('Location: ' . $redirectTarget);
+        // Fallback HTML for browsers that ignore Location header in some error states
+        echo '<!doctype html><html><head><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($redirectTarget, ENT_QUOTES, 'UTF-8') . '">';
+        echo '<script>try{if(window.top && window.top !== window.self){window.top.location.href = ' . json_encode($redirectTarget) . ';} else {window.location.href = ' . json_encode($redirectTarget) . ';}}catch(e){window.location.href = ' . json_encode($redirectTarget) . ';}</script>';
+        echo '</head><body>If you are not redirected, <a href="' . htmlspecialchars($redirectTarget, ENT_QUOTES, 'UTF-8') . '">click here</a>.</body></html>';
         exit();
     } catch (Exception $e) {
         if (function_exists('app_log')) {
@@ -374,7 +380,12 @@ if (isset($_POST['login'])) {
                     auth_rate_limit_reset($loginIpBucket);
                     auth_rate_limit_reset($loginUserBucket);
                 }
-                header('Location: ' . post_login_redirect_url($_SESSION['user']));
+                $redirectTarget = post_login_redirect_url($_SESSION['user']);
+                if (function_exists('app_log')) { app_log('info', 'Redirect after login (primary)', ['target' => $redirectTarget]); }
+                header('Location: ' . $redirectTarget);
+                echo '<!doctype html><html><head><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($redirectTarget, ENT_QUOTES, 'UTF-8') . '">';
+                echo '<script>try{if(window.top && window.top !== window.self){window.top.location.href = ' . json_encode($redirectTarget) . ';} else {window.location.href = ' . json_encode($redirectTarget) . ';}}catch(e){window.location.href = ' . json_encode($redirectTarget) . ';}</script>';
+                echo '</head><body>If you are not redirected, <a href="' . htmlspecialchars($redirectTarget, ENT_QUOTES, 'UTF-8') . '">click here</a>.</body></html>';
                 exit();
             }
         }
@@ -420,7 +431,12 @@ if (isset($_POST['login'])) {
                     auth_rate_limit_reset($loginIpBucket);
                     auth_rate_limit_reset($loginUserBucket);
                 }
-                header('Location: ' . post_login_redirect_url($_SESSION['user']));
+                $redirectTarget = post_login_redirect_url($_SESSION['user']);
+                if (function_exists('app_log')) { app_log('info', 'Redirect after login (legacy)', ['target' => $redirectTarget]); }
+                header('Location: ' . $redirectTarget);
+                echo '<!doctype html><html><head><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($redirectTarget, ENT_QUOTES, 'UTF-8') . '">';
+                echo '<script>try{if(window.top && window.top !== window.self){window.top.location.href = ' . json_encode($redirectTarget) . ';} else {window.location.href = ' . json_encode($redirectTarget) . ';}}catch(e){window.location.href = ' . json_encode($redirectTarget) . ';}</script>';
+                echo '</head><body>If you are not redirected, <a href="' . htmlspecialchars($redirectTarget, ENT_QUOTES, 'UTF-8') . '">click here</a>.</body></html>';
                 exit();
             }
         }

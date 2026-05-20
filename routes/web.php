@@ -6,6 +6,7 @@ return [
 	'web.services' => '/public/services.php',
 	'web.contact' => '/public/contact_us.php',
 	'web.projects' => '/public/project_view.php',
+	'web.walkthrough' => '/walkthroughs/{project_slug}/{model_slug}',
 	'auth.login' => '/public/login.php',
 	'auth.signup' => '/public/signup.php',
 	'auth.logout' => '/public/logout.php',

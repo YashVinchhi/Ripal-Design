@@ -216,6 +216,15 @@ $pageTitle = $titleMap[$variant] ?? $titleMap['main'];
                 <i data-lucide="file-search" class="w-5 h-5 text-rajkot-rust"></i>
               </div>
             </a>
+            <a href="<?php echo esc_attr(base_path('admin/walkthroughs.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">3D Models</div>
+                  <div class="mt-1 font-bold text-foundation-grey">Walkthroughs</div>
+                </div>
+                <i data-lucide="box" class="w-5 h-5 text-rajkot-rust"></i>
+              </div>
+            </a>
             <a href="<?php echo esc_attr(base_path('admin/materials_studio.php')); ?>" class="group border border-gray-100 hover:border-slate-accent p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white">
               <div class="flex items-center justify-between">
                 <div>

@@ -2163,7 +2163,6 @@ $vrSettings = file_viewer_load_vr_settings();
         }
         const projectId = <?php echo (int)$projectId; ?>;
         const selectedResourceId = <?php echo (int)$resourceId; ?>;
-        const toursApiUrl = <?php echo json_encode(base_path('api/public_tours.php')); ?>;
         const fallbackPanorama = <?php echo json_encode($previewUrl); ?>;
 
         const state = {
@@ -2344,41 +2343,7 @@ $vrSettings = file_viewer_load_vr_settings();
         }
 
         async function loadProjectTour() {
-          if (projectId <= 0) {
-            loadFallbackViewer();
-            return;
-          }
-          try {
-            const resp = await fetch(toursApiUrl + '?project_id=' + encodeURIComponent(String(projectId)), { credentials: 'same-origin' });
-            const data = await resp.json().catch(() => ({}));
-            if (!resp.ok || !data.success || !Array.isArray(data.scenes) || !data.scenes.length) {
-              loadFallbackViewer();
-              return;
-            }
-
-            state.tour = data.tour || null;
-            state.scenes = data.scenes.filter((scene) => !!scene.image_url);
-            state.scenesById = new Map();
-            state.scenes.forEach((scene) => state.scenesById.set(Number(scene.id), scene));
-
-            if (!state.scenes.length) {
-              loadFallbackViewer();
-              return;
-            }
-
-            renderSceneSelect();
-
-            const sceneByFile = state.scenes.find((scene) => Number(scene.project_file_id || 0) === selectedResourceId);
-            const startSceneId = Number((state.tour && state.tour.start_scene_id) || 0);
-            const firstSceneId = Number((state.scenes[0] && state.scenes[0].id) || 0);
-            const initialSceneId = sceneByFile
-              ? Number(sceneByFile.id)
-              : (startSceneId > 0 && state.scenesById.has(startSceneId) ? startSceneId : firstSceneId);
-
-            loadScene(initialSceneId);
-          } catch (e) {
-            loadFallbackViewer();
-          }
+          loadFallbackViewer();
         }
 
         const zoomInBtn = document.getElementById('zoomInBtn');
