@@ -20,9 +20,60 @@ $renderTemplate = static function ($template, array $vars = []) {
 function post_login_redirect_url(array $user): string
 {
     if (!empty($_SESSION['redirect_after_login'])) {
-        $url = (string) $_SESSION['redirect_after_login'];
+        $raw = (string) $_SESSION['redirect_after_login'];
         unset($_SESSION['redirect_after_login']);
-        return $url;
+
+        // Normalize and validate stored redirect target to avoid open-redirects
+        $parts = parse_url($raw);
+
+        // If the stored value is an absolute URL, only allow it when host matches configured BASE_URL host
+        if (!empty($parts['host']) || !empty($parts['scheme'])) {
+            $baseHost = '';
+            if (defined('BASE_URL')) {
+                $baseHost = strtolower((string)parse_url((string)BASE_URL, PHP_URL_HOST) ?: '');
+            }
+            $targetHost = strtolower((string)($parts['host'] ?? ''));
+            if ($baseHost !== '' && $targetHost === $baseHost) {
+                // Rebuild the path+query preserving the same base
+                $path = $parts['path'] ?? '/';
+                $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
+                return rtrim((string)BASE_URL, '/') . $path . $query;
+            }
+            // Host differs or not allowed — fall back to canonical dashboard
+            return function_exists('auth_dashboard_url') ? auth_dashboard_url() : (rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php');
+        }
+
+        // It's a relative URI. Ensure it starts with the application base path to avoid redirecting to other apps.
+        $relative = $parts['path'] ?? $raw;
+        $basePath = defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') : '';
+        // Allow internal admin/dashboard/client/worker routes; otherwise fall back.
+        $allowedPrefixes = [
+            $basePath . '/admin',
+            $basePath . '/dashboard',
+            $basePath . '/client',
+            $basePath . '/worker',
+            $basePath . '/public',
+            '/admin',
+            '/dashboard',
+            '/client',
+            '/worker',
+            '/public',
+        ];
+
+        foreach ($allowedPrefixes as $pref) {
+            if ($pref !== '' && strpos($relative, $pref) === 0) {
+                // Preserve any query string
+                $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
+                // If relative already contains basePath, return as-is; otherwise prefix basePath
+                if ($basePath !== '' && strpos($relative, $basePath) !== 0) {
+                    return $basePath . '/' . ltrim($relative, '/') . $query;
+                }
+                return $relative . $query;
+            }
+        }
+
+        // Not an allowed internal path — redirect to canonical dashboard instead
+        return function_exists('auth_dashboard_url') ? auth_dashboard_url() : (rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php');
     }
 
     if (function_exists('auth_dashboard_url')) {
