@@ -64,10 +64,11 @@ function post_login_redirect_url(array $user): string
             if ($pref !== '' && strpos($relative, $pref) === 0) {
                 // Preserve any query string
                 $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
-                // If relative already contains basePath, return as-is; otherwise prefix basePath
-                if ($basePath !== '' && strpos($relative, $basePath) !== 0) {
-                    return $basePath . '/' . ltrim($relative, '/') . $query;
+                // Build absolute URL using BASE_URL when available to ensure canonical host
+                if (defined('BASE_URL') && BASE_URL !== '') {
+                    return rtrim((string)BASE_URL, '/') . '/' . ltrim($relative, '/') . $query;
                 }
+                // Fallback: return relative path
                 return $relative . $query;
             }
         }
