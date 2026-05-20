@@ -43,22 +43,23 @@ function post_login_redirect_url(array $user): string
 
     $raw = trim((string)$raw);
     if ($raw !== '') {
-        $parts = parse_url($raw);
-        if ($parts === false) {
-            $parts = [];
-        }
+        // Prefer parse_url component calls to avoid relying on array keys (helps static analyzers)
+        $parsedHost = parse_url($raw, PHP_URL_HOST);
+        $parsedScheme = parse_url($raw, PHP_URL_SCHEME);
+        $parsedPath = parse_url($raw, PHP_URL_PATH);
+        $parsedQuery = parse_url($raw, PHP_URL_QUERY);
 
         // If the stored value is an absolute URL, only allow it when host matches configured BASE_URL host
-        if (!empty($parts['host']) || !empty($parts['scheme'])) {
+        if (!empty($parsedHost) || !empty($parsedScheme)) {
             $baseHost = '';
             if (defined('BASE_URL')) {
                 $baseHost = strtolower((string)parse_url((string)BASE_URL, PHP_URL_HOST) ?: '');
             }
-            $targetHost = strtolower((string)($parts['host'] ?? ''));
+            $targetHost = strtolower((string)($parsedHost ?? ''));
             if ($baseHost !== '' && $targetHost === $baseHost) {
                 // Rebuild the path+query preserving the same base
-                $path = $parts['path'] ?? '/';
-                $query = !empty($parts['query']) ? ('?' . (string)$parts['query']) : '';
+                $path = $parsedPath ?? '/';
+                $query = ($parsedQuery !== null && $parsedQuery !== '') ? ('?' . (string)$parsedQuery) : '';
                 return rtrim((string)BASE_URL, '/') . $path . $query;
             }
             // Host differs or not allowed — fall back to canonical dashboard
@@ -66,7 +67,7 @@ function post_login_redirect_url(array $user): string
         }
 
         // It's a relative URI. Ensure it starts with the application base path to avoid redirecting to other apps.
-        $relative = $parts['path'] ?? $raw;
+        $relative = $parsedPath ?? $raw;
         $basePath = defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') : '';
         // Allow internal admin/dashboard/client/worker routes; otherwise fall back.
         $allowedPrefixes = [
@@ -85,7 +86,7 @@ function post_login_redirect_url(array $user): string
         foreach ($allowedPrefixes as $pref) {
             if ($pref !== '' && strpos($relative, $pref) === 0) {
                 // Preserve any query string
-                $query = !empty($parts['query']) ? ('?' . (string)$parts['query']) : '';
+                $query = ($parsedQuery !== null && $parsedQuery !== '') ? ('?' . (string)$parsedQuery) : '';
                 // Build absolute URL using BASE_URL when available to ensure canonical host
                 if (defined('BASE_URL') && BASE_URL !== '') {
                     return rtrim((string)BASE_URL, '/') . '/' . ltrim($relative, '/') . $query;
