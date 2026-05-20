@@ -54,8 +54,8 @@ ErrorDocument 404 /public/404.php
     # If the requested filename does not exist, and it's not a directory
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    # Then route to 404 page
-    RewriteRule . /public/404.php [L]
+    # Route all non-file/directory requests to the front controller so PHP can decide
+    RewriteRule . /public/index.php [L,QSA]
     
     # SEO-friendly project slugs
     RewriteRule ^projects/([0-9]+)$ /projects/$1 [L,NC]
