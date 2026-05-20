@@ -19,12 +19,34 @@ $renderTemplate = static function ($template, array $vars = []) {
 
 function post_login_redirect_url(array $user): string
 {
+    $raw = '';
     if (!empty($_SESSION['redirect_after_login'])) {
         $raw = (string) $_SESSION['redirect_after_login'];
+        // Temporary debug: log redirect target and server context to help diagnose
+        // unexpected absolute host redirects. This will be removed after investigation.
+        $logDir = rtrim((string)(dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'logs'), '\/');
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0777, true);
+        }
+        $logFile = $logDir . DIRECTORY_SEPARATOR . 'post_login_debug.log';
+        $context = [
+            'redirect_after_login' => $raw,
+            'BASE_URL' => defined('BASE_URL') ? BASE_URL : null,
+            'HTTP_HOST' => $_SERVER['HTTP_HOST'] ?? null,
+            'HTTPS' => $_SERVER['HTTPS'] ?? null,
+            'REQUEST_URI' => $_SERVER['REQUEST_URI'] ?? null,
+            'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'] ?? null,
+        ];
+        @file_put_contents($logFile, date('c') . ' ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
         unset($_SESSION['redirect_after_login']);
+    }
 
-        // Normalize and validate stored redirect target to avoid open-redirects
+    $raw = trim((string)$raw);
+    if ($raw !== '') {
         $parts = parse_url($raw);
+        if ($parts === false) {
+            $parts = [];
+        }
 
         // If the stored value is an absolute URL, only allow it when host matches configured BASE_URL host
         if (!empty($parts['host']) || !empty($parts['scheme'])) {
@@ -36,11 +58,11 @@ function post_login_redirect_url(array $user): string
             if ($baseHost !== '' && $targetHost === $baseHost) {
                 // Rebuild the path+query preserving the same base
                 $path = $parts['path'] ?? '/';
-                $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
+                $query = !empty($parts['query']) ? ('?' . (string)$parts['query']) : '';
                 return rtrim((string)BASE_URL, '/') . $path . $query;
             }
             // Host differs or not allowed — fall back to canonical dashboard
-            return function_exists('auth_dashboard_url') ? auth_dashboard_url() : (rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php');
+            return function_exists('auth_dashboard_url') ? auth_dashboard_url() : (rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php');
         }
 
         // It's a relative URI. Ensure it starts with the application base path to avoid redirecting to other apps.
@@ -63,7 +85,7 @@ function post_login_redirect_url(array $user): string
         foreach ($allowedPrefixes as $pref) {
             if ($pref !== '' && strpos($relative, $pref) === 0) {
                 // Preserve any query string
-                $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
+                $query = !empty($parts['query']) ? ('?' . (string)$parts['query']) : '';
                 // Build absolute URL using BASE_URL when available to ensure canonical host
                 if (defined('BASE_URL') && BASE_URL !== '') {
                     return rtrim((string)BASE_URL, '/') . '/' . ltrim($relative, '/') . $query;
@@ -74,14 +96,14 @@ function post_login_redirect_url(array $user): string
         }
 
         // Not an allowed internal path — redirect to canonical dashboard instead
-        return function_exists('auth_dashboard_url') ? auth_dashboard_url() : (rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php');
+        return function_exists('auth_dashboard_url') ? auth_dashboard_url() : (rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php');
     }
 
     if (function_exists('auth_dashboard_url')) {
         return auth_dashboard_url();
     }
 
-    return rtrim(BASE_PATH, '/') . '/dashboard/dashboard.php';
+    return rtrim((string)BASE_PATH, '/') . '/dashboard/dashboard.php';
 }
 
 function login_error_and_redirect(string $message): void
