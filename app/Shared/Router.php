@@ -30,6 +30,13 @@ class Router
 
         $rel = ltrim($path, '/');
 
+        // If requests include the public directory segment (e.g. "/public/about_us.php"),
+        // strip it so routing matches paths defined in `routes/*.php` and public files.
+        $publicBase = basename($this->publicDir);
+        if ($publicBase !== '' && stripos($rel, $publicBase . '/') === 0) {
+            $rel = substr($rel, strlen($publicBase) + 1);
+        }
+
         // If the requested resource is a real public file, serve it directly
         $candidate = $this->publicDir . DIRECTORY_SEPARATOR . $rel;
         if ($this->isFileUnderPublic($candidate)) {
