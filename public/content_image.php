@@ -10,9 +10,16 @@ if ($relative === '' || strpos($relative, 'uploads/content/') !== 0) {
     exit;
 }
 
-$absolute = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+$storageRoot = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\');
+$storageRelative = $relative;
+if (preg_match('~/uploads$~i', $storageRoot) && strpos($storageRelative, 'uploads/') === 0) {
+    $storageRelative = substr($storageRelative, strlen('uploads/'));
+}
+
+$absolute = $storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $storageRelative);
 $realFile = realpath($absolute);
-$managedRoot = realpath(rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'content');
+$managedRootSuffix = preg_match('~/uploads$~i', $storageRoot) ? 'content' : ('uploads' . DIRECTORY_SEPARATOR . 'content');
+$managedRoot = realpath($storageRoot . DIRECTORY_SEPARATOR . $managedRootSuffix);
 
 if ($realFile === false || $managedRoot === false || strpos($realFile, $managedRoot . DIRECTORY_SEPARATOR) !== 0 || !is_file($realFile)) {
     http_response_code(404);

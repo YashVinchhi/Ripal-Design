@@ -24,21 +24,21 @@ while (count($featuredProjects) < 4) {
     $featuredProjects[] = $fallbackProjects[count($featuredProjects)] ?? $fallbackProjects[0];
 }
 
-$heroImage = $image('hero_image_src', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg');
+$heroImage = $image('hero_image_src', '/uploads/content/index/hero_image_src_1777625297_5b23b5aa.jpg');
 $heroVideo = trim($ct('hero_video_src', ''));
 
 $carouselImages = [
-    ['src' => $image('carousel_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'), 'alt' => $ct('carousel_alt_1', 'Project image 1')],
-    ['src' => $image('carousel_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'), 'alt' => $ct('carousel_alt_2', 'Project image 2')],
-    ['src' => $image('carousel_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'), 'alt' => $ct('carousel_alt_3', 'Project image 3')],
-    ['src' => $image('carousel_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'), 'alt' => $ct('carousel_alt_4', 'Project image 4')],
+    ['src' => $image('carousel_image_1', '/uploads/content/index/carousel_image_1_1777625025_11cb6f70.jpg'), 'alt' => $ct('carousel_alt_1', 'Project image 1')],
+    ['src' => $image('carousel_image_2', '/uploads/content/index/carousel_image_2_1777625025_3b469cb0.png'), 'alt' => $ct('carousel_alt_2', 'Project image 2')],
+    ['src' => $image('carousel_image_3', '/uploads/content/index/carousel_image_3_1777625025_58ec8d85.png'), 'alt' => $ct('carousel_alt_3', 'Project image 3')],
+    ['src' => $image('carousel_image_4', '/uploads/content/index/carousel_image_4_1777625025_2fcfaf27.png'), 'alt' => $ct('carousel_alt_4', 'Project image 4')],
 ];
 
 $projectImages = [
-    ['src' => $image('featured_image_1', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'), 'alt' => $ct('featured_image_alt_1', 'Featured project image 1')],
-    ['src' => $image('featured_image_2', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'), 'alt' => $ct('featured_image_alt_2', 'Featured project image 2')],
-    ['src' => $image('featured_image_3', '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'), 'alt' => $ct('featured_image_alt_3', 'Featured project image 3')],
-    ['src' => $image('featured_image_4', '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'), 'alt' => $ct('featured_image_alt_4', 'Featured project image 4')],
+    ['src' => $image('featured_image_1', '/uploads/content/index/featured_image_1_1777625376_671f1eee.png'), 'alt' => $ct('featured_image_alt_1', 'Featured project image 1')],
+    ['src' => $image('featured_image_2', '/uploads/content/index/featured_image_2_1777629694_fd700f37.png'), 'alt' => $ct('featured_image_alt_2', 'Featured project image 2')],
+    ['src' => $image('featured_image_3', '/uploads/content/index/featured_image_3_1777629731_d8945c9d.png'), 'alt' => $ct('featured_image_alt_3', 'Featured project image 3')],
+    ['src' => $image('featured_image_4', '/uploads/content/index/featured_image_4_1777629732_122fef21.png'), 'alt' => $ct('featured_image_alt_4', 'Featured project image 4')],
 ];
 
 $projectDescriptions = [

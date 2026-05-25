@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $notes = trim((string)($_POST['submission_notes'] ?? ''));
 
           $storedName = $res['stored_name'];
-          $storagePath = 'private_uploads/' . $storedName;
+          $storagePath = 'uploads/' . $storedName;
 
           if (function_exists('app_log')) {
             app_log('info', 'File uploaded', ['stored_name' => $storedName, 'storage_path' => $storagePath, 'uploader_id' => function_exists('current_user_id') ? current_user_id() : 0, 'size' => (int)($res['size'] ?? 0)]);

@@ -113,7 +113,7 @@ if (!function_exists('public_content_registry')) {
                 'preview_path' => 'public/index.php',
                 'fields' => [
                     'page_title' => ['label' => 'Browser Title', 'format' => 'plain', 'default' => 'Home | Ripal Design'],
-                    'hero_image_src' => ['label' => 'Hero: Background Image', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
+                    'hero_image_src' => ['label' => 'Hero: Background Image', 'format' => 'image', 'default' => '/uploads/content/index/hero_image_src_1777625297_5b23b5aa.jpg'],
                     'hero_image_alt' => ['label' => 'Hero: Background Image Alt', 'format' => 'plain', 'default' => 'Contemporary residence designed by Ripal Design'],
                     'hero_video_src' => ['label' => 'Hero: Background Video URL', 'format' => 'plain', 'default' => ''],
                     'hero_established' => ['label' => 'Hero: Established Label', 'format' => 'plain', 'default' => 'Est. 2017'],
@@ -139,10 +139,10 @@ if (!function_exists('public_content_registry')) {
                     'fallback_project_4_name' => ['label' => 'Fallback Project 4 Name', 'format' => 'plain', 'default' => 'Rameshwaram Sea View Retreat'],
                     'fallback_project_4_location' => ['label' => 'Fallback Project 4 Location', 'format' => 'plain', 'default' => 'Coastal Residence'],
                     'carousel_caption' => ['label' => 'Carousel Caption', 'format' => 'plain', 'default' => 'Another view, another craft decision. Scroll to hold each frame in place.'],
-                    'carousel_image_1' => ['label' => 'Carousel Image 1', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
-                    'carousel_image_2' => ['label' => 'Carousel Image 2', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'],
-                    'carousel_image_3' => ['label' => 'Carousel Image 3', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
-                    'carousel_image_4' => ['label' => 'Carousel Image 4', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'],
+                    'carousel_image_1' => ['label' => 'Carousel Image 1', 'format' => 'image', 'default' => '/uploads/content/index/carousel_image_1_1777625025_11cb6f70.jpg'],
+                    'carousel_image_2' => ['label' => 'Carousel Image 2', 'format' => 'image', 'default' => '/uploads/content/index/carousel_image_2_1777625025_3b469cb0.png'],
+                    'carousel_image_3' => ['label' => 'Carousel Image 3', 'format' => 'image', 'default' => '/uploads/content/index/carousel_image_3_1777625025_58ec8d85.png'],
+                    'carousel_image_4' => ['label' => 'Carousel Image 4', 'format' => 'image', 'default' => '/uploads/content/index/carousel_image_4_1777625025_2fcfaf27.png'],
                     'carousel_alt_1' => ['label' => 'Carousel Image 1 Alt', 'format' => 'plain', 'default' => 'Project image 1'],
                     'carousel_alt_2' => ['label' => 'Carousel Image 2 Alt', 'format' => 'plain', 'default' => 'Project image 2'],
                     'carousel_alt_3' => ['label' => 'Carousel Image 3 Alt', 'format' => 'plain', 'default' => 'Project image 3'],
@@ -151,10 +151,10 @@ if (!function_exists('public_content_registry')) {
                     'project_2_description' => ['label' => 'Project 2 Description', 'format' => 'plain', 'default' => 'A landmark in Jam Khambhalia, bridging the gap between Tradition and contemporary living with breathable structure.'],
                     'project_3_description' => ['label' => 'Project 3 Description', 'format' => 'plain', 'default' => "State-of-the-art Multi-Institutional System integrated into Rajkot's burgeoning urban landscape."],
                     'project_4_description' => ['label' => 'Project 4 Description', 'format' => 'plain', 'default' => "Industrial refinement meeting contemporary aesthetics in the heart of India's ceramic capital."],
-                    'featured_image_1' => ['label' => 'Featured Image 1', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg'],
-                    'featured_image_2' => ['label' => 'Featured Image 2', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.51 PM.jpeg'],
-                    'featured_image_3' => ['label' => 'Featured Image 3', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.43.21 PM (1).jpeg'],
-                    'featured_image_4' => ['label' => 'Featured Image 4', 'format' => 'image', 'default' => '/assets/Content/WhatsApp Image 2026-02-02 at 5.51.43 PM.jpeg'],
+                    'featured_image_1' => ['label' => 'Featured Image 1', 'format' => 'image', 'default' => '/uploads/content/index/featured_image_1_1777625376_671f1eee.png'],
+                    'featured_image_2' => ['label' => 'Featured Image 2', 'format' => 'image', 'default' => '/uploads/content/index/featured_image_2_1777629694_fd700f37.png'],
+                    'featured_image_3' => ['label' => 'Featured Image 3', 'format' => 'image', 'default' => '/uploads/content/index/featured_image_3_1777629731_d8945c9d.png'],
+                    'featured_image_4' => ['label' => 'Featured Image 4', 'format' => 'image', 'default' => '/uploads/content/index/featured_image_4_1777629732_122fef21.png'],
                     'featured_image_alt_1' => ['label' => 'Featured Image 1 Alt', 'format' => 'plain', 'default' => 'Featured project image 1'],
                     'featured_image_alt_2' => ['label' => 'Featured Image 2 Alt', 'format' => 'plain', 'default' => 'Featured project image 2'],
                     'featured_image_alt_3' => ['label' => 'Featured Image 3 Alt', 'format' => 'plain', 'default' => 'Featured project image 3'],
@@ -847,7 +847,12 @@ if (!function_exists('public_content_image_url')) {
             return '';
         }
 
-        $privateAbsolute = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        $storageRoot = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\');
+        $privateRelative = $relative;
+        if (preg_match('~/uploads$~i', $storageRoot) && strpos($privateRelative, 'uploads/') === 0) {
+            $privateRelative = substr($privateRelative, strlen('uploads/'));
+        }
+        $privateAbsolute = $storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $privateRelative);
         if (is_file($privateAbsolute)) {
             $prefix = defined('PUBLIC_PATH_PREFIX') ? (string)PUBLIC_PATH_PREFIX : '/public';
             return rtrim((string)BASE_PATH, '/') . $prefix . '/content_image.php?path=' . rawurlencode($relative);
@@ -1111,7 +1116,12 @@ if (!function_exists('public_content_store_uploaded_image')) {
         $safeField = $safeField !== '' ? $safeField : 'image';
 
         $relativeDir = 'uploads/content/' . $safeSlug;
-        $absoluteDir = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDir);
+        $storageRoot = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\');
+        $storageRelativeDir = $relativeDir;
+        if (preg_match('~/uploads$~i', $storageRoot)) {
+            $storageRelativeDir = 'content/' . $safeSlug;
+        }
+        $absoluteDir = $storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $storageRelativeDir);
         if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
             $result['error'] = 'Unable to create content image directory.';
             return $result;
@@ -1146,7 +1156,7 @@ if (!function_exists('public_content_store_uploaded_image')) {
             @mkdir($publicDir, 0775, true);
         }
         $publicAbsolute = $publicDir . DIRECTORY_SEPARATOR . $storedName;
-        if (is_dir($publicDir) && is_writable($publicDir) && !is_file($publicAbsolute)) {
+        if (is_dir($publicDir) && is_writable($publicDir) && $publicAbsolute !== $absolutePath && !is_file($publicAbsolute)) {
             @copy($absolutePath, $publicAbsolute);
         }
 
@@ -1176,10 +1186,18 @@ if (!function_exists('public_content_delete_managed_image')) {
 
         $deleted = false;
 
-        $privateAbsolute = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        $storageRoot = rtrim((string)UPLOAD_STORAGE_ROOT, '/\\');
+        $privateRelative = $relative;
+        if (preg_match('~/uploads$~i', $storageRoot) && strpos($privateRelative, 'uploads/') === 0) {
+            $privateRelative = substr($privateRelative, strlen('uploads/'));
+        }
+        $privateAbsolute = $storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $privateRelative);
         if (is_file($privateAbsolute)) {
             $realPrivate = realpath($privateAbsolute);
-            $privateRoot = realpath(rtrim((string)UPLOAD_STORAGE_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'content');
+            $privateRootSuffix = preg_match('~/uploads$~i', $storageRoot)
+                ? 'content'
+                : ('uploads' . DIRECTORY_SEPARATOR . 'content');
+            $privateRoot = realpath($storageRoot . DIRECTORY_SEPARATOR . $privateRootSuffix);
             if ($realPrivate !== false && $privateRoot !== false && strpos($realPrivate, $privateRoot . DIRECTORY_SEPARATOR) === 0) {
                 $deleted = @unlink($realPrivate) || $deleted;
             }

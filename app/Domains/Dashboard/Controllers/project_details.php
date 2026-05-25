@@ -2579,6 +2579,7 @@ if ($pdo instanceof PDO) {
             formData.append('file', file);
             formData.append('project_id', projectId);
             formData.append('action', 'upload_file');
+            formData.append('csrf_token', csrfToken || '');
 
             showNotification(`Uploading ${file.name}...`, 'info');
 
@@ -2635,6 +2636,7 @@ if ($pdo instanceof PDO) {
             formData.append('project_id', projectId);
             formData.append('base_file_id', String(baseFileId));
             formData.append('action', 'upload_file_revision');
+            formData.append('csrf_token', csrfToken || '');
 
             showNotification(`Uploading revision ${file.name}...`, 'info');
 
@@ -2683,6 +2685,7 @@ if ($pdo instanceof PDO) {
             formData.append('file', file);
             formData.append('project_id', projectId);
             formData.append('action', 'upload_drawing');
+            formData.append('csrf_token', csrfToken || '');
 
             showNotification(`Uploading ${file.name}...`, 'info');
 
@@ -2719,12 +2722,14 @@ if ($pdo instanceof PDO) {
                 const response = await fetch('api/project_files.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken || ''
                     },
                     body: JSON.stringify({
                         action: 'delete_file',
                         file_id: fileId,
-                        project_id: projectId
+                        project_id: projectId,
+                        csrf_token: csrfToken || ''
                     })
                 });
 
@@ -2755,12 +2760,14 @@ if ($pdo instanceof PDO) {
                 const response = await fetch('api/project_files.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken || ''
                     },
                     body: JSON.stringify({
                         action: 'delete_drawing',
                         drawing_id: drawingId,
-                        project_id: projectId
+                        project_id: projectId,
+                        csrf_token: csrfToken || ''
                     })
                 });
 
@@ -2795,12 +2802,14 @@ if ($pdo instanceof PDO) {
                 const response = await fetch('api/project_files.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken || ''
                     },
                     body: JSON.stringify({
                         action: 'remove_team_member',
                         worker_id: workerId,
-                        project_id: projectId
+                        project_id: projectId,
+                        csrf_token: csrfToken || ''
                     })
                 });
 
@@ -2827,13 +2836,15 @@ if ($pdo instanceof PDO) {
                 await fetch('api/project_files.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken || ''
                     },
                     body: JSON.stringify({
                         action: 'log_activity',
                         project_id: projectId,
                         activity_action: action,
-                        item: item
+                        item: item,
+                        csrf_token: csrfToken || ''
                     })
                 });
             } catch (error) {
@@ -3041,6 +3052,7 @@ if ($pdo instanceof PDO) {
                 const formData = new FormData(this);
                 formData.append('project_id', projectId);
                 formData.append('action', 'add_team_member');
+                formData.append('csrf_token', csrfToken || '');
 
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
@@ -3229,13 +3241,15 @@ if ($pdo instanceof PDO) {
                     const response = await fetch('api/project_files.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfToken || ''
                         },
                         body: JSON.stringify({
                             action: 'contact_via_signal',
                             project_id: projectId,
                             worker_id: parseInt(memberId, 10),
-                            message: String(message)
+                            message: String(message),
+                            csrf_token: csrfToken || ''
                         })
                     });
 
