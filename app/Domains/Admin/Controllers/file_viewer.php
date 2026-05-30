@@ -753,15 +753,17 @@ $fileVersionButtons = [];
 $fileVersionSelectedId = 0;
 $hasProjectFilesRevisionGroup = false;
 $hasProjectFilesRevisionNo = false;
+$db = null;
 
 $db = function_exists('get_db') ? get_db() : null;
 
 if (db_connected()) {
+  $db = get_db();
   $hasProjectFilesRevisionGroup = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_group') : false;
   $hasProjectFilesRevisionNo = function_exists('db_column_exists') ? db_column_exists('project_files', 'revision_no') : false;
 }
 
-if (db_connected() && $projectId > 0) {
+if (($db instanceof PDO) && $projectId > 0) {
   $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(revision_group, \'\') AS revision_group' : "'' AS revision_group";
   $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(revision_no, 1) AS revision_no' : '1 AS revision_no';
 
@@ -811,7 +813,7 @@ if (db_connected() && $projectId > 0) {
     }
     return $ta > $tb ? -1 : 1;
   });
-} elseif (db_connected() && $projectId <= 0) {
+} elseif (($db instanceof PDO) && $projectId <= 0) {
   $revisionGroupSelect = $hasProjectFilesRevisionGroup ? 'COALESCE(pf.revision_group, \'\') AS revision_group' : "'' AS revision_group";
   $revisionNoSelect = $hasProjectFilesRevisionNo ? 'COALESCE(pf.revision_no, 1) AS revision_no' : '1 AS revision_no';
   $globalFiles = db_fetch_all('SELECT pf.id, pf.project_id, pf.name, pf.type, pf.uploaded_at, p.name AS project_name, ' . $revisionGroupSelect . ', ' . $revisionNoSelect . ' FROM project_files pf LEFT JOIN projects p ON p.id = pf.project_id' . (function_exists('projects_soft_delete_sql') && projects_soft_delete_sql('p', '') ? ' AND ' . projects_soft_delete_sql('p', '') : '') . ' ORDER BY pf.uploaded_at DESC LIMIT 200');

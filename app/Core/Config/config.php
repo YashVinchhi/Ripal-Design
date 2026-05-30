@@ -395,7 +395,7 @@ if (!defined('UPLOAD_STORAGE_ROOT')) {
     if ($configuredUploadRoot !== '') {
         define('UPLOAD_STORAGE_ROOT', $configuredUploadRoot);
     } else {
-        define('UPLOAD_STORAGE_ROOT', rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'private_uploads');
+        define('UPLOAD_STORAGE_ROOT', rtrim((string)PROJECT_ROOT, '/\\') . DIRECTORY_SEPARATOR . 'uploads');
     }
 }
 
