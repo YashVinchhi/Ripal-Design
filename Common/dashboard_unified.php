@@ -296,7 +296,7 @@ if ($useWorkerProjectView) {
     .dashboard-main {
       width: 100%;
       max-width: none !important;
-      padding-top: clamp(96px, 12vh, 150px) !important;
+      padding-top: clamp(72px, 8vh, 108px) !important;
     }
 
     @media (min-width: 1024px) {
@@ -375,7 +375,7 @@ if ($useWorkerProjectView) {
     <!-- Dashboard hero header removed to conserve vertical space -->
 
     <main class="dashboard-main flex-grow px-4 sm:px-6 lg:px-8 pb-10">
-      <div class="<?php echo $statGridClasses; ?>" data-stats-group style="margin-top:10vh;">
+        <div class="<?php echo $statGridClasses; ?>" data-stats-group style="margin-top: clamp(1rem, 2.5vh, 1.75rem);">
         <?php foreach ($statCards as $card): ?>
           <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden" data-stat-card>
             <div class="flex items-start justify-between gap-4">
