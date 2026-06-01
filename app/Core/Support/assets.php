@@ -66,7 +66,12 @@ if (!function_exists('asset')) {
         }
 
         $basePath = defined('BASE_PATH') ? rtrim((string)BASE_PATH, '/') : '';
-        $url = ($basePath !== '' ? $basePath : '') . '/' . $relative;
+        $urlRelative = $relative;
+        if (defined('PUBLIC_PATH_PREFIX') && PUBLIC_PATH_PREFIX === '' && str_starts_with($relative, 'public/')) {
+            $urlRelative = substr($relative, strlen('public/'));
+        }
+
+        $url = ($basePath !== '' ? $basePath : '') . '/' . $urlRelative;
         $url = preg_replace('#/+#', '/', $url);
         return $url . asset_version_suffix_for_file($absolute);
     }
