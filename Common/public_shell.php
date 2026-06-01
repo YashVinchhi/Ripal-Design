@@ -90,11 +90,13 @@ if (!function_exists('rd_page_start')) {
     <link rel="icon" href="<?php echo esc_attr(rd_asset_url('favicon.ico')); ?>" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- TODO: Self-host Google Fonts to enable Subresource Integrity (SRI) checks. -->
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- TODO: Replace placeholder SRI hash with real one from srihash.org -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous">
     <link rel="stylesheet" href="<?php echo esc_attr(rd_asset_url('assets/css/ui-radius.css')); ?>">
     <link rel="stylesheet" href="<?php echo esc_attr(rd_public_url('css/public-redesign.css')); ?>">
-    <script>
+    <script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>">
         document.documentElement.setAttribute('data-ui-radius', <?php echo json_encode($radiusMode); ?>);
     </script>
 </head>
@@ -134,12 +136,13 @@ if (!function_exists('rd_page_start')) {
             <a class="menu-cta"  style="color:#eee7dc" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>"><?php echo esc($shellText('nav_cta_label', 'Start a Project')); ?></a>
         </nav>
     </header>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
-    <script src="<?php echo esc_attr(rd_asset_url('assets/js/gsap-core-init.js')); ?>" defer></script>
-    <script src="<?php echo esc_attr(rd_asset_url('assets/js/gsap-motion-presets.js')); ?>" defer></script>
-    <script src="<?php echo esc_attr(rd_public_url('js/public-immersive.js')); ?>" defer></script>
-    <script src="<?php echo esc_attr(rd_asset_url('assets/js/home-immersive.js')); ?>" defer></script>
+    <!-- TODO: Replace placeholder SRI hashes with real ones from srihash.org -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-..." crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" integrity="sha512-..." crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(rd_asset_url('assets/js/gsap-core-init.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(rd_asset_url('assets/js/gsap-motion-presets.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(rd_public_url('js/public-immersive.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(rd_asset_url('assets/js/home-immersive.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
         <?php
     }
 }
@@ -192,7 +195,7 @@ if (!function_exists('rd_page_end')) {
             <a href="<?php echo esc_attr($whatsAppHref); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc($shellText('footer_whatsapp_label', 'WhatsApp')); ?></a>
         </div>
     </footer>
-    <script>
+    <script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>">
         document.querySelectorAll('[data-rd-phone][data-rd-phone-label]').forEach(function (link) {
             try {
                 link.href = atob(link.getAttribute('data-rd-phone') || '');

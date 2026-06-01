@@ -125,6 +125,7 @@ $isActiveNav = static function ($path) use ($currentPath) {
 <!-- Common Stylesheets and Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- TODO: Self-host Google Fonts to enable Subresource Integrity (SRI) checks. -->
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Phantom-UI: SSR pre-hydration CSS + CDN bundle -->
@@ -141,10 +142,12 @@ $isActiveNav = static function ($path) use ($currentPath) {
         opacity: 0 !important;
     }
 </style>
-<script defer src="https://cdn.jsdelivr.net/npm/@aejkatappaja/phantom-ui/dist/phantom-ui.cdn.js"></script>
+<!-- TODO: Replace placeholder SRI hash with real one from srihash.org -->
+<script defer src="https://cdn.jsdelivr.net/npm/@aejkatappaja/phantom-ui/dist/phantom-ui.cdn.js" integrity="sha512-..." crossorigin="anonymous" nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
 
 <!-- Icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- TODO: Replace placeholder SRI hash with real one from srihash.org -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous">
 
 <?php if ((empty($HEADER_MODE) || $HEADER_MODE !== 'public') && (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS)): ?>
 <?php
@@ -167,7 +170,7 @@ echo '<link rel="stylesheet" href="' . esc_attr($mainCss . asset_version_suffix_
 ?>
 <?php endif; ?>
 
-<script>
+<script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>">
     document.documentElement.setAttribute('data-ui-radius', <?php echo json_encode($radiusMode); ?>);
 </script>
 
@@ -456,7 +459,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
     // and is visible to users (moved from earlier in the head section).
     require_once __DIR__ . '/toolbar.php';
 ?>
-<script>
+<script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>">
     // Global image error handler: replace broken images with local placeholder (same-origin)
     (function(){
         var fallback = <?php echo esc_js(rtrim((string)BASE_PATH, '/') . "/assets/images/rd-placeholder.svg"); ?>;
@@ -482,7 +485,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
         <div id="phantom-ui-root">
     <?php endif; ?>
         <!-- Lucide icons (used via data-lucide="icon-name"). Initialize after the library loads. -->
-        <script>
+        <script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>">
             (function(){
                 var lucideScript = document.createElement('script');
                 // Prefer local copy to avoid CORB/CSP/CDN issues. Fallback to CDN if not present.
@@ -524,7 +527,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
                 document.head.appendChild(lucideScript);
             })();
         </script>
-        <script>
+        <script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>">
             // Replace <i data-lucide="name"> with Font Awesome equivalent when lucide isn't available
             (function(){
                 var map = {
@@ -609,14 +612,15 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
                 }catch(e){}
             })();
         </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
-    <script src="<?php echo esc_attr(asset('assets/js/gsap-core-init.js')); ?>" defer></script>
-    <script src="<?php echo esc_attr(asset('assets/js/gsap-motion-presets.js')); ?>" defer></script>
-    <script src="<?php echo esc_attr(asset('assets/js/header-nav.js')); ?>" defer></script>
-    <script src="<?php echo esc_attr(asset('assets/js/auto-hide-alerts.js')); ?>" defer></script>
-    <script src="<?php echo esc_attr(asset('assets/js/ajax-forms.js')); ?>" defer></script>
-<script>
+    <!-- TODO: Replace placeholder SRI hashes with real ones from srihash.org -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-..." crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" integrity="sha512-..." crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(asset('assets/js/gsap-core-init.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(asset('assets/js/gsap-motion-presets.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(asset('assets/js/header-nav.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(asset('assets/js/auto-hide-alerts.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="<?php echo esc_attr(asset('assets/js/ajax-forms.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+<script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>">
 document.addEventListener('DOMContentLoaded', function(){
   // Fallback: if Phantom-UI doesn't initialize (CDN blocked), ensure content is visible
   setTimeout(function(){

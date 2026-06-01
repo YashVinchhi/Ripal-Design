@@ -104,7 +104,7 @@ rd_page_start([
     </div>
 </div>
 
-<script>
+<script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce'] ?? ''); ?>">
     const apiBase = <?php echo json_encode(rtrim((string)BASE_PATH, '/')); ?>;
     const fallbackCards = <?php echo json_encode($fallbackCards); ?>;
     const grid = document.getElementById('projectGrid');

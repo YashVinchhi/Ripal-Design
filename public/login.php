@@ -58,8 +58,8 @@ rd_page_start([
         </article>
     </section>
 </main>
-<script src="<?php echo esc_attr(rd_public_url('js/validation.js')); ?>" defer></script>
-<script>
+<script src="<?php echo esc_attr(rd_public_url('js/validation.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce'] ?? ''); ?>"></script>
+<script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce'] ?? ''); ?>">
     document.querySelectorAll('.toggle-password-btn').forEach(function (button) {
         button.addEventListener('click', function () {
             var input = button.closest('.password-wrap').querySelector('input');

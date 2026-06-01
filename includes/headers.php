@@ -13,20 +13,11 @@ if (!function_exists('apply_security_headers')) {
             return;
         }
 
-        // Prevent clickjacking
-        header('X-Frame-Options: DENY');
-
-        // Prevent content type sniffing
-        header('X-Content-Type-Options: nosniff');
-
-        // Referrer policy
-        header('Referrer-Policy: strict-origin-when-cross-origin');
-
-        // Permissions policy - restrict sensors
-        header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+        $nonce = base64_encode(random_bytes(16));
+        $_REQUEST['csp_nonce'] = $nonce;
 
         if (!defined('SECURITY_ENABLE_CSP') || SECURITY_ENABLE_CSP) {
-            $csp = defined('SECURITY_CSP_POLICY') ? (string)SECURITY_CSP_POLICY : "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'";
+            $csp = defined('SECURITY_CSP_POLICY') ? (string)SECURITY_CSP_POLICY : "default-src 'self'; script-src 'self' 'nonce-{$nonce}'; style-src 'self' 'unsafe-inline'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'";
             header('Content-Security-Policy: ' . $csp);
         }
 

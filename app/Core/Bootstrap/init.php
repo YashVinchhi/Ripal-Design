@@ -114,11 +114,6 @@ if (file_exists($incHeaders)) {
                 return;
             }
 
-            header('X-Frame-Options: DENY');
-            header('X-Content-Type-Options: nosniff');
-            header('Referrer-Policy: strict-origin-when-cross-origin');
-            header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
-
             // Default CSP (allows self resources; permits inline styles for legacy layouts).
             $csp = "default-src 'self' https: data: blob: 'unsafe-inline'; script-src 'self' https: 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://static.cloudflareinsights.com; style-src 'self' https: 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' https: data:; connect-src 'self' https: wss: https://www.google-analytics.com https://analytics.google.com https://www.clarity.ms; frame-src 'self' https:; media-src 'self' https: data: blob:; object-src 'none';";
             header('Content-Security-Policy: ' . $csp);
@@ -232,20 +227,6 @@ if (function_exists('current_user')) {
 }
 
 apply_security_headers();
-
-if (!headers_sent()) {
-    header("Content-Security-Policy: " . implode('; ', [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://cdn.babylonjs.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://static.cloudflareinsights.com",
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-        "img-src 'self' data: blob: https:",
-        "media-src 'self' data: blob: https:",
-        "worker-src 'self' blob:",
-        "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://cdn.babylonjs.com https://www.google-analytics.com https://analytics.google.com https://www.clarity.ms",
-        "frame-ancestors 'none'"
-    ]));
-}
 
 // Polyfill for mbstring functions when the extension is not available.
 if (!function_exists('mb_substr')) {
