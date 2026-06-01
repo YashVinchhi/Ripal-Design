@@ -11,7 +11,7 @@ $ip = $_SERVER['REMOTE_ADDR'];
 $cacheKey = 'login_attempts_' . md5($ip);
 
 // Using APCu or a DB-backed attempt counter
-$attempts = apcu_fetch($cacheKey) ?: 0;
+$attempts = function_exists('apcu_fetch') ? (int)(apcu_fetch($cacheKey) ?: 0) : 0;
 
 if ($attempts >= 5) {
     http_response_code(429);
@@ -122,7 +122,9 @@ function post_login_redirect_url(array $user): string
 function login_error_and_redirect(string $message): void
 {
     global $cacheKey, $attempts;
-    apcu_store($cacheKey, $attempts + 1, 900); // 15 min TTL
+    if (function_exists('apcu_store')) {
+        @apcu_store($cacheKey, $attempts + 1, 900); // 15 min TTL
+    }
     $_SESSION['login_error'] = $message;
     $_SESSION['active_form'] = 'login';
     header('Location: login.php');

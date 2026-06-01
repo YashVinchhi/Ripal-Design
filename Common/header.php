@@ -143,11 +143,11 @@ $isActiveNav = static function ($path) use ($currentPath) {
     }
 </style>
 <!-- TODO: Replace placeholder SRI hash with real one from srihash.org -->
-<script defer src="https://cdn.jsdelivr.net/npm/@aejkatappaja/phantom-ui/dist/phantom-ui.cdn.js" integrity="sha512-..." crossorigin="anonymous" nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@aejkatappaja/phantom-ui/dist/phantom-ui.cdn.js" crossorigin="anonymous" nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
 
 <!-- Icons -->
 <!-- TODO: Replace placeholder SRI hash with real one from srihash.org -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 
 <?php if ((empty($HEADER_MODE) || $HEADER_MODE !== 'public') && (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS)): ?>
 <?php
@@ -347,7 +347,7 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
                 <?php if ($activeSection === 'dashboard'): ?>
                     <strong class="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2 px-4"><?php echo htmlspecialchars((string)$headerText('dashboard_section_title', 'Dashboard')); ?></strong>
                     <?php render_if('dashboard', 'nav.dashboard.home', static function () use ($roleDashboardLink, $headerText): void { ?>
-                        <a href="<?php echo htmlspecialchars($roleDashboardLink); ?>"><?php echo htmlspecialchars((string)$headerText('dashboard_link_home', 'Dashboard Home')); ?></a>
+                        <a href="<?php echo htmlspecialchars((string)$roleDashboardLink, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars((string)$headerText('dashboard_link_home', 'Dashboard Home')); ?></a>
                     <?php }); ?>
                     <?php render_if('dashboard', 'nav.dashboard.project_details', static function () use ($headerText): void { ?>
                         <a href="<?php echo htmlspecialchars(rtrim((string)BASE_PATH, '/') . '/worker/project_details.php'); ?>"><?php echo htmlspecialchars((string)$headerText('dashboard_link_project_details', 'Project Details')); ?></a>
@@ -613,8 +613,8 @@ if (isset($faviconImage) && strpos((string)$faviconImage, '.ico') !== false && !
             })();
         </script>
     <!-- TODO: Replace placeholder SRI hashes with real ones from srihash.org -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-..." crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" integrity="sha512-..." crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" crossorigin="anonymous" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
     <script src="<?php echo esc_attr(asset('assets/js/gsap-core-init.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
     <script src="<?php echo esc_attr(asset('assets/js/gsap-motion-presets.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
     <script src="<?php echo esc_attr(asset('assets/js/header-nav.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce']); ?>"></script>
