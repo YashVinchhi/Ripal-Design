@@ -33,7 +33,7 @@ rd_page_start([
             <p class="eyebrow">Signup</p>
             <h1 id="signupTitle">Create account</h1>
             <?php if ($error !== ''): ?><p class="notice notice-error"><?php echo esc($error); ?></p><?php endif; ?>
-            <form id="signupForm" class="auth-form" method="post" action="<?php echo esc_attr(rd_public_url('login_register.php')); ?>">
+            <form id="signupForm" class="auth-form" method="post" action="login_register.php">
                 <input type="hidden" name="csrf_token" value="<?php echo h(generate_csrf_token()); ?>">
                 <div class="form-grid">
                     <div class="field">
