@@ -81,14 +81,33 @@
     return data;
   }
 
+  function getModelContext() {
+    return document && document.modelContext ? document.modelContext : null;
+  }
+
+  function bridgeLegacyPolyfill() {
+    if (!document || document.modelContext || !window.navigator || !window.navigator["modelContext"]) {
+      return;
+    }
+
+    try {
+      document.modelContext = window.navigator["modelContext"];
+    } catch (err) {
+      // Some future native implementations may expose a read-only property.
+    }
+  }
+
   function registerTools() {
-    if (!("modelContext" in navigator) || !navigator.modelContext || typeof navigator.modelContext.registerTool !== "function") {
+    bridgeLegacyPolyfill();
+
+    var modelContext = getModelContext();
+    if (!modelContext || typeof modelContext.registerTool !== "function") {
       return;
     }
 
     ensureDiscoveryMeta();
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "get_portfolio_projects",
       description: "List all architecture projects in Ripal Design's portfolio, optionally filtered by category (residential, commercial, interior, urban).",
       parameters: {
@@ -107,7 +126,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "get_project_detail",
       description: "Get full details of a specific architecture project including images, materials used, client brief, and completion date.",
       parameters: {
@@ -123,7 +142,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "get_project_team_members",
       description: "List workers or employees assigned to a specific project.",
       parameters: {
@@ -139,7 +158,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "get_role_actions",
       description: "List role-based actions the currently logged-in user is allowed to execute through AI.",
       parameters: {
@@ -151,7 +170,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "execute_role_action",
       description: "Execute an allowed non-delete action as the currently logged-in user. Requires explicit user confirmation.",
       readOnly: false,
@@ -167,7 +186,7 @@
         var actionKey = params && params.action_key ? String(params.action_key) : "";
         var requestParams = params && params.params && typeof params.params === "object" ? params.params : {};
 
-        await navigator.modelContext.requestUserInteraction?.({
+        await document.modelContext.requestUserInteraction?.({
           reason: "Confirm executing action: " + actionKey
         });
 
@@ -186,7 +205,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "get_firm_info",
       description: "Get information about the architecture firm including services offered, team members, awards, and contact details.",
       parameters: {
@@ -198,7 +217,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "search_projects",
       description: "Search the portfolio by keyword, location, year range, or building type.",
       parameters: {
@@ -224,7 +243,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "request_consultation",
       description: "Submit a consultation request to the firm on behalf of the user. Requires explicit user confirmation before submitting.",
       readOnly: false,
@@ -240,7 +259,7 @@
         required: ["name", "email", "project_type", "message"]
       },
       execute: async function (params) {
-        await navigator.modelContext.requestUserInteraction?.({
+        await document.modelContext.requestUserInteraction?.({
           reason: "Confirm sending consultation request to Ripal Design"
         });
 
@@ -255,7 +274,7 @@
       }
     });
 
-    navigator.modelContext.registerTool({
+    document.modelContext.registerTool({
       name: "get_available_consultation_slots",
       description: "Get available consultation appointment slots for the next 30 days.",
       parameters: {
@@ -272,7 +291,7 @@
   }
 
   // Polyfill for browsers without native WebMCP support
-  if (!("modelContext" in navigator)) {
+  if (!("modelContext" in document)) {
     var script = document.createElement("script");
     script.src = "https://unpkg.com/@mcp-b/webmcp-polyfill/dist/index.js?module";
     // The polyfill is distributed as an ES module; ensure module semantics.

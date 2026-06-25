@@ -45,8 +45,8 @@ $initialServiceImage = (string)($services[0]['image'] ?? $heroImage);
 $initialServiceTitle = (string)($services[0]['title'] ?? 'Service');
 
 rd_page_start([
-    'title' => $ct('page_title', 'Services'),
-    'description' => $ct('meta_description', 'Architecture, interiors, landscape, and project execution services by Ripal Design.'),
+    'title' => $ct('page_title', 'Architecture & Interior Design Services in Rajkot | Ripal Design'),
+    'description' => $ct('meta_description', "Explore Ripal Design's services in Rajkot — architectural planning from ₹35k, interior design, landscape architecture, and full project execution. Serving Rajkot, Jamnagar & Gujarat."),
     'image' => $heroImage,
     'url' => rd_public_url('services.php'),
     'active' => 'services',
@@ -57,6 +57,7 @@ rd_page_start([
         <div class="hero-copy">
             <p class="eyebrow"><?php echo esc($ct('section_kicker', 'Services')); ?></p>
             <h1><?php echo esc($ct('hero_heading', 'Clear services for decisions that become buildings.')); ?></h1>
+            <h2>Architecture, Interior Design & Project Management in Rajkot, Gujarat</h2>
             <p><?php echo esc($ct('hero_subheading', 'Choose focused design help, complete interiors, or execution support. Every engagement starts with clarity on scope, timeline, and the decisions required from you.')); ?></p>
             <div class="hero-actions">
                 <a class="button button-primary" href="<?php echo esc_attr(rd_public_url('contact_us.php')); ?>">Request a Proposal</a>

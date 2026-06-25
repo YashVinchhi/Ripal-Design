@@ -257,6 +257,7 @@ $actionCards = [
     $actionCards[] = ['label' => 'Portfolio', 'href' => base_path('admin/project_management.php'), 'icon' => 'folder'];
     $actionCards[] = ['label' => 'Content Manager', 'href' => base_path('admin/content_management.php'), 'icon' => 'file-text'];
     $actionCards[] = ['label' => 'Contact Manager', 'href' => base_path('admin/contact_messages.php'), 'icon' => 'mail'];
+    $actionCards[] = ['label' => '3D Walkthroughs', 'href' => base_path('admin/walkthroughs.php'), 'icon' => 'box'];
     $actionCards[] = ['label' => 'Vendors', 'href' => base_path('admin/entities.php?tab=vendors'), 'icon' => 'truck'];
     $actionCards[] = ['label' => 'Materials Studio', 'href' => base_path('admin/materials_studio.php'), 'icon' => 'package'];
     $actionCards[] = ['label' => 'Workers', 'href' => base_path('admin/entities.php?tab=workers'), 'icon' => 'users'];
@@ -281,40 +282,100 @@ if ($useWorkerProjectView) {
   <?php $HEADER_MODE = 'dashboard';
   require_once __DIR__ . '/header.php'; ?>
   <style>
+    html,
+    body {
+      background: #f7f4ef !important;
+      color: #24211f !important;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
     /* Dashboard desktop: center main content with 10% side margins */
-    .dashboard-main { width: 100%; max-width: none !important; }
+    .dashboard-main {
+      width: 100%;
+      max-width: none !important;
+      padding-top: clamp(72px, 8vh, 108px) !important;
+    }
+
     @media (min-width: 1024px) {
       .dashboard-main { width: 80% !important; margin-left: 10% !important; margin-right: 10% !important; }
+    }
+
+    [data-stats-group] {
+      margin-top: 0 !important;
+    }
+
+    [data-stat-card],
+    [data-quick-actions],
+    [data-project-card],
+    .dashboard-main > section {
+      background: rgba(255, 255, 255, 0.96) !important;
+      color: #24211f !important;
+      border: 1px solid rgba(36, 33, 31, 0.08) !important;
+      box-shadow: 0 18px 50px rgba(36, 33, 31, 0.08) !important;
+    }
+
+    [data-stat-card] {
+      min-height: 128px;
+    }
+
+    [data-stat-card] span,
+    [data-project-card] span,
+    [data-project-card] h3,
+    [data-project-card] div,
+    .dashboard-main h2,
+    .dashboard-main a {
+      color: inherit;
+    }
+
+    [data-stats-group] [data-countup],
+    .stat-number {
+      color: #24211f !important;
+      font-size: clamp(1.75rem, 2.2vw, 2.4rem) !important;
+      line-height: 1 !important;
+    }
+
+    [data-stat-card] .text-gray-400,
+    [data-project-card] .text-gray-400,
+    [data-project-card] .text-gray-600 {
+      color: #6f6861 !important;
+    }
+
+    [data-project-card] h3 {
+      color: #24211f !important;
+      font-size: 1.15rem !important;
+    }
+
+    [data-project-card] a.bg-foundation-grey,
+    [data-project-card] a.hover\:bg-black {
+      background: #24211f !important;
+      color: #ffffff !important;
+      border-color: #24211f !important;
+    }
+
+    [data-project-card] a.border {
+      color: #24211f !important;
+      background: #fffaf3 !important;
+    }
+
+    .alt-header {
+      background: rgba(22, 20, 18, 0.92) !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
     }
   </style>
 </head>
 
-<body class="font-sans text-foundation-grey bg-canvas-white">
+<body class="font-sans text-foundation-grey bg-canvas-white dashboard-page">
 
   <div class="min-h-screen flex flex-col">
-    <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
-      <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-serif font-bold">Project Command Center</h1>
-          <p class="text-gray-300 mt-2 text-sm">Manage projects, teams, and progress.</p>
-        </div>
-        <a href="<?php echo esc_attr($profileUrl); ?>" aria-label="Open profile settings" title="Open Profile" class="no-underline">
-          <?php if ($sessionAvatar !== ''): ?>
-            <div class="w-12 h-12 rounded-none overflow-hidden shadow-inner" style="display:inline-block;">
-              <img src="<?php echo esc_attr($sessionAvatar); ?>" alt="Avatar" class="w-12 h-12 object-cover block" onerror="this.style.display='none'; document.getElementById('dashProfileInitials').style.display='flex';">
-              <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-none flex items-center justify-center font-bold text-lg text-white" style="display:none;"><?php echo esc($userInitials); ?></div>
-            </div>
-          <?php else: ?>
-            <div id="dashProfileInitials" class="w-12 h-12 bg-rajkot-rust rounded-none flex items-center justify-center font-bold text-lg shadow-inner no-underline text-white hover:bg-[#7f140a] transition-colors">
-              <?php echo esc($userInitials); ?>
-            </div>
-          <?php endif; ?>
-        </a>
-      </div>
-    </header>
+    <!-- Dashboard hero header removed to conserve vertical space -->
 
     <main class="dashboard-main flex-grow px-4 sm:px-6 lg:px-8 pb-10">
-      <div class="<?php echo $statGridClasses; ?>" data-stats-group>
+        <div class="<?php echo $statGridClasses; ?>" data-stats-group style="margin-top: clamp(1rem, 2.5vh, 1.75rem);">
         <?php foreach ($statCards as $card): ?>
           <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative overflow-hidden" data-stat-card>
             <div class="flex items-start justify-between gap-4">
@@ -328,6 +389,56 @@ if ($useWorkerProjectView) {
         <?php endforeach; ?>
       </div>
 
+      <?php if ($isAdmin): ?>
+      <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8 mb-8" data-admin-tools>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+          <div>
+            <h2 class="text-xl md:text-2xl font-serif font-bold">Admin Tools</h2>
+            <p class="text-gray-500 text-sm mt-1">Manage portfolio assets, 3D walkthroughs, users, billing, and content.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <a href="<?php echo esc_attr(base_path('admin/project_management.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Portfolio</div>
+                <div class="mt-1 font-bold text-foundation-grey">Projects</div>
+              </div>
+              <i data-lucide="folder" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+          <a href="<?php echo esc_attr(base_path('admin/walkthroughs.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">3D Models</div>
+                <div class="mt-1 font-bold text-foundation-grey">Walkthroughs</div>
+              </div>
+              <i data-lucide="box" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+          <a href="<?php echo esc_attr(base_path('admin/file_viewer.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Files</div>
+                <div class="mt-1 font-bold text-foundation-grey">File Viewer</div>
+              </div>
+              <i data-lucide="file-search" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+          <a href="<?php echo esc_attr(base_path('admin/materials_studio.php')); ?>" class="group border border-gray-100 hover:border-rajkot-rust p-5 shadow-sm hover:shadow-premium transition-all no-underline bg-gray-50 hover:bg-white" data-magnetic>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Materials</div>
+                <div class="mt-1 font-bold text-foundation-grey">Studio</div>
+              </div>
+              <i data-lucide="package" class="w-5 h-5 text-rajkot-rust"></i>
+            </div>
+          </a>
+        </div>
+      </section>
+      <?php endif; ?>
+
+      <?php if (!$isAdmin): ?>
       <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8 mb-8" data-quick-actions>
         <h2 class="text-xl md:text-2xl font-serif font-bold mb-5">Quick Actions</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -341,6 +452,7 @@ if ($useWorkerProjectView) {
           <?php endforeach; ?>
         </div>
       </section>
+      <?php endif; ?>
 
       <section class="bg-white shadow-premium border border-gray-100 p-6 md:p-8">
         <div class="flex items-center justify-between mb-5">

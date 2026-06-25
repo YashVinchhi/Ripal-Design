@@ -7,7 +7,7 @@ $image = static fn ($key, $default) => rd_content_image($content, $key, $default
 $heroImage = $image('team_1_image', '/assets/Content/WhatsApp Image 2026-02-02 at 5.02.50 PM.jpeg');
 
 rd_page_start([
-    'title' => $ct('page_title', 'About the Studio'),
+    'title' => $ct('page_title', 'About Us – Architectural Firm Est. 2017, Rajkot | Ripal Design'),
     'description' => $ct('meta_description', 'Meet Ripal Design, a Rajkot design-build studio focused on practical architecture and interiors.'),
     'image' => $heroImage,
     'url' => rd_public_url('about_us.php'),

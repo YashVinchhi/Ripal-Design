@@ -27,6 +27,13 @@ if (!defined('PROJECT_ROOT')) {
     require_once __DIR__ . '/../Config/config.php';
 }
 
+// Temporary mitigant: enable output buffering early to avoid "headers already sent"
+// warnings while we locate the root cause. This is safe for local debugging
+// and will be removed once the underlying early-output source is fixed.
+if (PHP_SAPI !== 'cli' && !ob_get_level()) {
+    @ob_start();
+}
+
 // Load .env into environment if present. Prefer vlucas/phpdotenv when available,
 // otherwise fall back to a lightweight parser that sets getenv()/$_ENV/$_SERVER.
 $autoload = rtrim((string)defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 3), '/\\') . '/vendor/autoload.php';
@@ -34,9 +41,13 @@ $envPath = rtrim((string)defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR_
 if (file_exists($autoload)) {
     try {
         require_once $autoload;
+        if (defined('PROJECT_ROOT') && file_exists(rtrim((string)PROJECT_ROOT, '/\\') . '/includes/autoload_shim.php')) {
+            require_once rtrim((string)PROJECT_ROOT, '/\\') . '/includes/autoload_shim.php';
+        }
         if (class_exists('\\Dotenv\\Dotenv')) {
             try {
-                $dot = \Dotenv\Dotenv::createImmutable(rtrim((string)PROJECT_ROOT, '/\\'));
+                $dotenvClass = '\\Dotenv\\Dotenv';
+                $dot = $dotenvClass::createImmutable(rtrim((string)PROJECT_ROOT, '/\\'));
                 $dot->safeLoad();
             } catch (Throwable $e) {
                 // ignore dotenv failures and fall back to manual loader below
@@ -50,6 +61,7 @@ if (file_exists($autoload)) {
 if (file_exists($envPath) && is_readable($envPath)) {
     $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if (is_array($lines)) {
+        $loadedFromFile = [];
         foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '' || strpos($line, '#') === 0) continue;
@@ -58,10 +70,11 @@ if (file_exists($envPath) && is_readable($envPath)) {
             $name = trim((string)$name);
             $value = trim((string)$value);
             $value = trim($value, "\"'");
-            if (getenv($name) === false) {
+            if (isset($loadedFromFile[$name]) || getenv($name) === false) {
                 putenv($name . '=' . $value);
                 $_ENV[$name] = $value;
                 $_SERVER[$name] = $value;
+                $loadedFromFile[$name] = true;
             }
         }
     }
@@ -101,13 +114,8 @@ if (file_exists($incHeaders)) {
                 return;
             }
 
-            header('X-Frame-Options: DENY');
-            header('X-Content-Type-Options: nosniff');
-            header('Referrer-Policy: strict-origin-when-cross-origin');
-            header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
-
             // Default CSP (allows self resources; permits inline styles for legacy layouts).
-            $csp = "default-src 'self' https: data: blob: 'unsafe-inline'; script-src 'self' https: 'unsafe-inline' 'unsafe-eval'; style-src 'self' https: 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' https: data:; connect-src 'self' https: wss:; frame-src 'self' https:; media-src 'self' https: data: blob:; object-src 'none';";
+            $csp = "default-src 'self' https: data: blob: 'unsafe-inline'; script-src 'self' https: 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://static.cloudflareinsights.com; style-src 'self' https: 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' https: data:; connect-src 'self' https: wss: https://www.google-analytics.com https://analytics.google.com https://www.clarity.ms; frame-src 'self' https:; media-src 'self' https: data: blob:; object-src 'none';";
             header('Content-Security-Policy: ' . $csp);
 
             if (function_exists('app_is_https') && app_is_https() && defined('SECURITY_ENABLE_HSTS') && SECURITY_ENABLE_HSTS) {
@@ -123,9 +131,19 @@ require_once __DIR__ . '/../Database/db.php';
 // Load authentication helpers
 require_once __DIR__ . '/../Security/auth.php';
 
+if (!defined('APP_ROOT')) {
+    define('APP_ROOT', PROJECT_ROOT);
+}
+
+// Permission gate will be loaded after session is started (moved down).
+
 // Load utility functions (depends on config and db)
 if (file_exists(__DIR__ . '/../Support/util.php')) {
     require_once __DIR__ . '/../Support/util.php';
+}
+
+if (file_exists(__DIR__ . '/../Support/assets.php')) {
+    require_once __DIR__ . '/../Support/assets.php';
 }
 
 $commonFunctionsPath = rtrim((string)PROJECT_ROOT, '/\\') . '/Common/functions.php';
@@ -185,6 +203,27 @@ if (session_status() === PHP_SESSION_NONE) {
         'samesite' => 'Strict',
     ]);
     @session_start();
+
+    $requestId = bin2hex(random_bytes(8));
+    $_SERVER['X_REQUEST_ID'] = $requestId;
+    if (!headers_sent()) {
+        header('X-Request-ID: ' . $requestId);
+    }
+}
+
+// Load permission gate after session is started and auth helpers are available
+if (file_exists(APP_ROOT . '/app/Core/Permissions/gate.php')) {
+    require_once APP_ROOT . '/app/Core/Permissions/gate.php';
+} else {
+    require_once __DIR__ . '/../Permissions/gate.php';
+}
+
+// Preload permission cache when a current user exists (depends on session)
+if (function_exists('current_user')) {
+    $bootstrapCurrentUser = current_user();
+    if (is_array($bootstrapCurrentUser)) {
+        \App\Core\Permissions\PermissionService::preload();
+    }
 }
 
 apply_security_headers();
@@ -210,6 +249,8 @@ if (!function_exists('mb_strlen')) {
 if (function_exists('auth_try_auto_login')) {
     auth_try_auto_login();
 }
+
+
 
 // Global login guard for protected routes.
 if (function_exists('enforce_protected_route_login')) {

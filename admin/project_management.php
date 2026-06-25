@@ -1,4 +1,4 @@
 <?php
-$projectRoot = defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 1);
-require_once $projectRoot . '/app/Domains/Admin/Controllers/project_management.php';
-return;
+// Legacy entry point kept for route compatibility.
+// Load the current admin project management controller.
+require_once __DIR__ . '/../app/Domains/Admin/Controllers/project_management.php';

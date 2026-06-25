@@ -15,15 +15,20 @@
       top: 0;
       left: 0;
       right: 0;
-      height: var(--header-height, 80px);
+      height: 6vh; /* menubar: 6% of viewport height */
       display: flex;
       align-items: center;
-      padding: 0 var(--space-3xl, 40px);
+      padding-top: 3vh; /* 3% top spacing */
+      padding-bottom: 3vh; /* 3% bottom spacing */
+      padding-left: var(--space-3xl, 40px);
+      padding-right: var(--space-3xl, 40px);
       z-index: 9999;
-      background: linear-gradient(180deg, rgba(11, 11, 11, 0.82), rgba(11, 11, 11, 0.35));
-      border-bottom: 1px solid rgba(246, 242, 236, 0.08);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
-      backdrop-filter: blur(10px);
+      /* Make header completely transparent and remove blur/shadow */
+      background: transparent !important;
+      border-bottom: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
       transition: height 0.3s ease, padding 0.3s ease, background 0.3s ease;
   }
 
@@ -195,6 +200,135 @@
       background: transparent;
       color: var(--alt-text);
   }
+
+/* Make page header background transparent so menu bar appears floating */
+header { background: transparent !important; }
+
+/* Ensure nav alt-header (menu bar) uses the logged header max height */
+nav.alt-header { height: var(--rd-logged-header-max); max-height: var(--rd-logged-header-max); }
+
+/* Payment toolbar styling to match site UI and be 6% of viewport height */
+.payment-toolbar {
+    position: fixed;
+    top: calc(6vh);
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 9997;
+    --payment-toolbar-height: 6vh;
+    height: var(--payment-toolbar-height);
+    min-height: 6vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background: transparent;
+}
+
+/* Align toolbar content to page container and prevent overlap with main content */
+.payment-toolbar > .max-w-7xl {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* Ensure main content is pushed below the stacked header + toolbar to avoid overlap */
+main {
+    /* account for stacked header (6vh) + toolbar (6vh) */
+    padding-top: calc(12vh + 1rem);
+}
+
+/* Responsive: on small screens the toolbar becomes static and we reduce top padding */
+@media (max-width: 768px) {
+    .payment-toolbar { position: static; height: auto; }
+    main { padding-top: calc(var(--rd-logged-header-max) + 4rem); }
+    .payment-toolbar > .max-w-7xl { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+}
+
+.payment-toolbar .toolbar-btn {
+    background: rgba(255,255,255,0.95);
+    color: var(--rajkot-rust, #7a2f20);
+    border: 0;
+    padding: 0.5rem 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.06);
+    height: calc(var(--payment-toolbar-height) - 1.2rem);
+}
+
+.payment-toolbar input[type="search"],
+.payment-toolbar .toolbar-btn[aria-pressed] {
+    height: calc(var(--payment-toolbar-height) - 1.2rem);
+}
+
+@media (max-width: 640px) {
+    .payment-toolbar { height: auto; padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .payment-toolbar .toolbar-btn, .payment-toolbar input[type="search"] { height: auto; padding: 0.5rem 0.7rem; }
+}
+
+/* Admin toolbar & control sizing: apply to user-management and payment toolbars
+   - toolbar total height: 10% of viewport height
+   - controls (buttons, inputs, selects) height: 6% of viewport height
+   - top/bottom margin: 2% of viewport height
+*/
+.alt-toolbar,
+.user-management-toolbar,
+.payment-toolbar {
+    height: 6vh; /* toolbar total height: 6% of viewport */
+    min-height: 6vh;
+    box-sizing: border-box;
+    padding-top: 3vh; /* 3% top spacing */
+    padding-bottom: 3vh; /* 3% bottom spacing */
+    align-items: center;
+}
+
+.alt-toolbar .toolbar-btn,
+.user-management-toolbar button,
+.user-management-toolbar .toolbar-btn,
+.user-management-toolbar .styled-select,
+.user-management-toolbar .styled-input,
+.payment-toolbar .toolbar-btn,
+.payment-toolbar input[type="search"] {
+    height: 6vh;
+    min-height: 6vh;
+    line-height: 6vh;
+    margin-top: 3vh;    /* 3% top margin */
+    margin-bottom: 3vh; /* 3% bottom margin */
+    padding-top: 0;
+    padding-bottom: 0;
+    box-sizing: border-box;
+}
+
+.user-management-toolbar .styled-input,
+.user-management-toolbar input[type="search"] {
+    padding-left: 3rem; /* preserve search icon spacing */
+}
+
+@media (max-width: 768px) {
+    .alt-toolbar,
+    .user-management-toolbar,
+    .payment-toolbar { height: auto; min-height: unset; padding-top: .75rem; padding-bottom: .75rem; }
+    .alt-toolbar .toolbar-btn,
+    .user-management-toolbar button,
+    .payment-toolbar .toolbar-btn { height: auto; margin-top:0.5rem; margin-bottom:0.5rem; padding: .5rem .75rem; line-height: normal; }
+}
+
+/* Payment toolbar: make specific invoice buttons sharp (square corners) */
+#createInvoiceBtn,
+#recordPaymentBtn,
+#sendInvoiceEmailBtn {
+    border-radius: 0 !important;
+}
+
+/* Also ensure export button matches when present */
+#exportCsvBtn {
+    border-radius: 0 !important;
+}
 
   .btn-signup {
       background: #f6f2ec;
@@ -423,3 +557,185 @@
                     animation: none !important;
                 }
     }
+
+/* Toolbar styles (moved from Common/header.php) */
+.alt-toolbar {
+    position: fixed;
+    top: calc(var(--rd-logged-header-max));
+    left: 0;
+    right: 0;
+    height: var(--rd-logged-header-max);
+    min-height: calc(var(--rd-logged-header-max));
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    z-index: 9998;
+    background: transparent;
+    border-bottom: none;
+}
+.alt-toolbar .toolbar-label { color: #6b7280; font-weight:700; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; }
+.alt-toolbar .styled-select, .alt-toolbar .styled-input { background: #fafafa; border: 1px solid #e6e6e6; color: #374151; padding: 0.45rem 0.6rem; border-radius: 4px; }
+.alt-toolbar .toolbar-search { position:relative; }
+.alt-toolbar .absolute-search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+.alt-toolbar .styled-input { padding-left:2.2rem; width:100%; }
+.alt-toolbar .toolbar-actions { display:flex; gap:0.5rem; align-items:center; }
+.alt-toolbar .toolbar-btn { background: transparent; border: 1px solid #e6e6e6; color: #6b7280; padding: 0.55rem 0.75rem; border-radius: 4px; font-weight:700; text-transform:uppercase; font-size:12px; display:inline-flex; align-items:center; justify-content:center; gap:0.4rem }
+.alt-toolbar .toolbar-btn:hover { background: #fff; color:#7a2f20; border-color:#d4d4d4 }
+.alt-toolbar .toolbar-btn.btn-new { background: linear-gradient(90deg,#b85c3b,#7a2f20); color:#fff; border:none; box-shadow: 0 2px 6px rgba(122,47,32,0.12); }
+@media (max-width: 1024px) {
+    .alt-toolbar { padding: 0.35rem 0.5rem; gap:0.5rem; }
+    .alt-toolbar .toolbar-status, .alt-toolbar .toolbar-search { display:none; }
+}
+/* Toolbar visual polish */
+.alt-toolbar { background: rgba(255,255,255,0.98); color: #1f2937; }
+.alt-toolbar .toolbar-btn { background: transparent; border: 1px solid rgba(15,23,42,0.06); color: #374151; padding:0.55rem 0.75rem; }
+.alt-toolbar .toolbar-btn.btn-new { background: linear-gradient(90deg,#b85c3b,#7a2f20); color:#fff; box-shadow: 0 2px 6px rgba(122,47,32,0.12); padding:0.6rem 0.9rem; }
+.alt-toolbar .toolbar-label { color: #6b7280; }
+@media (min-width: 768px) {
+    .project-management-sharp .project-filter-bar { display: none !important; }
+    .project-management-sharp main { margin-top: 2rem; }
+}
+
+/* User management toolbar: fixed full-width bar at 10vh height */
+.user-management-toolbar {
+    position: fixed;
+    top: calc(var(--rd-logged-header-max));
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--rd-logged-header-max);
+    min-height: calc(var(--rd-logged-header-max));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    z-index: 9998;
+    background: transparent;
+    border-bottom: none;
+    backdrop-filter: none;
+}
+
+@media (max-width: 640px) {
+    .user-management-toolbar { height: auto; position: static; width: 100%; padding: 0.75rem; }
+}
+
+/* Ensure all toolbar controls share exact same height */
+.user-management-toolbar {
+    --um-toolbar-inner-height: var(--rd-logged-header-max);
+}
+.user-management-toolbar button,
+.user-management-toolbar .styled-input,
+.user-management-toolbar input[type="search"],
+.user-management-toolbar select {
+    height: var(--um-toolbar-inner-height) !important;
+    min-height: 0;
+    box-sizing: border-box;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: inline-flex;
+    align-items: center;
+}
+.user-management-toolbar .styled-input,
+.user-management-toolbar input[type="search"] {
+    padding-left: 3rem !important; /* leave room for search icon */
+}
+.user-management-toolbar button {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+@media (max-width: 640px) {
+    .user-management-toolbar button,
+    .user-management-toolbar .styled-input,
+    .user-management-toolbar input[type="search"],
+    .user-management-toolbar select {
+        height: auto !important;
+        padding-top: .6rem !important;
+        padding-bottom: .6rem !important;
+    }
+}
+
+/* User request: make toolbar backgrounds transparent across admin pages */
+.alt-toolbar,
+.user-management-toolbar,
+.payment-toolbar {
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+/* Strong override: ensure public header/navigation is fully transparent
+   and has no backdrop blur, even if utility classes or other styles apply. */
+nav.alt-header,
+header,
+header.site-header {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+}
+
+/* Unified toolbar variables and consistent CTA/button styles
+   Ensures all admin toolbars use the same font, spacing and primary color */
+:root {
+    --toolbar-font: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    --toolbar-btn-bg: #ffffff;
+    --toolbar-btn-color: #374151; /* neutral text for secondary actions */
+    --toolbar-btn-border: rgba(15,23,42,0.06);
+    --toolbar-cta-bg: #7a2f20; /* primary brand color (Rajkot rust) */
+    --toolbar-cta-bg-alt: #b85c3b; /* accent gradient fallback */
+    --toolbar-btn-radius: 8px;
+    --toolbar-btn-padding: 0.55rem 0.9rem;
+}
+
+/* Base toolbar button used across all toolbars */
+.toolbar-btn,
+.alt-toolbar .toolbar-btn,
+.user-management-toolbar .toolbar-btn,
+.payment-toolbar .toolbar-btn,
+.toolbar-actions .toolbar-btn {
+    font-family: var(--toolbar-font);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--toolbar-btn-color);
+    background: var(--toolbar-btn-bg);
+    border: 1px solid var(--toolbar-btn-border);
+    padding: var(--toolbar-btn-padding);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--toolbar-btn-radius);
+    box-shadow: 0 2px 6px rgba(15,23,42,0.06);
+    text-transform: none;
+    cursor: pointer;
+}
+
+/* Primary CTA variant */
+.toolbar-cta {
+    background: linear-gradient(90deg, var(--toolbar-cta-bg-alt), var(--toolbar-cta-bg));
+    color: #fff !important;
+    border: none;
+}
+
+/* Secondary / muted variant */
+.toolbar-secondary {
+    background: transparent;
+    color: var(--toolbar-btn-color);
+    border: 1px solid var(--toolbar-btn-border);
+}
+
+/* Small adjustments for compact controls inside toolbars */
+.alt-toolbar .styled-select,
+.alt-toolbar .styled-input,
+.user-management-toolbar .styled-select,
+.user-management-toolbar .styled-input {
+    height: calc(2.6rem + 0px);
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+    .toolbar-btn { padding: .45rem .6rem; font-size: .85rem }
+}

@@ -19,7 +19,7 @@ $counts = [
   'paused' => 0,
   'completed' => 0,
 ];
-$defaultCover = 'https://placehold.co/720x400/94180C/ffffff?text=Project+Cover';
+$defaultCover = rtrim((string)BASE_PATH, '/') . '/assets/images/rd-cover.svg';
 
 if (function_exists('db_connected') && db_connected()) {
   $hasClientId = function_exists('db_column_exists') && db_column_exists('projects', 'client_id');

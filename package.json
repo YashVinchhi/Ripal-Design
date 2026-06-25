@@ -10,7 +10,7 @@
     "@tailwindcss/typography": "^0.5.19"
   },
   "scripts": {
-    "build:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/tailwind.css --minify",
-    "watch:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/tailwind.css --watch"
+    "build:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/styles.css --minify && node -e \"require('fs').writeFileSync('assets/build-manifest.json', JSON.stringify({css: 'styles.css?v=' + Date.now()}))\"",
+    "watch:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/styles.css --watch"
   }
 }

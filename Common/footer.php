@@ -1,5 +1,9 @@
 <!-- Footer / CTA -->
+<?php if (!empty($isPublicHeader) || (empty($HEADER_MODE) || $HEADER_MODE === 'public')): ?>
 </phantom-ui>
+<?php else: ?>
+</div>
+<?php endif; ?>
 <?php
 /**
  * Common Footer Component
@@ -17,6 +21,9 @@
 // Ensure configuration is loaded
 if (!defined('BASE_PATH')) {
     require_once __DIR__ . '/../app/Core/Config/config.php';
+}
+if (file_exists(__DIR__ . '/../app/Core/Support/assets.php')) {
+    require_once __DIR__ . '/../app/Core/Support/assets.php';
 }
 
 $footerContent = function_exists('public_content_page_values') ? public_content_page_values('common_footer') : [];
@@ -102,7 +109,8 @@ $currentYear = date('Y');
                     </div>
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-phone text-rajkot-rust" aria-hidden="true"></i>
-                        <a href="#" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm" data-rd-phone="<?php echo esc_attr(base64_encode('tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER))); ?>" data-rd-phone-label="<?php echo esc_attr(base64_encode((string)PHONE_NUMBER)); ?>">Call studio</a>
+                        <?php $telHref = 'tel:' . preg_replace('/\s+/', '', (string)PHONE_NUMBER); ?>
+                        <a href="<?php echo esc_attr($telHref); ?>" class="footer-contact-link text-gray-400 hover:text-rajkot-rust transition-colors text-sm"><?php echo esc((string)PHONE_NUMBER); ?></a>
                     </div>
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-envelope text-rajkot-rust" aria-hidden="true"></i>
@@ -171,7 +179,7 @@ if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {
         if (file_exists($filePath)) {
             $publicRemoved = preg_replace('~^/public~i', '', $script);
             $href = rtrim((string)BASE_PATH, '/') . PUBLIC_PATH_PREFIX . $publicRemoved;
-            echo '<script defer src="' . esc_attr($href) . '"></script>' . "\n";
+            echo '<script defer src="' . esc_attr($href . asset_version_suffix_for_file($filePath)) . '"></script>' . "\n";
             break;
         }
     }
@@ -180,12 +188,12 @@ if (!isset($DISABLE_EXTERNAL_CSS) || !$DISABLE_EXTERNAL_CSS) {
 // Include global tab persistence script if present
 $persistPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'persist-tabs.js';
 if (file_exists($persistPath)) {
-    echo '<script defer src="' . esc_attr(rtrim(BASE_PATH, '/') . '/assets/js/persist-tabs.js') . '"></script>' . "\n";
+    echo '<script defer src="' . esc_attr(asset('assets/js/persist-tabs.js')) . '"></script>' . "\n";
 }
 
 $pageTransitionPath = PROJECT_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'page-transitions.js';
 if (file_exists($pageTransitionPath)) {
-    echo '<script defer src="' . esc_attr(rtrim(BASE_PATH, '/') . '/assets/js/page-transitions.js') . '"></script>' . "\n";
+    echo '<script defer src="' . esc_attr(asset('assets/js/page-transitions.js')) . '"></script>' . "\n";
 }
 
 // Render any enqueued scripts from util.php

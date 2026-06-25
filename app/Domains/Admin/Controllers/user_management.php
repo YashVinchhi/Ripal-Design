@@ -73,28 +73,66 @@ if ($db instanceof PDO) {
         $ratingJoin = '';
     }
 
-    $sql = 'SELECT users.id AS id, users.username, users.first_name, users.last_name, users.full_name, users.email, users.role, users.status, COALESCE(users.updated_at, users.created_at) AS last_sync' . $ratingSelect . ' FROM users' . $ratingJoin;
-    $where = [];
-    $params = [];
+        $sql = 'SELECT users.id AS id, users.username, users.first_name, users.last_name, users.full_name, users.email, users.role, users.status, COALESCE(users.updated_at, users.created_at) AS last_sync' . $ratingSelect . ' FROM users' . $ratingJoin;
+        $where = [];
+        $params = [];
 
-    if ($search !== '') {
-        $searchLike = '%' . $search . '%';
-        $where[] = '(full_name LIKE :search OR first_name LIKE :search OR last_name LIKE :search OR username LIKE :search OR email LIKE :search)';
-        $params[':search'] = $searchLike;
+        // Use shared search helper to build safe SQL and params
+        $searchFields = ['full_name', 'first_name', 'last_name', 'username', 'email'];
+        // default to LIKE; if you want regex, pass 'regex' as mode
+        require_once PROJECT_ROOT . '/app/Shared/search.php';
+        $searchCond = rd_build_search_conditions($searchFields, $search, 'like');
+        if ($searchCond['sql'] !== '') {
+            $where[] = $searchCond['sql'];
+            $params = array_merge($params, $searchCond['params']);
+        }
+
+        if ($role !== 'all') {
+            $where[] = 'LOWER(role) = :role';
+            $params['role'] = $role;
+        }
+
+        if (!empty($where)) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        $sql .= ' ORDER BY users.id DESC LIMIT 200';
+        $stmt = $db->prepare($sql);
+    // Ensure we only pass parameters that actually exist in the SQL to avoid "Invalid parameter number" errors
+    $filtered = [];
+    if (!empty($params)) {
+        preg_match_all('/:([a-zA-Z_][a-zA-Z0-9_]*)/', $sql, $matches);
+        $placeholders = array_unique($matches[1] ?? []);
+        foreach ($placeholders as $ph) {
+            if (array_key_exists($ph, $params)) {
+                $filtered[$ph] = $params[$ph];
+            } elseif (array_key_exists(':' . $ph, $params)) {
+                $filtered[$ph] = $params[':' . $ph];
+            }
+        }
     }
-
-    if ($role !== 'all') {
-        $where[] = 'LOWER(role) = :role';
-        $params[':role'] = $role;
+    // Bind values explicitly to avoid PDO parameter mismatches
+    try {
+        if (!empty($filtered)) {
+            foreach ($filtered as $k => $v) {
+                $stmt->bindValue(':' . $k, $v);
+            }
+            $stmt->execute();
+        } else {
+            // No named placeholders found; execute without params
+            $stmt->execute();
+        }
+    } catch (PDOException $e) {
+        // Debug logging to help diagnose mismatched parameters during development
+        preg_match_all('/:([a-zA-Z_][a-zA-Z0-9_]*)/', $sql, $m2);
+        $placeholders = array_unique($m2[1] ?? []);
+        error_log('[UM] PDOException during execute(): ' . $e->getMessage());
+        error_log('[UM] SQL: ' . $sql);
+        error_log('[UM] Placeholders: ' . implode(',', $placeholders));
+        error_log('[UM] Params keys: ' . implode(',', array_keys($params)));
+        error_log('[UM] Filtered keys: ' . implode(',', array_keys($filtered)));
+        throw $e;
     }
-
-    if (!empty($where)) {
-        $sql .= ' WHERE ' . implode(' AND ', $where);
-    }
-
-    $sql .= ' ORDER BY users.id DESC LIMIT 200';
-    $stmt = $db->prepare($sql);
-    $stmt->execute($params);
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } else {
     // Fallback to existing helper if PDO is unavailable.
@@ -191,30 +229,24 @@ if ($db instanceof PDO) {
             border-radius: 0 !important;
         }
     </style>
-  <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; ?>
+    <?php
+    // Enable centralized toolbar for this admin page
+    $ENABLE_COMMON_TOOLBAR = true;
+    $HEADER_MODE = 'dashboard';
+    require_once PROJECT_ROOT . '/Common/header.php';
+    ?>
 </head>
 <body class="user-management-sharp bg-canvas-white font-sans text-foundation-grey min-h-screen">
   
   <div class="min-h-screen flex flex-col">
     <!-- Unified Dark Portal Header -->
-    <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-serif font-bold">User Management</h1>
-                <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Identity & Authorization Registry</p>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <a href="provision_temp_user.php?demo=1" class="w-full md:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] shadow-premium transition-all flex items-center justify-center gap-3 active:scale-95 no-underline">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i> Provision Identity
-                </a>
-            </div>
-        </div>
-    </header>
+    <!-- Header title removed per design; toolbar will provide actions -->
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+        <!-- Reduced top spacing to align with compact header + toolbar (was 20vh causing large blank gap) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12" style="margin-top:2vh;">
             <div class="bg-white p-6 md:p-8 shadow-premium border border-gray-100 relative group overflow-hidden">
                 <div class="absolute top-0 right-0 w-16 h-16 bg-gray-50 -mr-8 -mt-8 rotate-45 pointer-events-none"></div>
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Total Registry</span>
@@ -234,27 +266,7 @@ if ($db instanceof PDO) {
             </div>
         </div>
 
-        <!-- Toolbar -->
-        <div class="bg-white shadow-premium border border-gray-100 p-4 md:p-6 mb-8 flex flex-col lg:flex-row justify-between items-center gap-4 md:gap-6">
-            <div class="relative w-full lg:w-96">
-                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
-                <form action="" method="get" onsubmit="return false;">
-                    <input id="identityFilterInput" type="search" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Filter identities..." class="w-full pl-12 pr-6 py-3 md:py-4 bg-gray-50 border border-gray-50 outline-none focus:bg-white focus:border-rajkot-rust transition-all text-sm font-medium">
-                </form>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                <select id="permissionFilterSelect" class="w-full sm:w-auto py-3 md:py-4 px-6 bg-gray-50 border border-gray-50 text-[10px] font-bold uppercase tracking-widest outline-none focus:bg-white focus:border-rajkot-rust transition-all cursor-pointer">
-                    <option value="all" <?php echo $role === 'all' ? 'selected' : ''; ?>>All Permissions</option>
-                    <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>Administrators</option>
-                    <option value="employee" <?php echo $role === 'employee' ? 'selected' : ''; ?>>Employees</option>
-                    <option value="worker" <?php echo $role === 'worker' ? 'selected' : ''; ?>>Field Tech</option>
-                    <option value="client" <?php echo $role === 'client' ? 'selected' : ''; ?>>Govt Client</option>
-                </select>
-                <button id="applyIdentityFiltersBtn" type="button" class="bg-foundation-grey hover:bg-rajkot-rust text-white px-6 py-3 md:py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center shadow-lg active:scale-95">
-                    <i data-lucide="filter" class="w-3.5 h-3.5 mr-2"></i> Apply
-                </button>
-            </div>
-        </div>
+        <!-- Toolbar removed: using centralized toolbar in Common/toolbar.php -->
 
         <?php if ($statusMsg === 'updated'): ?>
             <div class="mb-6 bg-approval-green/10 border border-approval-green/30 text-approval-green px-4 py-3 text-xs font-bold uppercase tracking-wider">
@@ -367,48 +379,61 @@ if ($db instanceof PDO) {
   </div>
 
   <script>
-    document.getElementById('applyIdentityFiltersBtn').addEventListener('click', function () {
-        const roleValue = (document.getElementById('permissionFilterSelect').value || 'all').trim().toLowerCase();
-        const url = new URL(window.location.href);
-        if (roleValue && roleValue !== 'all') {
-            url.searchParams.set('role', roleValue);
-        } else {
-            url.searchParams.delete('role');
-        }
-        window.location.href = url.toString();
-    });
+    // Wire toolbar search and filters (centralized toolbar ids)
+    (function wireToolbarBindings() {
+        const applyBtn = document.getElementById('applyFiltersBtn');
+        const clearBtn = document.getElementById('clearFiltersBtn');
+        const roleSelect = document.getElementById('filterRoleHeader');
+        const searchInput = document.getElementById('userSearchHeader');
 
-    // Reference-style search: debounce and redirect with query params.
-    (function initSearchRedirect() {
-        const searchInput = document.getElementById('identityFilterInput');
-        if (!searchInput) return;
-
-        let refreshTimer;
-        function focusAtEnd() {
-            searchInput.focus();
-            const val = searchInput.value || '';
-            if (searchInput.setSelectionRange) {
-                searchInput.setSelectionRange(val.length, val.length);
-            }
-        }
-
-        focusAtEnd();
-        // Retry once for browsers that delay paint/focus when the page just reloaded.
-        setTimeout(focusAtEnd, 60);
-
-        searchInput.addEventListener('input', function () {
-            clearTimeout(refreshTimer);
-            const searchValue = (this.value || '').trim();
-            refreshTimer = setTimeout(function () {
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function () {
+                const roleValue = (roleSelect && roleSelect.value) ? roleSelect.value.trim().toLowerCase() : 'all';
                 const url = new URL(window.location.href);
-                if (searchValue) {
-                    url.searchParams.set('search', searchValue);
+                if (roleValue && roleValue !== 'all') {
+                    url.searchParams.set('role', roleValue);
                 } else {
-                    url.searchParams.delete('search');
+                    url.searchParams.delete('role');
                 }
+                // other filters (rating, sort) could be appended here as needed
                 window.location.href = url.toString();
-            }, 500);
-        });
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('role');
+                url.searchParams.delete('search');
+                window.location.href = url.toString();
+            });
+        }
+
+        if (searchInput) {
+            let refreshTimer;
+            function focusAtEnd() {
+                searchInput.focus();
+                const val = searchInput.value || '';
+                if (searchInput.setSelectionRange) {
+                    searchInput.setSelectionRange(val.length, val.length);
+                }
+            }
+            focusAtEnd();
+            setTimeout(focusAtEnd, 60);
+            searchInput.addEventListener('input', function () {
+                clearTimeout(refreshTimer);
+                const searchValue = (this.value || '').trim();
+                refreshTimer = setTimeout(function () {
+                    const url = new URL(window.location.href);
+                    if (searchValue) {
+                        url.searchParams.set('search', searchValue);
+                    } else {
+                        url.searchParams.delete('search');
+                    }
+                    window.location.href = url.toString();
+                }, 500);
+            });
+        }
     })();
 
     document.getElementById('loadMoreUsersBtn').addEventListener('click', function () {

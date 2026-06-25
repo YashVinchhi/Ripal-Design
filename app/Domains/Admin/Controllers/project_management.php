@@ -440,7 +440,12 @@ $resolveRegion = static function (string $location): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Project Management | Ripal Design</title>
-  <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; ?>
+    <?php
+    // Enable centralized toolbar for this admin page
+    $ENABLE_COMMON_TOOLBAR = true;
+    $HEADER_MODE = 'dashboard';
+    require_once PROJECT_ROOT . '/Common/header.php';
+    ?>
   <!-- jQuery and Validation Plugin -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
@@ -716,33 +721,18 @@ $resolveRegion = static function (string $location): string {
         }
     }
 </style>
+<style>
+    /* Ensure project cards sit below header + toolbar — desktop only */
+    @media (min-width: 768px) {
+        /* Reduced extra top spacing to avoid large blank gap now header/toolbar are compact */
+        .project-management-sharp .project-grid-mobile { margin-top: 2vh; }
+    }
+</style>
 </head>
 <body class="project-management-sharp bg-canvas-white font-sans text-foundation-grey min-h-screen">
   
   <div class="min-h-screen flex flex-col">
-    <!-- Unified Dark Portal Header -->
-    <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-serif font-bold project-mobile-heading">Project Portfolio</h1>
-                <p class="text-gray-400 mt-2 text-sm md:text-base">Executive oversight for architectural and infrastructure ventures.</p>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <button id="exportProjectsBtn" type="button" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-                    <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i> Export Report
-                </button>
-                <button id="selectAllBtn" type="button" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-                    <i data-lucide="check-square" class="w-4 h-4"></i> Select All
-                </button>
-                <button id="deleteSelectedBtn" type="button" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-4 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
-                    <i data-lucide="trash" class="w-4 h-4"></i> Delete Selected
-                </button>
-                <button id="newProjectBtn" type="button" class="w-full sm:w-auto bg-rajkot-rust hover:bg-red-700 text-white px-6 py-3 text-[10px] md:text-sm font-bold uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95" data-create-url="<?php echo esc_attr($newProjectUrl); ?>">
-                    <i data-lucide="plus" class="w-4 h-4"></i> New Project
-                </button>
-            </div>
-        </div>
-    </header>
+    <!-- Project header removed (moved controls into filter row for better layout) -->
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -773,6 +763,38 @@ $resolveRegion = static function (string $location): string {
                     <div class="relative flex-1 lg:flex-initial" style="min-width:300px;">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4"></i>
                         <input id="projectSearchInput" type="search" placeholder="Search Master Registry..." value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" class="styled-input w-full pl-10 pr-4" aria-label="Search projects">
+                    </div>
+                    <!-- Moved toolbar controls: export, select all, delete, new project -->
+                    <div class="hidden lg:flex items-center gap-3 ml-4">
+                        <button id="exportProjectsBtn" type="button" class="bg-white/5 hover:bg-white/10 text-foundation-grey border border-white/10 px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i>
+                        </button>
+                        <button id="selectAllBtn" type="button" class="bg-white/5 hover:bg-white/10 text-foundation-grey border border-white/10 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="check-square" class="w-4 h-4"></i>
+                        </button>
+                        <button id="deleteSelectedBtn" type="button" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs font-bold uppercase tracking-widest shadow transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="trash" class="w-4 h-4"></i>
+                        </button>
+                        <button id="newProjectBtn" type="button" class="bg-rajkot-rust hover:bg-red-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-widest shadow transition-all flex items-center justify-center gap-2" data-create-url="<?php echo esc_attr($newProjectUrl); ?>">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <!-- Mobile toolbar: stack under filters for small screens -->
+                    <div class="lg:hidden mt-3 w-full">
+                        <div class="flex flex-wrap gap-2">
+                            <button id="exportProjectsBtn_mobile" type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-foundation-grey border border-white/10 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-4 h-4 text-rajkot-rust"></i> Export
+                            </button>
+                            <button id="selectAllBtn_mobile" type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-foundation-grey border border-white/10 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="check-square" class="w-4 h-4"></i> Select All
+                            </button>
+                            <button id="deleteSelectedBtn_mobile" type="button" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs font-bold uppercase tracking-widest shadow transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="trash" class="w-4 h-4"></i> Delete
+                            </button>
+                            <button id="newProjectBtn_mobile" type="button" class="flex-1 bg-rajkot-rust hover:bg-red-700 text-white px-3 py-2 text-xs font-bold uppercase tracking-widest shadow transition-all flex items-center justify-center gap-2" data-create-url="<?php echo esc_attr($newProjectUrl); ?>">
+                                <i data-lucide="plus" class="w-4 h-4"></i> New
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1020,6 +1042,103 @@ $resolveRegion = static function (string $location): string {
                     window.location.href = url.toString();
                 }, 500);
             });
+        })();
+
+        // Header toolbar -> page handler bridge (defensive wiring for header controls)
+        (function bridgeHeaderToolbar() {
+            function mapHeaderBtns() {
+                // Add New -> reuse page newProjectBtn
+                var add = document.getElementById('addProjectBtn');
+                if (add) {
+                    add.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var target = document.getElementById('newProjectBtn') || document.getElementById('newProjectBtn_mobile');
+                        if (target) { target.click(); return; }
+                        // fallback to known create URL
+                        try {
+                            var createUrl = <?php echo json_encode($newProjectUrl); ?>;
+                            if (createUrl) window.location.href = createUrl;
+                        } catch (err) { console.warn('Create URL unavailable'); }
+                    });
+                }
+
+                // Edit -> open edit page for first selected project
+                var edit = document.getElementById('editProjectBtn');
+                if (edit) {
+                    edit.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var sel = document.querySelectorAll('.project-select-checkbox:checked');
+                        if (!sel || sel.length === 0) { alert('Please select a project to edit.'); return; }
+                        var id = sel[0].getAttribute('data-project-id');
+                        if (!id) { alert('Selected project id missing'); return; }
+                        var base = <?php echo json_encode($newProjectUrl); ?>;
+                        window.location.href = base + '?id=' + encodeURIComponent(id);
+                    });
+                }
+
+                // Delete -> reuse existing delete button
+                var del = document.getElementById('deleteProjectBtn');
+                if (del) {
+                    del.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var target = document.getElementById('deleteSelectedBtn') || document.getElementById('deleteSelectedBtn_mobile');
+                        if (target) { target.click(); return; }
+                        alert('Delete action currently unavailable');
+                    });
+                }
+
+                // Select All -> toggle checkboxes (defensive, works even if page button differs)
+                var hdrSelect = document.getElementById('selectAllBtn');
+                if (hdrSelect) {
+                    hdrSelect.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var boxes = Array.from(document.querySelectorAll('.project-select-checkbox'));
+                        if (!boxes.length) return;
+                        var anyUnchecked = boxes.some(function (cb) { return !cb.checked; });
+                        boxes.forEach(function (cb) { cb.checked = anyUnchecked; });
+                        try { hdrSelect.textContent = anyUnchecked ? 'Unselect All' : 'Select All'; } catch (err) {}
+                    });
+                }
+
+                // Header search -> mirror into page search input to reuse debounce redirect
+                var hdrSearch = document.getElementById('projectSearchHeader');
+                if (hdrSearch) {
+                    hdrSearch.addEventListener('input', function () {
+                        var val = this.value || '';
+                        var main = document.getElementById('projectSearchInput');
+                        if (main) {
+                            main.value = val;
+                            var ev = new Event('input', { bubbles: true, cancelable: true });
+                            main.dispatchEvent(ev);
+                        }
+                    });
+                }
+
+                // Region select -> click corresponding region button
+                var regionSelect = document.getElementById('regionSelect');
+                if (regionSelect) {
+                    regionSelect.addEventListener('change', function () {
+                        var val = this.value || 'Global';
+                        var btn = Array.from(document.querySelectorAll('#region-filters .seg-btn')).find(function (b) {
+                            return ((b.getAttribute('data-region') || '').toLowerCase() === val.toLowerCase());
+                        });
+                        if (btn) { btn.click(); } else if (typeof filterRegion === 'function') { filterRegion(val, null); }
+                    });
+                }
+
+                // Filter / Sort -> focus status filter
+                var fbtn = document.getElementById('filterSortBtn');
+                if (fbtn) {
+                    fbtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var el = document.getElementById('projectStatusFilter');
+                        if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mapHeaderBtns);
+            else mapHeaderBtns();
         })();
 
         document.getElementById('newProjectBtn').addEventListener('click', function () {

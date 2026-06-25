@@ -1,14 +1,15 @@
 <?php
 
 return [
-	'web.home' => '/public/index.php',
-	'web.about' => '/public/about_us.php',
-	'web.services' => '/public/services.php',
-	'web.contact' => '/public/contact_us.php',
-	'web.projects' => '/public/project_view.php',
-	'auth.login' => '/public/login.php',
-	'auth.signup' => '/public/signup.php',
-	'auth.logout' => '/public/logout.php',
-	'auth.forgot' => '/public/forgot.php',
-	'auth.reset' => '/public/reset_password.php',
+	'web.home' => '/index.php',
+	'web.about' => '/about_us.php',
+	'web.services' => '/services.php',
+	'web.contact' => '/contact_us.php',
+	'web.projects' => '/project_view.php',
+	'web.walkthrough' => '/walkthroughs/{project_slug}/{model_slug}',
+	'auth.login' => '/login.php',
+	'auth.signup' => '/signup.php',
+	'auth.logout' => '/logout.php',
+	'auth.forgot' => '/forgot.php',
+	'auth.reset' => '/reset_password.php',
 ];

@@ -33,7 +33,7 @@ rd_page_start([
             <p class="eyebrow">Login</p>
             <h1 id="loginTitle">Sign in</h1>
             <?php if ($error !== ''): ?><p class="notice notice-error"><?php echo esc($error); ?></p><?php endif; ?>
-            <form id="loginForm" class="auth-form" method="post" action="<?php echo esc_attr(rd_public_url('login_register.php')); ?>">
+            <form id="loginForm" class="auth-form" method="post" action="login_register.php">
                 <input type="hidden" name="csrf_token" value="<?php echo h(generate_csrf_token()); ?>">
                 <div class="field">
                     <label for="email"><?php echo esc($ct('label_email', 'Email address')); ?></label>
@@ -58,8 +58,8 @@ rd_page_start([
         </article>
     </section>
 </main>
-<script src="<?php echo esc_attr(rd_public_url('js/validation.js')); ?>" defer></script>
-<script>
+<script src="<?php echo esc_attr(rd_public_url('js/validation.js')); ?>" defer nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce'] ?? ''); ?>"></script>
+<script nonce="<?php echo htmlspecialchars($_REQUEST['csp_nonce'] ?? ''); ?>">
     document.querySelectorAll('.toggle-password-btn').forEach(function (button) {
         button.addEventListener('click', function () {
             var input = button.closest('.password-wrap').querySelector('input');

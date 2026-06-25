@@ -18,6 +18,9 @@
             "stubs/dev_test_stubs.php"
         ]
     },
+    "extra": {
+        "autoload_note": "Run composer dump-autoload after changing PSR-4 mappings."
+    },
     "autoload-dev": {
         "psr-4": {
             "PHPMailer\\PHPMailer\\": "src/",

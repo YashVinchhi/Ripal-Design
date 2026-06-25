@@ -300,23 +300,16 @@ $statusClass = static function (string $status): string {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Revenue & Billing Workspace | Ripal Design</title>
-    <?php $HEADER_MODE = 'dashboard'; require_once PROJECT_ROOT . '/Common/header.php'; ?>
+    <?php
+    // Show the centralized admin toolbar on this page
+    $ENABLE_COMMON_TOOLBAR = true;
+    $HEADER_MODE = 'dashboard';
+    require_once PROJECT_ROOT . '/Common/header.php';
+    ?>
 </head>
 <body class="bg-canvas-white font-sans text-foundation-grey min-h-screen">
 <div class="min-h-screen flex flex-col">
-    <header class="bg-foundation-grey text-white pt-20 md:pt-24 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 shadow-lg mb-8 md:mb-12 border-b-2 border-rajkot-rust">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-serif font-bold">Revenue & Billing Workspace</h1>
-                <p class="text-gray-400 mt-2 text-sm uppercase tracking-widest font-bold opacity-70">Project fees, goods billing, invoice lifecycle, and collections in one command center.</p>
-            </div>
-            <div class="bg-white/10 border border-white/20 rounded px-5 py-4">
-                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-300 font-bold">Payment Provider</p>
-                <p class="font-bold text-lg mt-1"><?php echo esc(strtoupper((string)(getenv('PAYMENT_PROVIDER') ?: 'razorpay'))); ?> / LIVE API</p>
-                <p class="text-[11px] text-gray-400 mt-1"><?php echo $isRazorpayConfigured ? 'Razorpay API is configured' : 'Razorpay credentials missing'; ?></p>
-            </div>
-        </div>
-    </header>
+    <!-- toolbar is now rendered from Common/toolbar.php -->
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 space-y-10">
         <?php if (function_exists('render_flash')) { render_flash(); } ?>

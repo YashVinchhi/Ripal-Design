@@ -78,6 +78,44 @@ function render_seo_head(array $page_data = []) {
         echo '<meta name="twitter:image" content="' . htmlspecialchars($image, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '">' . "\n";
     }
 
+    // Structured data (JSON-LD) for LocalBusiness / Architect
+    $schemaTelephone = defined('PHONE_NUMBER') ? (string)PHONE_NUMBER : '+918264271111';
+    // Normalize telephone to E.164-like (remove spaces) but keep readable in JSON-LD
+    $schemaTelephone = preg_replace('/\s+/', ' ', trim($schemaTelephone));
+    $schemaEmail = 'projects@ripaldesign.studio';
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type' => ['Architect', 'LocalBusiness'],
+        'name' => $siteName,
+        'description' => $description !== '' ? $description : 'Architectural firm in Rajkot offering architecture, interior design, and project management.',
+        'url' => $url !== '' ? $url : (isset($_SERVER['HTTP_HOST']) ? (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? '') . '/' : ''),
+        'telephone' => $schemaTelephone,
+        'email' => $schemaEmail,
+        'foundingDate' => '2017',
+        'address' => [
+            '@type' => 'PostalAddress',
+            'streetAddress' => '538 Jasal Complex, Nanavati Chowk, 150ft Ring Road',
+            'addressLocality' => 'Rajkot',
+            'addressRegion' => 'Gujarat',
+            'postalCode' => '360005',
+            'addressCountry' => 'IN',
+        ],
+        'geo' => [
+            '@type' => 'GeoCoordinates',
+            'latitude' => '22.3039',
+            'longitude' => '70.8022',
+        ],
+        'areaServed' => ['Rajkot', 'Jamnagar', 'Morbi', 'Junagadh', 'Gujarat'],
+        'serviceType' => ['Architectural Planning', 'Interior Design', 'Landscape Architecture', 'Project Management'],
+        'priceRange' => '₹₹',
+        'openingHours' => 'Mo-Sa 09:00-18:00',
+        'sameAs' => ['https://www.instagram.com/ripal_design12/', 'hhttps://www.facebook.com/profile.php?id=100063867671131'],
+    ];
+
+    echo "<script type=\"application/ld+json\">\n";
+    echo json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n";
+    echo "</script>\n";
+
 }
 
 // End of seo.php

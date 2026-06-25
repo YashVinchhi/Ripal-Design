@@ -47,11 +47,15 @@ ErrorDocument 404 /public/404.php
     # Uploaded files are static assets only; never execute scripts from uploads.
     RewriteRule ^uploads/.*\.(?:php[0-9]?|phtml|phar|pl|py|cgi|asp|aspx|jsp|sh|bash)$ - [F,L,NC]
 
+    # SEO-friendly 3D walkthrough URLs.
+    RewriteRule ^walkthroughs/([A-Za-z0-9\-]+)/([A-Za-z0-9\-]+)/?$ public/walkthrough.php?project_slug=$1&model_slug=$2 [L,QSA,NC]
+    RewriteRule ^walkthrough-assets/([A-Za-z0-9\-]+)/([A-Za-z0-9\-]+)/model\.glb$ public/walkthrough_asset.php?project_slug=$1&model_slug=$2 [L,QSA,NC]
+
     # If the requested filename does not exist, and it's not a directory
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    # Then route to 404 page
-    RewriteRule . /public/404.php [L]
+    # Route all non-file/directory requests to the front controller so PHP can decide
+    RewriteRule . /public/index.php [L,QSA]
     
     # SEO-friendly project slugs
     RewriteRule ^projects/([0-9]+)$ /projects/$1 [L,NC]

@@ -92,6 +92,9 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
+    require_login();
+    require_csrf();
+
     $action = $_POST['action'] ?? '';
     if ($action === 'appreciate') {
         require_login();
@@ -213,7 +216,7 @@ if ($rawId !== '') {
     }
 
     $project = get_project_by_id($resolvedId);
-    if (!$project) {
+    if (!$project || empty($project['is_published'])) {
         wmcp_error('Project not found.', 404, true);
     }
 
@@ -282,7 +285,8 @@ if (!in_array($category, $allowedCategories, true)) {
     $category = 'all';
 }
 
-$rows = db_fetch_all('SELECT id, name, project_type, location, address, created_at FROM projects' . projects_soft_delete_sql('projects', ' WHERE ') . ' ORDER BY id DESC LIMIT 500');
+$softDeleteCond = projects_soft_delete_sql('projects', ' AND ');
+$rows = db_fetch_all('SELECT id, name, project_type, location, address, created_at FROM projects WHERE is_published = 1' . $softDeleteCond . ' ORDER BY id DESC LIMIT 500');
 $output = [];
 
 foreach ($rows as $row) {

@@ -40,6 +40,8 @@ function load_project_env_file()
         return;
     }
 
+    $loadedFromFile = [];
+
     foreach ($lines as $line) {
         $line = trim((string)$line);
         if ($line === '' || strpos($line, '#') === 0) {
@@ -57,8 +59,9 @@ function load_project_env_file()
             continue;
         }
 
-        // Do not override env vars already provided by OS/web server.
-        if (getenv($key) !== false) {
+        // Do not override env vars already provided by OS/web server, but allow
+        // later entries in the same .env file to replace earlier duplicate keys.
+        if (!isset($loadedFromFile[$key]) && getenv($key) !== false) {
             continue;
         }
 
@@ -69,6 +72,7 @@ function load_project_env_file()
         putenv($key . '=' . $value);
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
+        $loadedFromFile[$key] = true;
     }
 }
 
@@ -101,6 +105,10 @@ if (!function_exists('env_value')) {
         }
         return trim((string)$raw);
     }
+}
+
+if (!defined('ALLOWED_ORIGINS')) {
+    define('ALLOWED_ORIGINS', env_value('ALLOWED_ORIGINS', 'http://localhost,https://yourdomain.com'));
 }
 
 if (!function_exists('app_is_https')) {
@@ -203,6 +211,24 @@ function getBaseUrl()
 
     $configuredBaseUrl = trim((string)(getenv('APP_BASE_URL') ?: ''));
     if ($configuredBaseUrl !== '') {
+        $configuredParts = parse_url($configuredBaseUrl);
+        $configuredHost = strtolower((string)($configuredParts['host'] ?? ''));
+        $requestHost = (string)($_SERVER['HTTP_HOST'] ?? '');
+        if (!preg_match('/^[a-z0-9.-]+(?::[0-9]{1,5})?$/i', $requestHost)) {
+            $requestHost = '';
+        }
+        $requestHostName = strtolower((string)(parse_url('//' . $requestHost, PHP_URL_HOST) ?: ''));
+
+        // In local dev it is common to switch between http://localhost and
+        // https://localhost. Follow the active request origin when it targets
+        // the same host so secure session cookies survive login redirects.
+        if ($requestHost !== '' && $configuredHost !== '' && $configuredHost === $requestHostName) {
+            $scheme = app_is_https() ? 'https' : 'http';
+            $path = (string)($configuredParts['path'] ?? '');
+            $baseUrl = rtrim($scheme . '://' . $requestHost . rtrim($path, '/'), '/');
+            return $baseUrl;
+        }
+
         $baseUrl = rtrim($configuredBaseUrl, '/');
         return $baseUrl;
     }
@@ -221,19 +247,27 @@ function getBaseUrl()
     // Normalize path separators to forward slashes
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
+    if ($scriptPath === '.' || $scriptPath === '\\' || $scriptPath === '/') {
+        $scriptPath = '';
+    }
 
-    // Detect if we're in a subdirectory (public/dashboard/admin/client/worker/api)
-    // Remove trailing app folders to get the application root path.
+    // Detect the first application folder in the path and trim everything after it.
+    // This keeps the base URL anchored at the project root even for nested pages
+    // like /public/blog/post.php.
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
-        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
+        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api', 'pages'];
 
-        while (!empty($parts)) {
-            $lastPart = $parts[count($parts) - 1];
-            if (!in_array($lastPart, $appFolders, true)) {
+        $appIndex = null;
+        foreach ($parts as $index => $part) {
+            if (in_array($part, $appFolders, true)) {
+                $appIndex = $index;
                 break;
             }
-            array_pop($parts);
+        }
+
+        if ($appIndex !== null) {
+            $parts = array_slice($parts, 0, $appIndex);
         }
 
         $appPath = !empty($parts) ? '/' . implode('/', $parts) : '';
@@ -268,18 +302,25 @@ function getBasePath()
     // Normalize path separators to forward slashes
     $scriptPath = str_replace('\\', '/', $scriptPath);
     $scriptPath = trim($scriptPath, '/');
+    if ($scriptPath === '.' || $scriptPath === '\\' || $scriptPath === '/') {
+        $scriptPath = '';
+    }
 
-    // Detect if we're in a subdirectory and remove trailing app folders
+    // Detect the first application folder in the path and trim everything after it.
     if (!empty($scriptPath)) {
         $parts = explode('/', $scriptPath);
-        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api'];
+        $appFolders = ['public', 'dashboard', 'admin', 'client', 'worker', 'api', 'pages'];
 
-        while (!empty($parts)) {
-            $lastPart = $parts[count($parts) - 1];
-            if (!in_array($lastPart, $appFolders, true)) {
+        $appIndex = null;
+        foreach ($parts as $index => $part) {
+            if (in_array($part, $appFolders, true)) {
+                $appIndex = $index;
                 break;
             }
-            array_pop($parts);
+        }
+
+        if ($appIndex !== null) {
+            $parts = array_slice($parts, 0, $appIndex);
         }
 
         $basePath = !empty($parts) ? '/' . implode('/', $parts) : '';
@@ -294,6 +335,9 @@ function getBasePath()
 define('BASE_URL', getBaseUrl());
 define('BASE_PATH', getBasePath());
 define('PROJECT_ROOT', dirname(__DIR__, 3));
+if (!defined('APP_URL')) {
+    define('APP_URL', env_value('APP_URL', BASE_URL));
+}
 
 // Public entry path prefix:
 // - '' when Apache DocumentRoot points to /public
@@ -342,7 +386,7 @@ if (!defined('SECURITY_CSP_POLICY')) {
     $tailwindCdn = (defined('APP_ENV') && APP_ENV === 'development') ? ' https://cdn.tailwindcss.com' : '';
         // Allow Microsoft Clarity and analytics where necessary. Keep list conservative.
         // Note: fonts.googleapis.com needed in font-src for font file loading (not just CSS)
-        $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://www.google.com https://maps.google.com https://www.googleusercontent.com https://maps.gstatic.com https://api.razorpay.com; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com" . $tailwindCdn . " https://code.jquery.com https://cdnjs.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms https://www.googletagmanager.com https://www.google-analytics.com https://checkout.razorpay.com https://static.cloudflareinsights.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://www.clarity.ms https://scripts.clarity.ms https://v.clarity.ms https://d.clarity.ms https://www.google-analytics.com https://www.googletagmanager.com https://www.google.com https://api.razorpay.com https://checkout.razorpay.com https://cloudflareinsights.com; form-action 'self'";
+        $defaultCsp = "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://www.google.com https://maps.google.com https://www.googleusercontent.com https://maps.gstatic.com https://api.razorpay.com; object-src 'none'; img-src 'self' data: blob:; media-src 'self' data: blob: https:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.babylonjs.com" . $tailwindCdn . " https://code.jquery.com https://cdnjs.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms https://www.googletagmanager.com https://www.google-analytics.com https://checkout.razorpay.com https://static.cloudflareinsights.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.babylonjs.com https://www.clarity.ms https://scripts.clarity.ms https://v.clarity.ms https://d.clarity.ms https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://www.google.com https://api.razorpay.com https://checkout.razorpay.com https://cloudflareinsights.com; form-action 'self'";
     define('SECURITY_CSP_POLICY', (string)(getenv('SECURITY_CSP_POLICY') ?: $defaultCsp));
 }
 

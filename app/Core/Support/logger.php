@@ -6,7 +6,7 @@ if (!class_exists('AppLogger')) {
         private $logPath;
         private $maxBytes;
 
-        public function __construct(string $logPath = null, int $maxBytes = 5242880)
+        public function __construct(?string $logPath = null, int $maxBytes = 10485760)
         {
             $projectRoot = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : rtrim((string)dirname(__DIR__, 3), '/\\');
             $this->logPath = $logPath ?? ($projectRoot . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'app.log');
@@ -20,45 +20,28 @@ if (!class_exists('AppLogger')) {
 
         private function rotateIfNeeded(): void
         {
-            if (!is_file($this->logPath)) {
-                return;
-            }
-            clearstatcache(true, $this->logPath);
-            $size = @filesize($this->logPath);
-            if ($size === false) {
-                return;
-            }
-            if ($size > $this->maxBytes) {
-                $rotated = $this->logPath . '.1';
-                if (is_file($rotated)) {
-                    @unlink($rotated);
-                }
-                @rename($this->logPath, $rotated);
-            }
+            app_log_rotate_file($this->logPath, $this->maxBytes);
         }
 
-        private function normalizeContext(array $context): string
+        private function normalizeContext(array $context): array
         {
-            try {
-                $json = json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                return is_string($json) ? $json : '';
-            } catch (Throwable $e) {
-                return '';
-            }
+            return $context;
         }
 
-        private function formatLine(string $level, string $message, string $file = '', int $line = 0, string $contextJson = ''): string
+        private function formatLine(string $level, string $message, array $context = [], string $file = '', int $line = 0): string
         {
-            $ts = gmdate('Y-m-d\TH:i:s\Z');
-            $level = strtoupper((string)$level);
-            $parts = [$ts, $level . ':', $message];
-            if ($file !== '') {
-                $parts[] = 'in ' . $file . ':' . (int)$line;
-            }
-            if ($contextJson !== '') {
-                $parts[] = $contextJson;
-            }
-            return implode(' ', $parts) . PHP_EOL;
+            $payload = [
+                'ts' => gmdate('c'),
+                'level' => (string)$level,
+                'request_id' => function_exists('request_id') ? request_id() : (string)($_SERVER['X_REQUEST_ID'] ?? 'no-id'),
+                'message' => $message,
+                'context' => (object)$context,
+                'file' => $file,
+                'line' => $line,
+            ];
+
+            $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return is_string($json) ? $json . PHP_EOL : '';
         }
 
         public function log(string $level, string $message, array $context = [], string $file = '', int $line = 0): void
@@ -74,10 +57,12 @@ if (!class_exists('AppLogger')) {
                 }
             }
 
-            $contextJson = $this->normalizeContext($context);
             $this->rotateIfNeeded();
 
-            $lineStr = $this->formatLine($level, $message, $file, $line, $contextJson);
+            $lineStr = $this->formatLine($level, $message, $this->normalizeContext($context), $file, $line);
+            if ($lineStr === '') {
+                return;
+            }
 
             $fp = @fopen($this->logPath, 'a');
             if ($fp !== false) {
@@ -114,6 +99,33 @@ if (!class_exists('AppLogger')) {
     }
 }
 
+if (!function_exists('app_log_rotate_file')) {
+    function app_log_rotate_file(string $logPath, int $maxBytes = 10485760): void
+    {
+        if ($logPath === '' || !is_file($logPath)) {
+            return;
+        }
+
+        clearstatcache(true, $logPath);
+        $size = @filesize($logPath);
+        if ($size === false || $size <= $maxBytes) {
+            return;
+        }
+
+        $dir = dirname($logPath);
+        $base = pathinfo($logPath, PATHINFO_FILENAME);
+        $ext = pathinfo($logPath, PATHINFO_EXTENSION);
+        $rotated = $dir . DIRECTORY_SEPARATOR . $base . '-' . date('Y-m-d-H') . ($ext !== '' ? '.' . $ext : '');
+        $suffix = 1;
+        while (file_exists($rotated)) {
+            $rotated = $dir . DIRECTORY_SEPARATOR . $base . '-' . date('Y-m-d-H') . '-' . $suffix . ($ext !== '' ? '.' . $ext : '');
+            $suffix++;
+        }
+
+        @rename($logPath, $rotated);
+    }
+}
+
 if (!function_exists('app_logger')) {
     function app_logger()
     {
@@ -122,27 +134,9 @@ if (!function_exists('app_logger')) {
             return $logger;
         }
 
-        // Prefer Monolog (with RotatingFileHandler) when available
-        if (class_exists('Monolog\\Logger') && class_exists('Monolog\\Handler\\RotatingFileHandler')) {
-            try {
-                $projectRoot = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : rtrim((string)dirname(__DIR__, 3), '/\\');
-                $logPath = $projectRoot . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'app.log';
-                $dir = dirname($logPath);
-                if (!is_dir($dir)) {
-                    @mkdir($dir, 0775, true);
-                }
-                $monolog = new \Monolog\Logger('app');
-                $handler = new \Monolog\Handler\RotatingFileHandler($logPath, 0, \Monolog\Logger::DEBUG);
-                $monolog->pushHandler($handler);
-                $logger = $monolog;
-            } catch (Throwable $e) {
-                $logger = new AppLogger(null, 5 * 1024 * 1024);
-            }
-        } else {
-            $projectRoot = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : rtrim((string)dirname(__DIR__, 3), '/\\');
-            $logPath = $projectRoot . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'app.log';
-            $logger = new AppLogger($logPath, 5 * 1024 * 1024);
-        }
+        $projectRoot = defined('PROJECT_ROOT') ? rtrim((string)PROJECT_ROOT, '/\\') : rtrim((string)dirname(__DIR__, 3), '/\\');
+        $logPath = $projectRoot . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'app.log';
+        $logger = new AppLogger($logPath, 10 * 1024 * 1024);
 
         // Register PHP error/exception handlers once
         if (!defined('APP_LOGGER_HANDLERS_REGISTERED')) {
@@ -213,21 +207,29 @@ if (!function_exists('app_logger')) {
 }
 
 if (!function_exists('app_log')) {
-    function app_log(string $level, string $message, array $context = []): void
+    function app_log($level, $message = null, array $context = []): void
     {
         $logger = app_logger();
+        if ($message === null) {
+            $message = (string)$level;
+            $level = 'info';
+        }
+
         if (is_object($logger) && method_exists($logger, 'log')) {
-            $logger->log($level, $message, $context);
+            $logger->log((string)$level, (string)$message, $context);
             return;
         }
 
-        if (!empty($context)) {
-            $encoded = @json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            if (is_string($encoded) && $encoded !== '') {
-                error_log(strtoupper($level) . ': ' . $message . ' ' . $encoded);
-                return;
-            }
-        }
-        error_log(strtoupper($level) . ': ' . $message);
+        $payload = [
+            'ts' => gmdate('c'),
+            'level' => (string)$level,
+            'request_id' => function_exists('request_id') ? request_id() : (string)($_SERVER['X_REQUEST_ID'] ?? 'no-id'),
+            'message' => (string)$message,
+            'context' => (object)$context,
+            'file' => '',
+            'line' => 0,
+        ];
+        $encoded = @json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        error_log(is_string($encoded) ? $encoded : (string)$message);
     }
 }

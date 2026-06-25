@@ -53,7 +53,8 @@ function invoice_email_html($project, $goods, $subtotal, $tax, $total, $invoice_
                                         <table border="0" cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td valign="middle" style="padding-right: 15px;">
-                                                    <img src="<?php echo htmlspecialchars(rtrim(BASE_URL, '/').'/assets/Content/Logo.png'); ?>" alt="RD Logo" width="45" style="display: block; border: 0;" onerror="this.src='https://placehold.co/90x90/b91c1c/ffffff?text=RD'">
+                                                    <?php $logoFallback = rtrim((string)BASE_URL, '/') . '/assets/images/rd-placeholder.svg'; ?>
+                                                    <img src="<?php echo htmlspecialchars(rtrim(BASE_URL, '/').'/assets/Content/Logo.png'); ?>" alt="RD Logo" width="45" style="display: block; border: 0;" onerror="this.src='<?php echo htmlspecialchars($logoFallback); ?>'">
                                                 </td>
                                                 <td valign="middle">
                                                     <h1 style="margin: 0 0 2px 0; color: #111827; font-size: 18px; font-weight: 700;">Ripal Design</h1>

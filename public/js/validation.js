@@ -1,28 +1,32 @@
-//  sinupin form validation 
+// signup form validation 
 
-$(document).ready(function () {
+document.addEventListener("DOMContentLoaded", function () {
   function validateInput(input) {
-    var field = $(input);
-    var value = field.val() ? field.val().trim() : "";
-    var errorfield = $("#" + field.attr("name") + "_error");
-    var validationType = field.data("validation");
-    var minLength = field.data("min") || 0;
-    var maxLength = field.data("max") || 9999;
-    var fileSize = field.data("filesize") || 0;
-    var fileType = field.data("filetype") || "";
+    var field = input;
+    var value = field.value ? field.value.trim() : "";
+    var errorfield = document.getElementById(field.getAttribute("name") + "_error");
+    var validationType = field.getAttribute("data-validation");
+    var minLength = parseInt(field.getAttribute("data-min") || "0", 10);
+    var maxLength = parseInt(field.getAttribute("data-max") || "9999", 10);
+    var fileSize = parseInt(field.getAttribute("data-filesize") || "0", 10);
+    var fileType = field.getAttribute("data-filetype") || "";
     let errorMessage = "";
-    var isFileInput = field.attr("type") === "file";
-    var isCheckbox = field.attr("type") === "checkbox";
+    var isFileInput = field.type === "file";
+    var isCheckbox = field.type === "checkbox";
+
+    if (!errorfield) {
+        return true;
+    }
 
     if (validationType) {
       // Required field validation (all types)
       if (validationType.includes("required")) {
         if (isCheckbox) {
-          if (!field.is(":checked")) {
+          if (!field.checked) {
             errorMessage = "You must accept the terms and conditions.";
           }
         } else if (isFileInput) {
-          if (!field[0].files || field[0].files.length === 0) {
+          if (!field.files || field.files.length === 0) {
             errorMessage = "This field is required.";
           }
         } else if (value === "" || value === "0" || value === null) {
@@ -44,7 +48,7 @@ $(document).ready(function () {
 
         if(validationType.includes('alphabetic'))
         {
-          alphabet_regex = /^[a-zA-Z\s]+$/;
+          const alphabet_regex = /^[a-zA-Z\s]+$/;
           if(!alphabet_regex.test(value))
           {
             errorMessage = "Please enter alphabetic characters only.";
@@ -79,10 +83,13 @@ $(document).ready(function () {
 
         // Password confirmation validation
         if (validationType.includes("confirmPassword")) {
-          const passwordField = field.closest('form').find('input[name="password"]');
-          const passwordValue = passwordField.length ? passwordField.val() : '';
-          if (value !== passwordValue) {
-            errorMessage = "Passwords do not match.";
+          const form = field.closest('form');
+          if (form) {
+             const passwordField = form.querySelector('input[name="password"]');
+             const passwordValue = passwordField ? passwordField.value : '';
+             if (value !== passwordValue) {
+               errorMessage = "Passwords do not match.";
+             }
           }
         }
 
@@ -93,8 +100,8 @@ $(document).ready(function () {
       }
 
       // File validations (only if file is selected)
-      if (isFileInput && field[0].files && field[0].files.length > 0) {
-        const file = field[0].files[0];
+      if (isFileInput && field.files && field.files.length > 0) {
+        const file = field.files[0];
         
         // File size validation
         if (validationType.includes("fileSize")) {
@@ -116,37 +123,41 @@ $(document).ready(function () {
       }
 
       if (errorMessage) {
-        errorfield.text(errorMessage).show();
-        field.addClass("is-invalid").removeClass("is-valid");
-        errorfield.addClass("small text-danger");
+        errorfield.textContent = errorMessage;
+        errorfield.style.display = "block";
+        field.classList.add("is-invalid");
+        field.classList.remove("is-valid");
+        errorfield.classList.add("small", "text-danger");
         return false;
       } else {
-        errorfield.text("").hide();
-        field.removeClass("is-invalid").addClass("is-valid");
+        errorfield.textContent = "";
+        errorfield.style.display = "none";
+        field.classList.remove("is-invalid");
+        field.classList.add("is-valid");
         return true;
       }
     }
     return true;
   }
-  $("input, textarea, select").on("input change", function () {
-    validateInput(this);
+
+  document.querySelectorAll("input, textarea, select").forEach(function (element) {
+    element.addEventListener("input", function () { validateInput(this); });
+    element.addEventListener("change", function () { validateInput(this); });
   });
 
-  $("form").on("submit", function (e) {
-    let isValid = true;
-    $(this)
-      .find("input, textarea, select")
-      .each(function () {
-        const fieldValid = validateInput(this);
+  document.querySelectorAll("form").forEach(function (form) {
+    form.addEventListener("submit", function (e) {
+      let isValid = true;
+      this.querySelectorAll("input, textarea, select").forEach(function (element) {
+        const fieldValid = validateInput(element);
         if (!fieldValid) {
           isValid = false;
         }
       });
-    if (!isValid) {
-      e.preventDefault();
-      return false;
-    }
+      if (!isValid) {
+        e.preventDefault();
+      }
+    });
   });
 });
-
 

@@ -35,7 +35,14 @@ if (!function_exists('wmcp_set_json_headers')) {
         header('Access-Control-Allow-Headers: Content-Type, Accept');
 
         if ($readOnly) {
-            header('Access-Control-Allow-Origin: *');
+            $allowed_origins = defined('ALLOWED_ORIGINS')
+                ? array_values(array_filter(array_map('trim', explode(',', (string)ALLOWED_ORIGINS))))
+                : ['http://localhost'];
+            $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
+            if (in_array($origin, $allowed_origins, true)) {
+                header('Access-Control-Allow-Origin: ' . $origin);
+                header('Vary: Origin');
+            }
         }
     }
 }
