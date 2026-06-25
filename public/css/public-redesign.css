@@ -525,7 +525,8 @@ body.home-immersive .nav-toggle {
 }
 
 body.home-immersive .nav-toggle {
-  background: transparent;
+  /* background: transparent; */
+  background: #7d7d8ba3;
   border-color: rgba(247, 242, 234, 0.28);
   color: #f7f2ea;
 }

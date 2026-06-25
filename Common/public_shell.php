@@ -254,11 +254,11 @@ if (!function_exists('rd_page_end')) {
                     }
                 });
 
-                if (!menuOpen && scrollingDown && currentY > threshold) {
-                    document.body.classList.add('nav-hidden');
-                } else {
-                    document.body.classList.remove('nav-hidden');
-                }
+                // if (!menuOpen && scrollingDown && currentY > threshold) {
+                //     document.body.classList.add('nav-hidden');
+                // } else {
+                //     document.body.classList.remove('nav-hidden');
+                // }
 
                 lastY = currentY;
                 ticking = false;
